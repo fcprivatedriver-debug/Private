@@ -9,6 +9,8 @@ const envSchema = z.object({
   PAYMENTS_ENABLED: z.string().default("false"),
   PLATFORM_FEE_PERCENT: z.coerce.number().default(15),
   NEXT_PUBLIC_APP_NAME: z.string().default("Movio"),
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;
