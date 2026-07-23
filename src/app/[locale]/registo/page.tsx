@@ -20,25 +20,29 @@ function RegisterForm() {
     setLoading(true);
     setError(null);
     const formData = new FormData(e.currentTarget);
-    const result = await registerAction(formData);
-    if (!result.ok) {
-      setError(result.error);
+    try {
+      const result = await registerAction(formData);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      const login = await signIn("credentials", {
+        email: String(formData.get("email")),
+        password: String(formData.get("password")),
+        redirect: false,
+      });
+      if (login?.error) {
+        router.push("/login");
+        return;
+      }
+      const role = String(formData.get("role"));
+      router.push(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
+      router.refresh();
+    } catch {
+      setError("Não foi possível registar. Tente de novo.");
+    } finally {
       setLoading(false);
-      return;
     }
-    const login = await signIn("credentials", {
-      email: String(formData.get("email")),
-      password: String(formData.get("password")),
-      redirect: false,
-    });
-    setLoading(false);
-    if (login?.error) {
-      router.push("/login");
-      return;
-    }
-    const role = String(formData.get("role"));
-    router.push(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
-    router.refresh();
   }
 
   return (

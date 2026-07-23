@@ -2,6 +2,14 @@
 
 Movio uses **PostgreSQL** (Neon). SQLite is not supported.
 
+## Login on Vercel (important)
+
+Production uses the **Neon serverless Prisma adapter**. Without it, Prisma TCP
+queries during Auth.js `authorize` can hang forever — the login button stays on
+**“A entrar…”**.
+
+After this fix is on `main`, open Vercel → **Deployments** → **Redeploy**.
+
 ## Auth secret — no manual setup required
 
 The app includes a **built-in demo `AUTH_SECRET` fallback**.  
