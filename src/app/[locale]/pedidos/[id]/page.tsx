@@ -5,7 +5,6 @@ import { formatMoney } from "@/lib/money";
 import {
   OFFER_STATUS_LABELS,
   TRIP_STATUS_LABELS,
-  VEHICLE_CATEGORY_LABELS,
 } from "@/config/constants";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
@@ -13,12 +12,15 @@ import { TripActions } from "@/components/trip/TripActions";
 import { OfferForm } from "@/components/offer/OfferForm";
 import { ReviewForm } from "@/components/trip/ReviewForm";
 import { canRevealContacts } from "@/lib/contacts";
+import { localizeVehicleClass } from "@/domain/vehicle-class";
+import { getLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function TripDetailPage({ params }: Props) {
   const session = await requireSession();
   const { id } = await params;
+  const locale = await getLocale();
 
   const trip = await prisma.tripRequest.findUnique({
     where: { id },
@@ -33,12 +35,13 @@ export default async function TripDetailPage({ params }: Props) {
               driverProfile: true,
             },
           },
-          vehicle: true,
+          vehicle: { include: { vehicleClass: true } },
         },
         orderBy: { priceAmount: "asc" },
       },
       booking: { include: { payment: true, review: true } },
       customer: { select: { id: true, name: true, phone: true } },
+      preferredVehicleClass: true,
     },
   });
 
@@ -68,7 +71,7 @@ export default async function TripDetailPage({ params }: Props) {
     isDriver
       ? await prisma.driverProfile.findUnique({
           where: { userId: session.user.id },
-          include: { vehicles: true },
+          include: { vehicles: { include: { vehicleClass: true } } },
         })
       : null;
 
@@ -92,9 +95,9 @@ export default async function TripDetailPage({ params }: Props) {
               <strong>{trip.passengers}</strong> passageiros · <strong>{trip.luggage}</strong> malas
             </p>
             {trip.flightNumber && <p className="muted">Voo {trip.flightNumber}</p>}
-            {trip.preferredVehicleCategory && (
+            {trip.preferredVehicleClass && (
               <p className="muted">
-                Preferência: {VEHICLE_CATEGORY_LABELS[trip.preferredVehicleCategory]}
+                Preferência: {localizeVehicleClass(trip.preferredVehicleClass, locale).name}
               </p>
             )}
             {trip.notes && <p style={{ marginTop: "0.75rem" }}>{trip.notes}</p>}
@@ -157,7 +160,7 @@ export default async function TripDetailPage({ params }: Props) {
                     {offer.vehicle && (
                       <div className="muted">
                         {offer.vehicle.make} {offer.vehicle.model} ·{" "}
-                        {VEHICLE_CATEGORY_LABELS[offer.vehicle.category]}
+                        {localizeVehicleClass(offer.vehicle.vehicleClass, locale).name}
                       </div>
                     )}
                     {offer.message && <p>{offer.message}</p>}
@@ -180,7 +183,12 @@ export default async function TripDetailPage({ params }: Props) {
               )}
               <OfferForm
                 tripRequestId={trip.id}
-                vehicles={driverVehicles?.vehicles || []}
+                vehicles={(driverVehicles?.vehicles || []).map((v) => ({
+                  id: v.id,
+                  make: v.make,
+                  model: v.model,
+                  className: localizeVehicleClass(v.vehicleClass, locale).name,
+                }))}
                 existingPrice={myOffer ? myOffer.priceAmount / 100 : undefined}
               />
             </>

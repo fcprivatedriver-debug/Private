@@ -89,6 +89,13 @@ movio/
 
 ## Data model highlights (Phase 0)
 
+### Vehicle classification (database-driven)
+
+- `VehicleClass` table: `code`, localized names (`namePt`/`nameEn`), capacity limits, `sortOrder`, `active`
+- `Vehicle.vehicleClassId` and `TripRequest.preferredVehicleClassId` reference it
+- `CommissionRule.vehicleClassId` optional override
+- Admin CRUD at `/admin/vehicle-classes`; public list via `GET /api/vehicle-classes`
+
 ### Money & commission
 
 - All amounts stored as **integer cents** + ISO `currency` (`EUR` default).

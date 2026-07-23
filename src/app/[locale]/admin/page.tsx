@@ -2,11 +2,12 @@ import { requireRole } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { VerifyDriverButton } from "@/components/admin/VerifyDriverButton";
 import { TRIP_STATUS_LABELS } from "@/config/constants";
+import { Link } from "@/i18n/navigation";
 
 export default async function AdminPage() {
   await requireRole("ADMIN");
 
-  const [pendingDrivers, stats, recentTrips] = await Promise.all([
+  const [pendingDrivers, stats, recentTrips, classCount] = await Promise.all([
     prisma.driverProfile.findMany({
       where: { status: "PENDING_VERIFICATION" },
       include: { user: true, vehicles: true },
@@ -22,6 +23,7 @@ export default async function AdminPage() {
       take: 8,
       include: { customer: { select: { name: true } } },
     }),
+    prisma.vehicleClass.count({ where: { active: true } }),
   ]);
 
   const [tripCount, offerCount, bookingCount, driverCount] = stats;
@@ -32,6 +34,11 @@ export default async function AdminPage() {
         <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
           Admin Movio
         </h1>
+        <div className="cta-row" style={{ marginBottom: "1.25rem" }}>
+          <Link href="/admin/vehicle-classes" className="btn btn-secondary">
+            Vehicle classes ({classCount})
+          </Link>
+        </div>
         <div className="steps" style={{ margin: "1.5rem 0" }}>
           <div className="panel">
             <div className="step-num">{tripCount}</div>

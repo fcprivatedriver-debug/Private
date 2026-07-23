@@ -2,13 +2,14 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { createOfferAction } from "@/actions/marketplace";
 
 type Vehicle = {
   id: string;
   make: string;
   model: string;
-  category: string;
+  className: string;
 };
 
 export function OfferForm({
@@ -42,7 +43,7 @@ export function OfferForm({
   if (vehicles.length === 0) {
     return (
       <div className="alert alert-error">
-        Regista um veículo em <a href="/veiculo">/veiculo</a> antes de propor.
+        Regista um veículo em <Link href="/veiculo">/veiculo</Link> antes de propor.
       </div>
     );
   }
@@ -72,7 +73,7 @@ export function OfferForm({
         <select className="select" id="vehicleId" name="vehicleId" defaultValue={vehicles[0]?.id}>
           {vehicles.map((v) => (
             <option key={v.id} value={v.id}>
-              {v.make} {v.model} ({v.category})
+              {v.make} {v.model} ({v.className})
             </option>
           ))}
         </select>

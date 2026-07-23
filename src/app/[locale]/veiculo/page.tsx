@@ -22,7 +22,22 @@ export default async function VehiclePage() {
             {profile ? DRIVER_STATUS_LABELS[profile.status] : "—"}
           </span>
         </p>
-        <VehicleForm vehicle={profile?.vehicles[0] || null} />
+        <VehicleForm
+          vehicle={
+            profile?.vehicles[0]
+              ? {
+                  make: profile.vehicles[0].make,
+                  model: profile.vehicles[0].model,
+                  year: profile.vehicles[0].year,
+                  color: profile.vehicles[0].color,
+                  plate: profile.vehicles[0].plate,
+                  seats: profile.vehicles[0].seats,
+                  luggageCapacity: profile.vehicles[0].luggageCapacity,
+                  vehicleClassId: profile.vehicles[0].vehicleClassId,
+                }
+              : null
+          }
+        />
       </div>
     </section>
   );

@@ -3,6 +3,74 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const DEFAULT_CLASSES = [
+  {
+    id: "vc_sedan",
+    code: "SEDAN",
+    namePt: "Sedan",
+    nameEn: "Sedan",
+    descriptionPt: "Carro standard até 3 passageiros",
+    descriptionEn: "Standard car up to 3 passengers",
+    minPassengers: 1,
+    maxPassengers: 3,
+    maxLuggage: 2,
+    iconKey: "sedan",
+    sortOrder: 10,
+  },
+  {
+    id: "vc_executive",
+    code: "EXECUTIVE",
+    namePt: "Executivo",
+    nameEn: "Executive",
+    descriptionPt: "Berlina executiva confortável",
+    descriptionEn: "Comfortable executive saloon",
+    minPassengers: 1,
+    maxPassengers: 3,
+    maxLuggage: 3,
+    iconKey: "executive",
+    sortOrder: 20,
+  },
+  {
+    id: "vc_van",
+    code: "VAN",
+    namePt: "Van",
+    nameEn: "Van",
+    descriptionPt: "Van para grupos e bagagem extra",
+    descriptionEn: "Van for groups and extra luggage",
+    minPassengers: 1,
+    maxPassengers: 7,
+    maxLuggage: 7,
+    iconKey: "van",
+    sortOrder: 30,
+  },
+  {
+    id: "vc_minibus",
+    code: "MINIBUS",
+    namePt: "Minibus",
+    nameEn: "Minibus",
+    descriptionPt: "Minibus para grupos maiores",
+    descriptionEn: "Minibus for larger groups",
+    minPassengers: 1,
+    maxPassengers: 16,
+    maxLuggage: 16,
+    iconKey: "minibus",
+    sortOrder: 40,
+  },
+  {
+    id: "vc_luxury",
+    code: "LUXURY",
+    namePt: "Luxo",
+    nameEn: "Luxury",
+    descriptionPt: "Veículo de luxo premium",
+    descriptionEn: "Premium luxury vehicle",
+    minPassengers: 1,
+    maxPassengers: 3,
+    maxLuggage: 3,
+    iconKey: "luxury",
+    sortOrder: 50,
+  },
+] as const;
+
 async function main() {
   await prisma.payment.deleteMany();
   await prisma.review.deleteMany();
@@ -33,6 +101,25 @@ async function main() {
       supportedCurrencies: JSON.stringify(["EUR"]),
     },
   });
+
+  for (const vc of DEFAULT_CLASSES) {
+    await prisma.vehicleClass.upsert({
+      where: { code: vc.code },
+      create: { ...vc, active: true },
+      update: {
+        namePt: vc.namePt,
+        nameEn: vc.nameEn,
+        descriptionPt: vc.descriptionPt,
+        descriptionEn: vc.descriptionEn,
+        minPassengers: vc.minPassengers,
+        maxPassengers: vc.maxPassengers,
+        maxLuggage: vc.maxLuggage,
+        iconKey: vc.iconKey,
+        sortOrder: vc.sortOrder,
+        active: true,
+      },
+    });
+  }
 
   const passwordHash = await bcrypt.hash("movio123", 10);
 
@@ -95,7 +182,7 @@ async function main() {
               plate: "AA-00-MV",
               seats: 3,
               luggageCapacity: 3,
-              category: "EXECUTIVE",
+              vehicleClassId: "vc_executive",
             },
           },
         },
@@ -138,7 +225,7 @@ async function main() {
               plate: "BB-11-MV",
               seats: 7,
               luggageCapacity: 7,
-              category: "VAN",
+              vehicleClassId: "vc_van",
             },
           },
         },
@@ -146,7 +233,7 @@ async function main() {
     },
   });
 
-  const pendingDriver = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email: "pendente@movio.app",
       name: "João Pendente",
@@ -171,7 +258,7 @@ async function main() {
               plate: "CC-22-MV",
               seats: 3,
               luggageCapacity: 2,
-              category: "SEDAN",
+              vehicleClassId: "vc_sedan",
             },
           },
         },
@@ -198,7 +285,7 @@ async function main() {
       notes: "Arrival flight TP1234. Name board: Ana.",
       flightNumber: "TP1234",
       status: "OPEN",
-      preferredVehicleCategory: "EXECUTIVE",
+      preferredVehicleClassId: "vc_executive",
       currency: "EUR",
       expiresAt: new Date(pickupAt.getTime() - 2 * 60 * 60 * 1000),
     },
@@ -221,13 +308,12 @@ async function main() {
     },
   });
 
-  console.log("Movio Phase 0 seed complete.");
+  console.log("Movio seed complete (DB-driven vehicle classes).");
   console.log("Accounts (password: movio123):");
   console.log(`  Admin:      ${admin.email}`);
   console.log(`  Customer:   ${customer.email}`);
   console.log(`  Driver:     ${driver.email}`);
   console.log(`  Driver 2:   ${driver2.email}`);
-  console.log(`  Pending:    ${pendingDriver.email}`);
   console.log(`  Demo OPEN trip: ${trip.id}`);
 }
 

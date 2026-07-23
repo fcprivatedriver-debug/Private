@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { eurosToCents, calcPlatformFee } from "@/lib/money";
 import { resolveCommissionPercent } from "@/lib/commission";
 import { getPaymentProvider } from "@/lib/payments/provider";
+import { assertActiveVehicleClass } from "@/domain/vehicle-class";
 import type { TripStatus } from "@prisma/client";
 
 export class DomainError extends Error {
@@ -21,14 +22,13 @@ export async function createTripRequest(input: {
   luggage: number;
   notes?: string;
   flightNumber?: string;
-  preferredVehicleCategory?:
-    | "SEDAN"
-    | "EXECUTIVE"
-    | "VAN"
-    | "MINIBUS"
-    | "LUXURY";
+  preferredVehicleClassId?: string;
   publish?: boolean;
 }) {
+  if (input.preferredVehicleClassId) {
+    await assertActiveVehicleClass(input.preferredVehicleClassId);
+  }
+
   const expiresAt = new Date(input.pickupAt.getTime() - 2 * 60 * 60 * 1000);
   const status: TripStatus = input.publish ? "OPEN" : "DRAFT";
 
@@ -42,7 +42,7 @@ export async function createTripRequest(input: {
       luggage: input.luggage,
       notes: input.notes || null,
       flightNumber: input.flightNumber || null,
-      preferredVehicleCategory: input.preferredVehicleCategory || null,
+      preferredVehicleClassId: input.preferredVehicleClassId || null,
       status,
       currency: "EUR",
       expiresAt,
@@ -218,9 +218,15 @@ export async function acceptOffer(tripId: string, offerId: string, customerId: s
       data: { status: "REJECTED" },
     });
 
+    const vehicle = offer.vehicleId
+      ? await tx.vehicle.findUnique({
+          where: { id: offer.vehicleId },
+          select: { vehicleClassId: true },
+        })
+      : null;
     const feePercent = await resolveCommissionPercent({
       currency: offer.currency,
-      vehicleCategory: undefined,
+      vehicleClassId: vehicle?.vehicleClassId,
     });
     const fee = calcPlatformFee(offer.priceAmount, feePercent);
 

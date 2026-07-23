@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { upsertVehicleAction } from "@/actions/marketplace";
 
 type Vehicle = {
@@ -12,14 +13,31 @@ type Vehicle = {
   plate: string;
   seats: number;
   luggageCapacity: number;
-  category: string;
+  vehicleClassId: string;
 } | null;
+
+type VehicleClassOption = {
+  id: string;
+  code: string;
+  name: string;
+  maxPassengers: number;
+  maxLuggage: number;
+};
 
 export function VehicleForm({ vehicle }: { vehicle: Vehicle }) {
   const router = useRouter();
+  const locale = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [classes, setClasses] = useState<VehicleClassOption[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/vehicle-classes?locale=${locale}`)
+      .then((r) => r.json())
+      .then((data) => setClasses(data.classes || []))
+      .catch(() => setClasses([]));
+  }, [locale]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -83,15 +101,21 @@ export function VehicleForm({ vehicle }: { vehicle: Vehicle }) {
           <input className="input" id="plate" name="plate" defaultValue={vehicle?.plate} required />
         </div>
         <div className="field">
-          <label className="label" htmlFor="category">
-            Categoria
+          <label className="label" htmlFor="vehicleClassId">
+            Classe
           </label>
-          <select className="select" id="category" name="category" defaultValue={vehicle?.category || "SEDAN"}>
-            <option value="SEDAN">Sedan</option>
-            <option value="EXECUTIVE">Executivo</option>
-            <option value="VAN">Van</option>
-            <option value="MINIBUS">Minibus</option>
-            <option value="LUXURY">Luxo</option>
+          <select
+            className="select"
+            id="vehicleClassId"
+            name="vehicleClassId"
+            defaultValue={vehicle?.vehicleClassId || classes[0]?.id}
+            required
+          >
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.code})
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -123,7 +147,7 @@ export function VehicleForm({ vehicle }: { vehicle: Vehicle }) {
           />
         </div>
       </div>
-      <button className="btn btn-primary" type="submit" disabled={loading}>
+      <button className="btn btn-primary" type="submit" disabled={loading || classes.length === 0}>
         {loading ? "A guardar…" : "Guardar veículo"}
       </button>
     </form>

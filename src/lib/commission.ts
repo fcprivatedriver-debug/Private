@@ -3,7 +3,7 @@ import { getEnv } from "@/config/env";
 
 export type CommissionContext = {
   countryCode?: string | null;
-  vehicleCategory?: string | null;
+  vehicleClassId?: string | null;
   currency?: string | null;
 };
 
@@ -21,7 +21,7 @@ export async function resolveCommissionPercent(
 
   for (const rule of rules) {
     if (rule.countryCode && rule.countryCode !== ctx.countryCode) continue;
-    if (rule.vehicleCategory && rule.vehicleCategory !== ctx.vehicleCategory) continue;
+    if (rule.vehicleClassId && rule.vehicleClassId !== ctx.vehicleClassId) continue;
     if (rule.currency && rule.currency !== ctx.currency) continue;
     return rule.percent;
   }

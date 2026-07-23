@@ -1,14 +1,32 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { createTripAction } from "@/actions/marketplace";
 import { AddressAutocompleteInput } from "@/components/map/AddressAutocompleteInput";
+import { useLocale } from "next-intl";
+
+type VehicleClassOption = {
+  id: string;
+  code: string;
+  name: string;
+  maxPassengers: number;
+  maxLuggage: number;
+};
 
 export default function NewTripPage() {
   const router = useRouter();
+  const locale = useLocale();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [classes, setClasses] = useState<VehicleClassOption[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/vehicle-classes?locale=${locale}`)
+      .then((r) => r.json())
+      .then((data) => setClasses(data.classes || []))
+      .catch(() => setClasses([]));
+  }, [locale]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -16,6 +34,8 @@ export default function NewTripPage() {
     setError(null);
     const formData = new FormData(e.currentTarget);
     formData.set("publish", "true");
+    const preferred = String(formData.get("preferredVehicleClassId") || "");
+    if (!preferred) formData.delete("preferredVehicleClassId");
     const result = await createTripAction(formData);
     setLoading(false);
     if (!result.ok) {
@@ -55,16 +75,16 @@ export default function NewTripPage() {
               <input className="input" id="pickupAt" name="pickupAt" type="datetime-local" required />
             </div>
             <div className="field">
-              <label className="label" htmlFor="preferredVehicleCategory">
-                Veículo preferido
+              <label className="label" htmlFor="preferredVehicleClassId">
+                Classe de veículo preferida
               </label>
-              <select className="select" id="preferredVehicleCategory" name="preferredVehicleCategory">
+              <select className="select" id="preferredVehicleClassId" name="preferredVehicleClassId" defaultValue="">
                 <option value="">Sem preferência</option>
-                <option value="SEDAN">Sedan</option>
-                <option value="EXECUTIVE">Executivo</option>
-                <option value="VAN">Van</option>
-                <option value="MINIBUS">Minibus</option>
-                <option value="LUXURY">Luxo</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} · até {c.maxPassengers} pax / {c.maxLuggage} malas
+                  </option>
+                ))}
               </select>
             </div>
           </div>

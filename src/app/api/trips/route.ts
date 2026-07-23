@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     luggage: parsed.data.luggage,
     notes: parsed.data.notes,
     flightNumber: parsed.data.flightNumber,
-    preferredVehicleCategory: parsed.data.preferredVehicleCategory,
+    preferredVehicleClassId: parsed.data.preferredVehicleClassId,
     publish: parsed.data.publish,
   });
 
