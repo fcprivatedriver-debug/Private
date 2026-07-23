@@ -34,6 +34,7 @@ export default async function HomePage({ params }: Props) {
       <section className="hero">
         <div className="hero-media" aria-hidden />
         <div className="container hero-content">
+          <p className="hero-eyebrow">{t("eyebrow")}</p>
           <h1 className="hero-brand">
             Mov<span>io</span>
           </h1>
@@ -76,6 +77,7 @@ export default async function HomePage({ params }: Props) {
       <footer className="site-footer">
         <div className="container site-footer-inner">
           <div className="logo" style={{ fontSize: "1.2rem" }}>
+            <span className="logo-mark" aria-hidden style={{ width: "1.1rem", height: "1.1rem" }} />
             Mov<span>io</span>
           </div>
           <div>

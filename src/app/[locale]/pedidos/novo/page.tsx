@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { createTripAction } from "@/actions/marketplace";
 import { AddressAutocompleteInput } from "@/components/map/AddressAutocompleteInput";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type VehicleClassOption = {
   id: string;
@@ -17,6 +17,7 @@ type VehicleClassOption = {
 export default function NewTripPage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("tripForm");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState<VehicleClassOption[]>([]);
@@ -49,38 +50,38 @@ export default function NewTripPage() {
   return (
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 720 }}>
-        <h1 className="page-title">Novo pedido de viagem</h1>
-        <p className="page-lead">Publica o trajeto e espera propostas de motoristas.</p>
+        <h1 className="page-title">{t("title")}</h1>
+        <p className="page-lead">{t("lead")}</p>
         {error && <div className="alert alert-error">{error}</div>}
-        <form onSubmit={onSubmit} className="panel">
+        <form onSubmit={onSubmit} className="panel panel-lift">
           <AddressAutocompleteInput
             name="pickupAddress"
-            label="Origem"
-            placeholder="Aeroporto de Lisboa (LIS)"
+            label={t("pickup")}
+            placeholder={t("pickupPlaceholder")}
             required
           />
           <AddressAutocompleteInput
             name="dropoffAddress"
-            label="Destino"
-            placeholder="Hotel ou morada"
+            label={t("dropoff")}
+            placeholder={t("dropoffPlaceholder")}
             required
           />
           <div className="grid-2">
             <div className="field">
               <label className="label" htmlFor="pickupAt">
-                Data e hora
+                {t("when")}
               </label>
               <input className="input" id="pickupAt" name="pickupAt" type="datetime-local" required />
             </div>
             <div className="field">
               <label className="label" htmlFor="preferredVehicleClassId">
-                Classe de veículo preferida
+                {t("vehicleClass")}
               </label>
               <select className="select" id="preferredVehicleClassId" name="preferredVehicleClassId" defaultValue="">
-                <option value="">Sem preferência</option>
+                <option value="">{t("noPreference")}</option>
                 {classes.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} · até {c.maxPassengers} pax / {c.maxLuggage} malas
+                    {c.name} · até {c.maxPassengers} / {c.maxLuggage}
                   </option>
                 ))}
               </select>
@@ -89,32 +90,32 @@ export default function NewTripPage() {
           <div className="grid-2">
             <div className="field">
               <label className="label" htmlFor="passengers">
-                Passageiros
+                {t("passengers")}
               </label>
               <input className="input" id="passengers" name="passengers" type="number" min={1} defaultValue={1} required />
             </div>
             <div className="field">
               <label className="label" htmlFor="luggage">
-                Malas
+                {t("luggage")}
               </label>
               <input className="input" id="luggage" name="luggage" type="number" min={0} defaultValue={1} required />
             </div>
           </div>
           <div className="field">
             <label className="label" htmlFor="flightNumber">
-              Nº de voo (opcional)
+              {t("flight")}
             </label>
             <input className="input" id="flightNumber" name="flightNumber" />
           </div>
           <div className="field">
             <label className="label" htmlFor="notes">
-              Notas
+              {t("notes")}
             </label>
-            <textarea className="textarea" id="notes" name="notes" placeholder="Placa com nome, tempo de espera…" />
+            <textarea className="textarea" id="notes" name="notes" placeholder={t("notesPlaceholder")} />
           </div>
           <div className="form-actions">
             <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? "A publicar…" : "Publicar pedido"}
+              {loading ? t("submitting") : t("submit")}
             </button>
           </div>
         </form>

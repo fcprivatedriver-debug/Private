@@ -14,6 +14,9 @@ import { ReviewForm } from "@/components/trip/ReviewForm";
 import { canRevealContacts } from "@/lib/contacts";
 import { localizeVehicleClass } from "@/domain/vehicle-class";
 import { getLocale } from "next-intl/server";
+import { TripRouteMap } from "@/components/map/TripRouteMap";
+import { Link } from "@/i18n/navigation";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -79,10 +82,10 @@ export default async function TripDetailPage({ params }: Props) {
 
   return (
     <section className="section fade-up">
-      <div className="container grid-2">
-        <div>
+      <div className="container">
+        <div style={{ marginBottom: "1.5rem" }}>
           <span className="badge">{TRIP_STATUS_LABELS[trip.status]}</span>
-          <h1 className="font-display" style={{ fontSize: "2.2rem", marginTop: "0.75rem" }}>
+          <h1 className="font-display" style={{ fontSize: "clamp(1.7rem, 4vw, 2.35rem)", marginTop: "0.75rem" }}>
             {trip.pickupAddress}
             <span className="muted"> → </span>
             {trip.dropoffAddress}
@@ -90,9 +93,22 @@ export default async function TripDetailPage({ params }: Props) {
           <p className="muted">
             {format(trip.pickupAt, "EEEE, d MMMM yyyy · HH:mm", { locale: pt })}
           </p>
-          <div className="panel" style={{ marginTop: "1.25rem" }}>
+        </div>
+
+        <TripRouteMap
+          pickupAddress={trip.pickupAddress}
+          dropoffAddress={trip.dropoffAddress}
+          pickupLat={trip.pickupLat}
+          pickupLng={trip.pickupLng}
+          dropoffLat={trip.dropoffLat}
+          dropoffLng={trip.dropoffLng}
+        />
+
+        <div className="grid-2" style={{ marginTop: "1.5rem" }}>
+        <div>
+          <div className="panel">
             <p>
-              <strong>{trip.passengers}</strong> passageiros · <strong>{trip.luggage}</strong> malas
+              <strong>{trip.passengers}</strong> pessoas · <strong>{trip.luggage}</strong> malas
             </p>
             {trip.flightNumber && <p className="muted">Voo {trip.flightNumber}</p>}
             {trip.preferredVehicleClass && (
@@ -103,7 +119,7 @@ export default async function TripDetailPage({ params }: Props) {
             {trip.notes && <p style={{ marginTop: "0.75rem" }}>{trip.notes}</p>}
             {revealContacts && (
               <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
-                Contacts (visible after payment confirmed):{" "}
+                Contacto disponível:{" "}
                 {isOwner
                   ? trip.offers.find((o) => o.id === trip.acceptedOfferId)?.driver.phone || "—"
                   : trip.customer.phone || "—"}
@@ -111,7 +127,7 @@ export default async function TripDetailPage({ params }: Props) {
             )}
             {!revealContacts && trip.booking && (
               <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
-                Contact details unlock after payment is confirmed.
+                Os contactos ficam visíveis depois do pagamento confirmado.
               </div>
             )}
           </div>
@@ -144,7 +160,10 @@ export default async function TripDetailPage({ params }: Props) {
               <h2 className="font-display">Propostas</h2>
               <div className="list-stack" style={{ marginTop: "0.75rem" }}>
                 {trip.offers.length === 0 && (
-                  <div className="empty-state">Ainda sem propostas. Os motoristas vão aparecer aqui.</div>
+                  <EmptyState
+                    title="Ainda sem propostas"
+                    body="Assim que motoristas verificados responderem, as opções aparecem aqui."
+                  />
                 )}
                 {trip.offers.map((offer) => (
                   <div key={offer.id} className="list-item">
@@ -153,14 +172,23 @@ export default async function TripDetailPage({ params }: Props) {
                       <span className="badge">{OFFER_STATUS_LABELS[offer.status]}</span>
                     </div>
                     <div>
-                      {offer.driver.name}
+                      {offer.driver.driverProfile ? (
+                        <Link href={`/motoristas/${offer.driver.driverProfile.id}`}>
+                          {offer.driver.name}
+                        </Link>
+                      ) : (
+                        offer.driver.name
+                      )}
                       {offer.driver.driverProfile?.ratingAvg
                         ? ` · ★ ${offer.driver.driverProfile.ratingAvg.toFixed(1)}`
                         : ""}
                     </div>
                     {offer.vehicle && (
                       <div className="muted">
-                        {offer.vehicle.make} {offer.vehicle.model} ·{" "}
+                        <Link href={`/veiculos/${offer.vehicle.id}`}>
+                          {offer.vehicle.make} {offer.vehicle.model}
+                        </Link>
+                        {" · "}
                         {localizeVehicleClass(offer.vehicle.vehicleClass, locale).name}
                         {offer.vehicle.ratingCount
                           ? ` · ★ ${offer.vehicle.ratingAvg?.toFixed(1)} veículo`
@@ -179,7 +207,7 @@ export default async function TripDetailPage({ params }: Props) {
 
           {isDriver && trip.status === "OPEN" && (
             <>
-              <h2 className="font-display">A tua proposta</h2>
+              <h2 className="font-display">A sua proposta</h2>
               {myOffer && (
                 <div className="alert alert-info">
                   Proposta atual: {formatMoney(myOffer.priceAmount)} ({OFFER_STATUS_LABELS[myOffer.status]})
@@ -206,6 +234,7 @@ export default async function TripDetailPage({ params }: Props) {
               </p>
             </div>
           )}
+        </div>
         </div>
       </div>
     </section>

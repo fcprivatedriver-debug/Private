@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link as LocaleLink } from "@/i18n/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { routing } from "@/i18n/routing";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
@@ -30,9 +31,7 @@ export async function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container site-header-inner">
-        <LocaleLink href="/" className="logo">
-          Mov<span>io</span>
-        </LocaleLink>
+        <BrandLogo />
         <nav className="nav-links">
           {!session && (
             <>
@@ -53,7 +52,6 @@ export async function SiteHeader() {
               <LocaleLink href="/propostas">{t("myOffers")}</LocaleLink>
               <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
               <LocaleLink href="/veiculo">{t("vehicle")}</LocaleLink>
-              <LocaleLink href="/onboarding">{t("onboarding")}</LocaleLink>
             </>
           )}
           {role === "ADMIN" && (
@@ -67,14 +65,14 @@ export async function SiteHeader() {
           {!session ? (
             <>
               <LocaleLink href="/login">{t("login")}</LocaleLink>
-              <LocaleLink href="/registo" className="btn btn-primary" style={{ padding: "0.55rem 1rem" }}>
+              <LocaleLink href="/registo" className="btn btn-primary btn-sm">
                 {t("start")}
               </LocaleLink>
             </>
           ) : (
             <>
-              <span className="muted" style={{ fontSize: "0.9rem" }}>
-                {session.user.name}
+              <span className="muted" style={{ fontSize: "0.88rem" }}>
+                {session.user.name?.split(" ")[0]}
               </span>
               <form
                 action={async () => {
@@ -82,11 +80,7 @@ export async function SiteHeader() {
                   await signOut({ redirectTo: `/${locale}` });
                 }}
               >
-                <button
-                  type="submit"
-                  className="btn btn-secondary"
-                  style={{ padding: "0.55rem 1rem" }}
-                >
+                <button type="submit" className="btn btn-secondary btn-sm">
                   {t("logout")}
                 </button>
               </form>
