@@ -1,83 +1,150 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { auth } from "@/lib/auth";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import Link from "next/link";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
-export const dynamic = "force-dynamic";
-
-type Props = { params: Promise<{ locale: string }> };
-
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations("home");
-  const session = await auth();
-  const role = session?.user?.role;
-
-  const primary =
-    role === "CUSTOMER"
-      ? { href: "/pedidos/novo" as const, label: t("ctaRequest") }
-      : role === "DRIVER"
-        ? { href: "/painel" as const, label: t("ctaDashboard") }
-        : role === "ADMIN"
-          ? { href: "/admin" as const, label: t("ctaAdmin") }
-          : { href: "/registo?role=CUSTOMER" as const, label: t("ctaRequest") };
-
-  const secondary =
-    role === "CUSTOMER"
-      ? { href: "/pedidos" as const, label: t("ctaMyTrips") }
-      : role === "DRIVER"
-        ? { href: "/pedidos-abertos" as const, label: t("ctaDriver") }
-        : role === "ADMIN"
-          ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
-          : { href: "/para-motoristas" as const, label: t("ctaDriver") };
-
+export default function LandingPage() {
   return (
-    <>
+    <div className="landing">
+      <nav className="landing-nav">
+        <BrandLogo href="/pt" size="md" />
+        <div className="landing-nav-actions">
+          <Link href="/pt/login" className="btn btn-ghost btn-sm">
+            Entrar
+          </Link>
+          <Link href="/pt/registo" className="btn btn-primary btn-sm">
+            Conhecer a Nina
+          </Link>
+        </div>
+      </nav>
+
       <section className="hero">
-        <div className="hero-media" aria-hidden />
-        <div className="container hero-content">
-          <p className="hero-eyebrow">{t("eyebrow")}</p>
-          <h1 className="hero-brand">
-            Heg<span>os</span>
-          </h1>
-          <p className="hero-copy">{t("copy")}</p>
-          <div className="cta-row">
-            <Link href={primary.href} className="btn btn-primary">
-              {primary.label}
+        <div className="hero-bg" aria-hidden />
+        <div className="hero-content">
+          <p className="hero-brand">Nina</p>
+          <h1>A assistente que trata das contas por ti.</h1>
+          <p>
+            O dinheiro não deve ser uma preocupação. Deve ser uma ferramenta para viver melhor.
+            A Nina simplifica tudo — com calma, clareza e inteligência artificial.
+          </p>
+          <div className="hero-ctas">
+            <Link href="/pt/registo" className="btn btn-primary">
+              Começar com a Nina
             </Link>
-            <Link href={secondary.href} className="btn btn-secondary">
-              {secondary.label}
+            <Link href="/pt/login" className="btn btn-ghost">
+              Já tenho conta
             </Link>
           </div>
+          <p className="hero-promise">
+            “Quanto mais a utilizas, menos trabalho tens.”
+          </p>
         </div>
       </section>
 
       <section className="section">
-        <div className="container">
-          <h2>{t("stepsTitle")}</h2>
-          <p className="lead">{t("stepsLead")}</p>
-          <div className="steps">
-            <div>
-              <div className="step-num">01</div>
-              <h3>{t("step1Title")}</h3>
-              <p className="muted">{t("step1Body")}</p>
-            </div>
-            <div>
-              <div className="step-num">02</div>
-              <h3>{t("step2Title")}</h3>
-              <p className="muted">{t("step2Body")}</p>
-            </div>
-            <div>
-              <div className="step-num">03</div>
-              <h3>{t("step3Title")}</h3>
-              <p className="muted">{t("step3Body")}</p>
-            </div>
-          </div>
+        <h2>Fala com a Nina como falas com uma amiga</h2>
+        <p className="section-lead">
+          Sem menus complicados. Sem linguagem técnica. Só perguntas naturais — e respostas claras.
+        </p>
+        <div className="feature-grid nina-examples">
+          {[
+            "Nina, quanto gastei este mês?",
+            "Nina, quanto posso gastar até ao final do mês?",
+            "Nina, onde posso poupar?",
+            "Nina, compara este mês com o anterior.",
+            "Nina, quanto falta para o objetivo de férias?",
+            "Nina, mostra as despesas do supermercado.",
+          ].map((q) => (
+            <article key={q} className="feature nina-example">
+              <p>{q}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <SiteFooter termsLabel={t("terms")} privacyLabel={t("privacy")} />
-    </>
+      <section className="section section-adaptive" id="experiencia-inteligente">
+        <p className="section-eyebrow">Experiência & inteligência</p>
+        <h2>Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina</h2>
+        <p className="section-lead">
+          Uma única funcionalidade integrada: adesão simples, Conta Familiar partilhada e uma
+          assistente que aprende contigo — até quase não precisares de perguntar nada.
+        </p>
+
+        <div className="adaptive-flow">
+          <article className="adaptive-block">
+            <h3>Adesão em segundos</h3>
+            <p>
+              Regista-te com email (ou Google / Apple) e autenticação segura. Cria a Conta Familiar
+              com um toque; a Nina gera um convite por link ou QR Code. Quem aceita fica logo ligado —
+              sem códigos nem configuração técnica.
+            </p>
+          </article>
+
+          <article className="adaptive-block">
+            <h3>Perfis próprios, casa partilhada</h3>
+            <p>
+              Cada membro tem nome, fotografia, preferências e autenticação própria (PIN, impressão
+              digital ou reconhecimento facial). As Minhas Finanças e a Conta Familiar ficam
+              separadas: o que é teu e o que é de todos.
+            </p>
+          </article>
+
+          <article className="adaptive-block">
+            <h3>Compreensão automática</h3>
+            <p>
+              A Nina entende se um gasto é pessoal, familiar ou profissional. Confirma só quando há
+              dúvida; com as tuas respostas, aprende hábitos, lojas, horários e categorias — e
+              automatiza cada vez mais.
+            </p>
+          </article>
+
+          <article className="adaptive-block">
+            <h3>Memória, sugestões e ligações</h3>
+            <p>
+              Define regras e recebe sugestões úteis. No Centro de Ligações ativa só o que quiseres —
+              banco, email, supermercados — ou continua só por voz. Nada é obrigatório.
+            </p>
+          </article>
+        </div>
+
+        <p className="adaptive-philosophy">
+          Quanto mais a Nina é utilizada, menos trabalho o utilizador tem.
+        </p>
+      </section>
+
+      <section className="section">
+        <h2>Também trata do dia a dia</h2>
+        <p className="section-lead">
+          Orçamentos, objetivos, OCR de faturas, importações e resumos — sempre em linguagem simples.
+        </p>
+        <div className="feature-grid">
+          {[
+            {
+              title: "Captura Instantânea",
+              body: "Fala, escreve ou fotografa. Em segundos a Nina regista — sem formulários.",
+            },
+            {
+              title: "Organiza sozinha",
+              body: "Classifica compras e explica para onde está a ir o dinheiro.",
+            },
+            {
+              title: "Ajuda a poupar",
+              body: "Objetivos partilhados e progresso automático quando a família poupa.",
+            },
+          ].map((f) => (
+            <article key={f.title} className="feature">
+              <h3>{f.title}</h3>
+              <p className="muted">{f.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="landing-footer">
+        <p>
+          Nina · Assistente financeira pessoal ·{" "}
+          <Link href="/pt/privacidade">Privacidade</Link> ·{" "}
+          <Link href="/pt/termos">Termos</Link>
+        </p>
+      </footer>
+    </div>
   );
 }

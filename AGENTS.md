@@ -1,4 +1,4 @@
-# Agent notes — Hegos
+# Agent notes — Nina
 
 ## PR completion gate (mandatory)
 

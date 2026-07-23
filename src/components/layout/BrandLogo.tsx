@@ -1,58 +1,40 @@
-import { Link } from "@/i18n/navigation";
-
-/** Hegos mark — geometric H with a forward arc (motion + trust). */
-export function HegosMark({ className = "", size = 28 }: { className?: string; size?: number }) {
-  return (
-    <svg
-      className={className}
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <rect width="32" height="32" rx="8" fill="currentColor" className="hegos-mark-bg" />
-      <path
-        d="M9 8.5v15M23 8.5v15M9 16h14"
-        stroke="#F7F8F9"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M21.5 7.5c3.2 2.4 4.8 5.6 4.8 8.5s-1.6 6.1-4.8 8.5"
-        stroke="#5BA3C0"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        opacity="0.95"
-      />
-    </svg>
-  );
-}
+import Link from "next/link";
 
 export function BrandLogo({
-  href = "/",
+  href = "/pt",
   size = "md",
-  tone = "default",
+  withWord = true,
 }: {
-  href?: "/" | string;
+  href?: string;
   size?: "sm" | "md" | "lg";
-  tone?: "default" | "on-dark";
+  withWord?: boolean;
 }) {
-  const mark = size === "lg" ? 34 : size === "sm" ? 22 : 28;
-  const fontSize = size === "lg" ? "1.75rem" : size === "sm" ? "1.2rem" : "1.4rem";
+  const sizes = {
+    sm: { mark: 30, text: "1.15rem" },
+    md: { mark: 38, text: "1.45rem" },
+    lg: { mark: 56, text: "2rem" },
+  }[size];
+
   return (
-    <Link
-      href={href as "/"}
-      className={`logo${tone === "on-dark" ? " logo-on-dark" : ""}`}
-      style={{ fontSize }}
-      aria-label="Hegos"
-    >
-      <HegosMark size={mark} />
-      <span className="logo-word">
-        Heg<span>os</span>
+    <Link href={href} className="brand-logo" aria-label="Nina — assistente financeira pessoal">
+      <span className="brand-mark" style={{ width: sizes.mark, height: sizes.mark }} aria-hidden>
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="12" fill="currentColor" />
+          <circle cx="20" cy="16" r="6" fill="#fff" fillOpacity="0.95" />
+          <path
+            d="M10 30c1.8-5.2 5.4-8 10-8s8.2 2.8 10 8"
+            stroke="#fff"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
       </span>
+      {withWord ? (
+        <span className="brand-word" style={{ fontSize: sizes.text }}>
+          Nina
+        </span>
+      ) : null}
     </Link>
   );
 }

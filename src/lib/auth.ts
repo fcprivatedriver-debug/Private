@@ -3,36 +3,29 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
-import type { Role } from "@prisma/client";
+import type { FamilyRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { authConfig } from "@/auth.config";
 import { z } from "zod";
 
 declare module "next-auth" {
   interface User {
-    role: Role;
+    role?: FamilyRole;
   }
   interface Session {
     user: {
       id: string;
       email: string;
       name: string;
-      role: Role;
+      role?: FamilyRole;
       image?: string | null;
     };
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-  }
-}
-
 const credentialsSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(4),
 });
 
 const googleConfigured = Boolean(
@@ -58,11 +51,16 @@ const providers = [
       const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
       if (!valid) return null;
 
+      const membership = await prisma.familyMember.findFirst({
+        where: { userId: user.id },
+        select: { role: true },
+      });
+
       return {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        role: membership?.role,
         image: user.image,
       };
     },
@@ -87,7 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id!;
-        token.role = user.role;
+        if (user.role) token.role = user.role;
         return token;
       }
 
@@ -95,11 +93,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email },
-            select: { id: true, role: true },
+            select: {
+              id: true,
+              memberships: { select: { role: true }, take: 1 },
+            },
           });
           if (dbUser) {
             token.id = dbUser.id;
-            token.role = dbUser.role;
+            token.role = dbUser.memberships[0]?.role;
           }
         } catch (err) {
           console.error("[auth] jwt backfill failed", err);
@@ -110,7 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.id as string) || (token.sub as string);
-        session.user.role = token.role as Role;
+        session.user.role = token.role as FamilyRole | undefined;
       }
       return session;
     },

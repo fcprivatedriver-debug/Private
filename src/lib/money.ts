@@ -1,40 +1,59 @@
-const LOCALE_BY_LANG: Record<string, string> = {
-  pt: "pt-PT",
-  en: "en-GB",
-};
+export type MoneyCents = number;
 
-/** Convert major units (e.g. euros) to integer minor units (cents). */
-export function toMinorUnits(amount: number): number {
-  return Math.round(amount * 100);
+export function eurosToCents(value: number): MoneyCents {
+  return Math.round(value * 100);
 }
 
-/** @deprecated use toMinorUnits — kept for existing call sites during Phase 0 */
-export function eurosToCents(euros: number): number {
-  return toMinorUnits(euros);
+export function centsToEuros(cents: MoneyCents): number {
+  return cents / 100;
 }
 
-export function formatMoney(
-  cents: number,
-  currency = "EUR",
-  localeOrLang = "pt",
-): string {
-  const locale = LOCALE_BY_LANG[localeOrLang] ?? localeOrLang;
-  return new Intl.NumberFormat(locale, {
+/** Formatação EUR pt-PT */
+export function formatEUR(cents: MoneyCents, opts?: { signed?: boolean }): string {
+  const value = centsToEuros(cents);
+  const formatted = new Intl.NumberFormat("pt-PT", {
     style: "currency",
-    currency,
-  }).format(cents / 100);
+    currency: "EUR",
+  }).format(Math.abs(value));
+
+  if (!opts?.signed) return formatted;
+  if (cents > 0) return `+${formatted}`;
+  if (cents < 0) return `−${formatted}`;
+  return formatted;
 }
 
-export function calcPlatformFee(totalCents: number, feePercent: number): number {
-  return Math.round((totalCents * feePercent) / 100);
+export function parseEURInput(raw: string): MoneyCents | null {
+  const cleaned = raw
+    .trim()
+    .replace(/\s/g, "")
+    .replace(/€/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const n = Number(cleaned);
+  if (!Number.isFinite(n)) return null;
+  return eurosToCents(n);
 }
 
-/** Validate ISO-4217-ish currency codes we accept (extensible). */
-export function assertSupportedCurrency(
-  currency: string,
-  supported: string[],
-): void {
-  if (!supported.includes(currency)) {
-    throw new Error(`Currency ${currency} is not enabled`);
-  }
+export function percent(part: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.min(999, Math.round((part / total) * 1000) / 10);
+}
+
+export function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+export function monthBounds(year: number, month: number): { start: Date; end: Date } {
+  const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+  return { start, end };
+}
+
+export function currentYearMonth(now = new Date()): { year: number; month: number } {
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+}
+
+export function monthLabel(year: number, month: number): string {
+  const d = new Date(year, month - 1, 1);
+  return new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric" }).format(d);
 }

@@ -8,141 +8,188 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  CUSTOMER
-  DRIVER
+// ——— Auth (Auth.js) ———
+
+enum FamilyRole {
+  OWNER
   ADMIN
+  MEMBER
+  VIEWER
 }
 
-enum DriverStatus {
-  PENDING_VERIFICATION
-  ACTIVE
-  SUSPENDED
-  REJECTED
+enum HouseholdKind {
+  INDIVIDUAL
+  COUPLE
+  FAMILY
+  SHARED
 }
 
-enum OnboardingStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  SUBMITTED
-  UNDER_REVIEW
-  NEEDS_INFO
-  APPROVED
-  REJECTED
+enum FinanceScope {
+  PERSONAL
+  FAMILY
 }
 
-enum DriverDocumentType {
-  IDENTITY
-  DRIVING_LICENSE
-  VEHICLE_REGISTRATION
-  INSURANCE
-  PROFILE_PHOTO
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum PaymentMethod {
+  CASH
+  DEBIT_CARD
+  CREDIT_CARD
+  MB_WAY
+  TRANSFER
+  DIRECT_DEBIT
+  REVOLUT
   OTHER
 }
 
-enum DriverDocumentStatus {
-  UPLOADED
-  AI_PROCESSING
-  AI_PASSED
-  AI_FLAGGED
-  APPROVED
-  REJECTED
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  CASH
+  WALLET
+  INVESTMENT
+  OTHER
 }
 
-enum VerificationDecision {
-  APPROVE
-  REJECT
-  REQUEST_INFO
-  ESCALATE
+enum BudgetAlertLevel {
+  SEVENTY_FIVE
+  NINETY
+  HUNDRED
 }
 
-enum TripStatus {
-  DRAFT
-  OPEN
-  OFFER_ACCEPTED
-  CONFIRMED
-  DRIVER_EN_ROUTE
-  DRIVER_ARRIVED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  EXPIRED
+enum AlertType {
+  BUDGET_THRESHOLD
+  UNUSUAL_SPENDING
+  RECURRING_DUE
+  BILL_DUE
+  GOAL_NEAR
+  CUSTOM
 }
 
-enum OfferStatus {
-  PENDING
-  WITHDRAWN
-  REJECTED
-  ACCEPTED
-  EXPIRED
-}
-
-enum BookingStatus {
-  PENDING_PAYMENT
-  PAID
-  REFUNDED
-  CANCELLED
-  COMPLETED
-}
-
-enum PaymentProvider {
-  STRIPE
+enum ImportProvider {
+  CONTINENTE
+  PINGO_DOCE
+  LIDL_PLUS
+  MERCADONA
+  AUCHAN
+  REPSOL
+  GALP
+  PRIO
+  VIA_VERDE
+  TESLA
+  MB_WAY
+  REVOLUT
+  OPEN_BANKING
+  PDF
+  CSV
+  EMAIL
   MANUAL
-  NONE
 }
 
-enum PaymentStatus {
-  REQUIRES_PAYMENT
-  AUTHORIZED
-  CAPTURED
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  READY_REVIEW
+  IMPORTED
   FAILED
-  REFUNDED
+}
+
+enum ConnectionKind {
+  BANKING
+  CARD
+  WALLET
+  EMAIL
+  RETAIL
+  LOYALTY
+  FUEL
+  AUTO
+  UTILITY
+  TELECOM
+  INSURANCE
+  TAX
+  INVESTMENT
+  OTHER
+}
+
+enum ConnectionStatus {
+  AUTHORIZED
+  PAUSED
+  ERROR
+}
+
+enum AutomationLevel {
+  VOICE
+  VOICE_OCR
+  VOICE_EMAIL
+  VOICE_BANK
+  VOICE_BANK_EMAIL_RETAIL
+  FULL
+}
+
+enum GoalType {
+  CAR
+  HOUSE
+  VACATION
+  EMERGENCY
+  INVESTMENT
+  RETIREMENT
+  CUSTOM
+}
+
+enum RecurrenceFrequency {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
 }
 
 model User {
   id            String    @id @default(cuid())
+  name          String
   email         String    @unique
   emailVerified DateTime?
-  passwordHash  String?
-  name          String
-  phone         String?
-  role          Role      @default(CUSTOMER)
-  locale        String    @default("pt")
   image         String?
+  passwordHash  String?
+  pinHash       String?
+  biometricsEnabled Boolean @default(false)
+  theme         String    @default("system") // light | dark | system
+  locale        String    @default("pt")
+  automationLevel AutomationLevel @default(VOICE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  customerProfile  CustomerProfile?
-  driverProfile    DriverProfile?
-  tripRequests     TripRequest[]    @relation("CustomerTrips")
-  offers           Offer[]
-  bookingsAsCustomer Booking[]      @relation("CustomerBookings")
-  bookingsAsDriver   Booking[]      @relation("DriverBookings")
-  reviewsFrom      Review[]         @relation("ReviewsFrom")
-  reviewsTo        Review[]         @relation("ReviewsTo")
-  notifications    Notification[]
-  auditLogs        AuditLog[]
-
-  @@index([role])
+  accounts      AuthAccount[]
+  sessions      Session[]
+  memberships   FamilyMember[]
+  createdIncomes Income[]  @relation("IncomeCreator")
+  createdExpenses Expense[] @relation("ExpenseCreator")
+  alerts        Alert[]
+  aiInsights    AiInsight[]
+  memoryRules   NinaMemoryRule[]
+  habitStats    NinaHabitStat[]
+  invitesCreated FamilyInvite[] @relation("InviteCreator")
+  connections   NinaConnection[]
+  shoppingItems ShoppingListItem[]
 }
 
-model Account {
+model AuthAccount {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -163,341 +210,451 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model CustomerProfile {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  defaultCurrency String  @default("EUR")
-  ratingAvg       Float?
-  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+// ——— Família ———
+
+model Family {
+  id         String        @id @default(cuid())
+  name       String
+  kind       HouseholdKind @default(FAMILY)
+  inviteCode String?       @unique
+  currency   String        @default("EUR")
+  timezone   String        @default("Europe/Lisbon")
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  members            FamilyMember[]
+  accounts           FinanceAccount[]
+  categories         Category[]
+  incomes            Income[]
+  expenses           Expense[]
+  budgets            Budget[]
+  goals              SavingsGoal[]
+  recurringPayments  RecurringPayment[]
+  alerts             Alert[]
+  importJobs         ImportJob[]
+  aiInsights         AiInsight[]
+  stores             Store[]
+  invites            FamilyInvite[]
+  memoryRules        NinaMemoryRule[]
+  habitStats         NinaHabitStat[]
+  connections        NinaConnection[]
+  shoppingItems      ShoppingListItem[]
 }
 
-model DriverProfile {
-  id                     String           @id @default(cuid())
-  userId                 String           @unique
-  status                 DriverStatus     @default(PENDING_VERIFICATION)
-  onboardingStatus       OnboardingStatus @default(NOT_STARTED)
-  /// Wizard step: profile | vehicle | documents | review | done
-  onboardingStep         String           @default("profile")
-  /// 0–100 profile + docs completeness
-  completenessScore      Int              @default(0)
-  photoUrl               String?
-  bio                    String?
-  /// JSON string array of BCP-47 language codes, e.g. ["pt","en","es"]
-  languagesSpoken        String           @default("[\"pt\"]")
-  yearsOfExperience      Int              @default(0)
-  ratingAvg              Float?
-  ratingCount            Int              @default(0)
-  completedTripsCount    Int              @default(0)
-  /// 0–100 percentage of offers responded to
-  responseRate           Float?
-  /// Average minutes to first offer on a trip request
-  avgResponseTimeMinutes Float?
-  /// Legacy JSON metadata (kept for compatibility)
-  documents              String           @default("[]")
-  /// Latest AI risk score 0–100 (higher = riskier)
-  aiRiskScore            Float?
-  /// Latest AI confidence 0–100
-  aiConfidence           Float?
-  /// JSON summary from last AI run
-  aiSummary              String?
-  adminNotes             String?
-  rejectionReason        String?
-  infoRequestMessage     String?
-  submittedAt            DateTime?
-  verifiedAt             DateTime?
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+model FamilyMember {
+  id        String     @id @default(cuid())
+  familyId  String
+  userId    String
+  displayName String
+  photoUrl  String?
+  role      FamilyRole @default(MEMBER)
+  color     String     @default("#1e3a5f")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles           Vehicle[]
-  verificationDocs   DriverDocument[]
-  verificationReviews VerificationReview[]
+  family   Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomes  Income[]
+  expenses Expense[]
+  personalGoals SavingsGoal[] @relation("PersonalGoalOwner")
 
-  @@index([status])
-  @@index([onboardingStatus])
+  @@unique([familyId, userId])
+  @@index([userId])
 }
 
-model DriverDocument {
-  id               String               @id @default(cuid())
-  driverProfileId  String
-  type             DriverDocumentType
-  status           DriverDocumentStatus @default(UPLOADED)
-  fileName         String
-  mimeType         String
-  sizeBytes        Int
-  /// Relative storage path under uploads/
-  storageKey       String
-  /// Optional public-ish URL path served by API
-  url              String?
-  /// JSON AI extraction / signals
-  aiAnalysis       String?
-  aiScore          Float?
-  aiFlags          String               @default("[]")
-  reviewerNotes    String?
-  reviewedAt       DateTime?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
+model FamilyInvite {
+  id           String    @id @default(cuid())
+  familyId     String
+  token        String    @unique
+  createdById  String
+  label        String?
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  acceptedById String?
+  createdAt    DateTime  @default(now())
 
-  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
+  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy User   @relation("InviteCreator", fields: [createdById], references: [id])
 
-  @@index([driverProfileId, type])
-  @@index([status])
+  @@index([familyId])
+  @@index([token])
 }
 
-model VerificationReview {
-  id              String               @id @default(cuid())
-  driverProfileId String
-  /// AI | ADMIN | SYSTEM
-  source          String
-  decision        VerificationDecision?
-  /// 0–100 risk
-  riskScore       Float?
-  confidence      Float?
-  /// Human-readable recommendation
-  recommendation  String?
-  /// JSON detailed findings
-  findings        String               @default("[]")
-  notes           String?
-  actorUserId     String?
-  createdAt       DateTime             @default(now())
-
-  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
-
-  @@index([driverProfileId, createdAt])
-}
-
-/// Singleton-style platform configuration (id = "default")
-model PlatformSettings {
-  id                        String   @id @default("default")
-  defaultCurrency           String   @default("EUR")
-  /// Default marketplace commission percent (e.g. 15.0)
-  defaultCommissionPercent  Float    @default(15)
-  /// JSON array of ISO currencies enabled on the platform
-  supportedCurrencies       String   @default("[\"EUR\"]")
-  /// When true, UI shows Demo Mode banner and seed accounts apply
-  demoMode                  Boolean  @default(false)
-  updatedAt                 DateTime @updatedAt
-}
-
-/// Future commission overrides (country, vehicle class, etc.)
-model CommissionRule {
-  id             String   @id @default(cuid())
-  name           String
-  percent        Float
-  /// Optional ISO country code
-  countryCode    String?
-  vehicleClassId String?
-  currency       String?
-  active         Boolean  @default(true)
-  priority       Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  vehicleClass VehicleClass? @relation(fields: [vehicleClassId], references: [id], onDelete: SetNull)
-
-  @@index([active, priority])
-  @@index([vehicleClassId])
-}
-
-/// Database-driven vehicle classification (replaces hardcoded enums)
-model VehicleClass {
+model NinaMemoryRule {
   id            String   @id @default(cuid())
-  /// Stable machine code, e.g. SEDAN, EXECUTIVE
-  code          String   @unique
-  namePt        String
-  nameEn        String
-  descriptionPt String?
-  descriptionEn String?
-  minPassengers Int      @default(1)
-  maxPassengers Int
-  maxLuggage    Int      @default(2)
-  /// Optional UI/icon key for clients
-  iconKey       String?
-  sortOrder     Int      @default(0)
-  active        Boolean  @default(true)
+  userId        String
+  familyId      String?
+  triggerPhrase String
+  scope         FinanceScope?
+  categorySlug  String?
+  notes         String?
+  isActive      Boolean  @default(true)
+  hitCount      Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  vehicles        Vehicle[]
-  tripRequests    TripRequest[]
-  commissionRules CommissionRule[]
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
-  @@index([active, sortOrder])
+  @@index([userId, isActive])
 }
 
-model Vehicle {
-  id              String   @id @default(cuid())
-  driverId        String
-  vehicleClassId  String
-  make            String
-  model           String
-  year            Int
-  color           String
-  plate           String
-  seats           Int
-  luggageCapacity Int      @default(2)
-  photoUrls       String   @default("[]")
-  /// Aggregate vehicle rating from completed trip reviews
-  ratingAvg       Float?
-  ratingCount     Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model NinaHabitStat {
+  id                  String   @id @default(cuid())
+  userId              String
+  familyId            String
+  keyType             String   // store | category | phrase
+  keyValue            String
+  personalCount       Int      @default(0)
+  familyCount         Int      @default(0)
+  lastScope           FinanceScope?
+  lastUsedAt          DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  vehicleClass VehicleClass  @relation(fields: [vehicleClassId], references: [id])
-  offers       Offer[]
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
-  @@index([driverId])
-  @@index([vehicleClassId])
+  @@unique([userId, familyId, keyType, keyValue])
+  @@index([userId, familyId])
 }
 
-model TripRequest {
-  id                      String     @id @default(cuid())
-  customerId              String
-  pickupAddress           String
-  pickupLat               Float?
-  pickupLng               Float?
-  dropoffAddress          String
-  dropoffLat              Float?
-  dropoffLng              Float?
-  pickupAt                DateTime
-  passengers              Int        @default(1)
-  luggage                 Int        @default(1)
-  notes                   String?
-  flightNumber            String?
-  status                  TripStatus @default(DRAFT)
-  preferredVehicleClassId String?
-  currency                String     @default("EUR")
-  /// Route distance in meters (estimated)
-  distanceMeters          Int?
-  /// Route duration in seconds (estimated)
-  durationSeconds         Int?
-  expiresAt               DateTime?
-  acceptedOfferId         String?    @unique
-  createdAt               DateTime   @default(now())
-  updatedAt               DateTime   @updatedAt
+/// Lista de compras partilhada da Conta Familiar
+model ShoppingListItem {
+  id          String   @id @default(cuid())
+  familyId    String
+  createdById String?
+  name        String
+  quantity    String   @default("1")
+  categorySlug String?
+  notes       String?
+  isChecked   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  customer              User          @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
-  preferredVehicleClass VehicleClass? @relation(fields: [preferredVehicleClassId], references: [id], onDelete: SetNull)
-  offers                Offer[]
-  booking               Booking?
-  acceptedOffer         Offer?        @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
+  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@index([status, pickupAt])
-  @@index([customerId])
-  @@index([preferredVehicleClassId])
+  @@index([familyId, isChecked])
 }
 
-model Offer {
-  id              String      @id @default(cuid())
-  tripRequestId   String
-  driverId        String
-  vehicleId       String?
-  priceAmount     Int
-  currency        String      @default("EUR")
-  message         String?
-  includesTolls   Boolean     @default(true)
-  includesWaiting Boolean     @default(false)
-  /// Driver ETA to pickup in minutes (optional)
-  estimatedArrivalMinutes Int?
-  validUntil      DateTime?
-  status          OfferStatus @default(PENDING)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+/// Ligação opcional a um serviço externo — só ativa com autorização explícita.
+model NinaConnection {
+  id            String           @id @default(cuid())
+  familyId      String
+  userId        String
+  providerKey   String
+  label         String
+  kind          ConnectionKind   @default(OTHER)
+  status        ConnectionStatus @default(AUTHORIZED)
+  autoImport    Boolean          @default(true)
+  importProvider ImportProvider?
+  lastSyncAt    DateTime?
+  lastMessage   String?
+  metadataJson  String?          @db.Text
+  authorizedAt  DateTime         @default(now())
+  revokedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  tripRequest    TripRequest  @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
-  driver         User         @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  vehicle        Vehicle?     @relation(fields: [vehicleId], references: [id])
-  acceptedForTrip TripRequest? @relation("AcceptedOffer")
-  booking        Booking?
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([tripRequestId, status])
-  @@index([driverId, status])
+  @@unique([familyId, providerKey])
+  @@index([familyId, status])
+  @@index([userId])
 }
 
-model Booking {
-  id                String        @id @default(cuid())
-  tripRequestId     String        @unique
-  offerId           String        @unique
-  customerId        String
-  driverId          String
-  status            BookingStatus @default(PENDING_PAYMENT)
-  totalAmount       Int
-  currency          String        @default("EUR")
-  platformFeeAmount Int
-  paymentIntentId   String?
-  confirmedAt       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+// ——— Contas ———
 
-  tripRequest TripRequest @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
-  offer       Offer       @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  customer    User        @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  driver      User        @relation("DriverBookings", fields: [driverId], references: [id], onDelete: Cascade)
-  payment     Payment?
-  review      Review?
+model FinanceAccount {
+  id        String      @id @default(cuid())
+  familyId  String
+  name      String
+  type      AccountType @default(CHECKING)
+  bankName  String?
+  ibanMasked String?
+  balanceCents Int      @default(0)
+  currency  String      @default("EUR")
+  color     String      @default("#1e3a5f")
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  @@index([customerId])
-  @@index([driverId])
+  family              Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  incomes             Income[]
+  expenses            Expense[]
+  recurringPayments   RecurringPayment[]
+
+  @@index([familyId])
 }
 
-model Payment {
-  id                String          @id @default(cuid())
-  bookingId         String          @unique
-  provider          PaymentProvider @default(NONE)
-  providerPaymentId String?
-  amount            Int
-  currency          String          @default("EUR")
-  status            PaymentStatus   @default(REQUIRES_PAYMENT)
-  rawPayload        String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+// ——— Categorias ———
 
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+model Category {
+  id          String   @id @default(cuid())
+  familyId    String
+  name        String
+  slug        String
+  icon        String?
+  color       String   @default("#64748b")
+  kind        TransactionType @default(EXPENSE)
+  isSystem    Boolean  @default(false)
+  parentId    String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  family      Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  incomes     Income[]
+  expenses    Expense[]  @relation("ExpenseCategory")
+  expenseSubs Expense[]  @relation("ExpenseSubcategory")
+  budgets     Budget[]
+  recurringPayments RecurringPayment[]
+
+  @@unique([familyId, slug])
+  @@index([familyId, kind])
 }
 
-model Review {
-  id            String   @id @default(cuid())
-  bookingId     String   @unique
-  fromUserId    String
-  toUserId      String
-  /// Driver rating 1–5
-  rating        Int
-  /// Vehicle rating 1–5 (optional)
-  vehicleRating Int?
-  comment       String?
-  createdAt     DateTime @default(now())
+// ——— Receitas ———
 
-  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  fromUser User    @relation("ReviewsFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser   User    @relation("ReviewsTo", fields: [toUserId], references: [id], onDelete: Cascade)
+model Income {
+  id          String       @id @default(cuid())
+  familyId    String
+  memberId    String?
+  accountId   String?
+  categoryId  String
+  createdById String?
+  scope       FinanceScope @default(PERSONAL)
+  amountCents Int
+  currency    String       @default("EUR")
+  date        DateTime
+  description String
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  family    Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  member    FamilyMember?   @relation(fields: [memberId], references: [id])
+  account   FinanceAccount? @relation(fields: [accountId], references: [id])
+  category  Category        @relation(fields: [categoryId], references: [id])
+  createdBy User?           @relation("IncomeCreator", fields: [createdById], references: [id])
+
+  @@index([familyId, date])
+  @@index([familyId, scope])
+  @@index([categoryId])
 }
 
-model Notification {
-  id        String    @id @default(cuid())
-  userId    String
-  type      String
+// ——— Despesas ———
+
+model Expense {
+  id              String        @id @default(cuid())
+  familyId        String
+  memberId        String?
+  accountId       String?
+  categoryId      String
+  subcategoryId   String?
+  storeId         String?
+  createdById     String?
+  scope           FinanceScope  @default(PERSONAL)
+  amountCents     Int
+  currency        String        @default("EUR")
+  date            DateTime
+  time            String?
+  description     String
+  storeName       String?
+  paymentMethod   PaymentMethod @default(DEBIT_CARD)
+  notes           String?
+  receiptImageUrl String?
+  receiptPdfUrl   String?
+  latitude        Float?
+  longitude       Float?
+  vatCents        Int?
+  ocrRawJson      String?       @db.Text
+  importJobId     String?
+  isRecurringInstance Boolean   @default(false)
+  recurringPaymentId  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  family       Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  member       FamilyMember?      @relation(fields: [memberId], references: [id])
+  account      FinanceAccount?    @relation(fields: [accountId], references: [id])
+  category     Category           @relation("ExpenseCategory", fields: [categoryId], references: [id])
+  subcategory  Category?          @relation("ExpenseSubcategory", fields: [subcategoryId], references: [id])
+  store        Store?             @relation(fields: [storeId], references: [id])
+  createdBy    User?              @relation("ExpenseCreator", fields: [createdById], references: [id])
+  importJob    ImportJob?         @relation(fields: [importJobId], references: [id])
+  recurring    RecurringPayment?  @relation(fields: [recurringPaymentId], references: [id])
+  lineItems    ExpenseLineItem[]
+
+  @@index([familyId, date])
+  @@index([familyId, scope])
+  @@index([categoryId])
+  @@index([storeName])
+  @@index([paymentMethod])
+}
+
+model ExpenseLineItem {
+  id          String  @id @default(cuid())
+  expenseId   String
+  name        String
+  quantity    Float   @default(1)
+  unitCents   Int
+  totalCents  Int
+  vatRate     Float?
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  familyId  String
+  name      String
+  normalizedName String
+  createdAt DateTime @default(now())
+
+  family   Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@unique([familyId, normalizedName])
+  @@index([familyId])
+}
+
+// ——— Orçamentos ———
+
+model Budget {
+  id          String   @id @default(cuid())
+  familyId    String
+  categoryId  String
+  year        Int
+  month       Int
+  limitCents  Int
+  alert75     Boolean  @default(true)
+  alert90     Boolean  @default(true)
+  alert100    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  family   Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([familyId, categoryId, year, month])
+  @@index([familyId, year, month])
+}
+
+// ——— Objetivos de poupança ———
+
+model SavingsGoal {
+  id              String       @id @default(cuid())
+  familyId        String
+  ownerMemberId   String?
+  scope           FinanceScope @default(FAMILY)
+  name            String
+  type            GoalType     @default(CUSTOM)
+  targetCents     Int
+  currentCents    Int          @default(0)
+  deadline        DateTime?
+  color           String       @default("#0f7a4a")
+  icon            String?
+  notes           String?
+  isCompleted     Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  family Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  owner  FamilyMember? @relation("PersonalGoalOwner", fields: [ownerMemberId], references: [id])
+
+  @@index([familyId])
+  @@index([familyId, scope])
+}
+
+// ——— Pagamentos recorrentes ———
+
+model RecurringPayment {
+  id            String              @id @default(cuid())
+  familyId      String
+  categoryId    String
+  accountId     String?
+  name          String
+  amountCents   Int
+  frequency     RecurrenceFrequency @default(MONTHLY)
+  dayOfMonth    Int?
+  nextDueDate   DateTime
+  paymentMethod PaymentMethod       @default(DIRECT_DEBIT)
+  isActive      Boolean             @default(true)
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  family   Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  category Category        @relation(fields: [categoryId], references: [id])
+  account  FinanceAccount? @relation(fields: [accountId], references: [id])
+  expenses Expense[]
+
+  @@index([familyId, nextDueDate])
+}
+
+// ——— Alertas ———
+
+model Alert {
+  id          String    @id @default(cuid())
+  familyId    String
+  userId      String?
+  type        AlertType
+  title       String
+  message     String
+  level       String    @default("info") // info | warning | danger | success
+  isRead      Boolean   @default(false)
+  metadata    String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@index([familyId, isRead])
+}
+
+// ——— Importações ———
+
+model ImportJob {
+  id           String         @id @default(cuid())
+  familyId     String
+  provider     ImportProvider
+  status       ImportStatus   @default(PENDING)
+  sourceLabel  String?
+  rawPayload   String?        @db.Text
+  parsedJson   String?        @db.Text
+  errorMessage String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  family   Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@index([familyId, status])
+}
+
+// ——— IA ———
+
+model AiInsight {
+  id        String   @id @default(cuid())
+  familyId  String
+  userId    String?
+  kind      String
   title     String
-  body      String
-  readAt    DateTime?
-  meta      String?
-  createdAt DateTime  @default(now())
+  body      String   @db.Text
+  severity  String   @default("info")
+  dataJson  String?  @db.Text
+  createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id])
 
-  @@index([userId, readAt])
-}
-
-model AuditLog {
-  id         String   @id @default(cuid())
-  actorId    String?
-  action     String
-  entityType String
-  entityId   String
-  meta       String?
-  createdAt  DateTime @default(now())
-
-  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
-
-  @@index([entityType, entityId])
+  @@index([familyId, createdAt])
 }

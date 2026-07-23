@@ -1,0 +1,446 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  createIncome,
+  createExpense,
+  createBudget,
+  createGoal,
+  createRecurring,
+  createCategory,
+  contributeToGoal,
+  addFamilyMember,
+} from "@/actions/finance";
+import { PAYMENT_METHOD_LABELS } from "@/domain/categories";
+
+type Cat = { id: string; name: string; kind: string };
+type Acc = { id: string; name: string };
+type Mem = { id: string; displayName: string };
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
+
+export function IncomeForm({
+  categories,
+  accounts,
+  members,
+}: {
+  categories: Cat[];
+  accounts: Acc[];
+  members: Mem[];
+}) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <form
+      className="form-grid"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          const res = await createIncome(fd);
+          if (!res.ok) setError(res.error);
+          else router.push("/pt/receitas");
+        });
+      }}
+    >
+      <Field label="Valor (€)">
+        <input name="amount" required placeholder="0,00" inputMode="decimal" />
+      </Field>
+      <Field label="Data">
+        <input name="date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+      </Field>
+      <Field label="Descrição">
+        <input name="description" required placeholder="Ex: Salário" />
+      </Field>
+      <Field label="Categoria">
+        <select name="categoryId" required>
+          {categories.filter((c) => c.kind === "INCOME").map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Conta">
+        <select name="accountId">
+          <option value="">—</option>
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Membro">
+        <select name="memberId">
+          {members.map((m) => (
+            <option key={m.id} value={m.id}>{m.displayName}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Observações">
+        <textarea name="notes" rows={3} placeholder="Opcional" />
+      </Field>
+      {error ? <p className="form-error">{error}</p> : null}
+      <button className="btn btn-success" disabled={pending} type="submit">
+        {pending ? "A guardar…" : "Guardar entrada"}
+      </button>
+    </form>
+  );
+}
+
+export function ExpenseForm({
+  categories,
+  accounts,
+  members,
+  defaults,
+}: {
+  categories: Cat[];
+  accounts: Acc[];
+  members: Mem[];
+  defaults?: Partial<{
+    amount: string;
+    date: string;
+    description: string;
+    categoryId: string;
+    storeName: string;
+  }>;
+}) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const expenseCats = categories.filter((c) => c.kind === "EXPENSE");
+
+  return (
+    <form
+      className="form-grid"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          const res = await createExpense(fd);
+          if (!res.ok) setError(res.error);
+          else router.push("/pt/despesas");
+        });
+      }}
+    >
+      <Field label="Valor (€)">
+        <input name="amount" required placeholder="0,00" inputMode="decimal" defaultValue={defaults?.amount} />
+      </Field>
+      <Field label="Data">
+        <input name="date" type="date" required defaultValue={defaults?.date ?? new Date().toISOString().slice(0, 10)} />
+      </Field>
+      <Field label="Hora">
+        <input name="time" type="time" defaultValue={new Date().toTimeString().slice(0, 5)} />
+      </Field>
+      <Field label="Descrição">
+        <input name="description" required placeholder="Ex: Compras Continente" defaultValue={defaults?.description} />
+      </Field>
+      <Field label="Categoria">
+        <select name="categoryId" required defaultValue={defaults?.categoryId}>
+          {expenseCats.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Subcategoria">
+        <select name="subcategoryId">
+          <option value="">—</option>
+          {expenseCats.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Loja">
+        <input name="storeName" placeholder="Ex: Continente" defaultValue={defaults?.storeName} />
+      </Field>
+      <Field label="Método de pagamento">
+        <select name="paymentMethod" defaultValue="DEBIT_CARD">
+          {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Conta">
+        <select name="accountId">
+          <option value="">—</option>
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Membro">
+        <select name="memberId">
+          {members.map((m) => (
+            <option key={m.id} value={m.id}>{m.displayName}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="URL fotografia fatura">
+        <input name="receiptImageUrl" placeholder="https://…" />
+      </Field>
+      <Field label="URL PDF fatura">
+        <input name="receiptPdfUrl" placeholder="https://…" />
+      </Field>
+      <Field label="Observações">
+        <textarea name="notes" rows={3} />
+      </Field>
+      {error ? <p className="form-error">{error}</p> : null}
+      <button className="btn btn-primary" disabled={pending} type="submit">
+        {pending ? "A guardar…" : "Guardar gasto"}
+      </button>
+    </form>
+  );
+}
+
+export function BudgetForm({ categories, year, month }: { categories: Cat[]; year: number; month: number }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="form-grid form-grid-compact"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          await createBudget(fd);
+          router.refresh();
+        });
+      }}
+    >
+      <input type="hidden" name="year" value={year} />
+      <input type="hidden" name="month" value={month} />
+      <Field label="Categoria">
+        <select name="categoryId" required>
+          {categories.filter((c) => c.kind === "EXPENSE").map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Limite mensal (€)">
+        <input name="limit" required placeholder="250,00" />
+      </Field>
+      <button className="btn btn-primary" disabled={pending} type="submit">
+        Definir orçamento
+      </button>
+    </form>
+  );
+}
+
+export function GoalForm() {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="form-grid"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          await createGoal(fd);
+          router.refresh();
+          (e.target as HTMLFormElement).reset();
+        });
+      }}
+    >
+      <Field label="Nome">
+        <input name="name" required placeholder="Ex: Férias" />
+      </Field>
+      <Field label="Tipo">
+        <select name="type" defaultValue="CUSTOM">
+          <option value="CAR">Carro</option>
+          <option value="HOUSE">Casa</option>
+          <option value="VACATION">Férias</option>
+          <option value="EMERGENCY">Emergência</option>
+          <option value="INVESTMENT">Investimentos</option>
+          <option value="RETIREMENT">Reforma</option>
+          <option value="CUSTOM">Personalizado</option>
+        </select>
+      </Field>
+      <Field label="Meta (€)">
+        <input name="target" required placeholder="2500,00" />
+      </Field>
+      <Field label="Já poupado (€)">
+        <input name="current" placeholder="0,00" />
+      </Field>
+      <Field label="Prazo">
+        <input name="deadline" type="date" />
+      </Field>
+      <Field label="Notas">
+        <textarea name="notes" rows={2} />
+      </Field>
+      <button className="btn btn-success" disabled={pending} type="submit">
+        Criar objetivo
+      </button>
+    </form>
+  );
+}
+
+export function ContributeForm({ goalId }: { goalId: string }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="inline-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          await contributeToGoal(goalId, String(fd.get("amount") || ""));
+          router.refresh();
+        });
+      }}
+    >
+      <input name="amount" placeholder="€" required inputMode="decimal" />
+      <button className="btn btn-sm btn-success" disabled={pending} type="submit">
+        +
+      </button>
+    </form>
+  );
+}
+
+export function RecurringForm({ categories, accounts }: { categories: Cat[]; accounts: Acc[] }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="form-grid"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          await createRecurring(fd);
+          router.refresh();
+        });
+      }}
+    >
+      <Field label="Nome">
+        <input name="name" required placeholder="Ex: Netflix" list="recurring-presets" />
+        <datalist id="recurring-presets">
+          {["Renda", "Água", "Luz", "Gás", "Internet", "Netflix", "Spotify", "Seguros", "Ginásio"].map((p) => (
+            <option key={p} value={p} />
+          ))}
+        </datalist>
+      </Field>
+      <Field label="Valor (€)">
+        <input name="amount" required />
+      </Field>
+      <Field label="Categoria">
+        <select name="categoryId" required>
+          {categories.filter((c) => c.kind === "EXPENSE").map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Frequência">
+        <select name="frequency" defaultValue="MONTHLY">
+          <option value="WEEKLY">Semanal</option>
+          <option value="MONTHLY">Mensal</option>
+          <option value="QUARTERLY">Trimestral</option>
+          <option value="YEARLY">Anual</option>
+        </select>
+      </Field>
+      <Field label="Dia do mês">
+        <input name="dayOfMonth" type="number" min={1} max={28} defaultValue={1} />
+      </Field>
+      <Field label="Próximo pagamento">
+        <input name="nextDueDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+      </Field>
+      <Field label="Método">
+        <select name="paymentMethod" defaultValue="DIRECT_DEBIT">
+          {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Conta">
+        <select name="accountId">
+          <option value="">—</option>
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </select>
+      </Field>
+      <button className="btn btn-primary" disabled={pending} type="submit">
+        Criar recorrente
+      </button>
+    </form>
+  );
+}
+
+export function CategoryForm() {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="form-grid form-grid-compact"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          await createCategory(fd);
+          router.refresh();
+        });
+      }}
+    >
+      <Field label="Nome">
+        <input name="name" required />
+      </Field>
+      <Field label="Tipo">
+        <select name="kind" defaultValue="EXPENSE">
+          <option value="EXPENSE">Despesa</option>
+          <option value="INCOME">Receita</option>
+        </select>
+      </Field>
+      <Field label="Cor">
+        <input name="color" type="color" defaultValue="#1e3a5f" />
+      </Field>
+      <button className="btn btn-primary" disabled={pending} type="submit">
+        Criar categoria
+      </button>
+    </form>
+  );
+}
+
+export function MemberForm() {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  return (
+    <form
+      className="form-grid form-grid-compact"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        start(async () => {
+          await addFamilyMember(fd);
+          router.refresh();
+        });
+      }}
+    >
+      <Field label="Nome">
+        <input name="name" required />
+      </Field>
+      <Field label="Email">
+        <input name="email" type="email" required />
+      </Field>
+      <Field label="Password inicial">
+        <input name="password" type="password" defaultValue="nina123" />
+      </Field>
+      <button className="btn btn-primary" disabled={pending} type="submit">
+        Adicionar membro
+      </button>
+    </form>
+  );
+}

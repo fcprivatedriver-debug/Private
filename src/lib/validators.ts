@@ -1,55 +1,90 @@
 import { z } from "zod";
 
-export const createTripSchema = z.object({
-  pickupAddress: z.string().min(3, "Indica a origem"),
-  dropoffAddress: z.string().min(3, "Indica o destino"),
-  pickupAt: z.string().min(1, "Indica data e hora"),
-  passengers: z.coerce.number().int().min(1).max(20),
-  luggage: z.coerce.number().int().min(0).max(30),
-  notes: z.string().optional(),
-  flightNumber: z.string().optional(),
-  preferredVehicleClassId: z.string().min(1).optional(),
-  publish: z.coerce.boolean().optional(),
-  pickupLat: z.coerce.number().optional(),
-  pickupLng: z.coerce.number().optional(),
-  dropoffLat: z.coerce.number().optional(),
-  dropoffLng: z.coerce.number().optional(),
-  distanceMeters: z.coerce.number().int().positive().optional(),
-  durationSeconds: z.coerce.number().int().positive().optional(),
+export const incomeSchema = z.object({
+  amount: z.string().min(1),
+  date: z.string().min(1),
+  description: z.string().min(1).max(200),
+  categoryId: z.string().min(1),
+  accountId: z.string().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  memberId: z.string().optional().nullable(),
 });
 
-export const createOfferSchema = z.object({
-  tripRequestId: z.string().min(1),
-  vehicleId: z.string().optional(),
-  priceEuros: z.coerce.number().positive("Preço inválido"),
-  message: z.string().max(500).optional(),
-  includesTolls: z.coerce.boolean().optional(),
-  includesWaiting: z.coerce.boolean().optional(),
-  estimatedArrivalMinutes: z.coerce.number().int().min(1).max(240).optional(),
+export const expenseSchema = z.object({
+  amount: z.string().min(1),
+  date: z.string().min(1),
+  time: z.string().optional().nullable(),
+  description: z.string().min(1).max(200),
+  categoryId: z.string().min(1),
+  subcategoryId: z.string().optional().nullable(),
+  storeName: z.string().max(200).optional().nullable(),
+  paymentMethod: z.enum([
+    "CASH",
+    "DEBIT_CARD",
+    "CREDIT_CARD",
+    "MB_WAY",
+    "TRANSFER",
+    "DIRECT_DEBIT",
+    "REVOLUT",
+    "OTHER",
+  ]),
+  accountId: z.string().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  memberId: z.string().optional().nullable(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  receiptImageUrl: z.string().optional().nullable(),
+  receiptPdfUrl: z.string().optional().nullable(),
+  vatCents: z.number().int().optional().nullable(),
 });
 
-export const reviewSchema = z.object({
-  bookingId: z.string().min(1),
-  rating: z.coerce.number().int().min(1).max(5),
-  vehicleRating: z.coerce.number().int().min(1).max(5).optional(),
-  comment: z.string().max(1000).optional(),
+export const budgetSchema = z.object({
+  categoryId: z.string().min(1),
+  limit: z.string().min(1),
+  year: z.coerce.number().int(),
+  month: z.coerce.number().int().min(1).max(12),
+});
+
+export const goalSchema = z.object({
+  name: z.string().min(1).max(120),
+  type: z.enum(["CAR", "HOUSE", "VACATION", "EMERGENCY", "INVESTMENT", "RETIREMENT", "CUSTOM"]),
+  target: z.string().min(1),
+  current: z.string().optional(),
+  deadline: z.string().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+});
+
+export const recurringSchema = z.object({
+  name: z.string().min(1).max(120),
+  amount: z.string().min(1),
+  categoryId: z.string().min(1),
+  frequency: z.enum(["WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"]),
+  dayOfMonth: z.coerce.number().int().min(1).max(28).optional().nullable(),
+  nextDueDate: z.string().min(1),
+  paymentMethod: z.enum([
+    "CASH",
+    "DEBIT_CARD",
+    "CREDIT_CARD",
+    "MB_WAY",
+    "TRANSFER",
+    "DIRECT_DEBIT",
+    "REVOLUT",
+    "OTHER",
+  ]),
+  accountId: z.string().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+});
+
+export const categorySchema = z.object({
+  name: z.string().min(1).max(80),
+  kind: z.enum(["INCOME", "EXPENSE"]),
+  color: z.string().optional(),
+  parentId: z.string().optional().nullable(),
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2),
+  name: z.string().min(2).max(80),
   email: z.string().email(),
   password: z.string().min(6),
-  phone: z.string().optional(),
-  role: z.enum(["CUSTOMER", "DRIVER"]),
-});
-
-export const vehicleSchema = z.object({
-  make: z.string().min(1),
-  model: z.string().min(1),
-  year: z.coerce.number().int().min(1990).max(2100),
-  color: z.string().min(1),
-  plate: z.string().min(2),
-  seats: z.coerce.number().int().min(1).max(50),
-  luggageCapacity: z.coerce.number().int().min(0).max(50),
-  vehicleClassId: z.string().min(1),
+  familyName: z.string().min(2).max(80).optional(),
 });

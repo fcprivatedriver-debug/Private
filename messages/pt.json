@@ -1,115 +1,22 @@
 {
-  "meta": {
-    "appName": "Hegos",
-    "tagline": "Motoristas privados. Escolhidos com confiança."
-  },
-  "nav": {
-    "howItWorks": "Como funciona",
-    "drivers": "Motoristas",
-    "myTrips": "As minhas viagens",
-    "newTrip": "Pedir viagem",
-    "dashboard": "Painel",
-    "openRequests": "Pedidos abertos",
-    "myOffers": "Propostas",
-    "trips": "Viagens",
-    "vehicle": "Veículo",
-    "onboarding": "Perfil",
-    "admin": "Admin",
-    "verifications": "Verificações",
-    "vehicleClasses": "Classes",
-    "login": "Entrar",
-    "start": "Começar",
-    "logout": "Sair"
-  },
-  "home": {
-    "eyebrow": "Motoristas privados · Internacional",
-    "headline": "Hegos",
-    "copy": "Peça um transfer privado. Receba propostas de motoristas verificados. Escolha a que lhe parece certa — sem pressa, sem ruído.",
-    "ctaRequest": "Pedir uma viagem",
-    "ctaDriver": "Conduzir com a Hegos",
-    "ctaMyTrips": "Ver as minhas viagens",
-    "ctaDashboard": "Abrir o meu painel",
-    "ctaAdmin": "Abrir admin",
-    "stepsTitle": "Três momentos, uma experiência.",
-    "stepsLead": "A Hegos não é um táxi. É um marketplace discreto onde define a viagem e escolhe a proposta.",
-    "step1Title": "Conte-nos o trajeto",
-    "step1Body": "Onde o queremos encontrar, para onde vai, e o que importa no caminho.",
-    "step2Title": "Receba propostas",
-    "step2Body": "Motoristas verificados respondem com preço, veículo e condições claras.",
-    "step3Title": "Escolha com confiança",
-    "step3Body": "Compare, aceite, e viaje com transparência do início ao fim.",
-    "terms": "Termos",
-    "privacy": "Privacidade"
+  "app": {
+    "name": "Nina",
+    "tagline": "Assistente financeira pessoal"
   },
   "auth": {
-    "loginTitle": "Que bom vê-lo de novo",
-    "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
+    "loginTitle": "Olá outra vez",
+    "loginHint": "Continua a conversa com a Nina.",
     "email": "Email",
-    "password": "Palavra-passe",
+    "password": "Password",
     "submitLogin": "Entrar",
-    "loggingIn": "A entrar…",
-    "invalidCredentials": "Email ou palavra-passe incorretos",
-    "noAccount": "Ainda não tem conta?",
-    "registerLink": "Criar conta",
-    "registerTitle": "Bem-vindo à Hegos",
-    "registerLead": "Peça viagens ou envie propostas — uma conta, um papel para começar.",
-    "accountType": "Como quer começar?",
-    "customer": "Quero viajar",
-    "driver": "Quero conduzir",
-    "name": "Nome completo",
-    "phone": "Telefone",
-    "createAccount": "Criar conta",
-    "creating": "A criar…",
-    "hasAccount": "Já tem conta?",
-    "loginLink": "Entrar"
+    "loggingIn": "Um momento…",
+    "invalidCredentials": "Email ou password incorretos.",
+    "noAccount": "Ainda não falaste com a Nina?",
+    "registerLink": "Criar conta"
   },
-  "how": {
-    "title": "Como a Hegos funciona",
-    "lead": "Um marketplace de motoristas privados reduzido ao essencial: pedir, propor, escolher."
-  },
-  "forDrivers": {
-    "title": "Conduza com intenção",
-    "lead": "Veja pedidos abertos, defina o seu preço e cresça com confiança verificada.",
-    "ctaRegister": "Registar como motorista",
-    "ctaLogin": "Já tenho conta"
-  },
-  "legal": {
-    "termsTitle": "Termos de utilização",
-    "privacyTitle": "Privacidade",
-    "preliminary": "Versão preliminar · Hegos"
-  },
-  "common": {
-    "loading": "A carregar…"
-  },
-  "tripForm": {
-    "title": "Para onde vamos?",
-    "lead": "Conte-nos o essencial. Motoristas verificados tratam do resto.",
-    "eyebrow": "Reserva de chauffeur privado",
-    "routeSection": "O seu trajeto",
-    "routeHint": "Recolha e destino do transfer",
-    "scheduleSection": "Horário e veículo",
-    "scheduleHint": "Quando precisa de nós e a categoria do carro",
-    "partySection": "Passageiros e bagagem",
-    "partyHint": "Para encontrarmos o veículo certo",
-    "detailsSection": "Detalhes de concierge",
-    "detailsHint": "Notas opcionais para o motorista se preparar",
-    "pickup": "Onde o devemos encontrar?",
-    "pickupPlaceholder": "Aeroporto, hotel ou morada",
-    "dropoff": "Para onde gostaria de ir?",
-    "dropoffPlaceholder": "Destino final",
-    "when": "Quando precisa de nós?",
-    "vehicleClass": "Categoria de veículo",
-    "noPreference": "Sem preferência",
-    "passengers": "Passageiros",
-    "luggage": "Malas",
-    "flight": "Número de voo (opcional)",
-    "notes": "Algo que devêssemos saber?",
-    "notesPlaceholder": "Placa com nome, tempo de espera, cadeira de criança…",
-    "submit": "Pedir propostas",
-    "submitting": "A publicar…",
-    "estimating": "A calcular o trajeto…",
-    "distance": "Distância",
-    "duration": "Duração estimada",
-    "mapLabel": "Pré-visualização da rota"
+  "nav": {
+    "dashboard": "Conversar",
+    "incomes": "Entradas",
+    "expenses": "Gastos"
   }
 }
