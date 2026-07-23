@@ -9,6 +9,7 @@ import {
   REVIEW_COMMENTS,
   ROUTES,
   VEHICLE_CLASSES,
+  RETIRED_VEHICLE_CLASS_CODES,
 } from "./demo-catalog";
 
 const prisma = new PrismaClient();
@@ -96,6 +97,35 @@ async function seedSettings() {
         sortOrder: vc.sortOrder,
         active: true,
       },
+    });
+  }
+
+  // Remap legacy class FKs (safe no-op when tables were cleared)
+  const classRemap: Record<string, string> = {
+    vc_sedan: "vc_comfort",
+    vc_executive: "vc_premium",
+    vc_luxury: "vc_premium",
+    vc_minibus: "vc_van",
+  };
+  for (const [from, to] of Object.entries(classRemap)) {
+    await prisma.vehicle.updateMany({
+      where: { vehicleClassId: from },
+      data: { vehicleClassId: to },
+    });
+    await prisma.tripRequest.updateMany({
+      where: { preferredVehicleClassId: from },
+      data: { preferredVehicleClassId: to },
+    });
+    await prisma.commissionRule.updateMany({
+      where: { vehicleClassId: from },
+      data: { vehicleClassId: to },
+    });
+  }
+
+  for (const code of RETIRED_VEHICLE_CLASS_CODES) {
+    await prisma.vehicleClass.updateMany({
+      where: { code },
+      data: { active: false },
     });
   }
 }
@@ -413,7 +443,7 @@ async function seedLiveMarketplace(
       notes: "Arrival flight TP1234. Name board: Ana.",
       flightNumber: "TP1234",
       status: "OPEN",
-      preferredVehicleClassId: "vc_executive",
+      preferredVehicleClassId: "vc_premium",
       currency: "EUR",
       expiresAt: new Date(openPickup.getTime() - 2 * 60 * 60 * 1000),
       distanceMeters: 9800,
@@ -530,7 +560,7 @@ async function seedLiveMarketplace(
       luggage: 1,
       notes: "Return not needed.",
       status: "CONFIRMED",
-      preferredVehicleClassId: "vc_executive",
+      preferredVehicleClassId: "vc_premium",
       currency: "EUR",
       expiresAt: confirmedPickup,
       distanceMeters: 26500,
@@ -648,7 +678,7 @@ async function seedLiveMarketplace(
       passengers: 2,
       luggage: 1,
       status: "CANCELLED",
-      preferredVehicleClassId: "vc_sedan",
+      preferredVehicleClassId: "vc_comfort",
       currency: "EUR",
       notes: "Plans changed — cancelled by customer.",
     },

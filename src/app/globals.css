@@ -938,3 +938,212 @@ h3,
     animation: none !important;
   }
 }
+
+/* ——— Booking / concierge form ——— */
+.booking-page {
+  position: relative;
+  padding: 0 0 4rem;
+  overflow: hidden;
+}
+
+.booking-hero {
+  position: relative;
+  height: clamp(140px, 22vw, 220px);
+  background:
+    linear-gradient(120deg, rgba(10, 11, 13, 0.92) 0%, rgba(13, 79, 107, 0.78) 55%, rgba(31, 111, 139, 0.55) 100%),
+    url("/brand/hegos-hero.jpg") center 45% / cover no-repeat;
+  border-bottom: 1px solid var(--line);
+}
+
+.booking-hero-glow {
+  position: absolute;
+  inset: auto 10% -40% auto;
+  width: min(420px, 60vw);
+  height: 220px;
+  background: radial-gradient(circle, rgba(91, 163, 192, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.booking-layout {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin-top: -3.25rem;
+}
+
+.booking-intro {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem 1.35rem 1.25rem;
+  box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(12px);
+  margin-bottom: 1.25rem;
+}
+
+.booking-eyebrow {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.booking-intro .page-title {
+  margin-bottom: 0.45rem;
+}
+
+.booking-intro .page-lead {
+  margin-bottom: 0;
+}
+
+.booking-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.booking-section {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.booking-section-head {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 1.15rem 1.25rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(31, 111, 139, 0.06), transparent 90%);
+}
+
+.booking-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 10px;
+  background: var(--bg-ink);
+  color: var(--petrol-soft);
+  flex-shrink: 0;
+}
+
+.booking-section-head h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.booking-section-head p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.88rem;
+}
+
+.booking-section-body {
+  padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.booking-route-preview {
+  margin-top: 0.25rem;
+  padding-top: 0.35rem;
+}
+
+.booking-route-metrics {
+  margin-bottom: 0.85rem;
+}
+
+.booking-class-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.booking-class-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+@media (min-width: 640px) {
+  .booking-class-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.booking-class-card {
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s var(--ease-out),
+    background 0.2s ease;
+  font: inherit;
+  color: inherit;
+}
+
+.booking-class-card:hover {
+  border-color: rgba(31, 111, 139, 0.35);
+  transform: translateY(-1px);
+}
+
+.booking-class-card.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: linear-gradient(180deg, rgba(31, 111, 139, 0.08), #fff 70%);
+}
+
+.booking-class-name {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.booking-class-meta {
+  color: var(--fg-muted);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.booking-class-capacity {
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.booking-submit {
+  position: sticky;
+  bottom: 0.75rem;
+  padding-top: 0.35rem;
+  z-index: 5;
+}
+
+.booking-submit .btn-primary {
+  box-shadow: var(--shadow-float);
+}
+
+@media (max-width: 640px) {
+  .booking-layout {
+    margin-top: -2.5rem;
+  }
+
+  .booking-intro,
+  .booking-section-head,
+  .booking-section-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
