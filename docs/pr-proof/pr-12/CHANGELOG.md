@@ -2,26 +2,29 @@
 
 ## Resumo
 
-Lançamento da aplicação **MAFIL — Gestão Financeira Familiar**: plataforma completa em português para controlar receitas, despesas, orçamentos e objetivos da família, com design premium e arquitetura modular.
+Lançamento da **Nina** — assistente financeira pessoal baseada em Inteligência Artificial.
+
+A Nina não é só gestão financeira: é uma conversa. O utilizador pergunta em linguagem natural e recebe respostas claras, positivas e sem julgamentos.
+
+## Identidade
+
+- **Nome:** Nina  
+- **Missão:** Simplificar a vida, ajudando a controlar o dinheiro sem complicações  
+- **Filosofia:** “O dinheiro não deve ser uma preocupação. Deve ser uma ferramenta para viver melhor.”  
+- **Promessa:** “A Nina trata das contas para que tu possas aproveitar a vida.”  
+- **Personalidade:** simpática, inteligente, próxima, organizada, positiva, motivadora, nunca julgadora
 
 ## Novas funcionalidades
 
-- Landing page e autenticação (login / registo familiar)
-- Dashboard com saldo, receitas, despesas, poupança, orçamento %, objetivos, últimas despesas, próximos pagamentos e gráficos
-- Gestão de receitas e despesas (categorias PT, lojas, métodos, contas)
-- Orçamentos mensais por categoria com alertas 75% / 90% / 100%
-- Objetivos de poupança com progresso automático
-- Estatísticas mensais, semanais e anuais
-- Pesquisa inteligente e filtros avançados
-- OCR de faturas (loja, data, valor, IVA, produtos, categoria)
-- Importações (Continente, Pingo Doce, Lidl, Mercadona, Auchan, Repsol, Galp, Prio, Via Verde, Tesla, MB Way, Revolut, Open Banking, PDF, CSV, Email)
-- Pagamentos recorrentes
-- Alertas inteligentes
-- Multiutilizador familiar com permissões
-- Assistente IA (hábitos, anomalias, previsão de saldo, relatórios)
+- Chat central com a Nina (dashboard = conversar)
+- Respostas naturais a perguntas como “Quanto gastei este mês?” ou “Onde posso poupar?”
+- Navegação simplificada (Gastos, Entradas, Objetivos, Limites, Resumo…)
+- Landing e copy alinhados à marca Nina
+- Tema claro/escuro, azul-marinho elegante
+- Organização de despesas, orçamentos, objetivos, OCR, importações, família, avisos
 - Exportação PDF / Excel / CSV
-- Tema claro / escuro / automático
 
-## Conta demo
+## Demo
 
-- `familia@mafil.pt` / `mafil123`
+- `familia@nina.app` / `nina123`
+- `ana@nina.app` / `nina123`
