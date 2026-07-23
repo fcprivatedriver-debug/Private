@@ -4,6 +4,7 @@ import createMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { routing } from "@/i18n/routing";
 import { resolveAuthSecret } from "@/lib/auth-secret";
+import { dashboardPathForRole } from "@/lib/auth-routes";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -18,6 +19,8 @@ const protectedPrefixes = [
   { prefix: "/onboarding", roles: ["DRIVER"] },
   { prefix: "/admin", roles: ["ADMIN"] },
 ];
+
+const authOnlyGuestPaths = new Set(["/login", "/registo"]);
 
 function stripLocale(pathname: string): { locale: string | null; path: string } {
   const parts = pathname.split("/");
@@ -37,12 +40,20 @@ export async function middleware(request: NextRequest) {
   }
 
   const { locale, path } = stripLocale(pathname);
+  const loc = locale || routing.defaultLocale;
+  const secret = resolveAuthSecret();
+  const token = await getToken({ req: request, secret });
+
+  // Authenticated users should never see login/register forms
+  if (token && authOnlyGuestPaths.has(path)) {
+    const dest = dashboardPathForRole(token.role as string);
+    return NextResponse.redirect(new URL(`/${loc}${dest === "/" ? "" : dest}`, request.url));
+  }
 
   const rule = [...protectedPrefixes]
     .sort((a, b) => b.prefix.length - a.prefix.length)
     .find((r) => {
       if (path === r.prefix) return true;
-      // Avoid /veiculo matching public /veiculos/[id] profiles
       if (r.prefix === "/veiculo") {
         return path.startsWith("/veiculo/") && !path.startsWith("/veiculos");
       }
@@ -50,15 +61,6 @@ export async function middleware(request: NextRequest) {
     });
 
   if (rule) {
-    const secret = resolveAuthSecret();
-
-    const token = await getToken({
-      req: request,
-      secret,
-    });
-
-    const loc = locale || routing.defaultLocale;
-
     if (!token) {
       const login = new URL(`/${loc}/login`, request.url);
       login.searchParams.set("callbackUrl", pathname);

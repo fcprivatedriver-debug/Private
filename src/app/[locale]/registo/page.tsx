@@ -1,19 +1,34 @@
 "use client";
 
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { registerAction } from "@/actions/marketplace";
-import { signIn } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { signIn, useSession } from "next-auth/react";
+import { useLocale, useTranslations } from "next-intl";
+import { dashboardPathForRole } from "@/lib/auth-routes";
 
-function RegisterForm() {
-  const router = useRouter();
+function RegisterFormInner() {
   const params = useSearchParams();
+  const locale = useLocale();
   const t = useTranslations("auth");
+  const { data: session, status } = useSession();
   const defaultRole = params.get("role") === "DRIVER" ? "DRIVER" : "CUSTOMER";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+
+  function go(dest: string) {
+    setLeaving(true);
+    window.location.assign(`/${locale}${dest === "/" ? "" : dest}`);
+  }
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      go(dashboardPathForRole(session.user.role));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session?.user?.role]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,17 +47,26 @@ function RegisterForm() {
         redirect: false,
       });
       if (login?.error) {
-        router.push("/login");
+        window.location.assign(`/${locale}/login`);
         return;
       }
       const role = String(formData.get("role"));
-      router.push(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
-      router.refresh();
+      go(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
     } catch {
       setError("Não foi possível registar. Tente de novo.");
-    } finally {
       setLoading(false);
     }
+  }
+
+  if (status === "authenticated" || leaving || loading) {
+    return (
+      <section className="auth-shell fade-up">
+        <div className="container" style={{ maxWidth: 480 }}>
+          <h1 className="page-title">{t("registerTitle")}</h1>
+          <p className="page-lead">{loading ? "…" : "A redirecionar…"}</p>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -88,8 +112,8 @@ function RegisterForm() {
               id="password"
               name="password"
               type="password"
-              minLength={6}
               required
+              minLength={6}
               autoComplete="new-password"
             />
           </div>
@@ -111,7 +135,7 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense>
-      <RegisterForm />
+      <RegisterFormInner />
     </Suspense>
   );
 }
