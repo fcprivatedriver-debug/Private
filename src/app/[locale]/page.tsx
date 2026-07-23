@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { auth } from "@/lib/auth";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -7,6 +8,26 @@ export default async function HomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("home");
+  const session = await auth();
+  const role = session?.user?.role;
+
+  const primary =
+    role === "CUSTOMER"
+      ? { href: "/pedidos/novo" as const, label: t("ctaRequest") }
+      : role === "DRIVER"
+        ? { href: "/painel" as const, label: t("ctaDashboard") }
+        : role === "ADMIN"
+          ? { href: "/admin" as const, label: t("ctaAdmin") }
+          : { href: "/registo?role=CUSTOMER" as const, label: t("ctaRequest") };
+
+  const secondary =
+    role === "CUSTOMER"
+      ? { href: "/pedidos" as const, label: t("ctaMyTrips") }
+      : role === "DRIVER"
+        ? { href: "/pedidos-abertos" as const, label: t("ctaDriver") }
+        : role === "ADMIN"
+          ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
+          : { href: "/para-motoristas" as const, label: t("ctaDriver") };
 
   return (
     <>
@@ -18,11 +39,11 @@ export default async function HomePage({ params }: Props) {
           </h1>
           <p className="hero-copy">{t("copy")}</p>
           <div className="cta-row">
-            <Link href="/registo?role=CUSTOMER" className="btn btn-primary">
-              {t("ctaRequest")}
+            <Link href={primary.href} className="btn btn-primary">
+              {primary.label}
             </Link>
-            <Link href="/para-motoristas" className="btn btn-secondary">
-              {t("ctaDriver")}
+            <Link href={secondary.href} className="btn btn-secondary">
+              {secondary.label}
             </Link>
           </div>
         </div>

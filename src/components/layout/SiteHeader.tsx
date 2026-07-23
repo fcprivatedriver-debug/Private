@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link as LocaleLink } from "@/i18n/navigation";
 import { auth, signOut } from "@/lib/auth";
@@ -8,14 +7,15 @@ function LocaleSwitcher({ locale }: { locale: string }) {
   return (
     <div className="locale-switch">
       {routing.locales.map((l) => (
-        <Link
+        <LocaleLink
           key={l}
-          href={`/${l}`}
+          href="/"
+          locale={l}
           hrefLang={l}
           aria-current={l === locale ? "true" : undefined}
         >
           {l}
-        </Link>
+        </LocaleLink>
       ))}
     </div>
   );
@@ -34,17 +34,35 @@ export async function SiteHeader() {
           Mov<span>io</span>
         </LocaleLink>
         <nav className="nav-links">
-          <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
-          <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
-          {role === "CUSTOMER" && <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>}
+          {!session && (
+            <>
+              <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
+              <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
+            </>
+          )}
+          {role === "CUSTOMER" && (
+            <>
+              <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>
+              <LocaleLink href="/pedidos/novo">{t("newTrip")}</LocaleLink>
+            </>
+          )}
           {role === "DRIVER" && (
             <>
               <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
-              <LocaleLink href="/onboarding">Onboarding</LocaleLink>
+              <LocaleLink href="/pedidos-abertos">{t("openRequests")}</LocaleLink>
+              <LocaleLink href="/propostas">{t("myOffers")}</LocaleLink>
               <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
+              <LocaleLink href="/veiculo">{t("vehicle")}</LocaleLink>
+              <LocaleLink href="/onboarding">{t("onboarding")}</LocaleLink>
             </>
           )}
-          {role === "ADMIN" && <LocaleLink href="/admin">{t("admin")}</LocaleLink>}
+          {role === "ADMIN" && (
+            <>
+              <LocaleLink href="/admin">{t("admin")}</LocaleLink>
+              <LocaleLink href="/admin/verificacoes">{t("verifications")}</LocaleLink>
+              <LocaleLink href="/admin/vehicle-classes">{t("vehicleClasses")}</LocaleLink>
+            </>
+          )}
           <LocaleSwitcher locale={locale} />
           {!session ? (
             <>

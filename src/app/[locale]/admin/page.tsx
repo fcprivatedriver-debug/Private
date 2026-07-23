@@ -17,16 +17,29 @@ export default async function AdminPage() {
       prisma.offer.count(),
       prisma.booking.count(),
       prisma.user.count({ where: { role: "DRIVER" } }),
+      prisma.vehicle.count(),
+      prisma.payment.count(),
+      prisma.review.count(),
+      prisma.user.count({ where: { role: "CUSTOMER" } }),
     ]),
     prisma.tripRequest.findMany({
       orderBy: { createdAt: "desc" },
-      take: 8,
+      take: 12,
       include: { customer: { select: { name: true } } },
     }),
     prisma.vehicleClass.count({ where: { active: true } }),
   ]);
 
-  const [tripCount, offerCount, bookingCount, driverCount] = stats;
+  const [
+    tripCount,
+    offerCount,
+    bookingCount,
+    driverCount,
+    vehicleCount,
+    paymentCount,
+    reviewCount,
+    customerCount,
+  ] = stats;
 
   return (
     <section className="section fade-up">
@@ -59,6 +72,24 @@ export default async function AdminPage() {
             <div className="muted">Motoristas</div>
           </div>
         </div>
+        <div className="metric-row">
+          <div className="metric">
+            <div className="step-num">{customerCount}</div>
+            <div className="muted">Clientes</div>
+          </div>
+          <div className="metric">
+            <div className="step-num">{vehicleCount}</div>
+            <div className="muted">Veículos</div>
+          </div>
+          <div className="metric">
+            <div className="step-num">{paymentCount}</div>
+            <div className="muted">Pagamentos</div>
+          </div>
+          <div className="metric">
+            <div className="step-num">{reviewCount}</div>
+            <div className="muted">Avaliações</div>
+          </div>
+        </div>
 
         <h2 className="font-display">Verificações pendentes</h2>
         <div className="list-stack" style={{ marginTop: "0.75rem", marginBottom: "2rem" }}>
@@ -83,7 +114,7 @@ export default async function AdminPage() {
         <h2 className="font-display">Pedidos recentes</h2>
         <div className="list-stack" style={{ marginTop: "0.75rem" }}>
           {recentTrips.map((trip) => (
-            <div key={trip.id} className="list-item">
+            <Link key={trip.id} href={`/pedidos/${trip.id}`} className="list-item">
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <strong>
                   {trip.pickupAddress} → {trip.dropoffAddress}
@@ -91,7 +122,7 @@ export default async function AdminPage() {
                 <span className="badge">{TRIP_STATUS_LABELS[trip.status]}</span>
               </div>
               <span className="muted">{trip.customer.name}</span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

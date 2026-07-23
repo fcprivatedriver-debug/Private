@@ -12,7 +12,14 @@
     "admin": "Admin",
     "login": "Log in",
     "start": "Get started",
-    "logout": "Log out"
+    "logout": "Log out",
+    "newTrip": "New request",
+    "openRequests": "Open requests",
+    "myOffers": "Offers",
+    "vehicle": "Vehicle",
+    "onboarding": "Onboarding",
+    "verifications": "Verifications",
+    "vehicleClasses": "Classes"
   },
   "home": {
     "headline": "Movio",
@@ -28,7 +35,10 @@
     "step3Title": "Choose the best",
     "step3Body": "Compare, accept, and travel with clarity.",
     "terms": "Terms",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "ctaMyTrips": "My requests",
+    "ctaDashboard": "Go to dashboard",
+    "ctaAdmin": "Open admin"
   },
   "auth": {
     "loginTitle": "Welcome back",

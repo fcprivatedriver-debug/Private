@@ -84,6 +84,9 @@ export default async function DriverDashboardPage() {
           <div>
             <h2 className="font-display">Propostas recentes</h2>
             <div className="list-stack" style={{ marginTop: "0.75rem" }}>
+              {myOffers.length === 0 && (
+                <div className="empty-state">Ainda sem propostas enviadas.</div>
+              )}
               {myOffers.map((offer) => (
                 <Link key={offer.id} href={`/pedidos/${offer.tripRequestId}`} className="list-item">
                   <div style={{ display: "flex", justifyContent: "space-between" }}>

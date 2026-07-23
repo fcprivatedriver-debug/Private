@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { requireRole } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { TRIP_STATUS_LABELS } from "@/config/constants";

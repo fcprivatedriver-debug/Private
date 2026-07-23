@@ -116,7 +116,7 @@ export default async function TripDetailPage({ params }: Props) {
             )}
           </div>
 
-          {(isOwner || isAssignedDriver) && (
+          {(isOwner || isAssignedDriver || isAdmin) && (
             <TripActions
               tripId={trip.id}
               status={trip.status}
@@ -129,16 +129,17 @@ export default async function TripDetailPage({ params }: Props) {
           {isOwner && trip.status === "COMPLETED" && trip.booking && !trip.booking.review && (
             <ReviewForm bookingId={trip.booking.id} />
           )}
-          {isOwner && trip.booking?.review && (
+          {(isOwner || isAdmin) && trip.booking?.review && (
             <div className="panel" style={{ marginTop: "1rem" }}>
-              <strong>A tua avaliação:</strong> ★ {trip.booking.review.rating}
+              <strong>{isOwner ? "A tua avaliação" : "Avaliação"}:</strong> ★{" "}
+              {trip.booking.review.rating}
               {trip.booking.review.comment ? ` — ${trip.booking.review.comment}` : ""}
             </div>
           )}
         </div>
 
         <div>
-          {isOwner && (
+          {(isOwner || isAdmin) && (
             <>
               <h2 className="font-display">Propostas</h2>
               <div className="list-stack" style={{ marginTop: "0.75rem" }}>
@@ -161,6 +162,9 @@ export default async function TripDetailPage({ params }: Props) {
                       <div className="muted">
                         {offer.vehicle.make} {offer.vehicle.model} ·{" "}
                         {localizeVehicleClass(offer.vehicle.vehicleClass, locale).name}
+                        {offer.vehicle.ratingCount
+                          ? ` · ★ ${offer.vehicle.ratingAvg?.toFixed(1)} veículo`
+                          : ""}
                       </div>
                     )}
                     {offer.message && <p>{offer.message}</p>}
