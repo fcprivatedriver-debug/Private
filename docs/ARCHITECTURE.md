@@ -151,3 +151,9 @@ UI address fields consume this module in later phases; Phase 0 ships the provide
 
 Application and package name: **`movio`**.  
 GitHub repository should be renamed from `Private` → **`movio`** by the org owner (Settings → General → Repository name). Agent environments cannot rename the remote repo via read-only `gh`.
+
+### Owner steps to rename on GitHub
+
+1. Open https://github.com/fcprivatedriver-debug/Private/settings  
+2. Repository name → `movio` → Rename  
+3. Update local remotes: `git remote set-url origin https://github.com/fcprivatedriver-debug/movio.git`
