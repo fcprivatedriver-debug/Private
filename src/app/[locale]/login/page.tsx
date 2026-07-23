@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState, Suspense } from "react";
@@ -20,38 +20,62 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const res = await signIn("credentials", {
-      email: String(form.get("email")),
-      password: String(form.get("password")),
-      redirect: false,
-    });
-      if (res?.error) {
-      setLoading(false);
-      if (res.error === "Configuration" || res.status === 500) {
-        setError("Erro temporário de autenticação. Atualize a página ou tente de novo.");
-        return;
-      }
-      setError(t("invalidCredentials"));
-      return;
-    }
-
-    const callback = params.get("callbackUrl");
-    if (callback) {
-      window.location.href = callback;
-      return;
-    }
+    const email = String(form.get("email"));
+    const password = String(form.get("password"));
 
     try {
-      const me = await fetch("/api/me");
-      const data = await me.json();
-      const role = data?.user?.role as string | undefined;
+      const signInPromise = signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      const timeout = new Promise<null>((resolve) => {
+        window.setTimeout(() => resolve(null), 20000);
+      });
+
+      const res = await Promise.race([signInPromise, timeout]);
+
+      if (res === null) {
+        setError(
+          "O login demorou demasiado (base de dados). Tente de novo daqui a alguns segundos.",
+        );
+        return;
+      }
+
+      if (res.error) {
+        if (res.error === "Configuration" || res.status === 500) {
+          setError("Erro temporário de autenticação. Atualize a página ou tente de novo.");
+          return;
+        }
+        setError(t("invalidCredentials"));
+        return;
+      }
+
+      const callback = params.get("callbackUrl");
+      if (callback) {
+        window.location.href = callback;
+        return;
+      }
+
+      // Prefer JWT session (no extra Prisma round-trip via /api/me)
+      const session = await getSession();
+      const role = session?.user?.role as string | undefined;
       const dest =
-        role === "DRIVER" ? "/painel" : role === "ADMIN" ? "/admin" : role === "CUSTOMER" ? "/pedidos" : "/";
+        role === "DRIVER"
+          ? "/painel"
+          : role === "ADMIN"
+            ? "/admin"
+            : role === "CUSTOMER"
+              ? "/pedidos"
+              : "/";
       router.push(dest);
+      router.refresh();
     } catch {
-      router.push("/");
+      setError("Não foi possível entrar. Verifique a ligação e tente de novo.");
+    } finally {
+      setLoading(false);
     }
-    router.refresh();
   }
 
   return (
