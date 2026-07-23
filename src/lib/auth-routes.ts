@@ -2,6 +2,7 @@
 export const APP_PROTECTED_PREFIXES = [
   "/dashboard",
   "/captura",
+  "/lista",
   "/receitas",
   "/despesas",
   "/orcamentos",

@@ -173,6 +173,7 @@ model User {
   habitStats    NinaHabitStat[]
   invitesCreated FamilyInvite[] @relation("InviteCreator")
   connections   NinaConnection[]
+  shoppingItems ShoppingListItem[]
 }
 
 model AuthAccount {
@@ -237,6 +238,7 @@ model Family {
   memoryRules        NinaMemoryRule[]
   habitStats         NinaHabitStat[]
   connections        NinaConnection[]
+  shoppingItems      ShoppingListItem[]
 }
 
 model FamilyMember {
@@ -315,6 +317,26 @@ model NinaHabitStat {
 
   @@unique([userId, familyId, keyType, keyValue])
   @@index([userId, familyId])
+}
+
+/// Lista de compras partilhada da Conta Familiar
+model ShoppingListItem {
+  id          String   @id @default(cuid())
+  familyId    String
+  createdById String?
+  name        String
+  quantity    String   @default("1")
+  categorySlug String?
+  notes       String?
+  isChecked   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([familyId, isChecked])
 }
 
 /// Ligação opcional a um serviço externo — só ativa com autorização explícita.

@@ -23,10 +23,12 @@ npm run dev
 
 ### Conta demo
 
-| Email | Password |
-|-------|----------|
-| `familia@nina.app` | `nina123` |
-| `ana@nina.app` | `nina123` |
+| Pessoa | Email | Password |
+|--------|-------|----------|
+| Filipe | `familia@nina.app` | `nina123` |
+| Nina | `nina@nina.app` | `nina123` |
+
+Guia completo para testar no browser: [`docs/LOCAL.md`](docs/LOCAL.md)
 
 ## Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina
 

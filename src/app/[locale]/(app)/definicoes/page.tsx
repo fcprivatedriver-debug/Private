@@ -25,6 +25,10 @@ export default async function DefinicoesPage() {
               <strong>Captura Instantânea</strong>
               <span className="muted small">Falar, escrever ou fotografar — em segundos</span>
             </Link>
+            <Link href="/pt/lista">
+              <strong>Lista de compras</strong>
+              <span className="muted small">Partilhada na Conta Familiar</span>
+            </Link>
             <Link href="/pt/ligacoes">
               <strong>Ligações da Nina</strong>
               <span className="muted small">Automatização opcional — bancos, email, supermercados…</span>

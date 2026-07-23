@@ -95,7 +95,8 @@ function LoginFormInner() {
           </button>
         </form>
         <p className="muted small" style={{ marginTop: "1rem" }}>
-          Demo: familia@nina.app / nina123
+          Demo: <strong>familia@nina.app</strong> ou <strong>nina@nina.app</strong> · password{" "}
+          <strong>nina123</strong>
         </p>
         <p className="muted small">
           Ainda não falaste com a Nina? <Link href="/pt/registo">Criar conta</Link>

@@ -76,6 +76,7 @@ async function main() {
   await prisma.ninaMemoryRule.deleteMany();
   await prisma.familyInvite.deleteMany();
   await prisma.ninaConnection.deleteMany();
+  await prisma.shoppingListItem.deleteMany();
   await prisma.store.deleteMany();
   await prisma.category.deleteMany();
   await prisma.financeAccount.deleteMany();
@@ -100,8 +101,8 @@ async function main() {
 
   const ana = await prisma.user.create({
     data: {
-      name: "Ana Silva",
-      email: "ana@nina.app",
+      name: "Nina Assistente",
+      email: "nina@nina.app",
       passwordHash,
       theme: "light",
       biometricsEnabled: true,
@@ -133,13 +134,39 @@ async function main() {
     data: {
       familyId: family.id,
       userId: ana.id,
-      displayName: "Ana",
+      displayName: "Nina",
       role: "ADMIN",
       color: "#0f7a4a",
     },
   });
 
   const { expenseCats, incomeCats } = await seedCategories(family.id);
+
+  // Subcategorias de exemplo
+  const superCat = expenseCats.find((c) => c.slug === "supermercado")!;
+  const restoCat = expenseCats.find((c) => c.slug === "restaurantes")!;
+  for (const [name, slug, parentId] of [
+    ["Frescos", "supermercado-frescos", superCat.id],
+    ["Mercearia", "supermercado-mercearia", superCat.id],
+    ["Café", "restaurantes-cafe", restoCat.id],
+    ["Take-away", "restaurantes-takeaway", restoCat.id],
+  ] as const) {
+    expenseCats.push(
+      await prisma.category.create({
+        data: {
+          familyId: family.id,
+          name,
+          slug,
+          kind: "EXPENSE",
+          parentId,
+          isSystem: true,
+          color: "#64748b",
+          sortOrder: 100,
+        },
+      }),
+    );
+  }
+
   const bySlug = Object.fromEntries(
     [...expenseCats, ...incomeCats].map((c) => [c.slug, c]),
   );
@@ -205,7 +232,7 @@ async function main() {
         scope: "PERSONAL",
         amountCents: 160000,
         date: daysAgo(19),
-        description: "Salário Ana",
+        description: "Salário Nina",
       },
       {
         familyId: family.id,
@@ -297,6 +324,100 @@ async function main() {
         description: e.desc,
         storeName: e.store,
         paymentMethod: e.method ?? "DEBIT_CARD",
+      },
+    });
+  }
+
+  // Faturas de exemplo (OCR / arquivo)
+  await prisma.expense.create({
+    data: {
+      familyId: family.id,
+      memberId: memberFilipe.id,
+      accountId: contaCGD.id,
+      categoryId: bySlug.luz.id,
+      createdById: filipe.id,
+      scope: "FAMILY",
+      amountCents: 4875,
+      vatCents: 892,
+      date: daysAgo(2),
+      time: "09:10",
+      description: "Fatura EDP — julho",
+      storeName: "EDP",
+      paymentMethod: "DIRECT_DEBIT",
+      receiptImageUrl: "/api/uploads/demo/fatura-edp.jpg",
+      ocrRawJson: JSON.stringify({
+        storeName: "EDP",
+        totalCents: 4875,
+        vatCents: 892,
+        confidence: 0.94,
+        items: [{ name: "Eletricidade", quantity: 1, unitCents: 4875, totalCents: 4875, vatRate: 23 }],
+      }),
+      notes: "Fatura de exemplo · OCR demo",
+      lineItems: {
+        create: [
+          { name: "Consumo kWh", quantity: 1, unitCents: 3983, totalCents: 3983, vatRate: 23 },
+          { name: "Taxas", quantity: 1, unitCents: 892, totalCents: 892, vatRate: 23 },
+        ],
+      },
+    },
+  });
+
+  await prisma.expense.create({
+    data: {
+      familyId: family.id,
+      memberId: memberAna.id,
+      accountId: contaCGD.id,
+      categoryId: bySlug.supermercado.id,
+      subcategoryId: bySlug["supermercado-frescos"]?.id,
+      createdById: ana.id,
+      scope: "FAMILY",
+      amountCents: 3245,
+      vatCents: 456,
+      date: daysAgo(0),
+      time: "18:40",
+      description: "Talão Continente",
+      storeName: "Continente",
+      paymentMethod: "DEBIT_CARD",
+      receiptImageUrl: "/api/uploads/demo/talao-continente.jpg",
+      ocrRawJson: JSON.stringify({
+        storeName: "Continente",
+        totalCents: 3245,
+        vatCents: 456,
+        confidence: 0.91,
+      }),
+      notes: "Talão de exemplo · Captura Instantânea",
+      lineItems: {
+        create: [
+          { name: "Leite meio-gordo", quantity: 2, unitCents: 89, totalCents: 178, vatRate: 6 },
+          { name: "Pão de forma", quantity: 1, unitCents: 159, totalCents: 159, vatRate: 6 },
+          { name: "Fruta sortida", quantity: 1, unitCents: 450, totalCents: 450, vatRate: 6 },
+        ],
+      },
+    },
+  });
+
+  // Lista de compras preenchida
+  const shopping = [
+    ["Leite meio-gordo", "2L", "supermercado"],
+    ["Pão de forma", "1", "supermercado"],
+    ["Ovos (dúzia)", "1", "supermercado"],
+    ["Detergente loiça", "1", "casa"],
+    ["Café moído", "250g", "supermercado"],
+    ["Fruta da época", "1kg", "supermercado"],
+    ["Papel higiénico", "1 pack", "casa"],
+    ["Ração cão", "2kg", "animais"],
+  ] as const;
+  for (let i = 0; i < shopping.length; i++) {
+    const [name, quantity, categorySlug] = shopping[i];
+    await prisma.shoppingListItem.create({
+      data: {
+        familyId: family.id,
+        createdById: i % 2 === 0 ? filipe.id : ana.id,
+        name,
+        quantity,
+        categorySlug,
+        sortOrder: i,
+        isChecked: i >= 6,
       },
     });
   }
@@ -513,6 +634,14 @@ async function main() {
         level: "success",
         isRead: false,
       },
+      {
+        familyId: family.id,
+        userId: ana.id,
+        type: "CUSTOM",
+        title: "Lista de compras pronta",
+        message: "Há 6 artigos por comprar na lista familiar.",
+        level: "info",
+      },
     ],
   });
 
@@ -541,9 +670,10 @@ async function main() {
   void poupanca;
 
   console.log("✅ Demo Nina pronta");
-  console.log("   Email: familia@nina.app");
-  console.log(`   Password: ${DEMO_PASSWORD}`);
+  console.log("   Filipe: familia@nina.app / " + DEMO_PASSWORD);
+  console.log("   Nina:   nina@nina.app / " + DEMO_PASSWORD);
   console.log("   Convite: /pt/convite/nina-demo-invite-token-seguro");
+  console.log("   Abre: http://localhost:3000/pt/login");
 }
 
 main()
