@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { eurosToCents, calcPlatformFee } from "@/lib/money";
-import { platformFeePercent } from "@/config/env";
+import { resolveCommissionPercent } from "@/lib/commission";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import type { TripStatus } from "@prisma/client";
 
@@ -218,7 +218,11 @@ export async function acceptOffer(tripId: string, offerId: string, customerId: s
       data: { status: "REJECTED" },
     });
 
-    const fee = calcPlatformFee(offer.priceAmount, platformFeePercent());
+    const feePercent = await resolveCommissionPercent({
+      currency: offer.currency,
+      vehicleCategory: undefined,
+    });
+    const fee = calcPlatformFee(offer.priceAmount, feePercent);
 
     const booking = await tx.booking.create({
       data: {

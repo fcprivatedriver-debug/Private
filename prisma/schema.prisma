@@ -142,19 +142,60 @@ model CustomerProfile {
 }
 
 model DriverProfile {
-  id          String       @id @default(cuid())
-  userId      String       @unique
-  status      DriverStatus @default(PENDING_VERIFICATION)
-  bio         String?
-  languages   String       @default("pt") // comma-separated for SQLite
-  ratingAvg   Float?
-  ratingCount Int          @default(0)
-  documents   String       @default("[]") // JSON array as string
-  verifiedAt  DateTime?
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles    Vehicle[]
+  id                    String       @id @default(cuid())
+  userId                String       @unique
+  status                DriverStatus @default(PENDING_VERIFICATION)
+  photoUrl              String?
+  bio                   String?
+  /// JSON string array of BCP-47 language codes, e.g. ["pt","en","es"]
+  languagesSpoken       String       @default("[\"pt\"]")
+  yearsOfExperience     Int          @default(0)
+  ratingAvg             Float?
+  ratingCount           Int          @default(0)
+  completedTripsCount   Int          @default(0)
+  /// 0–100 percentage of offers responded to
+  responseRate          Float?
+  /// Average minutes to first offer on a trip request
+  avgResponseTimeMinutes Float?
+  /// JSON array of verification document metadata
+  documents             String       @default("[]")
+  verifiedAt            DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles Vehicle[]
 
   @@index([status])
+}
+
+/// Singleton-style platform configuration (id = "default")
+model PlatformSettings {
+  id                        String   @id @default("default")
+  defaultCurrency           String   @default("EUR")
+  /// Default marketplace commission percent (e.g. 15.0)
+  defaultCommissionPercent  Float    @default(15)
+  /// JSON array of ISO currencies enabled on the platform
+  supportedCurrencies       String   @default("[\"EUR\"]")
+  updatedAt                 DateTime @updatedAt
+}
+
+/// Future commission overrides (country, vehicle category, etc.)
+model CommissionRule {
+  id          String   @id @default(cuid())
+  name        String
+  percent     Float
+  /// Optional ISO country code
+  countryCode String?
+  /// Optional VehicleCategory name as string for SQLite flexibility
+  vehicleCategory String?
+  currency    String?
+  active      Boolean  @default(true)
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active, priority])
 }
 
 model Vehicle {

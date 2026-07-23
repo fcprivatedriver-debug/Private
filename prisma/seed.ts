@@ -12,11 +12,27 @@ async function main() {
   await prisma.vehicle.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.commissionRule.deleteMany();
   await prisma.driverProfile.deleteMany();
   await prisma.customerProfile.deleteMany();
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
+
+  await prisma.platformSettings.upsert({
+    where: { id: "default" },
+    create: {
+      id: "default",
+      defaultCurrency: "EUR",
+      defaultCommissionPercent: 15,
+      supportedCurrencies: JSON.stringify(["EUR"]),
+    },
+    update: {
+      defaultCurrency: "EUR",
+      defaultCommissionPercent: 15,
+      supportedCurrencies: JSON.stringify(["EUR"]),
+    },
+  });
 
   const passwordHash = await bcrypt.hash("movio123", 10);
 
@@ -27,6 +43,7 @@ async function main() {
       role: "ADMIN",
       passwordHash,
       phone: "+351900000001",
+      locale: "pt",
     },
   });
 
@@ -37,6 +54,7 @@ async function main() {
       role: "CUSTOMER",
       passwordHash,
       phone: "+351910000001",
+      locale: "pt",
       customerProfile: { create: { defaultCurrency: "EUR" } },
     },
   });
@@ -48,20 +66,32 @@ async function main() {
       role: "DRIVER",
       passwordHash,
       phone: "+351920000001",
+      locale: "pt",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
       driverProfile: {
         create: {
           status: "ACTIVE",
-          bio: "Motorista executivo com 8 anos de experiência em transferes aeroporto.",
-          languages: "pt,en,es",
+          photoUrl:
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
+          bio: "Executive chauffeur with 8 years of airport transfer experience across Portugal.",
+          languagesSpoken: JSON.stringify(["pt", "en", "es"]),
+          yearsOfExperience: 8,
           ratingAvg: 4.9,
           ratingCount: 42,
+          completedTripsCount: 380,
+          responseRate: 96,
+          avgResponseTimeMinutes: 12,
+          documents: JSON.stringify([
+            { type: "license", status: "verified", label: "Driving licence" },
+            { type: "insurance", status: "verified", label: "Fleet insurance" },
+          ]),
           verifiedAt: new Date(),
           vehicles: {
             create: {
               make: "Mercedes-Benz",
               model: "E-Class",
               year: 2023,
-              color: "Preto",
+              color: "Black",
               plate: "AA-00-MV",
               seats: 3,
               luggageCapacity: 3,
@@ -81,20 +111,30 @@ async function main() {
       role: "DRIVER",
       passwordHash,
       phone: "+351920000002",
+      locale: "en",
       driverProfile: {
         create: {
           status: "ACTIVE",
-          bio: "Especialista em transfers Lisboa–Algarve.",
-          languages: "pt,en",
+          photoUrl:
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+          bio: "Specialist in Lisbon–Algarve private transfers.",
+          languagesSpoken: JSON.stringify(["pt", "en"]),
+          yearsOfExperience: 5,
           ratingAvg: 4.7,
           ratingCount: 28,
+          completedTripsCount: 210,
+          responseRate: 91,
+          avgResponseTimeMinutes: 18,
+          documents: JSON.stringify([
+            { type: "license", status: "verified", label: "Driving licence" },
+          ]),
           verifiedAt: new Date(),
           vehicles: {
             create: {
               make: "Volkswagen",
               model: "Caravelle",
               year: 2022,
-              color: "Prata",
+              color: "Silver",
               plate: "BB-11-MV",
               seats: 7,
               luggageCapacity: 7,
@@ -112,16 +152,22 @@ async function main() {
       name: "João Pendente",
       role: "DRIVER",
       passwordHash,
+      locale: "pt",
       driverProfile: {
         create: {
           status: "PENDING_VERIFICATION",
-          bio: "À espera de verificação.",
+          bio: "Awaiting document verification.",
+          languagesSpoken: JSON.stringify(["pt"]),
+          yearsOfExperience: 2,
+          documents: JSON.stringify([
+            { type: "license", status: "pending", label: "Driving licence" },
+          ]),
           vehicles: {
             create: {
               make: "BMW",
               model: "5 Series",
               year: 2021,
-              color: "Azul",
+              color: "Blue",
               plate: "CC-22-MV",
               seats: 3,
               luggageCapacity: 2,
@@ -149,7 +195,7 @@ async function main() {
       pickupAt,
       passengers: 2,
       luggage: 2,
-      notes: "Chegada do voo TP1234. Placa com nome Ana.",
+      notes: "Arrival flight TP1234. Name board: Ana.",
       flightNumber: "TP1234",
       status: "OPEN",
       preferredVehicleCategory: "EXECUTIVE",
@@ -167,7 +213,7 @@ async function main() {
       vehicleId,
       priceAmount: 4500,
       currency: "EUR",
-      message: "Inclui 60 min de espera e água a bordo.",
+      message: "Includes 60 min waiting time and bottled water.",
       includesTolls: true,
       includesWaiting: true,
       validUntil: trip.expiresAt,
@@ -175,14 +221,14 @@ async function main() {
     },
   });
 
-  console.log("Seed Movio concluído.");
-  console.log("Contas (password: movio123):");
+  console.log("Movio Phase 0 seed complete.");
+  console.log("Accounts (password: movio123):");
   console.log(`  Admin:      ${admin.email}`);
-  console.log(`  Cliente:    ${customer.email}`);
-  console.log(`  Motorista:  ${driver.email}`);
-  console.log(`  Motorista2: ${driver2.email}`);
-  console.log(`  Pendente:   ${pendingDriver.email}`);
-  console.log(`  Pedido demo OPEN: ${trip.id}`);
+  console.log(`  Customer:   ${customer.email}`);
+  console.log(`  Driver:     ${driver.email}`);
+  console.log(`  Driver 2:   ${driver2.email}`);
+  console.log(`  Pending:    ${pendingDriver.email}`);
+  console.log(`  Demo OPEN trip: ${trip.id}`);
 }
 
 main()
