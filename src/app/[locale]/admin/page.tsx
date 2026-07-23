@@ -3,11 +3,13 @@ import { prisma } from "@/lib/db";
 import { VerifyDriverButton } from "@/components/admin/VerifyDriverButton";
 import { TRIP_STATUS_LABELS } from "@/config/constants";
 import { Link } from "@/i18n/navigation";
+import { PageGreeting, SummaryStrip } from "@/components/ui/PageGreeting";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function AdminPage() {
   await requireRole("ADMIN");
 
-  const [pendingDrivers, stats, recentTrips, classCount] = await Promise.all([
+  const [pendingDrivers, stats, recentTrips, classCount, completedToday] = await Promise.all([
     prisma.driverProfile.findMany({
       where: { status: "PENDING_VERIFICATION" },
       include: { user: true, vehicles: true },
@@ -28,6 +30,12 @@ export default async function AdminPage() {
       include: { customer: { select: { name: true } } },
     }),
     prisma.vehicleClass.count({ where: { active: true } }),
+    prisma.tripRequest.count({
+      where: {
+        status: "COMPLETED",
+        updatedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+      },
+    }),
   ]);
 
   const [
@@ -42,18 +50,29 @@ export default async function AdminPage() {
   ] = stats;
 
   return (
-    <section className="section fade-up">
+    <section className="section">
       <div className="container">
-        <h1 className="page-title">Admin Movio</h1>
-        <p className="page-lead">Operações, verificações e visão geral da plataforma.</p>
-        <div className="cta-row" style={{ marginBottom: "0.5rem" }}>
+        <PageGreeting
+          hello="Centro de operações Movio"
+          sub="Uma visão calma do marketplace — pessoas, viagens e confiança em verificação."
+        />
+        <SummaryStrip
+          items={[
+            { label: "Verificações em fila", value: String(pendingDrivers.length) },
+            { label: "Concluídas hoje", value: String(completedToday) },
+            { label: "Classes ativas", value: String(classCount) },
+          ]}
+        />
+
+        <div className="cta-row" style={{ marginBottom: "1rem" }}>
           <Link href="/admin/verificacoes" className="btn btn-primary">
-            AI verification queue
+            Fila de verificação
           </Link>
           <Link href="/admin/vehicle-classes" className="btn btn-secondary">
-            Vehicle classes ({classCount})
+            Classes de veículo ({classCount})
           </Link>
         </div>
+
         <div className="metric-row">
           <div className="metric">
             <div className="step-num">{tripCount}</div>
@@ -91,7 +110,9 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <h2 className="font-display">Verificações pendentes</h2>
+        <h2 className="font-display" style={{ fontSize: "1.45rem" }}>
+          À espera da sua decisão
+        </h2>
         <div className="list-stack" style={{ marginTop: "0.75rem", marginBottom: "2rem" }}>
           {pendingDrivers.map((d) => (
             <div key={d.id} className="list-item">
@@ -103,15 +124,25 @@ export default async function AdminPage() {
                   ? `${d.vehicles[0].make} ${d.vehicles[0].model} · ${d.vehicles[0].plate}`
                   : "Sem veículo"}
               </div>
-              <VerifyDriverButton driverProfileId={d.id} />
+              <div className="cta-row" style={{ marginTop: "0.5rem" }}>
+                <Link href={`/motoristas/${d.id}`} className="btn btn-ghost btn-sm">
+                  Ver perfil
+                </Link>
+                <VerifyDriverButton driverProfileId={d.id} />
+              </div>
             </div>
           ))}
           {pendingDrivers.length === 0 && (
-            <div className="empty-state">Nenhuma verificação pendente.</div>
+            <EmptyState
+              title="Nada pendente"
+              body="Quando um motorista submeter documentos, aparece aqui para revisão."
+            />
           )}
         </div>
 
-        <h2 className="font-display">Pedidos recentes</h2>
+        <h2 className="font-display" style={{ fontSize: "1.45rem" }}>
+          Atividade recente
+        </h2>
         <div className="list-stack" style={{ marginTop: "0.75rem" }}>
           {recentTrips.map((trip) => (
             <Link key={trip.id} href={`/pedidos/${trip.id}`} className="list-item">

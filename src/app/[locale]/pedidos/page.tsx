@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { TRIP_STATUS_LABELS } from "@/config/constants";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
+import { PageGreeting, SummaryStrip } from "@/components/ui/PageGreeting";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function CustomerTripsPage() {
   const session = await requireRole("CUSTOMER");
@@ -13,24 +15,48 @@ export default async function CustomerTripsPage() {
     include: { _count: { select: { offers: true } } },
   });
 
+  const open = trips.filter((t) => t.status === "OPEN").length;
+  const upcoming = trips.filter((t) => ["CONFIRMED", "IN_PROGRESS"].includes(t.status)).length;
+  const done = trips.filter((t) => t.status === "COMPLETED").length;
+  const firstName = session.user.name?.split(" ")[0] || "olá";
+
   return (
-    <section className="section fade-up">
+    <section className="section">
       <div className="container">
-        <div className="page-head">
+        <PageGreeting
+          hello={`Olá, ${firstName}.`}
+          sub="Aqui encontra as suas viagens — as que pediu, as que estão a caminho, e as que já o levaram bem."
+        />
+        <SummaryStrip
+          items={[
+            { label: "À espera de propostas", value: String(open) },
+            { label: "Para hoje / em breve", value: String(upcoming) },
+            { label: "Concluídas", value: String(done) },
+          ]}
+        />
+
+        <div className="page-head" style={{ marginBottom: "1rem" }}>
           <div>
-            <h1 className="page-title">Os meus pedidos</h1>
-            <p className="page-lead" style={{ marginBottom: 0 }}>
-              Acompanha propostas e reservas.
+            <h2 className="font-display" style={{ fontSize: "1.55rem", margin: 0 }}>
+              As suas viagens
+            </h2>
+            <p className="muted" style={{ margin: "0.35rem 0 0" }}>
+              Tudo o que importa, num só sítio.
             </p>
           </div>
           <Link href="/pedidos/novo" className="btn btn-primary">
-            Novo pedido
+            Pedir uma viagem
           </Link>
         </div>
 
-        <div className="list-stack" style={{ marginTop: "1.5rem" }}>
+        <div className="list-stack">
           {trips.length === 0 && (
-            <div className="empty-state">Ainda não tens pedidos. Cria o primeiro.</div>
+            <EmptyState
+              title="Ainda não tem viagens"
+              body="Quando estiver pronto, diga-nos onde o devemos encontrar — e a Movio trata do resto."
+              actionHref="/pedidos/novo"
+              actionLabel="Pedir a primeira viagem"
+            />
           )}
           {trips.map((trip) => (
             <Link key={trip.id} href={`/pedidos/${trip.id}`} className="list-item">
