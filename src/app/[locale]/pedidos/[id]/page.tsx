@@ -162,6 +162,9 @@ export default async function TripDetailPage({ params }: Props) {
                       <div className="muted">
                         {offer.vehicle.make} {offer.vehicle.model} ·{" "}
                         {localizeVehicleClass(offer.vehicle.vehicleClass, locale).name}
+                        {offer.vehicle.ratingCount
+                          ? ` · ★ ${offer.vehicle.ratingAvg?.toFixed(1)} veículo`
+                          : ""}
                       </div>
                     )}
                     {offer.message && <p>{offer.message}</p>}

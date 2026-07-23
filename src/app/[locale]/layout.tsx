@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export function generateStaticParams() {
@@ -45,6 +46,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
         <div lang={locale}>
+          <DemoModeBanner />
           <SiteHeader />
           <main>{children}</main>
         </div>

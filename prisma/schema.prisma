@@ -271,6 +271,8 @@ model PlatformSettings {
   defaultCommissionPercent  Float    @default(15)
   /// JSON array of ISO currencies enabled on the platform
   supportedCurrencies       String   @default("[\"EUR\"]")
+  /// When true, UI shows Demo Mode banner and seed accounts apply
+  demoMode                  Boolean  @default(false)
   updatedAt                 DateTime @updatedAt
 }
 
@@ -332,6 +334,9 @@ model Vehicle {
   seats           Int
   luggageCapacity Int      @default(2)
   photoUrls       String   @default("[]")
+  /// Aggregate vehicle rating from completed trip reviews
+  ratingAvg       Float?
+  ratingCount     Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

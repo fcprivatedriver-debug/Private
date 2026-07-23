@@ -17,16 +17,29 @@ export default async function AdminPage() {
       prisma.offer.count(),
       prisma.booking.count(),
       prisma.user.count({ where: { role: "DRIVER" } }),
+      prisma.vehicle.count(),
+      prisma.payment.count(),
+      prisma.review.count(),
+      prisma.user.count({ where: { role: "CUSTOMER" } }),
     ]),
     prisma.tripRequest.findMany({
       orderBy: { createdAt: "desc" },
-      take: 8,
+      take: 12,
       include: { customer: { select: { name: true } } },
     }),
     prisma.vehicleClass.count({ where: { active: true } }),
   ]);
 
-  const [tripCount, offerCount, bookingCount, driverCount] = stats;
+  const [
+    tripCount,
+    offerCount,
+    bookingCount,
+    driverCount,
+    vehicleCount,
+    paymentCount,
+    reviewCount,
+    customerCount,
+  ] = stats;
 
   return (
     <section className="section fade-up">
@@ -57,6 +70,24 @@ export default async function AdminPage() {
           <div className="metric">
             <div className="step-num">{driverCount}</div>
             <div className="muted">Motoristas</div>
+          </div>
+        </div>
+        <div className="metric-row">
+          <div className="metric">
+            <div className="step-num">{customerCount}</div>
+            <div className="muted">Clientes</div>
+          </div>
+          <div className="metric">
+            <div className="step-num">{vehicleCount}</div>
+            <div className="muted">Veículos</div>
+          </div>
+          <div className="metric">
+            <div className="step-num">{paymentCount}</div>
+            <div className="muted">Pagamentos</div>
+          </div>
+          <div className="metric">
+            <div className="step-num">{reviewCount}</div>
+            <div className="muted">Avaliações</div>
           </div>
         </div>
 

@@ -16,11 +16,24 @@ export default async function VehiclePage() {
         <h1 className="page-title">
           O teu veículo
         </h1>
-        <p className="muted" style={{ marginBottom: "1.25rem" }}>
+        <p className="page-lead" style={{ marginBottom: "1.25rem" }}>
           Estado do perfil:{" "}
           <span className="badge">
             {profile ? DRIVER_STATUS_LABELS[profile.status] : "—"}
           </span>
+          {profile?.vehicles[0]?.ratingCount ? (
+            <>
+              {" "}
+              · Veículo ★ {profile.vehicles[0].ratingAvg?.toFixed(1)} (
+              {profile.vehicles[0].ratingCount} avaliações)
+            </>
+          ) : null}
+          {profile?.ratingCount ? (
+            <>
+              {" "}
+              · Motorista ★ {profile.ratingAvg?.toFixed(1)} ({profile.ratingCount})
+            </>
+          ) : null}
         </p>
         <VehicleForm
           vehicle={
