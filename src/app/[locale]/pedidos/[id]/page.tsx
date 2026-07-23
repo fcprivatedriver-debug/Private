@@ -143,7 +143,7 @@ export default async function TripDetailPage({ params }: Props) {
               <h2 className="font-display">Propostas</h2>
               <div className="list-stack" style={{ marginTop: "0.75rem" }}>
                 {trip.offers.length === 0 && (
-                  <div className="panel muted">Ainda sem propostas. Os motoristas vão aparecer aqui.</div>
+                  <div className="empty-state">Ainda sem propostas. Os motoristas vão aparecer aqui.</div>
                 )}
                 {trip.offers.map((offer) => (
                   <div key={offer.id} className="list-item">

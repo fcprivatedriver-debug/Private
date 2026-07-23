@@ -20,10 +20,10 @@ export default async function DriverTripsPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+        <h1 className="page-title">
           As minhas viagens
         </h1>
-        <p className="lead">Reservas confirmadas e histórico.</p>
+        <p className="page-lead">Reservas confirmadas e histórico.</p>
         <div className="list-stack">
           {bookings.map((b) => (
             <Link key={b.id} href={`/pedidos/${b.tripRequestId}`} className="list-item">
@@ -40,7 +40,7 @@ export default async function DriverTripsPage() {
               </span>
             </Link>
           ))}
-          {bookings.length === 0 && <div className="panel muted">Ainda sem viagens.</div>}
+          {bookings.length === 0 && <div className="empty-state">Ainda sem viagens.</div>}
         </div>
       </div>
     </section>

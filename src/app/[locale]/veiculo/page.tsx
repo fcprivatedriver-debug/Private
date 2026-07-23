@@ -13,7 +13,7 @@ export default async function VehiclePage() {
   return (
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 720 }}>
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+        <h1 className="page-title">
           O teu veículo
         </h1>
         <p className="muted" style={{ marginBottom: "1.25rem" }}>

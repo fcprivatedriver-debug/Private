@@ -15,7 +15,7 @@ export default async function AdminVehicleClassesPage() {
         <p className="muted">
           <Link href="/admin">← Admin</Link>
         </p>
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+        <h1 className="page-title">
           Vehicle classes
         </h1>
         <p className="lead">

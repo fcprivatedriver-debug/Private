@@ -31,10 +31,9 @@ export default async function AdminPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
-          Admin Movio
-        </h1>
-        <div className="cta-row" style={{ marginBottom: "1.25rem" }}>
+        <h1 className="page-title">Admin Movio</h1>
+        <p className="page-lead">Operações, verificações e visão geral da plataforma.</p>
+        <div className="cta-row" style={{ marginBottom: "0.5rem" }}>
           <Link href="/admin/verificacoes" className="btn btn-primary">
             AI verification queue
           </Link>
@@ -42,20 +41,20 @@ export default async function AdminPage() {
             Vehicle classes ({classCount})
           </Link>
         </div>
-        <div className="steps" style={{ margin: "1.5rem 0" }}>
-          <div className="panel">
+        <div className="metric-row">
+          <div className="metric">
             <div className="step-num">{tripCount}</div>
             <div className="muted">Pedidos</div>
           </div>
-          <div className="panel">
+          <div className="metric">
             <div className="step-num">{offerCount}</div>
             <div className="muted">Propostas</div>
           </div>
-          <div className="panel">
+          <div className="metric">
             <div className="step-num">{bookingCount}</div>
             <div className="muted">Reservas</div>
           </div>
-          <div className="panel">
+          <div className="metric">
             <div className="step-num">{driverCount}</div>
             <div className="muted">Motoristas</div>
           </div>
@@ -77,7 +76,7 @@ export default async function AdminPage() {
             </div>
           ))}
           {pendingDrivers.length === 0 && (
-            <div className="panel muted">Nenhuma verificação pendente.</div>
+            <div className="empty-state">Nenhuma verificação pendente.</div>
           )}
         </div>
 

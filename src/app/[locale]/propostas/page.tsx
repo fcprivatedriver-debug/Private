@@ -16,7 +16,7 @@ export default async function MyOffersPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+        <h1 className="page-title">
           As minhas propostas
         </h1>
         <div className="list-stack" style={{ marginTop: "1.25rem" }}>
@@ -34,7 +34,7 @@ export default async function MyOffersPage() {
               {offer.status === "PENDING" && <WithdrawButton offerId={offer.id} />}
             </div>
           ))}
-          {offers.length === 0 && <div className="panel muted">Ainda não enviaste propostas.</div>}
+          {offers.length === 0 && <div className="empty-state">Ainda não enviaste propostas.</div>}
         </div>
       </div>
     </section>

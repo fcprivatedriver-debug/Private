@@ -15,7 +15,7 @@ export default async function OpenTripsPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+        <h1 className="page-title">
           Pedidos abertos
         </h1>
         <p className="lead">Envia propostas aos trajetos que te interessam.</p>
@@ -31,7 +31,7 @@ export default async function OpenTripsPage() {
               </span>
             </Link>
           ))}
-          {trips.length === 0 && <div className="panel muted">Não há pedidos abertos de momento.</div>}
+          {trips.length === 0 && <div className="empty-state">Não há pedidos abertos de momento.</div>}
         </div>
       </div>
     </section>

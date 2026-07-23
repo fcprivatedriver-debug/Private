@@ -54,7 +54,7 @@ export function VerificationQueue({ items }: { items: QueueItem[] }) {
   }
 
   if (items.length === 0) {
-    return <div className="panel muted">No drivers awaiting verification.</div>;
+    return <div className="empty-state">No drivers awaiting verification.</div>;
   }
 
   return (

@@ -42,14 +42,10 @@ function RegisterForm() {
   }
 
   return (
-    <section className="section fade-up">
-      <div className="container" style={{ maxWidth: 520 }}>
-        <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.5rem" }}>
-          {t("registerTitle")}
-        </h1>
-        <p className="muted" style={{ marginBottom: "1.5rem" }}>
-          {t("registerLead")}
-        </p>
+    <section className="auth-shell fade-up">
+      <div className="container" style={{ maxWidth: 480 }}>
+        <h1 className="page-title">{t("registerTitle")}</h1>
+        <p className="page-lead">{t("registerLead")}</p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
           <div className="field">
@@ -65,32 +61,43 @@ function RegisterForm() {
             <label className="label" htmlFor="name">
               {t("name")}
             </label>
-            <input className="input" id="name" name="name" required />
+            <input className="input" id="name" name="name" required autoComplete="name" />
           </div>
           <div className="field">
             <label className="label" htmlFor="email">
               {t("email")}
             </label>
-            <input className="input" id="email" name="email" type="email" required />
+            <input className="input" id="email" name="email" type="email" required autoComplete="email" />
           </div>
           <div className="field">
             <label className="label" htmlFor="phone">
               {t("phone")}
             </label>
-            <input className="input" id="phone" name="phone" />
+            <input className="input" id="phone" name="phone" autoComplete="tel" />
           </div>
           <div className="field">
             <label className="label" htmlFor="password">
               {t("password")}
             </label>
-            <input className="input" id="password" name="password" type="password" minLength={6} required />
+            <input
+              className="input"
+              id="password"
+              name="password"
+              type="password"
+              minLength={6}
+              required
+              autoComplete="new-password"
+            />
           </div>
           <button className="btn btn-primary" type="submit" disabled={loading}>
             {loading ? t("creating") : t("createAccount")}
           </button>
         </form>
-        <p className="muted" style={{ marginTop: "1rem" }}>
-          {t("hasAccount")} <Link href="/login">{t("loginLink")}</Link>
+        <p className="muted" style={{ marginTop: "1.25rem" }}>
+          {t("hasAccount")}{" "}
+          <Link href="/login" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+            {t("loginLink")}
+          </Link>
         </p>
       </div>
     </section>

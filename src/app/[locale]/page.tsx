@@ -49,13 +49,21 @@ export default async function HomePage({ params }: Props) {
               <p className="muted">{t("step3Body")}</p>
             </div>
           </div>
-          <p className="muted" style={{ marginTop: "3rem", fontSize: "0.9rem" }}>
-            <Link href="/termos">{t("terms")}</Link>
-            {" · "}
-            <Link href="/privacidade">{t("privacy")}</Link>
-          </p>
         </div>
       </section>
+
+      <footer className="site-footer">
+        <div className="container site-footer-inner">
+          <div className="logo" style={{ fontSize: "1.2rem" }}>
+            Mov<span>io</span>
+          </div>
+          <div>
+            <Link href="/termos">{t("terms")}</Link>
+            <span aria-hidden> · </span>
+            <Link href="/privacidade">{t("privacy")}</Link>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }

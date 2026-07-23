@@ -49,10 +49,8 @@ export default function NewTripPage() {
   return (
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 720 }}>
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
-          Novo pedido de viagem
-        </h1>
-        <p className="lead">Publica o trajeto e espera propostas de motoristas.</p>
+        <h1 className="page-title">Novo pedido de viagem</h1>
+        <p className="page-lead">Publica o trajeto e espera propostas de motoristas.</p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
           <AddressAutocompleteInput

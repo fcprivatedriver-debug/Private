@@ -13,7 +13,7 @@ export default async function AdminVerificationsPage() {
         <p className="muted">
           <Link href="/admin">← Admin</Link>
         </p>
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+        <h1 className="page-title">
           AI verification queue
         </h1>
         <p className="lead">
