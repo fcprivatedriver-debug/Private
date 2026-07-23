@@ -81,3 +81,18 @@ Future Open Banking and email invoice reading plug into the same seams without U
 The home experience is a chat with **Nina**. Natural-language questions in Portuguese
 are answered by `src/lib/ai/nina-assistant.ts` using the family's live financial context.
 Menus stay secondary and use everyday language (Gastos, Entradas, Objetivos…).
+
+## Adaptive household intelligence
+
+Product narrative (single integrated capability):  
+[`docs/PRODUCT.md`](./PRODUCT.md) — *Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina*.
+
+Implementation seams:
+
+| Concern | Location |
+|---------|----------|
+| Personal vs family space | Cookie `nina_space` · `src/lib/scope.ts` · `SpaceSwitcher` |
+| Secure invites (link / QR) | `FamilyInvite` · `/[locale]/convite/[token]` |
+| Scope resolution & habits | `src/lib/ai/learning.ts` · `NinaHabitStat` |
+| User memory rules | `NinaMemoryRule` · `/memoria` · NL «sempre que…» |
+| Smart suggestions | `getSmartSuggestions` on dashboard |

@@ -1007,3 +1007,54 @@ html.dark .nina-bubble.user .nina-bubble-body {
 .smart-card.tone-celebrate,
 .smart-card.tone-success { border-color: rgba(15, 122, 74, 0.25); background: var(--income-soft); }
 .smart-card.tone-warning { border-color: rgba(185, 28, 28, 0.2); }
+
+/* ——— Landing: experiência + inteligência adaptativa (secção única) ——— */
+.section-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--navy);
+}
+.section-adaptive h2 {
+  max-width: 22ch;
+}
+.adaptive-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.75rem;
+  margin-top: 1.75rem;
+}
+.adaptive-block {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.adaptive-block h3 {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--navy-deep);
+}
+.adaptive-block p {
+  margin: 0;
+  color: var(--fg-muted);
+  line-height: 1.55;
+  font-size: 0.95rem;
+  max-width: 42ch;
+}
+.adaptive-philosophy {
+  margin: 2rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--navy-deep);
+  max-width: 36ch;
+}
+@media (max-width: 800px) {
+  .adaptive-flow { grid-template-columns: 1fr; }
+  .section-adaptive h2 { max-width: none; }
+}

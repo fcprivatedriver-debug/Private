@@ -28,18 +28,29 @@ npm run dev
 | `familia@nina.app` | `nina123` |
 | `ana@nina.app` | `nina123` |
 
-## Funcionalidades
+## Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina
 
-- Dashboard: saldo, receitas, despesas, poupança, orçamento %, objetivos, últimas despesas, próximos pagamentos, gráficos
+Funcionalidade integrada (não duas secções separadas):
+
+- Registo extremamente simples e Conta Familiar via convite por **link ou QR Code**
+- Perfis individuais com autenticação própria (PIN, biometria)
+- Separação entre **As Minhas Finanças** e **Conta Familiar**
+- Compreensão automática de despesas pessoais, familiares ou profissionais
+- Aprendizagem contínua a partir das confirmações do utilizador
+- Memória personalizada com regras editáveis
+- Automatização progressiva (cada vez menos perguntas)
+- Sugestões inteligentes e análise de padrões de consumo
+- Filosofia: *quanto mais a Nina é utilizada, menos trabalho o utilizador tem*
+
+Documento completo: [`docs/PRODUCT.md`](docs/PRODUCT.md)
+
+## Outras capacidades
+
+- Dashboard conversacional com a Nina
 - Receitas e despesas com categorias PT
-- OCR de faturas (confirmar dados)
-- Importações (Continente, Galp, MB Way, CSV, …)
-- Orçamentos com alertas 75/90/100%
-- Estatísticas, pesquisa, filtros, alertas, recorrentes
-- Multiutilizador familiar
-- Tema claro / escuro
-- Exportação PDF / Excel / CSV
-- Assistente IA (hábitos, anomalias, previsão)
+- OCR de faturas · importações (Continente, Galp, MB Way, CSV, …)
+- Orçamentos, estatísticas, pesquisa, alertas, recorrentes
+- Tema claro / escuro · exportação PDF / Excel / CSV
 
 ## Ambiente
 
@@ -50,4 +61,4 @@ npm run dev
 | `AUTH_SECRET` | 32+ chars |
 | `NEXT_PUBLIC_APP_NAME` | `Nina` |
 
-Ver `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.
+Ver também `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.

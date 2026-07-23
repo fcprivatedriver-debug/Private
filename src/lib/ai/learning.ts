@@ -53,6 +53,15 @@ export async function resolveScope(input: {
     }
   }
 
+  if (/(tvde|uber|bolt|cliente|empresa|atividade profissional|fatura profissional|recibo verde)/.test(n)) {
+    return {
+      scope: "PERSONAL",
+      confidence: "high",
+      reason: "Soa a atividade profissional — registo nas tuas finanças pessoais com esse contexto.",
+      needsConfirm: false,
+    };
+  }
+
   // Pistas linguísticas fortes
   if (/(para casa|da casa|familiar|partilhad|compras para casa|conta familiar|da familia|da família)/.test(n)) {
     return {
