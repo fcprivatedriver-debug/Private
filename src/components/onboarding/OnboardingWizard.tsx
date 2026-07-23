@@ -343,7 +343,7 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
             Submit for AI verification
           </h2>
           <p className="muted">
-            Movio AI checks document quality, completeness, vehicle consistency and profile
+            Hegos AI checks document quality, completeness, vehicle consistency and profile
             authenticity, then queues a human review.
           </p>
           {profile.aiSummary && (

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "appName": "Movio",
-    "tagline": "O seu motorista privado, escolhido com calma"
+    "appName": "Hegos",
+    "tagline": "Motoristas privados. Escolhidos com confiança."
   },
   "nav": {
     "howItWorks": "Como funciona",
@@ -22,16 +22,16 @@
     "logout": "Sair"
   },
   "home": {
-    "eyebrow": "Motoristas privados · Portugal",
-    "headline": "Movio",
+    "eyebrow": "Motoristas privados · Internacional",
+    "headline": "Hegos",
     "copy": "Peça um transfer privado. Receba propostas de motoristas verificados. Escolha a que lhe parece certa — sem pressa, sem ruído.",
     "ctaRequest": "Pedir uma viagem",
-    "ctaDriver": "Conduzir com a Movio",
+    "ctaDriver": "Conduzir com a Hegos",
     "ctaMyTrips": "Ver as minhas viagens",
     "ctaDashboard": "Abrir o meu painel",
     "ctaAdmin": "Abrir admin",
     "stepsTitle": "Três momentos, uma experiência.",
-    "stepsLead": "A Movio não é um táxi. É um marketplace discreto onde define a viagem e escolhe a proposta.",
+    "stepsLead": "A Hegos não é um táxi. É um marketplace discreto onde define a viagem e escolhe a proposta.",
     "step1Title": "Conte-nos o trajeto",
     "step1Body": "Onde o queremos encontrar, para onde vai, e o que importa no caminho.",
     "step2Title": "Receba propostas",
@@ -51,7 +51,7 @@
     "invalidCredentials": "Email ou palavra-passe incorretos",
     "noAccount": "Ainda não tem conta?",
     "registerLink": "Criar conta",
-    "registerTitle": "Bem-vindo à Movio",
+    "registerTitle": "Bem-vindo à Hegos",
     "registerLead": "Peça viagens ou envie propostas — uma conta, um papel para começar.",
     "accountType": "Como quer começar?",
     "customer": "Quero viajar",
@@ -64,7 +64,7 @@
     "loginLink": "Entrar"
   },
   "how": {
-    "title": "Como a Movio funciona",
+    "title": "Como a Hegos funciona",
     "lead": "Um marketplace de motoristas privados reduzido ao essencial: pedir, propor, escolher."
   },
   "forDrivers": {
@@ -76,7 +76,7 @@
   "legal": {
     "termsTitle": "Termos de utilização",
     "privacyTitle": "Privacidade",
-    "preliminary": "Versão preliminar · Movio"
+    "preliminary": "Versão preliminar · Hegos"
   },
   "common": {
     "loading": "A carregar…"

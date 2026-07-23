@@ -31,7 +31,7 @@ async function geocodeNominatim(query: string): Promise<(Coords & { label: strin
     url.searchParams.set("format", "json");
     url.searchParams.set("limit", "1");
     const res = await fetch(url.toString(), {
-      headers: { "User-Agent": "MovioDemo/1.0 (marketplace)" },
+      headers: { "User-Agent": "HegosDemo/1.0 (marketplace)" },
       next: { revalidate: 86400 },
     });
     if (!res.ok) return null;

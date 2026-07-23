@@ -53,7 +53,7 @@ export default async function CustomerTripsPage() {
           {trips.length === 0 && (
             <EmptyState
               title="Ainda não tem viagens"
-              body="Quando estiver pronto, diga-nos onde o devemos encontrar — e a Movio trata do resto."
+              body="Quando estiver pronto, diga-nos onde o devemos encontrar — e a Hegos trata do resto."
               actionHref="/pedidos/novo"
               actionLabel="Pedir a primeira viagem"
             />

@@ -53,7 +53,7 @@ export default async function AdminPage() {
     <section className="section">
       <div className="container">
         <PageGreeting
-          hello="Centro de operações Movio"
+          hello="Centro de operações Hegos"
           sub="Uma visão calma do marketplace — pessoas, viagens e confiança em verificação."
         />
         <SummaryStrip

@@ -1,6 +1,6 @@
-# Deploy Movio to Vercel (phone-friendly)
+# Deploy Hegos to Vercel (phone-friendly)
 
-Movio uses **PostgreSQL** (Neon). SQLite is not supported.
+Hegos uses **PostgreSQL** (Neon). SQLite is not supported.
 
 ## Login on Vercel (important)
 

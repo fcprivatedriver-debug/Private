@@ -1,4 +1,4 @@
-# Agent notes — Movio
+# Agent notes — Hegos
 
 ## PR completion gate (mandatory)
 

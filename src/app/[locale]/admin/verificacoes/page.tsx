@@ -17,7 +17,7 @@ export default async function AdminVerificationsPage() {
           AI verification queue
         </h1>
         <p className="lead">
-          Review driver applications with Movio AI risk scores, document signals and audit-ready
+          Review driver applications with Hegos AI risk scores, document signals and audit-ready
           decisions.
         </p>
         <VerificationQueue

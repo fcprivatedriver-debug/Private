@@ -15,6 +15,12 @@ export default async function ParaMotoristasPage({ params }: Props) {
           {t("title")}
         </h1>
         <p className="page-lead">{t("lead")}</p>
+        <div className="ink-band fade-up-delay">
+          <p style={{ margin: "0 0 0.35rem", fontWeight: 600, letterSpacing: "-0.02em" }}>Hegos Drivers</p>
+          <p className="muted" style={{ margin: 0, maxWidth: "28rem" }}>
+            Verified profiles. Transparent offers. A platform built for professionals.
+          </p>
+        </div>
         <div className="cta-row" style={{ marginTop: "0.5rem" }}>
           <Link href="/registo?role=DRIVER" className="btn btn-primary">
             {t("ctaRegister")}

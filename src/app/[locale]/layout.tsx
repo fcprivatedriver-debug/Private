@@ -24,6 +24,16 @@ export async function generateMetadata({
       template: `%s · ${t("appName")}`,
     },
     description: t("tagline"),
+    applicationName: t("appName"),
+    icons: {
+      icon: [{ url: "/brand/hegos-mark.svg", type: "image/svg+xml" }],
+    },
+    openGraph: {
+      title: `${t("appName")} — ${t("tagline")}`,
+      description: t("tagline"),
+      siteName: t("appName"),
+      type: "website",
+    },
   };
 }
 

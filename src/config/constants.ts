@@ -1,4 +1,4 @@
-export const APP_NAME = "Movio";
+export const APP_NAME = "Hegos";
 export const DEFAULT_CURRENCY = "EUR";
 export const PLATFORM_FEE_PERCENT_DEFAULT = 15;
 
@@ -42,7 +42,7 @@ export const DRIVER_STATUS_LABELS: Record<string, string> = {
   REJECTED: "Recusado",
 };
 
-export function isMovioElite(profile: {
+export function isHegosElite(profile: {
   ratingAvg?: number | null;
   completedTripsCount?: number | null;
   ratingCount?: number | null;
@@ -54,6 +54,9 @@ export function isMovioElite(profile: {
   );
 }
 
+/** @deprecated Use isHegosElite */
+export const isMovioElite = isHegosElite;
+
 export function bookingReference(bookingId: string): string {
-  return `MOV-${bookingId.slice(-8).toUpperCase()}`;
+  return `HEG-${bookingId.slice(-8).toUpperCase()}`;
 }

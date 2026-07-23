@@ -14,7 +14,7 @@ export default async function TermosPage({ params }: Props) {
         <p className="page-lead">{t("preliminary")}</p>
         <div className="prose-block" style={{ marginTop: "0.5rem", lineHeight: 1.7, maxWidth: "40rem" }}>
           <p>
-            Movio is a marketplace connecting customers with private drivers. The platform is not a
+            Hegos is a marketplace connecting customers with private drivers. The platform is not a
             carrier: it facilitates trip requests, offers and bookings.
           </p>
           <p>

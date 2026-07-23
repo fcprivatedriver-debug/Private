@@ -17,7 +17,7 @@ export async function DemoModeBanner() {
         }}
       >
         <span>
-          <strong style={{ fontWeight: 600 }}>Demo Mode</strong>
+          <strong style={{ fontWeight: 600 }}>Hegos Demo</strong>
           <span style={{ opacity: 0.85 }}>
             {" "}
             — sample journeys are ready. Explore as guest, chauffeur, or admin.

@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function HomePage({ params }: Props) {
         <div className="container hero-content">
           <p className="hero-eyebrow">{t("eyebrow")}</p>
           <h1 className="hero-brand">
-            Mov<span>io</span>
+            Heg<span>os</span>
           </h1>
           <p className="hero-copy">{t("copy")}</p>
           <div className="cta-row">
@@ -76,19 +77,7 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
-      <footer className="site-footer">
-        <div className="container site-footer-inner">
-          <div className="logo" style={{ fontSize: "1.2rem" }}>
-            <span className="logo-mark" aria-hidden style={{ width: "1.1rem", height: "1.1rem" }} />
-            Mov<span>io</span>
-          </div>
-          <div>
-            <Link href="/termos">{t("terms")}</Link>
-            <span aria-hidden> · </span>
-            <Link href="/privacidade">{t("privacy")}</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter termsLabel={t("terms")} privacyLabel={t("privacy")} />
     </>
   );
 }

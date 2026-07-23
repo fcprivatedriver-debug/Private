@@ -15,14 +15,14 @@ export default async function PrivacidadePage({ params }: Props) {
         <div className="prose-block" style={{ marginTop: "0.5rem", lineHeight: 1.7, maxWidth: "40rem" }}>
           <p>
             We process account data (name, email, phone), trip requests and offers to operate the
-            Movio marketplace.
+            Hegos marketplace.
           </p>
           <p>
             Customer and driver contact details become visible to the counterpart only after payment
             has been successfully confirmed — never at offer acceptance alone.
           </p>
           <p>
-            You may request access or deletion of your data by contacting the Movio team. This page
+            You may request access or deletion of your data by contacting the Hegos team. This page
             will be finalized before production launch.
           </p>
         </div>
