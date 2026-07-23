@@ -46,3 +46,27 @@ O utilizador pode definir regras explícitas — «sempre que eu disser compras 
 ## Filosofia
 
 **Quanto mais a Nina é utilizada, menos trabalho o utilizador tem.**
+
+---
+
+## Ligações e Automatização Personalizada
+
+A Nina deixa cada pessoa escolher o nível de automatização. **Nunca obriga** acessos a serviços externos — tudo funciona por módulos opcionais, reversíveis e com autorização explícita.
+
+### Centro «Ligações da Nina»
+
+No menu **Ligações da Nina** o utilizador adiciona, pausa ou remove ligações quando quiser. Cada módulo é independente (ex.: Gmail e Continente ativos; Pingo Doce e eletricidade desligados).
+
+Arquitetura preparada para: Open Banking, cartões, Revolut, MB Way, PayPal, email (Gmail/Outlook), Autoridade Tributária (quando possível), Via Verde, supermercados, fidelização, combustível, Tesla e outras marcas, água, luz, gás, telecomunicações, seguradoras, investimentos e novos serviços.
+
+### Importação automática
+
+Com uma ligação ativa, a Nina pode importar despesas e receitas, identificar pagamentos, ler faturas autorizadas, classificar movimentos e atualizar estatísticas — automaticamente.
+
+No email autorizado, extrai valor, data, empresa, categoria e subcategoria de faturas, recibos, compras online, utilidades, seguros, portagens e subscrições.
+
+### Alternativa sem ligações
+
+Sem qualquer ligação externa, a Nina continua completa por voz: «paguei 42 € de eletricidade», «recebi o salário», «fui às compras».
+
+Níveis de automatização: apenas voz · voz + OCR · voz + email · voz + banco · voz + banco + email + supermercados · automatização total.

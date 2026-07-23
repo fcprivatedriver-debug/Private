@@ -67,6 +67,7 @@ async function captureStills() {
   await page.getByRole("button", { name: /Café/i }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   await gotoShot(page, "/pt/familia", "10c-conta-familiar");
+  await gotoShot(page, "/pt/ligacoes", "10g-ligacoes");
   await gotoShot(page, "/pt/memoria", "10d-memoria");
   await gotoShot(page, "/pt/perfil", "10e-perfil");
   await gotoShot(page, "/pt/convite/nina-demo-invite-token-seguro", "10f-convite");
@@ -114,6 +115,8 @@ async function captureFlowVideo() {
   await page.getByRole("button", { name: /Conta Familiar/i }).first().click().catch(() => {});
   await page.waitForTimeout(600);
   await page.goto(`${BASE}/pt/familia`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/ligacoes`, { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
   await page.goto(`${BASE}/pt/memoria`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);

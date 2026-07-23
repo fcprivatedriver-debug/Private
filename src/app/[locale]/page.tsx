@@ -97,11 +97,10 @@ export default function LandingPage() {
           </article>
 
           <article className="adaptive-block">
-            <h3>Memória e sugestões</h3>
+            <h3>Memória, sugestões e ligações</h3>
             <p>
-              Define regras («sempre que eu disser compras para casa…») e edita-as quando quiseres.
-              A Nina analisa padrões de consumo e sugere lembretes, progressos e avisos úteis — com
-              calma e sem julgamentos.
+              Define regras e recebe sugestões úteis. No Centro de Ligações ativa só o que quiseres —
+              banco, email, supermercados — ou continua só por voz. Nada é obrigatório.
             </p>
           </article>
         </div>

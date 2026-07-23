@@ -98,6 +98,38 @@ enum ImportStatus {
   FAILED
 }
 
+enum ConnectionKind {
+  BANKING
+  CARD
+  WALLET
+  EMAIL
+  RETAIL
+  LOYALTY
+  FUEL
+  AUTO
+  UTILITY
+  TELECOM
+  INSURANCE
+  TAX
+  INVESTMENT
+  OTHER
+}
+
+enum ConnectionStatus {
+  AUTHORIZED
+  PAUSED
+  ERROR
+}
+
+enum AutomationLevel {
+  VOICE
+  VOICE_OCR
+  VOICE_EMAIL
+  VOICE_BANK
+  VOICE_BANK_EMAIL_RETAIL
+  FULL
+}
+
 enum GoalType {
   CAR
   HOUSE
@@ -126,6 +158,7 @@ model User {
   biometricsEnabled Boolean @default(false)
   theme         String    @default("system") // light | dark | system
   locale        String    @default("pt")
+  automationLevel AutomationLevel @default(VOICE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -139,6 +172,7 @@ model User {
   memoryRules   NinaMemoryRule[]
   habitStats    NinaHabitStat[]
   invitesCreated FamilyInvite[] @relation("InviteCreator")
+  connections   NinaConnection[]
 }
 
 model AuthAccount {
@@ -202,6 +236,7 @@ model Family {
   invites            FamilyInvite[]
   memoryRules        NinaMemoryRule[]
   habitStats         NinaHabitStat[]
+  connections        NinaConnection[]
 }
 
 model FamilyMember {
@@ -280,6 +315,33 @@ model NinaHabitStat {
 
   @@unique([userId, familyId, keyType, keyValue])
   @@index([userId, familyId])
+}
+
+/// Ligação opcional a um serviço externo — só ativa com autorização explícita.
+model NinaConnection {
+  id            String           @id @default(cuid())
+  familyId      String
+  userId        String
+  providerKey   String
+  label         String
+  kind          ConnectionKind   @default(OTHER)
+  status        ConnectionStatus @default(AUTHORIZED)
+  autoImport    Boolean          @default(true)
+  importProvider ImportProvider?
+  lastSyncAt    DateTime?
+  lastMessage   String?
+  metadataJson  String?          @db.Text
+  authorizedAt  DateTime         @default(now())
+  revokedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, providerKey])
+  @@index([familyId, status])
+  @@index([userId])
 }
 
 // ——— Contas ———

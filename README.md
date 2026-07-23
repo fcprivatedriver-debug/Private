@@ -44,6 +44,10 @@ Funcionalidade integrada (não duas secções separadas):
 
 Documento completo: [`docs/PRODUCT.md`](docs/PRODUCT.md)
 
+## Ligações da Nina
+
+Automatização personalizada por módulos opcionais (`/pt/ligacoes`): autorizar, pausar ou remover bancos, email, supermercados e outros — nunca obrigatório. Sem ligações, a voz continua a funcionar.
+
 ## Outras capacidades
 
 - Dashboard conversacional com a Nina

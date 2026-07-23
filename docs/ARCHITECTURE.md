@@ -61,7 +61,10 @@ nina/
 
 Each import provider implements `ImportAdapter` in `src/lib/imports`.  
 OCR lives in `src/lib/ocr`. AI insights in `src/lib/ai/finance-insights`.  
-Future Open Banking and email invoice reading plug into the same seams without UI rewrites.
+Optional standing connections live in `NinaConnection` + `src/domain/connections.ts`
+(`Ligações da Nina` at `/ligacoes`) — authorize, pause, revoke, sync independently.
+Email invoice extraction stub: `src/lib/connections/email.ts`.
+Future Open Banking and email OAuth plug into the same seams without UI rewrites.
 
 ---
 

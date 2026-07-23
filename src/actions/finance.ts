@@ -510,6 +510,7 @@ export async function confirmImportJob(jobId: string) {
         memberId: membership.id,
         createdById: session.user.id,
         categoryId: cat.id,
+        scope: await scopeFromSpace(),
         amountCents: d.amountCents,
         date: new Date(d.date),
         description: d.description,

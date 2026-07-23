@@ -154,8 +154,12 @@ export const importAdapters: Partial<Record<ImportProvider, ImportAdapter>> = {
     supportsOAuth: true,
     connect: async () => ({
       ok: true,
-      message: "Leitura de emails com faturas mediante autorização (futuro).",
+      message: "Leitura de emails com faturas mediante a tua autorização explícita.",
     }),
+    fetchRecent: async () => {
+      const { extractInvoicesFromAuthorizedEmail } = await import("@/lib/connections/email");
+      return extractInvoicesFromAuthorizedEmail("gmail");
+    },
   },
 };
 

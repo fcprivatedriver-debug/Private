@@ -75,6 +75,7 @@ async function main() {
   await prisma.ninaHabitStat.deleteMany();
   await prisma.ninaMemoryRule.deleteMany();
   await prisma.familyInvite.deleteMany();
+  await prisma.ninaConnection.deleteMany();
   await prisma.store.deleteMany();
   await prisma.category.deleteMany();
   await prisma.financeAccount.deleteMany();
@@ -93,6 +94,7 @@ async function main() {
       passwordHash,
       theme: "system",
       biometricsEnabled: true,
+      automationLevel: "VOICE_EMAIL",
     },
   });
 
@@ -103,6 +105,7 @@ async function main() {
       passwordHash,
       theme: "light",
       biometricsEnabled: true,
+      automationLevel: "VOICE",
     },
   });
 
@@ -407,6 +410,45 @@ async function main() {
         personalCount: 5,
         familyCount: 0,
         lastScope: "PERSONAL",
+      },
+    ],
+  });
+
+  // Ligações demo — só as que o utilizador autorizou
+  await prisma.ninaConnection.createMany({
+    data: [
+      {
+        familyId: family.id,
+        userId: filipe.id,
+        providerKey: "gmail",
+        label: "Gmail",
+        kind: "EMAIL",
+        status: "AUTHORIZED",
+        autoImport: true,
+        importProvider: "EMAIL",
+        lastMessage: "Autorizado — a Nina pode ler faturas neste email.",
+      },
+      {
+        familyId: family.id,
+        userId: filipe.id,
+        providerKey: "continente",
+        label: "Continente",
+        kind: "RETAIL",
+        status: "AUTHORIZED",
+        autoImport: true,
+        importProvider: "CONTINENTE",
+        lastMessage: "Autorizado — importação de compras pronta.",
+      },
+      {
+        familyId: family.id,
+        userId: filipe.id,
+        providerKey: "via_verde",
+        label: "Via Verde",
+        kind: "AUTO",
+        status: "AUTHORIZED",
+        autoImport: false,
+        importProvider: "VIA_VERDE",
+        lastMessage: "Autorizado, auto-import desligado.",
       },
     ],
   });

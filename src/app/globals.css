@@ -1058,3 +1058,92 @@ html.dark .nina-bubble.user .nina-bubble-body {
   .adaptive-flow { grid-template-columns: 1fr; }
   .section-adaptive h2 { max-width: none; }
 }
+
+/* ——— Ligações da Nina ——— */
+.automation-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.65rem;
+}
+.automation-level {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.automation-level strong { display: block; margin-bottom: 0.25rem; font-size: 0.92rem; }
+.automation-level span { display: block; font-size: 0.8rem; color: var(--fg-muted); line-height: 1.4; }
+.automation-level.active {
+  border-color: #1e3a5f;
+  background: var(--navy-mist);
+}
+.ligacoes-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.nina-chip.is-selected {
+  background: var(--navy-deep);
+  color: #fff;
+  border-color: var(--navy-deep);
+}
+.ligacao-group { margin-bottom: 1.35rem; }
+.ligacao-kind {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.ligacao-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+.ligacao-card {
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.ligacao-card.is-active { border-color: rgba(15, 122, 74, 0.35); }
+.ligacao-card.is-soon { opacity: 0.92; }
+.ligacao-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.ligacao-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ligacao-badge.on { background: var(--income-soft); color: var(--income); }
+.ligacao-badge.off { background: var(--bg-soft); color: var(--fg-muted); }
+.ligacao-badge.pause { background: #fff7ed; color: #c2410c; }
+.ligacao-msg { margin: 0; font-size: 0.8rem; color: var(--navy); }
+.ligacao-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.45rem;
+}
+.ligacao-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+}

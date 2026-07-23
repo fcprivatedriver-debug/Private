@@ -18,6 +18,7 @@ const NAV = [
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/familia", label: "Conta" },
+  { href: "/pt/ligacoes", label: "Ligações" },
   { href: "/pt/memoria", label: "Memória" },
   { href: "/pt/perfil", label: "Perfil" },
   { href: "/pt/alertas", label: "Avisos" },
@@ -27,8 +28,8 @@ const NAV = [
 const MOBILE = [
   { href: "/pt/dashboard", label: "Nina" },
   { href: "/pt/despesas", label: "Gastos" },
+  { href: "/pt/ligacoes", label: "Ligações" },
   { href: "/pt/familia", label: "Conta" },
-  { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/definicoes", label: "Mais" },
 ];
 
