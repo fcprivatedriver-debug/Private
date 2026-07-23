@@ -9,21 +9,23 @@ import {
   publishTrip,
   withdrawOffer,
   DomainError,
-  confirmBookingWithoutPayment,
+  confirmBookingPayment,
   startTrip,
   completeTrip,
   createReview,
+  advanceJourney,
 } from "@/domain/marketplace";
 import {
   createOfferSchema,
   createTripSchema,
   registerSchema,
   vehicleSchema,
+  reviewSchema,
 } from "@/lib/validators";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { paymentsEnabled } from "@/config/env";
 import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from "@/domain/onboarding";
+import { estimateRoute } from "@/lib/maps/route";
 
 function fail(error: unknown) {
   if (error instanceof DomainError) {
@@ -92,7 +94,43 @@ export async function createTripAction(formData: FormData) {
       preferredVehicleClassId:
         formData.get("preferredVehicleClassId") || undefined,
       publish: formData.get("publish") === "true",
+      pickupLat: formData.get("pickupLat") || undefined,
+      pickupLng: formData.get("pickupLng") || undefined,
+      dropoffLat: formData.get("dropoffLat") || undefined,
+      dropoffLng: formData.get("dropoffLng") || undefined,
+      distanceMeters: formData.get("distanceMeters") || undefined,
+      durationSeconds: formData.get("durationSeconds") || undefined,
     });
+
+    let coords = {
+      pickupLat: parsed.pickupLat,
+      pickupLng: parsed.pickupLng,
+      dropoffLat: parsed.dropoffLat,
+      dropoffLng: parsed.dropoffLng,
+      distanceMeters: parsed.distanceMeters,
+      durationSeconds: parsed.durationSeconds,
+    };
+
+    if (!coords.distanceMeters || !coords.pickupLat) {
+      const estimate = await estimateRoute({
+        pickupAddress: parsed.pickupAddress,
+        dropoffAddress: parsed.dropoffAddress,
+        pickupLat: parsed.pickupLat,
+        pickupLng: parsed.pickupLng,
+        dropoffLat: parsed.dropoffLat,
+        dropoffLng: parsed.dropoffLng,
+      });
+      if (estimate) {
+        coords = {
+          pickupLat: estimate.pickup.lat,
+          pickupLng: estimate.pickup.lng,
+          dropoffLat: estimate.dropoff.lat,
+          dropoffLng: estimate.dropoff.lng,
+          distanceMeters: estimate.distanceMeters,
+          durationSeconds: estimate.durationSeconds,
+        };
+      }
+    }
 
     const trip = await createTripRequest({
       customerId: session.user.id,
@@ -105,6 +143,7 @@ export async function createTripAction(formData: FormData) {
       flightNumber: parsed.flightNumber,
       preferredVehicleClassId: parsed.preferredVehicleClassId,
       publish: parsed.publish,
+      ...coords,
     });
 
     return { ok: true as const, tripId: trip.id };
@@ -150,6 +189,7 @@ export async function createOfferAction(formData: FormData) {
       message: formData.get("message") || undefined,
       includesTolls: formData.get("includesTolls") === "on",
       includesWaiting: formData.get("includesWaiting") === "on",
+      estimatedArrivalMinutes: formData.get("estimatedArrivalMinutes") || undefined,
     });
     const offer = await createOrUpdateOffer({
       driverId: session.user.id,
@@ -181,10 +221,43 @@ export async function acceptOfferAction(tripId: string, offerId: string) {
   }
   try {
     const result = await acceptOffer(tripId, offerId, session.user.id);
-    if (!paymentsEnabled()) {
-      await confirmBookingWithoutPayment(result.booking.id);
-    }
-    return { ok: true as const, bookingId: result.booking.id };
+    return {
+      ok: true as const,
+      bookingId: result.booking.id,
+      tripId,
+      next: `/pedidos/${tripId}/pagamento` as const,
+    };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function confirmPaymentAction(bookingId: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "CUSTOMER") {
+    return { ok: false as const, error: "Sem permissão" };
+  }
+  try {
+    const booking = await confirmBookingPayment(bookingId, session.user.id);
+    return {
+      ok: true as const,
+      tripId: booking.tripRequestId,
+      next: `/pedidos/${booking.tripRequestId}/confirmacao` as const,
+    };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function advanceJourneyAction(
+  tripId: string,
+  next: "DRIVER_EN_ROUTE" | "DRIVER_ARRIVED" | "IN_PROGRESS",
+) {
+  const session = await auth();
+  if (!session?.user) return { ok: false as const, error: "Sem permissão" };
+  try {
+    await advanceJourney(tripId, session.user.id, session.user.role, next);
+    return { ok: true as const };
   } catch (error) {
     return fail(error);
   }
@@ -282,14 +355,18 @@ export async function createReviewAction(formData: FormData) {
     return { ok: false as const, error: "Sem permissão" };
   }
   try {
-    const bookingId = String(formData.get("bookingId") || "");
-    const rating = Number(formData.get("rating"));
-    const comment = String(formData.get("comment") || "") || undefined;
+    const parsed = reviewSchema.parse({
+      bookingId: formData.get("bookingId"),
+      rating: formData.get("rating"),
+      vehicleRating: formData.get("vehicleRating") || undefined,
+      comment: formData.get("comment") || undefined,
+    });
     await createReview({
-      bookingId,
+      bookingId: parsed.bookingId,
       fromUserId: session.user.id,
-      rating,
-      comment,
+      rating: parsed.rating,
+      vehicleRating: parsed.vehicleRating,
+      comment: parsed.comment,
     });
     return { ok: true as const };
   } catch (error) {

@@ -288,6 +288,8 @@ async function createCompletedTrip(opts: {
       preferredVehicleClassId: route.classId,
       currency: "EUR",
       expiresAt: pickupAt,
+      distanceMeters: 8000 + (opts.routeIndex % 20) * 1500,
+      durationSeconds: 900 + (opts.routeIndex % 20) * 120,
     },
   });
 
@@ -302,6 +304,7 @@ async function createCompletedTrip(opts: {
       includesTolls: true,
       includesWaiting: opts.routeIndex % 2 === 0,
       status: "ACCEPTED",
+      estimatedArrivalMinutes: 15 + (opts.routeIndex % 20),
     },
   });
 
@@ -337,6 +340,7 @@ async function createCompletedTrip(opts: {
           fromUserId: opts.customerId,
           toUserId: opts.driverUserId,
           rating,
+          vehicleRating: Math.max(4, rating - (opts.routeIndex % 2)),
           comment: pick(REVIEW_COMMENTS, opts.routeIndex + opts.dayOffset),
         },
       },
@@ -412,6 +416,8 @@ async function seedLiveMarketplace(
       preferredVehicleClassId: "vc_executive",
       currency: "EUR",
       expiresAt: new Date(openPickup.getTime() - 2 * 60 * 60 * 1000),
+      distanceMeters: 9800,
+      durationSeconds: 1680,
     },
   });
 
@@ -428,6 +434,7 @@ async function seedLiveMarketplace(
         includesWaiting: true,
         validUntil: openTrip.expiresAt!,
         status: "PENDING",
+        estimatedArrivalMinutes: 22,
       },
       {
         tripRequestId: openTrip.id,
@@ -440,6 +447,7 @@ async function seedLiveMarketplace(
         includesWaiting: true,
         validUntil: openTrip.expiresAt!,
         status: "PENDING",
+        estimatedArrivalMinutes: 28,
       },
       {
         tripRequestId: openTrip.id,
@@ -452,6 +460,7 @@ async function seedLiveMarketplace(
         includesWaiting: true,
         validUntil: openTrip.expiresAt!,
         status: "PENDING",
+        estimatedArrivalMinutes: 18,
       },
     ],
   });
@@ -462,6 +471,10 @@ async function seedLiveMarketplace(
       customerId: anaId,
       pickupAddress: "Hotel Avenida Palace, Lisboa",
       dropoffAddress: "Cascais Marina, Cascais",
+      pickupLat: 38.715,
+      pickupLng: -9.142,
+      dropoffLat: 38.692,
+      dropoffLng: -9.418,
       pickupAt: open2,
       passengers: 3,
       luggage: 3,
@@ -470,6 +483,8 @@ async function seedLiveMarketplace(
       preferredVehicleClassId: "vc_van",
       currency: "EUR",
       expiresAt: new Date(open2.getTime() - 3 * 60 * 60 * 1000),
+      distanceMeters: 28500,
+      durationSeconds: 2400,
     },
   });
 
@@ -494,6 +509,8 @@ async function seedLiveMarketplace(
         currency: "EUR",
         expiresAt: new Date(when.getTime() - 2 * 60 * 60 * 1000),
         notes: i % 2 === 0 ? "Demo open request for marketplace density." : null,
+        distanceMeters: 7000 + i * 2200,
+        durationSeconds: 900 + i * 180,
       },
     });
   }
@@ -504,6 +521,10 @@ async function seedLiveMarketplace(
       customerId: anaId,
       pickupAddress: "Estação do Oriente, Lisboa",
       dropoffAddress: "Sintra National Palace, Sintra",
+      pickupLat: 38.7679,
+      pickupLng: -9.099,
+      dropoffLat: 38.7975,
+      dropoffLng: -9.3906,
       pickupAt: confirmedPickup,
       passengers: 2,
       luggage: 1,
@@ -512,6 +533,8 @@ async function seedLiveMarketplace(
       preferredVehicleClassId: "vc_executive",
       currency: "EUR",
       expiresAt: confirmedPickup,
+      distanceMeters: 26500,
+      durationSeconds: 2100,
     },
   });
   const confirmedOffer = await prisma.offer.create({
@@ -524,6 +547,7 @@ async function seedLiveMarketplace(
       message: "Meet at main entrance.",
       includesTolls: true,
       status: "ACCEPTED",
+      estimatedArrivalMinutes: 20,
     },
   });
   await prisma.tripRequest.update({
@@ -559,6 +583,10 @@ async function seedLiveMarketplace(
       customerId: anaId,
       pickupAddress: "Aeroporto de Faro (FAO), Faro",
       dropoffAddress: "Marina de Lagos, Lagos",
+      pickupLat: 37.0144,
+      pickupLng: -7.9659,
+      dropoffLat: 37.101,
+      dropoffLng: -8.673,
       pickupAt: progressPickup,
       passengers: 4,
       luggage: 5,
@@ -567,6 +595,8 @@ async function seedLiveMarketplace(
       preferredVehicleClassId: "vc_van",
       currency: "EUR",
       expiresAt: progressPickup,
+      distanceMeters: 92000,
+      durationSeconds: 4800,
     },
   });
   const progressOffer = await prisma.offer.create({
@@ -580,6 +610,7 @@ async function seedLiveMarketplace(
       includesTolls: true,
       includesWaiting: true,
       status: "ACCEPTED",
+      estimatedArrivalMinutes: 35,
     },
   });
   await prisma.tripRequest.update({

@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
+import { formatDistance, formatDuration } from "@/lib/maps/route";
 
 export default async function OpenTripsPage() {
   await requireRole("DRIVER");
@@ -15,9 +16,7 @@ export default async function OpenTripsPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <h1 className="page-title">
-          Pedidos abertos
-        </h1>
+        <h1 className="page-title">Pedidos abertos</h1>
         <p className="lead">Envia propostas aos trajetos que te interessam.</p>
         <div className="list-stack">
           {trips.map((trip) => (
@@ -27,7 +26,8 @@ export default async function OpenTripsPage() {
               </strong>
               <span className="muted">
                 {format(trip.pickupAt, "d MMM yyyy · HH:mm", { locale: pt })} · {trip.passengers}{" "}
-                pax · {trip._count.offers} propostas
+                pax · {formatDistance(trip.distanceMeters)} ·{" "}
+                {formatDuration(trip.durationSeconds)} · {trip._count.offers} propostas
               </span>
             </Link>
           ))}

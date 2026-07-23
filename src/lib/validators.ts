@@ -10,6 +10,12 @@ export const createTripSchema = z.object({
   flightNumber: z.string().optional(),
   preferredVehicleClassId: z.string().min(1).optional(),
   publish: z.coerce.boolean().optional(),
+  pickupLat: z.coerce.number().optional(),
+  pickupLng: z.coerce.number().optional(),
+  dropoffLat: z.coerce.number().optional(),
+  dropoffLng: z.coerce.number().optional(),
+  distanceMeters: z.coerce.number().int().positive().optional(),
+  durationSeconds: z.coerce.number().int().positive().optional(),
 });
 
 export const createOfferSchema = z.object({
@@ -19,6 +25,14 @@ export const createOfferSchema = z.object({
   message: z.string().max(500).optional(),
   includesTolls: z.coerce.boolean().optional(),
   includesWaiting: z.coerce.boolean().optional(),
+  estimatedArrivalMinutes: z.coerce.number().int().min(1).max(240).optional(),
+});
+
+export const reviewSchema = z.object({
+  bookingId: z.string().min(1),
+  rating: z.coerce.number().int().min(1).max(5),
+  vehicleRating: z.coerce.number().int().min(1).max(5).optional(),
+  comment: z.string().max(1000).optional(),
 });
 
 export const registerSchema = z.object({

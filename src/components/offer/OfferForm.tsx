@@ -16,10 +16,12 @@ export function OfferForm({
   tripRequestId,
   vehicles,
   existingPrice,
+  existingEta,
 }: {
   tripRequestId: string;
   vehicles: Vehicle[];
   existingPrice?: number;
+  existingEta?: number | null;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +69,21 @@ export function OfferForm({
         />
       </div>
       <div className="field">
+        <label className="label" htmlFor="estimatedArrivalMinutes">
+          Chegada estimada (minutos)
+        </label>
+        <input
+          className="input"
+          id="estimatedArrivalMinutes"
+          name="estimatedArrivalMinutes"
+          type="number"
+          min={1}
+          max={240}
+          defaultValue={existingEta ?? 25}
+          required
+        />
+      </div>
+      <div className="field">
         <label className="label" htmlFor="vehicleId">
           Veículo
         </label>
@@ -80,9 +97,14 @@ export function OfferForm({
       </div>
       <div className="field">
         <label className="label" htmlFor="message">
-          Mensagem
+          Mensagem (opcional)
         </label>
-        <textarea className="textarea" id="message" name="message" placeholder="Inclui portagens, espera…" />
+        <textarea
+          className="textarea"
+          id="message"
+          name="message"
+          placeholder="Inclui portagens, espera, pontos de encontro…"
+        />
       </div>
       <label className="muted" style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
         <input type="checkbox" name="includesTolls" defaultChecked /> Inclui portagens

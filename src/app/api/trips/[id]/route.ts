@@ -2,8 +2,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { apiError } from "@/lib/utils";
 import { acceptOffer, cancelTrip, publishTrip, DomainError } from "@/domain/marketplace";
-import { paymentsEnabled } from "@/config/env";
-import { confirmBookingWithoutPayment } from "@/domain/marketplace";
 import { canRevealContacts, sanitizeUserContacts } from "@/lib/contacts";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -102,9 +100,6 @@ export async function POST(request: Request, context: Ctx) {
     }
     if (action === "accept-offer") {
       const result = await acceptOffer(id, body.offerId, session.user.id);
-      if (!paymentsEnabled()) {
-        await confirmBookingWithoutPayment(result.booking.id);
-      }
       return Response.json(result);
     }
     return apiError("BAD_REQUEST", "Ação desconhecida");

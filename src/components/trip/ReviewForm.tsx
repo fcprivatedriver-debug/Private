@@ -25,14 +25,17 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="panel" style={{ marginTop: "1rem" }}>
+    <form onSubmit={onSubmit} className="panel panel-lift" style={{ marginTop: "1rem" }}>
       <h3 className="font-display" style={{ marginTop: 0 }}>
-        Avaliar motorista
+        Avaliar a sua viagem
       </h3>
+      <p className="muted" style={{ marginTop: 0 }}>
+        A sua opinião ajuda outros clientes a escolher com confiança.
+      </p>
       {error && <div className="alert alert-error">{error}</div>}
       <div className="field">
         <label className="label" htmlFor="rating">
-          Classificação
+          Motorista
         </label>
         <select className="select" id="rating" name="rating" defaultValue="5" required>
           <option value="5">5 — Excelente</option>
@@ -43,10 +46,27 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
         </select>
       </div>
       <div className="field">
-        <label className="label" htmlFor="comment">
-          Comentário
+        <label className="label" htmlFor="vehicleRating">
+          Veículo
         </label>
-        <textarea className="textarea" id="comment" name="comment" placeholder="Como correu a viagem?" />
+        <select className="select" id="vehicleRating" name="vehicleRating" defaultValue="5" required>
+          <option value="5">5 — Impecável</option>
+          <option value="4">4 — Muito bom</option>
+          <option value="3">3 — Adequado</option>
+          <option value="2">2 — Fraco</option>
+          <option value="1">1 — Mau</option>
+        </select>
+      </div>
+      <div className="field">
+        <label className="label" htmlFor="comment">
+          Feedback (opcional)
+        </label>
+        <textarea
+          className="textarea"
+          id="comment"
+          name="comment"
+          placeholder="Como correu a viagem? Pontualidade, conforto, condução…"
+        />
       </div>
       <button className="btn btn-primary" type="submit" disabled={loading}>
         {loading ? "A enviar…" : "Enviar avaliação"}

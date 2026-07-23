@@ -10,6 +10,7 @@ type Props = {
   placeholder?: string;
   defaultValue?: string;
   required?: boolean;
+  onChangeValue?: (value: string) => void;
 };
 
 /**
@@ -23,12 +24,18 @@ export function AddressAutocompleteInput({
   placeholder,
   defaultValue,
   required,
+  onChangeValue,
 }: Props) {
   const autoId = useId();
   const inputId = id || autoId;
   const [value, setValue] = useState(defaultValue || "");
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const mapsReady = isGoogleMapsConfigured();
+
+  function updateValue(next: string) {
+    setValue(next);
+    onChangeValue?.(next);
+  }
 
   useEffect(() => {
     if (!mapsReady || value.trim().length < 3) {
@@ -52,7 +59,7 @@ export function AddressAutocompleteInput({
         id={inputId}
         name={name}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => updateValue(e.target.value)}
         placeholder={placeholder}
         required={required}
         autoComplete="off"
@@ -80,7 +87,7 @@ export function AddressAutocompleteInput({
                 className="btn btn-ghost"
                 style={{ width: "100%", justifyContent: "flex-start", borderRadius: 0 }}
                 onClick={() => {
-                  setValue(s.description);
+                  updateValue(s.description);
                   setSuggestions([]);
                 }}
               >

@@ -60,6 +60,8 @@ enum TripStatus {
   OPEN
   OFFER_ACCEPTED
   CONFIRMED
+  DRIVER_EN_ROUTE
+  DRIVER_ARRIVED
   IN_PROGRESS
   COMPLETED
   CANCELLED
@@ -365,6 +367,10 @@ model TripRequest {
   status                  TripStatus @default(DRAFT)
   preferredVehicleClassId String?
   currency                String     @default("EUR")
+  /// Route distance in meters (estimated)
+  distanceMeters          Int?
+  /// Route duration in seconds (estimated)
+  durationSeconds         Int?
   expiresAt               DateTime?
   acceptedOfferId         String?    @unique
   createdAt               DateTime   @default(now())
@@ -391,6 +397,8 @@ model Offer {
   message         String?
   includesTolls   Boolean     @default(true)
   includesWaiting Boolean     @default(false)
+  /// Driver ETA to pickup in minutes (optional)
+  estimatedArrivalMinutes Int?
   validUntil      DateTime?
   status          OfferStatus @default(PENDING)
   createdAt       DateTime    @default(now())
@@ -448,13 +456,16 @@ model Payment {
 }
 
 model Review {
-  id         String   @id @default(cuid())
-  bookingId  String   @unique
-  fromUserId String
-  toUserId   String
-  rating     Int
-  comment    String?
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  bookingId     String   @unique
+  fromUserId    String
+  toUserId      String
+  /// Driver rating 1–5
+  rating        Int
+  /// Vehicle rating 1–5 (optional)
+  vehicleRating Int?
+  comment       String?
+  createdAt     DateTime @default(now())
 
   booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   fromUser User    @relation("ReviewsFrom", fields: [fromUserId], references: [id], onDelete: Cascade)

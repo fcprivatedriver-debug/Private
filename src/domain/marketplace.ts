@@ -24,6 +24,12 @@ export async function createTripRequest(input: {
   flightNumber?: string;
   preferredVehicleClassId?: string;
   publish?: boolean;
+  pickupLat?: number;
+  pickupLng?: number;
+  dropoffLat?: number;
+  dropoffLng?: number;
+  distanceMeters?: number;
+  durationSeconds?: number;
 }) {
   if (input.preferredVehicleClassId) {
     await assertActiveVehicleClass(input.preferredVehicleClassId);
@@ -46,6 +52,12 @@ export async function createTripRequest(input: {
       status,
       currency: "EUR",
       expiresAt,
+      pickupLat: input.pickupLat ?? null,
+      pickupLng: input.pickupLng ?? null,
+      dropoffLat: input.dropoffLat ?? null,
+      dropoffLng: input.dropoffLng ?? null,
+      distanceMeters: input.distanceMeters ?? null,
+      durationSeconds: input.durationSeconds ?? null,
     },
   });
 }
@@ -107,6 +119,7 @@ export async function createOrUpdateOffer(input: {
   message?: string;
   includesTolls?: boolean;
   includesWaiting?: boolean;
+  estimatedArrivalMinutes?: number;
 }) {
   const driver = await prisma.user.findUnique({
     where: { id: input.driverId },
@@ -152,6 +165,7 @@ export async function createOrUpdateOffer(input: {
         message: input.message || null,
         includesTolls: input.includesTolls ?? true,
         includesWaiting: input.includesWaiting ?? false,
+        estimatedArrivalMinutes: input.estimatedArrivalMinutes ?? null,
         validUntil,
       },
     });
@@ -167,6 +181,7 @@ export async function createOrUpdateOffer(input: {
       message: input.message || null,
       includesTolls: input.includesTolls ?? true,
       includesWaiting: input.includesWaiting ?? false,
+      estimatedArrivalMinutes: input.estimatedArrivalMinutes ?? null,
       validUntil,
       status: "PENDING",
     },
@@ -284,46 +299,95 @@ export async function acceptOffer(tripId: string, offerId: string, customerId: s
 }
 
 export async function confirmBookingWithoutPayment(bookingId: string) {
-  // Used when PAYMENTS_ENABLED=false — advances to CONFIRMED for demo flow
-  return prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.findUnique({ where: { id: bookingId } });
-    if (!booking) throw new DomainError("NOT_FOUND", "Reserva não encontrada");
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) throw new DomainError("NOT_FOUND", "Reserva não encontrada");
+  return confirmBookingPayment(bookingId, booking.customerId);
+}
 
+export async function confirmBookingPayment(bookingId: string, customerId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { payment: true, tripRequest: true },
+  });
+  if (!booking || booking.customerId !== customerId) {
+    throw new DomainError("NOT_FOUND", "Reserva não encontrada");
+  }
+  if (booking.status !== "PENDING_PAYMENT") {
+    throw new DomainError("INVALID_STATE", "Pagamento já processado");
+  }
+
+  return prisma.$transaction(async (tx) => {
     await tx.booking.update({
       where: { id: bookingId },
       data: { status: "PAID", confirmedAt: new Date() },
     });
     await tx.payment.update({
       where: { bookingId },
-      data: { status: "CAPTURED", provider: "MANUAL" },
+      data: {
+        status: "CAPTURED",
+        provider: paymentsEnabled() ? "STRIPE" : "MANUAL",
+        rawPayload: JSON.stringify({
+          demo: !paymentsEnabled(),
+          mode: paymentsEnabled() ? "stripe_ready" : "demo_confirm",
+          at: new Date().toISOString(),
+        }),
+      },
     });
     await tx.tripRequest.update({
       where: { id: booking.tripRequestId },
       data: { status: "CONFIRMED" },
     });
+    await tx.notification.create({
+      data: {
+        userId: booking.driverId,
+        type: "BOOKING_CONFIRMED",
+        title: "Viagem confirmada",
+        body: "O pagamento foi confirmado. Prepare-se para o encontro.",
+        meta: JSON.stringify({ bookingId, tripId: booking.tripRequestId }),
+      },
+    });
     return booking;
   });
 }
 
-export async function startTrip(tripId: string, actorId: string, role: string) {
+function paymentsEnabled(): boolean {
+  return process.env.PAYMENTS_ENABLED === "true";
+}
+
+export async function advanceJourney(
+  tripId: string,
+  actorId: string,
+  role: string,
+  next: "DRIVER_EN_ROUTE" | "DRIVER_ARRIVED" | "IN_PROGRESS",
+) {
   const trip = await prisma.tripRequest.findUnique({
     where: { id: tripId },
     include: { booking: true },
   });
   if (!trip?.booking) throw new DomainError("NOT_FOUND", "Viagem não encontrada");
-  if (trip.status !== "CONFIRMED") {
-    throw new DomainError("INVALID_STATE", "Só viagens confirmadas podem iniciar");
-  }
   const allowed =
     role === "ADMIN" ||
     trip.booking.driverId === actorId ||
     trip.customerId === actorId;
   if (!allowed) throw new DomainError("FORBIDDEN", "Sem permissão");
 
+  const transitions: Record<string, string[]> = {
+    DRIVER_EN_ROUTE: ["CONFIRMED"],
+    DRIVER_ARRIVED: ["DRIVER_EN_ROUTE", "CONFIRMED"],
+    IN_PROGRESS: ["DRIVER_ARRIVED", "DRIVER_EN_ROUTE", "CONFIRMED"],
+  };
+  if (!transitions[next]?.includes(trip.status)) {
+    throw new DomainError("INVALID_STATE", `Não é possível avançar de ${trip.status} para ${next}`);
+  }
+
   return prisma.tripRequest.update({
     where: { id: tripId },
-    data: { status: "IN_PROGRESS" },
+    data: { status: next },
   });
+}
+
+export async function startTrip(tripId: string, actorId: string, role: string) {
+  return advanceJourney(tripId, actorId, role, "IN_PROGRESS");
 }
 
 export async function completeTrip(tripId: string, actorId: string, role: string) {
@@ -332,7 +396,7 @@ export async function completeTrip(tripId: string, actorId: string, role: string
     include: { booking: true },
   });
   if (!trip?.booking) throw new DomainError("NOT_FOUND", "Viagem não encontrada");
-  if (!["CONFIRMED", "IN_PROGRESS"].includes(trip.status)) {
+  if (!["CONFIRMED", "DRIVER_EN_ROUTE", "DRIVER_ARRIVED", "IN_PROGRESS"].includes(trip.status)) {
     throw new DomainError("INVALID_STATE", "Estado inválido para concluir");
   }
   const allowed =
@@ -357,15 +421,19 @@ export async function createReview(input: {
   bookingId: string;
   fromUserId: string;
   rating: number;
+  vehicleRating?: number;
   comment?: string;
 }) {
   if (input.rating < 1 || input.rating > 5) {
     throw new DomainError("VALIDATION", "Avaliação deve ser entre 1 e 5");
   }
+  if (input.vehicleRating != null && (input.vehicleRating < 1 || input.vehicleRating > 5)) {
+    throw new DomainError("VALIDATION", "Avaliação do veículo inválida");
+  }
 
   const booking = await prisma.booking.findUnique({
     where: { id: input.bookingId },
-    include: { review: true, tripRequest: true },
+    include: { review: true, tripRequest: true, offer: true },
   });
   if (!booking) throw new DomainError("NOT_FOUND", "Reserva não encontrada");
   if (booking.customerId !== input.fromUserId) {
@@ -385,6 +453,7 @@ export async function createReview(input: {
         fromUserId: input.fromUserId,
         toUserId: booking.driverId,
         rating: input.rating,
+        vehicleRating: input.vehicleRating ?? null,
         comment: input.comment || null,
       },
     });
@@ -402,6 +471,24 @@ export async function createReview(input: {
         ratingCount: agg._count.rating,
       },
     });
+
+    if (input.vehicleRating != null && booking.offer.vehicleId) {
+      const vAgg = await tx.review.aggregate({
+        where: {
+          vehicleRating: { not: null },
+          booking: { offer: { vehicleId: booking.offer.vehicleId } },
+        },
+        _avg: { vehicleRating: true },
+        _count: { vehicleRating: true },
+      });
+      await tx.vehicle.update({
+        where: { id: booking.offer.vehicleId },
+        data: {
+          ratingAvg: vAgg._avg.vehicleRating ?? input.vehicleRating,
+          ratingCount: vAgg._count.vehicleRating,
+        },
+      });
+    }
 
     await tx.notification.create({
       data: {
