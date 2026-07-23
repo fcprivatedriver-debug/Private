@@ -21,6 +21,10 @@ export default async function DefinicoesPage() {
       <div className="stack-lg">
         <Panel title="Atalhos">
           <div className="mais-links">
+            <Link href="/pt/captura">
+              <strong>Captura Instantânea</strong>
+              <span className="muted small">Falar, escrever ou fotografar — em segundos</span>
+            </Link>
             <Link href="/pt/ligacoes">
               <strong>Ligações da Nina</strong>
               <span className="muted small">Automatização opcional — bancos, email, supermercados…</span>

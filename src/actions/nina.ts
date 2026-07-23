@@ -215,6 +215,18 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     }
   }
 
+  if (intent?.kind === "need_amount") {
+    return {
+      ok: true as const,
+      reply: {
+        text: intent.hint,
+        tone: "warm" as const,
+        suggestions: ["Recebi o salário, 1850 euros", "Recebi 200 euros"],
+      },
+      mutated: false,
+    };
+  }
+
   if (intent && intent.kind !== "memory_rule" && canEditFinances(membership.role)) {
     if (intent.kind === "expense") {
       const decision = await resolveScope({

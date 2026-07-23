@@ -61,6 +61,13 @@ async function captureStills() {
 
   await login(page);
   await shot(page, "10-dashboard");
+  await gotoShot(page, "/pt/captura", "10h-captura");
+  await page.getByRole("button", { name: /Supermercado, 35 euros/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1200);
+  await shot(page, "10i-captura-registado");
+  await page.getByRole("button", { name: /Fotografar/i }).first().click().catch(() => {});
+  await page.waitForTimeout(400);
+  await shot(page, "10j-captura-foto");
   await page.getByRole("button", { name: /Continente para casa/i }).first().click().catch(() => {});
   await page.waitForTimeout(1500);
   await shot(page, "10b-nina-chat");
@@ -111,6 +118,10 @@ async function captureFlowVideo() {
     page.waitForURL(/\/pt\/dashboard/, { timeout: 30000 }),
     page.click('button[type="submit"]'),
   ]);
+  await page.waitForTimeout(1000);
+  await page.goto(`${BASE}/pt/captura`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.getByRole("button", { name: /Supermercado, 35 euros/i }).first().click().catch(() => {});
   await page.waitForTimeout(1000);
   await page.getByRole("button", { name: /Conta Familiar/i }).first().click().catch(() => {});
   await page.waitForTimeout(600);

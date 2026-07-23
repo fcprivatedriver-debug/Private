@@ -1,23 +1,24 @@
-# PR #12 — Nina: experiência adaptativa + Ligações
+# PR #12 — Nina: Captura Instantânea + experiência adaptativa
 
 ## Changelog
 
-Funcionalidade integrada de experiência/inteligência adaptativa, mais o **Centro de Ligações da Nina**: automatização personalizada por módulos opcionais, sem obrigar acessos externos.
+Nova funcionalidade principal **Captura Instantânea**: registar despesas/receitas em segundos por voz, texto ou fotografia (OCR com arquivo). Integra-se com Ligações e com a inteligência adaptativa já existente.
 
-## Ligações e Automatização Personalizada
+## Captura Instantânea
 
-- Menu **Ligações da Nina** (`/pt/ligacoes`)
-- Níveis: voz · voz+OCR · voz+email · voz+banco · avançado · total
-- Autorizar / pausar / remover / sincronizar por módulo
-- Catálogo preparado (bancos, email, retalho, utilidades, …)
-- Importação automática e extração de faturas de email (stub)
-- Sem ligações, a IA por voz continua completa
+- `/pt/captura` — falar / escrever / fotografar
+- Resposta curta: «Registado.» / «Registado na Conta Familiar.»
+- OCR + imagem arquivada no movimento
+- Atalho na navegação e FAB no telemóvel
+- Mesmo resultado via Ligações / conversa / OCR clássico
 
-## Experiência & inteligência (já incluída)
+## Também neste PR
 
-Ver `docs/PRODUCT.md` — uma única narrativa unificada.
+- Conta Familiar inteligente (espaços, convites, memória)
+- Ligações da Nina (automatização opcional)
+
+Documento: `docs/PRODUCT.md`
 
 ## Demo
 
 - `familia@nina.app` / `nina123`
-- Ligações demo ativas: Gmail, Continente (+ Via Verde sem auto-import)

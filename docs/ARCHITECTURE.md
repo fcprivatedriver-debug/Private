@@ -64,6 +64,8 @@ OCR lives in `src/lib/ocr`. AI insights in `src/lib/ai/finance-insights`.
 Optional standing connections live in `NinaConnection` + `src/domain/connections.ts`
 (`Ligações da Nina` at `/ligacoes`) — authorize, pause, revoke, sync independently.
 Email invoice extraction stub: `src/lib/connections/email.ts`.
+Instant capture (voice / text / photo): `/captura` + `src/actions/capture.ts`
+(Web Speech when available; OCR archives receipt via `storeFamilyFile`).
 Future Open Banking and email OAuth plug into the same seams without UI rewrites.
 
 ---

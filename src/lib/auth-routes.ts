@@ -1,6 +1,7 @@
 /** Rotas protegidas da Nina */
 export const APP_PROTECTED_PREFIXES = [
   "/dashboard",
+  "/captura",
   "/receitas",
   "/despesas",
   "/orcamentos",

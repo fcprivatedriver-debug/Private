@@ -48,6 +48,10 @@ Documento completo: [`docs/PRODUCT.md`](docs/PRODUCT.md)
 
 Automatização personalizada por módulos opcionais (`/pt/ligacoes`): autorizar, pausar ou remover bancos, email, supermercados e outros — nunca obrigatório. Sem ligações, a voz continua a funcionar.
 
+## Captura Instantânea
+
+Funcionalidade principal (`/pt/captura`): falar, escrever ou fotografar para registar em segundos. OCR arquiva a imagem no movimento. O mesmo resultado via Ligações / conversa.
+
 ## Outras capacidades
 
 - Dashboard conversacional com a Nina

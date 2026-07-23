@@ -118,16 +118,16 @@ export default function LandingPage() {
         <div className="feature-grid">
           {[
             {
+              title: "Captura Instantânea",
+              body: "Fala, escreve ou fotografa. Em segundos a Nina regista — sem formulários.",
+            },
+            {
               title: "Organiza sozinha",
               body: "Classifica compras e explica para onde está a ir o dinheiro.",
             },
             {
               title: "Ajuda a poupar",
               body: "Objetivos partilhados e progresso automático quando a família poupa.",
-            },
-            {
-              title: "Avisa a tempo",
-              body: "Limites, pagamentos e despesas invulgares — com tom amigável.",
             },
           ].map((f) => (
             <article key={f.title} className="feature">

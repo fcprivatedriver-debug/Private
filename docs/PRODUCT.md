@@ -70,3 +70,25 @@ No email autorizado, extrai valor, data, empresa, categoria e subcategoria de fa
 Sem qualquer ligação externa, a Nina continua completa por voz: «paguei 42 € de eletricidade», «recebi o salário», «fui às compras».
 
 Níveis de automatização: apenas voz · voz + OCR · voz + email · voz + banco · voz + banco + email + supermercados · automatização total.
+
+---
+
+## Captura Instantânea
+
+Funcionalidade principal para registar qualquer despesa ou receita em segundos — sem navegar menus nem preencher formulários.
+
+### Atalho de voz
+
+Em **Captura** (`/pt/captura`), um toque inicia a fala (ou texto curto). Exemplos: «Supermercado, 35 euros.» · «Farmácia, 18 euros.» · «Recebi o salário, 1850 euros.»
+
+A Nina interpreta valor, categoria, data, hora, conta (pessoal/familiar/empresa) e método de pagamento quando possível, e responde simplesmente: **«Registado.»** ou **«Registado na Conta Familiar.»**
+
+### Fotografia + OCR
+
+Com autorização da câmara, fotografa faturas, talões, recibos e contas. O OCR identifica empresa, valor, data, IVA, produtos (quando possível) e categoria. A imagem fica arquivada e associada ao movimento.
+
+### Mesmo resultado, vários caminhos
+
+Falar · escrever · fotografar · importação automática (Ligações) · conversa longa — todos produzem o mesmo registo final.
+
+**Princípio:** o utilizador vive a sua vida; a Nina trata do resto.
