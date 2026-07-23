@@ -14,6 +14,7 @@ const protectedPrefixes = [
   { prefix: "/propostas", roles: ["DRIVER"] },
   { prefix: "/veiculo", roles: ["DRIVER"] },
   { prefix: "/viagens", roles: ["DRIVER"] },
+  { prefix: "/onboarding", roles: ["DRIVER"] },
   { prefix: "/admin", roles: ["ADMIN"] },
 ];
 
