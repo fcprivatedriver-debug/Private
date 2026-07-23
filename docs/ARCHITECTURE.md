@@ -89,6 +89,14 @@ movio/
 
 ## Data model highlights (Phase 0)
 
+### AI driver onboarding & verification
+
+- Multi-step onboarding: profile → vehicle → documents → AI review
+- `DriverDocument` storage + `VerificationReview` audit trail
+- Heuristic AI provider (`src/lib/ai`) with risk score, confidence, findings
+- Admin queue: `/admin/verificacoes` (approve / request info / reject / re-run AI)
+- Contacts and offers still gated until `DriverProfile.status = ACTIVE`
+
 ### Vehicle classification (database-driven)
 
 - `VehicleClass` table: `code`, localized names (`namePt`/`nameEn`), capacity limits, `sortOrder`, `active`

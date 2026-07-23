@@ -48,10 +48,13 @@ export default async function DriverDashboardPage() {
         </p>
 
         <div className="cta-row" style={{ margin: "1.25rem 0 2rem" }}>
-          <Link href="/pedidos-abertos" className="btn btn-primary">
+          <Link href="/onboarding" className="btn btn-primary">
+            Onboarding & verification
+          </Link>
+          <Link href="/pedidos-abertos" className="btn btn-secondary">
             Ver pedidos abertos
           </Link>
-          <Link href="/veiculo" className="btn btn-secondary">
+          <Link href="/veiculo" className="btn btn-ghost">
             Gerir veículo
           </Link>
           <Link href="/viagens" className="btn btn-ghost">

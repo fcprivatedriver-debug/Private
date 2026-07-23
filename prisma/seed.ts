@@ -158,6 +158,9 @@ async function main() {
       driverProfile: {
         create: {
           status: "ACTIVE",
+          onboardingStatus: "APPROVED",
+          onboardingStep: "done",
+          completenessScore: 100,
           photoUrl:
             "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
           bio: "Executive chauffeur with 8 years of airport transfer experience across Portugal.",
@@ -168,11 +171,15 @@ async function main() {
           completedTripsCount: 380,
           responseRate: 96,
           avgResponseTimeMinutes: 12,
+          aiRiskScore: 18,
+          aiConfidence: 91,
+          aiSummary: "AI recommends approval for Carlos Motorista (risk 18/100).",
           documents: JSON.stringify([
             { type: "license", status: "verified", label: "Driving licence" },
             { type: "insurance", status: "verified", label: "Fleet insurance" },
           ]),
           verifiedAt: new Date(),
+          submittedAt: new Date(),
           vehicles: {
             create: {
               make: "Mercedes-Benz",
@@ -202,6 +209,9 @@ async function main() {
       driverProfile: {
         create: {
           status: "ACTIVE",
+          onboardingStatus: "APPROVED",
+          onboardingStep: "done",
+          completenessScore: 100,
           photoUrl:
             "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
           bio: "Specialist in Lisbon–Algarve private transfers.",
@@ -212,10 +222,14 @@ async function main() {
           completedTripsCount: 210,
           responseRate: 91,
           avgResponseTimeMinutes: 18,
+          aiRiskScore: 22,
+          aiConfidence: 88,
+          aiSummary: "AI recommends approval for Rita Condutora (risk 22/100).",
           documents: JSON.stringify([
             { type: "license", status: "verified", label: "Driving licence" },
           ]),
           verifiedAt: new Date(),
+          submittedAt: new Date(),
           vehicles: {
             create: {
               make: "Volkswagen",
@@ -243,6 +257,9 @@ async function main() {
       driverProfile: {
         create: {
           status: "PENDING_VERIFICATION",
+          onboardingStatus: "IN_PROGRESS",
+          onboardingStep: "documents",
+          completenessScore: 45,
           bio: "Awaiting document verification.",
           languagesSpoken: JSON.stringify(["pt"]),
           yearsOfExperience: 2,

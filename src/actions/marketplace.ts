@@ -23,6 +23,7 @@ import {
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { paymentsEnabled } from "@/config/env";
+import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from "@/domain/onboarding";
 
 function fail(error: unknown) {
   if (error instanceof DomainError) {
@@ -61,7 +62,7 @@ export async function registerAction(formData: FormData) {
           ? { customerProfile: { create: {} } }
           : {
               driverProfile: {
-                create: { status: "PENDING_VERIFICATION" },
+                create: { status: "PENDING_VERIFICATION", onboardingStatus: "NOT_STARTED" },
               },
             }),
       },
@@ -227,6 +228,8 @@ export async function upsertVehicleAction(formData: FormData) {
         data: { ...parsed, driverId: profile.id },
       });
     }
+    await setOnboardingStep(session.user.id, "vehicle");
+    await refreshCompleteness(profile.id);
     return { ok: true as const };
   } catch (error) {
     return fail(error);
@@ -239,12 +242,11 @@ export async function verifyDriverAction(driverProfileId: string, approve: boole
     return { ok: false as const, error: "Sem permissão" };
   }
   try {
-    await prisma.driverProfile.update({
-      where: { id: driverProfileId },
-      data: {
-        status: approve ? "ACTIVE" : "REJECTED",
-        verifiedAt: approve ? new Date() : null,
-      },
+    await adminDecideVerification({
+      driverProfileId,
+      adminUserId: session.user.id,
+      decision: approve ? "APPROVE" : "REJECT",
+      notes: approve ? "Approved from admin dashboard" : "Rejected from admin dashboard",
     });
     return { ok: true as const };
   } catch (error) {

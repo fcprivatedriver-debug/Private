@@ -37,7 +37,7 @@ function RegisterForm() {
       return;
     }
     const role = String(formData.get("role"));
-    router.push(role === "DRIVER" ? "/veiculo" : "/pedidos/novo");
+    router.push(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
     router.refresh();
   }
 

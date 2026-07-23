@@ -20,6 +20,41 @@ enum DriverStatus {
   REJECTED
 }
 
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  NEEDS_INFO
+  APPROVED
+  REJECTED
+}
+
+enum DriverDocumentType {
+  IDENTITY
+  DRIVING_LICENSE
+  VEHICLE_REGISTRATION
+  INSURANCE
+  PROFILE_PHOTO
+  OTHER
+}
+
+enum DriverDocumentStatus {
+  UPLOADED
+  AI_PROCESSING
+  AI_PASSED
+  AI_FLAGGED
+  APPROVED
+  REJECTED
+}
+
+enum VerificationDecision {
+  APPROVE
+  REJECT
+  REQUEST_INFO
+  ESCALATE
+}
+
 enum TripStatus {
   DRAFT
   OPEN
@@ -134,31 +169,98 @@ model CustomerProfile {
 }
 
 model DriverProfile {
-  id                    String       @id @default(cuid())
-  userId                String       @unique
-  status                DriverStatus @default(PENDING_VERIFICATION)
-  photoUrl              String?
-  bio                   String?
+  id                     String           @id @default(cuid())
+  userId                 String           @unique
+  status                 DriverStatus     @default(PENDING_VERIFICATION)
+  onboardingStatus       OnboardingStatus @default(NOT_STARTED)
+  /// Wizard step: profile | vehicle | documents | review | done
+  onboardingStep         String           @default("profile")
+  /// 0–100 profile + docs completeness
+  completenessScore      Int              @default(0)
+  photoUrl               String?
+  bio                    String?
   /// JSON string array of BCP-47 language codes, e.g. ["pt","en","es"]
-  languagesSpoken       String       @default("[\"pt\"]")
-  yearsOfExperience     Int          @default(0)
-  ratingAvg             Float?
-  ratingCount           Int          @default(0)
-  completedTripsCount   Int          @default(0)
+  languagesSpoken        String           @default("[\"pt\"]")
+  yearsOfExperience      Int              @default(0)
+  ratingAvg              Float?
+  ratingCount            Int              @default(0)
+  completedTripsCount    Int              @default(0)
   /// 0–100 percentage of offers responded to
-  responseRate          Float?
+  responseRate           Float?
   /// Average minutes to first offer on a trip request
   avgResponseTimeMinutes Float?
-  /// JSON array of verification document metadata
-  documents             String       @default("[]")
-  verifiedAt            DateTime?
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  /// Legacy JSON metadata (kept for compatibility)
+  documents              String           @default("[]")
+  /// Latest AI risk score 0–100 (higher = riskier)
+  aiRiskScore            Float?
+  /// Latest AI confidence 0–100
+  aiConfidence           Float?
+  /// JSON summary from last AI run
+  aiSummary              String?
+  adminNotes             String?
+  rejectionReason        String?
+  infoRequestMessage     String?
+  submittedAt            DateTime?
+  verifiedAt             DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles Vehicle[]
+  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles           Vehicle[]
+  verificationDocs   DriverDocument[]
+  verificationReviews VerificationReview[]
 
   @@index([status])
+  @@index([onboardingStatus])
+}
+
+model DriverDocument {
+  id               String               @id @default(cuid())
+  driverProfileId  String
+  type             DriverDocumentType
+  status           DriverDocumentStatus @default(UPLOADED)
+  fileName         String
+  mimeType         String
+  sizeBytes        Int
+  /// Relative storage path under uploads/
+  storageKey       String
+  /// Optional public-ish URL path served by API
+  url              String?
+  /// JSON AI extraction / signals
+  aiAnalysis       String?
+  aiScore          Float?
+  aiFlags          String               @default("[]")
+  reviewerNotes    String?
+  reviewedAt       DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
+
+  @@index([driverProfileId, type])
+  @@index([status])
+}
+
+model VerificationReview {
+  id              String               @id @default(cuid())
+  driverProfileId String
+  /// AI | ADMIN | SYSTEM
+  source          String
+  decision        VerificationDecision?
+  /// 0–100 risk
+  riskScore       Float?
+  confidence      Float?
+  /// Human-readable recommendation
+  recommendation  String?
+  /// JSON detailed findings
+  findings        String               @default("[]")
+  notes           String?
+  actorUserId     String?
+  createdAt       DateTime             @default(now())
+
+  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
+
+  @@index([driverProfileId, createdAt])
 }
 
 /// Singleton-style platform configuration (id = "default")

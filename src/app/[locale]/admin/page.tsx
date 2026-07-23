@@ -35,6 +35,9 @@ export default async function AdminPage() {
           Admin Movio
         </h1>
         <div className="cta-row" style={{ marginBottom: "1.25rem" }}>
+          <Link href="/admin/verificacoes" className="btn btn-primary">
+            AI verification queue
+          </Link>
           <Link href="/admin/vehicle-classes" className="btn btn-secondary">
             Vehicle classes ({classCount})
           </Link>
