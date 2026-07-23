@@ -6,17 +6,13 @@ import { routing } from "@/i18n/routing";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
-    <div style={{ display: "flex", gap: "0.35rem", fontSize: "0.85rem" }}>
+    <div className="locale-switch">
       {routing.locales.map((l) => (
         <Link
           key={l}
           href={`/${l}`}
           hrefLang={l}
-          style={{
-            opacity: l === locale ? 1 : 0.55,
-            fontWeight: l === locale ? 700 : 500,
-            textTransform: "uppercase",
-          }}
+          aria-current={l === locale ? "true" : undefined}
         >
           {l}
         </Link>
@@ -44,6 +40,7 @@ export async function SiteHeader() {
           {role === "DRIVER" && (
             <>
               <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
+              <LocaleLink href="/onboarding">Onboarding</LocaleLink>
               <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
             </>
           )}
@@ -52,11 +49,7 @@ export async function SiteHeader() {
           {!session ? (
             <>
               <LocaleLink href="/login">{t("login")}</LocaleLink>
-              <LocaleLink
-                href="/registo"
-                className="btn btn-primary"
-                style={{ padding: "0.55rem 1rem" }}
-              >
+              <LocaleLink href="/registo" className="btn btn-primary" style={{ padding: "0.55rem 1rem" }}>
                 {t("start")}
               </LocaleLink>
             </>

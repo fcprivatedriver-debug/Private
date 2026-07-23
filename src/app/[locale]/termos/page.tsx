@@ -10,11 +10,9 @@ export default async function TermosPage({ params }: Props) {
   return (
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 720 }}>
-        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
-          {t("termsTitle")}
-        </h1>
-        <p className="muted">{t("preliminary")}</p>
-        <div className="panel" style={{ marginTop: "1.5rem", lineHeight: 1.6 }}>
+        <h1 className="page-title">{t("termsTitle")}</h1>
+        <p className="page-lead">{t("preliminary")}</p>
+        <div className="prose-block" style={{ marginTop: "0.5rem", lineHeight: 1.7, maxWidth: "40rem" }}>
           <p>
             Movio is a marketplace connecting customers with private drivers. The platform is not a
             carrier: it facilitates trip requests, offers and bookings.

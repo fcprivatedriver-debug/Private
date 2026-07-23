@@ -1,12 +1,12 @@
 {
   "meta": {
     "appName": "Movio",
-    "tagline": "Private drivers by proposal"
+    "tagline": "Private drivers, chosen by proposal"
   },
   "nav": {
     "howItWorks": "How it works",
     "drivers": "Drivers",
-    "myTrips": "My trip requests",
+    "myTrips": "My requests",
     "dashboard": "Dashboard",
     "trips": "Trips",
     "admin": "Admin",
@@ -16,32 +16,32 @@
   },
   "home": {
     "headline": "Movio",
-    "copy": "Private driver trip requests. Publish your route, receive offers, and pick the best one — on your terms.",
+    "copy": "Publish a private transfer. Receive offers. Choose the one that fits — calmly, clearly, on your terms.",
     "ctaRequest": "Request a trip",
-    "ctaDriver": "I'm a driver",
-    "stepsTitle": "Three steps. No hidden flat fares.",
-    "stepsLead": "Movio is a marketplace: customers define the trip, drivers compete with clear offers.",
+    "ctaDriver": "Drive with Movio",
+    "stepsTitle": "Three steps, no noise.",
+    "stepsLead": "No opaque flat fares. A marketplace where you define the trip and choose the offer.",
     "step1Title": "Publish the request",
-    "step1Body": "Pickup, drop-off, time, and flight or luggage details.",
+    "step1Body": "Pickup, drop-off, time, and the details that matter.",
     "step2Title": "Receive offers",
-    "step2Body": "Verified drivers send price and conditions.",
+    "step2Body": "Verified drivers reply with price and conditions.",
     "step3Title": "Choose the best",
-    "step3Body": "Compare and accept. Your booking is ready.",
+    "step3Body": "Compare, accept, and travel with clarity.",
     "terms": "Terms",
     "privacy": "Privacy"
   },
   "auth": {
-    "loginTitle": "Log in to Movio",
+    "loginTitle": "Welcome back",
     "loginHint": "Demo: cliente@movio.app / motorista@movio.app / admin@movio.app — password movio123",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Log in",
     "loggingIn": "Signing in…",
     "invalidCredentials": "Invalid credentials",
-    "noAccount": "Don't have an account?",
+    "noAccount": "Don't have an account yet?",
     "registerLink": "Sign up",
-    "registerTitle": "Create a Movio account",
-    "registerLead": "Choose whether you want to request trips or send offers.",
+    "registerTitle": "Join Movio",
+    "registerLead": "Request trips or send offers — one account, one role to start.",
     "accountType": "Account type",
     "customer": "Customer",
     "driver": "Driver",
@@ -54,11 +54,11 @@
   },
   "how": {
     "title": "How Movio works",
-    "lead": "A private-driver marketplace: customers publish, drivers propose, customers decide."
+    "lead": "A private-driver marketplace reduced to the essentials: request, propose, choose."
   },
   "forDrivers": {
-    "title": "Drive with Movio",
-    "lead": "Browse open requests in your area, send offers at your price, and grow with reviews.",
+    "title": "Drive with intention",
+    "lead": "See open requests, set your price, and grow with verified trust.",
     "ctaRegister": "Register as a driver",
     "ctaLogin": "I already have an account"
   },

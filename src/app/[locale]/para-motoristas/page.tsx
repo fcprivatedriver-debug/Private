@@ -10,12 +10,12 @@ export default async function ParaMotoristasPage({ params }: Props) {
 
   return (
     <section className="section fade-up">
-      <div className="container">
-        <h1 className="font-display" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
+      <div className="container" style={{ maxWidth: 720 }}>
+        <h1 className="page-title" style={{ fontSize: "clamp(2.4rem, 6vw, 3.6rem)" }}>
           {t("title")}
         </h1>
-        <p className="lead">{t("lead")}</p>
-        <div className="cta-row">
+        <p className="page-lead">{t("lead")}</p>
+        <div className="cta-row" style={{ marginTop: "0.5rem" }}>
           <Link href="/registo?role=DRIVER" className="btn btn-primary">
             {t("ctaRegister")}
           </Link>

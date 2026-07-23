@@ -49,34 +49,40 @@ function LoginForm() {
   }
 
   return (
-    <section className="section fade-up">
-      <div className="container" style={{ maxWidth: 480 }}>
-        <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.5rem" }}>
-          {t("loginTitle")}
-        </h1>
-        <p className="muted" style={{ marginBottom: "1.5rem" }}>
-          {t("loginHint")}
-        </p>
+    <section className="auth-shell fade-up">
+      <div className="container" style={{ maxWidth: 440 }}>
+        <h1 className="page-title">{t("loginTitle")}</h1>
+        <p className="page-lead">{t("loginHint")}</p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
           <div className="field">
             <label className="label" htmlFor="email">
               {t("email")}
             </label>
-            <input className="input" id="email" name="email" type="email" required />
+            <input className="input" id="email" name="email" type="email" required autoComplete="email" />
           </div>
           <div className="field">
             <label className="label" htmlFor="password">
               {t("password")}
             </label>
-            <input className="input" id="password" name="password" type="password" required />
+            <input
+              className="input"
+              id="password"
+              name="password"
+              type="password"
+              required
+              autoComplete="current-password"
+            />
           </div>
           <button className="btn btn-primary" type="submit" disabled={loading}>
             {loading ? t("loggingIn") : t("submitLogin")}
           </button>
         </form>
-        <p className="muted" style={{ marginTop: "1rem" }}>
-          {t("noAccount")} <Link href="/registo">{t("registerLink")}</Link>
+        <p className="muted" style={{ marginTop: "1.25rem" }}>
+          {t("noAccount")}{" "}
+          <Link href="/registo" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+            {t("registerLink")}
+          </Link>
         </p>
       </div>
     </section>

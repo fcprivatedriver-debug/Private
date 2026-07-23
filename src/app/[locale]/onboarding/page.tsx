@@ -13,10 +13,10 @@ export default async function OnboardingPage() {
         <p className="muted">
           <Link href="/painel">← Dashboard</Link>
         </p>
-        <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.35rem" }}>
+        <h1 className="page-title">
           Driver onboarding
         </h1>
-        <p className="lead">
+        <p className="page-lead">
           Premium verification powered by Movio AI — complete your profile, vehicle and documents.
         </p>
         <OnboardingWizard

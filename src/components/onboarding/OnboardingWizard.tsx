@@ -133,11 +133,13 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
 
   return (
     <div className="fade-up">
-      <div className="panel" style={{ marginBottom: "1.25rem" }}>
+      <div style={{ marginBottom: "1.5rem", paddingBottom: "1.25rem", borderBottom: "1px solid var(--line)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
             <div className="muted">Completeness</div>
-            <strong style={{ fontSize: "1.6rem" }}>{progress}%</strong>
+            <strong className="font-display" style={{ fontSize: "1.85rem" }}>
+              {progress}%
+            </strong>
           </div>
           <div>
             <div className="muted">Status</div>
@@ -149,9 +151,9 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
         <div
           style={{
             marginTop: "0.85rem",
-            height: 10,
-            borderRadius: 999,
-            background: "rgba(255,255,255,0.08)",
+            height: 3,
+            borderRadius: 2,
+            background: "rgba(18, 22, 26, 0.08)",
             overflow: "hidden",
           }}
         >
@@ -159,8 +161,8 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
             style={{
               width: `${progress}%`,
               height: "100%",
-              background: "linear-gradient(90deg, var(--accent), var(--brand))",
-              transition: "width 0.4s ease",
+              background: "var(--brand)",
+              transition: "width 0.45s ease",
             }}
           />
         </div>

@@ -16,12 +16,12 @@ export default async function CustomerTripsPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+        <div className="page-head">
           <div>
-            <h1 className="font-display" style={{ fontSize: "2.4rem", margin: 0 }}>
-              Os meus pedidos
-            </h1>
-            <p className="muted">Acompanha propostas e reservas.</p>
+            <h1 className="page-title">Os meus pedidos</h1>
+            <p className="page-lead" style={{ marginBottom: 0 }}>
+              Acompanha propostas e reservas.
+            </p>
           </div>
           <Link href="/pedidos/novo" className="btn btn-primary">
             Novo pedido
@@ -30,7 +30,7 @@ export default async function CustomerTripsPage() {
 
         <div className="list-stack" style={{ marginTop: "1.5rem" }}>
           {trips.length === 0 && (
-            <div className="panel muted">Ainda não tens pedidos. Cria o primeiro.</div>
+            <div className="empty-state">Ainda não tens pedidos. Cria o primeiro.</div>
           )}
           {trips.map((trip) => (
             <Link key={trip.id} href={`/pedidos/${trip.id}`} className="list-item">

@@ -37,10 +37,8 @@ export default async function DriverDashboardPage() {
   return (
     <section className="section fade-up">
       <div className="container">
-        <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.35rem" }}>
-          Painel do motorista
-        </h1>
-        <p className="muted">
+        <h1 className="page-title">Painel do motorista</h1>
+        <p className="page-lead">
           Estado:{" "}
           <span className="badge">
             {profile ? DRIVER_STATUS_LABELS[profile.status] : "Sem perfil"}
@@ -80,7 +78,7 @@ export default async function DriverDashboardPage() {
                   </span>
                 </Link>
               ))}
-              {openTrips.length === 0 && <div className="panel muted">Sem pedidos abertos.</div>}
+              {openTrips.length === 0 && <div className="empty-state">Sem pedidos abertos.</div>}
             </div>
           </div>
           <div>
@@ -110,7 +108,9 @@ export default async function DriverDashboardPage() {
                   </span>
                 </Link>
               ))}
-              {bookings.length === 0 && <div className="panel muted">Ainda sem viagens confirmadas.</div>}
+              {bookings.length === 0 && (
+                <div className="empty-state">Ainda sem viagens confirmadas.</div>
+              )}
             </div>
           </div>
         </div>

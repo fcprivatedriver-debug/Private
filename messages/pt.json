@@ -1,7 +1,7 @@
 {
   "meta": {
     "appName": "Movio",
-    "tagline": "Motoristas privados sob proposta"
+    "tagline": "Motoristas privados, escolhidos por proposta"
   },
   "nav": {
     "howItWorks": "Como funciona",
@@ -16,22 +16,22 @@
   },
   "home": {
     "headline": "Movio",
-    "copy": "Pedidos de viagem com motoristas privados. Publicas o trajeto, recebes propostas e escolhes a melhor — ao teu preço, ao teu ritmo.",
+    "copy": "Publica um transfer privado. Recebe propostas. Escolhe a que faz sentido — com calma, clareza e no teu ritmo.",
     "ctaRequest": "Pedir viagem",
-    "ctaDriver": "Sou motorista",
-    "stepsTitle": "Três passos. Sem tarifas fixas escondidas.",
-    "stepsLead": "A Movio funciona como um marketplace: o cliente define a viagem, os motoristas competem com propostas claras.",
+    "ctaDriver": "Conduzir com a Movio",
+    "stepsTitle": "Três passos, sem ruído.",
+    "stepsLead": "Sem tarifas opacas. Um marketplace em que defines a viagem e escolhes a proposta.",
     "step1Title": "Publica o pedido",
-    "step1Body": "Origem, destino, data e detalhes do voo ou bagagem.",
+    "step1Body": "Origem, destino, hora e os detalhes que importam.",
     "step2Title": "Recebe propostas",
-    "step2Body": "Motoristas verificados enviam preço e condições.",
+    "step2Body": "Motoristas verificados respondem com preço e condições.",
     "step3Title": "Escolhe a melhor",
-    "step3Body": "Compara e aceita. A reserva fica pronta.",
+    "step3Body": "Compara, aceita e viaja com transparência.",
     "terms": "Termos",
     "privacy": "Privacidade"
   },
   "auth": {
-    "loginTitle": "Entrar na Movio",
+    "loginTitle": "Bem-vindo de volta",
     "loginHint": "Demo: cliente@movio.app / motorista@movio.app / admin@movio.app — password movio123",
     "email": "Email",
     "password": "Password",
@@ -40,8 +40,8 @@
     "invalidCredentials": "Credenciais inválidas",
     "noAccount": "Ainda não tens conta?",
     "registerLink": "Regista-te",
-    "registerTitle": "Criar conta Movio",
-    "registerLead": "Escolhe se queres pedir viagens ou enviar propostas.",
+    "registerTitle": "Junta-te à Movio",
+    "registerLead": "Pede viagens ou envia propostas — uma conta, uma role no início.",
     "accountType": "Tipo de conta",
     "customer": "Cliente",
     "driver": "Motorista",
@@ -54,11 +54,11 @@
   },
   "how": {
     "title": "Como funciona a Movio",
-    "lead": "Um marketplace de motoristas privados: o cliente publica, os motoristas propõem, o cliente decide."
+    "lead": "Um marketplace de motoristas privados reduzido ao essencial: pedir, propor, escolher."
   },
   "forDrivers": {
-    "title": "Conduz com a Movio",
-    "lead": "Vê pedidos abertos na tua zona, envia propostas com o teu preço e cresce com avaliações.",
+    "title": "Conduz com intenção",
+    "lead": "Vê pedidos abertos, define o teu preço e cresce com confiança verificada.",
     "ctaRegister": "Registar como motorista",
     "ctaLogin": "Já tenho conta"
   },
