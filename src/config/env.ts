@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
+  DIRECT_URL: z.string().min(1).optional(),
   AUTH_SECRET: z.string().min(16),
   AUTH_TRUST_HOST: z.string().optional(),
   AUTH_GOOGLE_ID: z.string().optional(),
@@ -11,6 +12,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().default("Movio"),
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
+  DEMO_MODE: z.string().optional(),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;
