@@ -1,115 +1,22 @@
 {
-  "meta": {
-    "appName": "Hegos",
-    "tagline": "Private chauffeurs. Chosen with confidence."
-  },
-  "nav": {
-    "howItWorks": "How it works",
-    "drivers": "Drivers",
-    "myTrips": "My trips",
-    "newTrip": "Request a trip",
-    "dashboard": "Dashboard",
-    "openRequests": "Open requests",
-    "myOffers": "Offers",
-    "trips": "Trips",
-    "vehicle": "Vehicle",
-    "onboarding": "Profile",
-    "admin": "Admin",
-    "verifications": "Verifications",
-    "vehicleClasses": "Classes",
-    "login": "Log in",
-    "start": "Get started",
-    "logout": "Log out"
-  },
-  "home": {
-    "eyebrow": "Private chauffeurs · International",
-    "headline": "Hegos",
-    "copy": "Request a private transfer. Receive offers from verified drivers. Choose the one that feels right — calmly, clearly, on your terms.",
-    "ctaRequest": "Request a trip",
-    "ctaDriver": "Drive with Hegos",
-    "ctaMyTrips": "View my trips",
-    "ctaDashboard": "Open my dashboard",
-    "ctaAdmin": "Open admin",
-    "stepsTitle": "Three moments. One experience.",
-    "stepsLead": "Hegos is not a taxi. It is a discreet marketplace where you define the trip and choose the offer.",
-    "step1Title": "Tell us the journey",
-    "step1Body": "Where we should meet you, where you are going, and what matters along the way.",
-    "step2Title": "Receive offers",
-    "step2Body": "Verified drivers reply with price, vehicle and clear conditions.",
-    "step3Title": "Choose with confidence",
-    "step3Body": "Compare, accept, and travel with transparency from start to finish.",
-    "terms": "Terms",
-    "privacy": "Privacy"
+  "app": {
+    "name": "MAFIL",
+    "tagline": "Family Finance Management"
   },
   "auth": {
-    "loginTitle": "Welcome back",
-    "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
+    "loginTitle": "Sign in",
+    "loginHint": "Access your family finances.",
     "email": "Email",
     "password": "Password",
-    "submitLogin": "Log in",
+    "submitLogin": "Sign in",
     "loggingIn": "Signing in…",
-    "invalidCredentials": "Incorrect email or password",
-    "noAccount": "Don't have an account yet?",
-    "registerLink": "Create account",
-    "registerTitle": "Welcome to Hegos",
-    "registerLead": "Request trips or send offers — one account, one role to start.",
-    "accountType": "How would you like to begin?",
-    "customer": "I want to travel",
-    "driver": "I want to drive",
-    "name": "Full name",
-    "phone": "Phone",
-    "createAccount": "Create account",
-    "creating": "Creating…",
-    "hasAccount": "Already have an account?",
-    "loginLink": "Log in"
+    "invalidCredentials": "Invalid email or password.",
+    "noAccount": "No account yet?",
+    "registerLink": "Create family"
   },
-  "how": {
-    "title": "How Hegos works",
-    "lead": "A private-chauffeur marketplace reduced to the essentials: request, propose, choose."
-  },
-  "forDrivers": {
-    "title": "Drive with intention",
-    "lead": "See open requests, set your price, and grow with verified trust.",
-    "ctaRegister": "Register as a driver",
-    "ctaLogin": "I already have an account"
-  },
-  "legal": {
-    "termsTitle": "Terms of use",
-    "privacyTitle": "Privacy",
-    "preliminary": "Preliminary version · Hegos"
-  },
-  "common": {
-    "loading": "Loading…"
-  },
-  "tripForm": {
-    "title": "Where shall we take you?",
-    "lead": "Tell us what matters. Verified chauffeurs will take care of the rest.",
-    "eyebrow": "Private chauffeur booking",
-    "routeSection": "Your route",
-    "routeHint": "Pickup and destination for your transfer",
-    "scheduleSection": "Schedule & vehicle",
-    "scheduleHint": "When you need us and the class of car",
-    "partySection": "Passengers & luggage",
-    "partyHint": "So we match the right vehicle",
-    "detailsSection": "Concierge details",
-    "detailsHint": "Optional notes that help your chauffeur prepare",
-    "pickup": "Where should we pick you up?",
-    "pickupPlaceholder": "Airport, hotel or address",
-    "dropoff": "Where would you like to go?",
-    "dropoffPlaceholder": "Final destination",
-    "when": "When do you need us?",
-    "vehicleClass": "Vehicle category",
-    "noPreference": "No preference",
-    "passengers": "Passengers",
-    "luggage": "Bags",
-    "flight": "Flight number (optional)",
-    "notes": "Anything we should know?",
-    "notesPlaceholder": "Name board, waiting time, child seat…",
-    "submit": "Request offers",
-    "submitting": "Publishing…",
-    "estimating": "Calculating your route…",
-    "distance": "Distance",
-    "duration": "Estimated duration",
-    "mapLabel": "Route preview"
+  "nav": {
+    "dashboard": "Home",
+    "incomes": "Income",
+    "expenses": "Expenses"
   }
 }

@@ -1,174 +1,74 @@
-# Hegos — Architecture (Phase 0 Foundation)
+# MAFIL — Architecture
 
-> Private-driver marketplace (GetTransfer-style).  
-> **Brand:** Hegos  
-> **Phase in scope:** Phase 0 — Foundation only
+> Gestão Financeira Familiar para o mercado português.  
+> **Brand:** MAFIL  
+> **Moeda:** EUR
 
 ---
 
-## Approved product decisions
+## Product decisions
 
 | Decision | Choice |
 |----------|--------|
-| Brand / project name | **Hegos** (repo target: `movio`) |
-| Default currency | **EUR** — multi-currency ready |
-| Platform commission | **15%** default — rates configurable (global + overrides later) |
-| Contact visibility | Phone/email **only after payment is successfully confirmed** (`Booking` paid / `Payment` CAPTURED) |
-| Maps | **Google Maps** — Places Autocomplete + Geocoding |
-| i18n | **Portuguese + English** from day one (`next-intl`) |
-| Roles (MVP) | Single primary role per account: `CUSTOMER` \| `DRIVER` \| `ADMIN` |
+| Brand | **MAFIL** |
+| Default currency | **EUR** |
+| Locale | Portuguese first (`/pt`), English available |
+| Multi-user | Family + FamilyMember with roles (OWNER / ADMIN / MEMBER / VIEWER) |
+| Integrations | Adapter layer for retalho, energia, MB Way, Revolut, Open Banking |
+| OCR | Pluggable receipt recognition (confirm-before-save) |
+| AI | Heuristic insights engine (swap-ready for LLM) |
 
 ---
 
-## Phase 0 deliverables
-
-1. Next.js 15 + TypeScript + Tailwind scaffold branded **Movio**
-2. Prisma schema (multi-currency, commission settings, expanded driver profile)
-3. Auth.js foundation (credentials + optional Google OAuth)
-4. i18n routing (`/pt`, `/en`) with message catalogs
-5. Google Maps client scaffolding (Places + Geocoding)
-6. Marketing landing + auth pages (localized)
-7. Demo seed (admin, customer, driver)
-8. Contact-privacy helpers enforced in domain/API boundaries
-
-**Out of scope for Phase 0:** full marketplace UX polish beyond existing core, Stripe live charges, email provider wiring, fleet accounts.
-
----
-
-## Tech stack
+## Stack
 
 | Layer | Choice |
 |-------|--------|
 | App | Next.js 15 App Router + TypeScript |
-| UI | Tailwind + custom components |
-| DB | Prisma + SQLite (dev) / PostgreSQL (prod) |
-| Auth | Auth.js (NextAuth v5) |
+| UI | Tailwind v4 + design tokens (navy / white / soft gray) |
+| DB | Prisma + PostgreSQL (Neon in prod, local PG in dev) |
+| Auth | Auth.js (credentials + optional Google) |
 | Validation | Zod |
-| i18n | `next-intl` (PT, EN) |
-| Maps | Google Maps JS API (`@googlemaps/js-api-loader`) |
-| Payments | Provider interface + `NullPaymentProvider` (Stripe Connect later) |
+| i18n | next-intl |
 
 ---
 
-## Folder structure (target)
+## Folder structure
 
 ```
-movio/
+mafil/
 ├── prisma/
-│   ├── schema.prisma
-│   ├── migrations/
-│   └── seed.ts
 ├── messages/
-│   ├── pt.json
-│   └── en.json
-├── public/brand/
 ├── src/
-│   ├── app/
-│   │   ├── [locale]/          # all user-facing routes
-│   │   │   ├── (marketing)/
-│   │   │   ├── (auth)/
-│   │   │   ├── (app)/         # authenticated areas
-│   │   │   └── layout.tsx
-│   │   └── api/               # locale-agnostic APIs
+│   ├── app/[locale]/
+│   │   ├── (app)/          # authenticated area
+│   │   ├── login|registo
+│   │   └── page.tsx        # landing
+│   ├── actions/finance.ts
 │   ├── components/
-│   ├── domain/                # business rules
-│   ├── lib/
-│   │   ├── auth.ts
-│   │   ├── db.ts
-│   │   ├── money.ts           # multi-currency helpers
-│   │   ├── commission.ts      # configurable fee resolution
-│   │   ├── contacts.ts        # payment-gated contact reveal
-│   │   ├── maps/              # Google Places + Geocoding
-│   │   └── i18n/
-│   ├── config/
-│   └── types/
-└── docs/ARCHITECTURE.md
+│   ├── domain/             # categories, finance math
+│   └── lib/
+│       ├── ocr/
+│       ├── imports/
+│       ├── ai/
+│       ├── export/
+│       └── queries.ts
 ```
 
 ---
 
-## Data model highlights (Phase 0)
+## Modular integrations
 
-### AI driver onboarding & verification
-
-- Multi-step onboarding: profile → vehicle → documents → AI review
-- `DriverDocument` storage + `VerificationReview` audit trail
-- Heuristic AI provider (`src/lib/ai`) with risk score, confidence, findings
-- Admin queue: `/admin/verificacoes` (approve / request info / reject / re-run AI)
-- Contacts and offers still gated until `DriverProfile.status = ACTIVE`
-
-### Vehicle classification (database-driven)
-
-- `VehicleClass` table: `code`, localized names (`namePt`/`nameEn`), capacity limits, `sortOrder`, `active`
-- `Vehicle.vehicleClassId` and `TripRequest.preferredVehicleClassId` reference it
-- `CommissionRule.vehicleClassId` optional override
-- Admin CRUD at `/admin/vehicle-classes`; public list via `GET /api/vehicle-classes`
-
-### Money & commission
-
-- All amounts stored as **integer cents** + ISO `currency` (`EUR` default).
-- `PlatformSettings` (singleton): `defaultCurrency`, `defaultCommissionPercent`.
-- Future: `CommissionRule` overrides by country/category without schema rewrites.
-
-### Driver profile (expanded)
-
-- `photoUrl`, `bio`, `languagesSpoken` (JSON/list)
-- `yearsOfExperience`, `ratingAvg`, `ratingCount`
-- `completedTripsCount`, `responseRate`, `avgResponseTimeMinutes`
-- `documents` (JSON metadata for verification uploads)
-- Vehicles as related `Vehicle` records
-
-### Contact privacy
-
-```
-canRevealContacts(booking, payment) =>
-  payment.status ∈ { AUTHORIZED, CAPTURED } OR booking.status ∈ { PAID, COMPLETED }
-```
-
-Reveal only to the two parties of that booking (+ admin). Never on `OFFER_ACCEPTED` / `PENDING_PAYMENT` alone.
+Each import provider implements `ImportAdapter` in `src/lib/imports`.  
+OCR lives in `src/lib/ocr`. AI insights in `src/lib/ai/finance-insights`.  
+Future Open Banking and email invoice reading plug into the same seams without UI rewrites.
 
 ---
 
-## i18n
+## Security roadmap
 
-- Locales: `pt` (default), `en`
-- URL prefix: `/pt/...`, `/en/...`
-- Shared dictionaries under `messages/`
-- Server Components use `getTranslations`; client uses `useTranslations`
-
----
-
-## Google Maps
-
-Env: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`  
-Module `src/lib/maps/google.ts`:
-
-- load Maps JS API
-- Places Autocomplete helper
-- Geocode / reverse-geocode helpers  
-UI address fields consume this module in later phases; Phase 0 ships the provider + typed config.
-
----
-
-## Phased roadmap (reminder)
-
-| Phase | Focus |
-|-------|--------|
-| **0** | Foundation (this document / this PR) |
-| 1 | Core marketplace (trips, offers, accept) |
-| 2 | Trust & ops (KYC queue, reviews, expiry cron) |
-| 3 | Stripe Connect payments |
-| 4 | Scale (fleet, chat, push, more locales) |
-
----
-
-## Repository naming
-
-Application and package name: **`movio`**.  
-GitHub repository should be renamed from `Private` → **`movio`** by the org owner (Settings → General → Repository name). Agent environments cannot rename the remote repo via read-only `gh`.
-
-### Owner steps to rename on GitHub
-
-1. Open https://github.com/fcprivatedriver-debug/Private/settings  
-2. Repository name → `movio` → Rename  
-3. Update local remotes: `git remote set-url origin https://github.com/fcprivatedriver-debug/movio.git`
+- Credentials + OAuth (Google / Apple)
+- PIN + biometrics flags on User (native clients)
+- HTTPS encryption in transit
+- Automated backups via managed Postgres
+- Explicit user consent for third-party imports

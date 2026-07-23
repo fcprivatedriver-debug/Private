@@ -1,4 +1,4 @@
-# Agent notes — Hegos
+# Agent notes — MAFIL
 
 ## PR completion gate (mandatory)
 

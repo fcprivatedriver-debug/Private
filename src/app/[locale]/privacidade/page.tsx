@@ -1,32 +1,17 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import Link from "next/link";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
-type Props = { params: Promise<{ locale: string }> };
-
-export default async function PrivacidadePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations("legal");
-
+export default function PrivacidadePage() {
   return (
-    <section className="section fade-up">
-      <div className="container" style={{ maxWidth: 720 }}>
-        <h1 className="page-title">{t("privacyTitle")}</h1>
-        <p className="page-lead">{t("preliminary")}</p>
-        <div className="prose-block" style={{ marginTop: "0.5rem", lineHeight: 1.7, maxWidth: "40rem" }}>
-          <p>
-            We process account data (name, email, phone), trip requests and offers to operate the
-            Hegos marketplace.
-          </p>
-          <p>
-            Customer and driver contact details become visible to the counterpart only after payment
-            has been successfully confirmed — never at offer acceptance alone.
-          </p>
-          <p>
-            You may request access or deletion of your data by contacting the Hegos team. This page
-            will be finalized before production launch.
-          </p>
-        </div>
-      </div>
-    </section>
+    <div className="section">
+      <BrandLogo href="/pt" />
+      <h1 className="page-title" style={{ marginTop: "1.5rem" }}>Privacidade</h1>
+      <p className="page-sub">
+        A MAFIL trata dados financeiros com encriptação em trânsito e em repouso,
+        backups automáticos e controlo de permissões por membro da família.
+        Integrações (Open Banking, retalho, energia) só avançam com autorização explícita.
+      </p>
+      <Link href="/pt" className="btn btn-ghost">Voltar</Link>
+    </div>
   );
 }

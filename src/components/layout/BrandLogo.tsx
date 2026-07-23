@@ -1,57 +1,31 @@
-import { Link } from "@/i18n/navigation";
-
-/** Hegos mark — geometric H with a forward arc (motion + trust). */
-export function HegosMark({ className = "", size = 28 }: { className?: string; size?: number }) {
-  return (
-    <svg
-      className={className}
-      width={size}
-      height={size}
-      viewBox="0 0 32 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <rect width="32" height="32" rx="8" fill="currentColor" className="hegos-mark-bg" />
-      <path
-        d="M9 8.5v15M23 8.5v15M9 16h14"
-        stroke="#F7F8F9"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M21.5 7.5c3.2 2.4 4.8 5.6 4.8 8.5s-1.6 6.1-4.8 8.5"
-        stroke="#5BA3C0"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        opacity="0.95"
-      />
-    </svg>
-  );
-}
+import Link from "next/link";
 
 export function BrandLogo({
-  href = "/",
+  href = "/pt",
   size = "md",
-  tone = "default",
 }: {
-  href?: "/" | string;
+  href?: string;
   size?: "sm" | "md" | "lg";
-  tone?: "default" | "on-dark";
 }) {
-  const mark = size === "lg" ? 34 : size === "sm" ? 22 : 28;
-  const fontSize = size === "lg" ? "1.75rem" : size === "sm" ? "1.2rem" : "1.4rem";
+  const sizes = {
+    sm: { mark: 28, text: "1.05rem" },
+    md: { mark: 36, text: "1.35rem" },
+    lg: { mark: 52, text: "1.85rem" },
+  }[size];
+
   return (
-    <Link
-      href={href as "/"}
-      className={`logo${tone === "on-dark" ? " logo-on-dark" : ""}`}
-      style={{ fontSize }}
-      aria-label="Hegos"
-    >
-      <HegosMark size={mark} />
-      <span className="logo-word">
-        Heg<span>os</span>
+    <Link href={href} className="brand-logo" aria-label="MAFIL — Gestão Financeira Familiar">
+      <span className="brand-mark" style={{ width: sizes.mark, height: sizes.mark }} aria-hidden>
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="currentColor" />
+          <path
+            d="M10 26V14h4.2l3.3 7.8L21 14H25v12h-3.1v-7.1L18.2 26h-2.9l-3.2-7.1V26H10zm16.5 0v-3.2h3.4V14H34v12h-7.5z"
+            fill="#fff"
+          />
+        </svg>
+      </span>
+      <span className="brand-word" style={{ fontSize: sizes.text }}>
+        MAFIL
       </span>
     </Link>
   );

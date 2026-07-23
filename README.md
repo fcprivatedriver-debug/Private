@@ -1,16 +1,17 @@
-# Hegos
+# MAFIL — Gestão Financeira Familiar
 
-Private-chauffeur marketplace — request a trip, receive offers from verified drivers, choose with confidence.
+Aplicação moderna para controlar receitas e despesas da família, orçamentos, objetivos de poupança e insights com IA. Feita para Portugal (EUR, retalho, energia, Open Banking).
 
-**Brand:** Hegos · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** MAFIL · **Moeda:** EUR · **Idioma:** Português (EN disponível) · **Base de dados:** PostgreSQL
 
 ## Stack
 
 - Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
-- Auth.js (credentials) · Prisma · Neon PostgreSQL
+- Auth.js (credentials + Google opcional) · Prisma · PostgreSQL
 - next-intl (`/pt`, `/en`)
+- Arquitetura modular: OCR, importações, IA, exportação, Open Banking stubs
 
-## Local setup
+## Arranque local
 
 ```bash
 cp .env.example .env
@@ -20,27 +21,33 @@ npm run db:seed
 npm run dev
 ```
 
-### Demo accounts (password: `movio123`)
+### Conta demo
 
-| Email | Role |
-|-------|------|
-| `cliente@movio.app` | Customer |
-| `motorista@movio.app` | Driver (active) |
-| `admin@movio.app` | Admin |
+| Email | Password |
+|-------|----------|
+| `familia@mafil.pt` | `mafil123` |
+| `ana@mafil.pt` | `mafil123` |
 
-Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
+## Funcionalidades
 
-## Environment
+- Dashboard: saldo, receitas, despesas, poupança, orçamento %, objetivos, últimas despesas, próximos pagamentos, gráficos
+- Receitas e despesas com categorias PT
+- OCR de faturas (confirmar dados)
+- Importações (Continente, Galp, MB Way, CSV, …)
+- Orçamentos com alertas 75/90/100%
+- Estatísticas, pesquisa, filtros, alertas, recorrentes
+- Multiutilizador familiar
+- Tema claro / escuro
+- Exportação PDF / Excel / CSV
+- Assistente IA (hábitos, anomalias, previsão)
 
-| Variable | Example |
+## Ambiente
+
+| Variável | Exemplo |
 |----------|---------|
-| `DATABASE_URL` | Neon pooled URL |
-| `DIRECT_URL` | Neon unpooled URL |
-| `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `Hegos` |
+| `DATABASE_URL` | PostgreSQL |
+| `DIRECT_URL` | PostgreSQL (migrate) |
+| `AUTH_SECRET` | 32+ chars |
+| `NEXT_PUBLIC_APP_NAME` | `MAFIL` |
 
-See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
-
-## Package
-
-- Package name: **hegos**
+Ver `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.

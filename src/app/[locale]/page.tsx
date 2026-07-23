@@ -1,83 +1,88 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { auth } from "@/lib/auth";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import Link from "next/link";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
-export const dynamic = "force-dynamic";
-
-type Props = { params: Promise<{ locale: string }> };
-
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations("home");
-  const session = await auth();
-  const role = session?.user?.role;
-
-  const primary =
-    role === "CUSTOMER"
-      ? { href: "/pedidos/novo" as const, label: t("ctaRequest") }
-      : role === "DRIVER"
-        ? { href: "/painel" as const, label: t("ctaDashboard") }
-        : role === "ADMIN"
-          ? { href: "/admin" as const, label: t("ctaAdmin") }
-          : { href: "/registo?role=CUSTOMER" as const, label: t("ctaRequest") };
-
-  const secondary =
-    role === "CUSTOMER"
-      ? { href: "/pedidos" as const, label: t("ctaMyTrips") }
-      : role === "DRIVER"
-        ? { href: "/pedidos-abertos" as const, label: t("ctaDriver") }
-        : role === "ADMIN"
-          ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
-          : { href: "/para-motoristas" as const, label: t("ctaDriver") };
-
+export default function LandingPage() {
   return (
-    <>
+    <div className="landing">
+      <nav className="landing-nav">
+        <BrandLogo href="/pt" size="md" />
+        <div className="landing-nav-actions">
+          <Link href="/pt/login" className="btn btn-ghost btn-sm">
+            Entrar
+          </Link>
+          <Link href="/pt/registo" className="btn btn-primary btn-sm">
+            Começar
+          </Link>
+        </div>
+      </nav>
+
       <section className="hero">
-        <div className="hero-media" aria-hidden />
-        <div className="container hero-content">
-          <p className="hero-eyebrow">{t("eyebrow")}</p>
-          <h1 className="hero-brand">
-            Heg<span>os</span>
-          </h1>
-          <p className="hero-copy">{t("copy")}</p>
-          <div className="cta-row">
-            <Link href={primary.href} className="btn btn-primary">
-              {primary.label}
+        <div className="hero-bg" aria-hidden />
+        <div className="hero-content">
+          <p className="hero-brand">MAFIL</p>
+          <h1>Gestão financeira familiar, com clareza.</h1>
+          <p>
+            Controlo receitas, despesas e objetivos da família num só lugar —
+            simples, seguro e feito para Portugal.
+          </p>
+          <div className="hero-ctas">
+            <Link href="/pt/registo" className="btn btn-primary">
+              Criar conta familiar
             </Link>
-            <Link href={secondary.href} className="btn btn-secondary">
-              {secondary.label}
+            <Link href="/pt/login" className="btn btn-ghost">
+              Entrar na demo
             </Link>
           </div>
         </div>
       </section>
 
       <section className="section">
-        <div className="container">
-          <h2>{t("stepsTitle")}</h2>
-          <p className="lead">{t("stepsLead")}</p>
-          <div className="steps">
-            <div>
-              <div className="step-num">01</div>
-              <h3>{t("step1Title")}</h3>
-              <p className="muted">{t("step1Body")}</p>
-            </div>
-            <div>
-              <div className="step-num">02</div>
-              <h3>{t("step2Title")}</h3>
-              <p className="muted">{t("step2Body")}</p>
-            </div>
-            <div>
-              <div className="step-num">03</div>
-              <h3>{t("step3Title")}</h3>
-              <p className="muted">{t("step3Body")}</p>
-            </div>
-          </div>
+        <h2>Tudo o que a família precisa</h2>
+        <p className="section-lead">
+          Da fatura do supermercado ao objetivo das férias — organizado, sincronizado e inteligente.
+        </p>
+        <div className="feature-grid">
+          {[
+            {
+              title: "Dashboard claro",
+              body: "Saldo do mês, orçamento utilizado, últimas despesas e próximos pagamentos num olhar.",
+            },
+            {
+              title: "OCR de faturas",
+              body: "Fotografe a fatura e confirme loja, valor, IVA e categoria sugerida automaticamente.",
+            },
+            {
+              title: "Importações PT",
+              body: "Arquitetura pronta para Continente, Galp, Via Verde, MB Way, Revolut e Open Banking.",
+            },
+            {
+              title: "Orçamentos com alertas",
+              body: "Defina limites por categoria e receba avisos aos 75%, 90% e 100%.",
+            },
+            {
+              title: "IA financeira",
+              body: "Hábitos, anomalias, previsão de saldo e sugestões personalizadas de poupança.",
+            },
+            {
+              title: "Multiutilizador",
+              body: "Vários membros da família, permissões e despesas próprias — tudo sincronizado.",
+            },
+          ].map((f) => (
+            <article key={f.title} className="feature">
+              <h3>{f.title}</h3>
+              <p className="muted">{f.body}</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <SiteFooter termsLabel={t("terms")} privacyLabel={t("privacy")} />
-    </>
+      <footer className="landing-footer">
+        <p>
+          MAFIL · Gestão Financeira Familiar ·{" "}
+          <Link href="/pt/privacidade">Privacidade</Link> ·{" "}
+          <Link href="/pt/termos">Termos</Link>
+        </p>
+      </footer>
+    </div>
   );
 }

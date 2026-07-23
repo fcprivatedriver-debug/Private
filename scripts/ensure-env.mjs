@@ -24,7 +24,7 @@ if (!process.env.DIRECT_URL) {
 
 if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
   process.env.AUTH_SECRET =
-    "movio-demo-auth-secret-do-not-use-in-real-prod-32b";
+    "mafil-demo-auth-secret-do-not-use-in-real-prod-32b";
   console.log("[ensure-env] AUTH_SECRET set to demo fallback for this build");
 }
 
