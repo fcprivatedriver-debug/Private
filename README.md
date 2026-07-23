@@ -1,16 +1,12 @@
 # Movio
 
-Marketplace de motoristas privados — os clientes publicam pedidos de viagem, os motoristas enviam propostas, o cliente escolhe a melhor.
+Professional marketplace for private drivers — customers publish trip requests, drivers send offers, customers choose the best proposal.
 
-## Stack
+**Brand:** Movio · **Default currency:** EUR · **Locales:** Portuguese, English
 
-- Next.js 15 (App Router) + TypeScript
-- Prisma + SQLite (dev; PostgreSQL em produção)
-- Auth.js (NextAuth v5)
-- Tailwind CSS
-- Pagamentos preparados (Stripe Connect stub)
+> Phase 0 — Foundation. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
-## Arranque
+## Quick start
 
 ```bash
 cp .env.example .env
@@ -20,27 +16,19 @@ npm run db:seed
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000/pt](http://localhost:3000/pt) or [http://localhost:3000/en](http://localhost:3000/en).
 
-### Contas demo (password: `movio123`)
+### Demo accounts (password: `movio123`)
 
 | Email | Role |
 |-------|------|
-| `cliente@movio.app` | Cliente |
-| `motorista@movio.app` | Motorista (ativo) |
-| `motorista2@movio.app` | Motorista (ativo) |
-| `pendente@movio.app` | Motorista (em verificação) |
+| `cliente@movio.app` | Customer |
+| `motorista@movio.app` | Driver (active) |
 | `admin@movio.app` | Admin |
 
-## Documentação
+## Product defaults
 
-- [Plano de arquitetura](./docs/ARCHITECTURE.md)
-
-## Defaults de produto
-
-- Moeda: EUR
-- Comissão Movio: 15%
-- Contactos revelados após aceite da proposta
-- Role única por conta no MVP
-- UI em português
-- `PAYMENTS_ENABLED=false` (confirmação demo sem Stripe)
+- Commission: **15%** (configurable)
+- Contacts visible **only after payment confirmed**
+- Maps: **Google Maps** (Places + Geocoding)
+- Repo/package name: **movio**
