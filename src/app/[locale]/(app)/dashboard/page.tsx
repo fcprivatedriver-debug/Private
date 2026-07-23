@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { getDashboardData } from "@/lib/queries";
+import { getNinaSpace } from "@/actions/household";
 import { formatEUR } from "@/lib/money";
+import { spaceLabel } from "@/lib/scope";
 import {
   StatCard,
   Panel,
@@ -12,6 +14,7 @@ import {
 } from "@/components/ui/FinanceUI";
 import { NinaChat } from "@/components/nina/NinaChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
+import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
 import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
 
 export default async function DashboardPage() {
@@ -20,8 +23,13 @@ export default async function DashboardPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const data = await getDashboardData(membership.familyId);
+  const space = await getNinaSpace();
+  const data = await getDashboardData(membership.familyId, {
+    space,
+    memberId: membership.id,
+  });
   const name = membership.displayName;
+  const label = spaceLabel(space);
 
   return (
     <div className="nina-home">
@@ -29,17 +37,21 @@ export default async function DashboardPage() {
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
             <p className="nina-kicker">
-              {HOUSEHOLD_KIND_LABELS[membership.family.kind]} · sempre sincronizada
+              {label} · {HOUSEHOLD_KIND_LABELS[membership.family.kind]}
             </p>
-            <h1 className="page-title">Olá, {name}. Eu trato das contas da família.</h1>
+            <h1 className="page-title">Olá, {name}. Eu trato disto por ti.</h1>
             <p className="page-sub">
-              Cada um fala comigo — eu organizo, partilho e atualizo tudo em tempo real.
+              {space === "family"
+                ? "Receitas partilhadas, despesas da casa e objetivos da família — sincronizados."
+                : "Só as tuas receitas, despesas e objetivos pessoais."}
               {` · ${data.monthLabel}`}
             </p>
           </div>
-          <HouseholdLiveSync />
+          {space === "family" ? <HouseholdLiveSync /> : null}
         </div>
       </header>
+
+      <SmartSuggestions />
 
       <div className="stats-grid nina-glance">
         <StatCard label="Folga este mês" valueCents={data.totals.balanceCents} tone="neutral" />
@@ -70,7 +82,7 @@ export default async function DashboardPage() {
             </Link>
           </Panel>
 
-          <Panel title="Objetivos da família">
+          <Panel title={space === "family" ? "Objetivos da família" : "Os teus objetivos"}>
             {data.goals.map((g) => (
               <div key={g.id} className="goal-card">
                 <div className="goal-head">
@@ -79,7 +91,7 @@ export default async function DashboardPage() {
                 </div>
                 <ProgressBar percent={g.progress} color="#0f7a4a" />
                 <p className="muted small">
-                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)} · partilhado
+                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
                 </p>
               </div>
             ))}

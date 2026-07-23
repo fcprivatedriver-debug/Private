@@ -61,12 +61,15 @@ async function captureStills() {
 
   await login(page);
   await shot(page, "10-dashboard");
-  await page.getByRole("button", { name: "Gastei 35 € no Continente" }).first().click();
+  await page.getByRole("button", { name: /Continente para casa/i }).first().click().catch(() => {});
   await page.waitForTimeout(1500);
   await shot(page, "10b-nina-chat");
-  await page.getByRole("button", { name: "Fui à farmácia e gastei 18 €" }).first().click().catch(() => {});
+  await page.getByRole("button", { name: /Café/i }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   await gotoShot(page, "/pt/familia", "10c-conta-familiar");
+  await gotoShot(page, "/pt/memoria", "10d-memoria");
+  await gotoShot(page, "/pt/perfil", "10e-perfil");
+  await gotoShot(page, "/pt/convite/nina-demo-invite-token-seguro", "10f-convite");
   await gotoShot(page, "/pt/receitas", "11-receitas");
   await gotoShot(page, "/pt/despesas", "12-despesas");
   await gotoShot(page, "/pt/despesas/nova", "13-despesa-nova");
@@ -86,7 +89,7 @@ async function captureStills() {
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoShot(page, "/pt/dashboard", "30-mobile-dashboard");
   await gotoShot(page, "/pt/despesas", "31-mobile-despesas");
-
+  await gotoShot(page, "/pt/familia", "32-mobile-familia");
   await browser.close();
 }
 
@@ -108,6 +111,12 @@ async function captureFlowVideo() {
     page.click('button[type="submit"]'),
   ]);
   await page.waitForTimeout(1000);
+  await page.getByRole("button", { name: /Conta Familiar/i }).first().click().catch(() => {});
+  await page.waitForTimeout(600);
+  await page.goto(`${BASE}/pt/familia`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/memoria`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/despesas`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/objetivos`, { waitUntil: "networkidle" });

@@ -24,6 +24,11 @@ enum HouseholdKind {
   SHARED
 }
 
+enum FinanceScope {
+  PERSONAL
+  FAMILY
+}
+
 enum TransactionType {
   INCOME
   EXPENSE
@@ -131,6 +136,9 @@ model User {
   createdExpenses Expense[] @relation("ExpenseCreator")
   alerts        Alert[]
   aiInsights    AiInsight[]
+  memoryRules   NinaMemoryRule[]
+  habitStats    NinaHabitStat[]
+  invitesCreated FamilyInvite[] @relation("InviteCreator")
 }
 
 model AuthAccount {
@@ -191,6 +199,9 @@ model Family {
   importJobs         ImportJob[]
   aiInsights         AiInsight[]
   stores             Store[]
+  invites            FamilyInvite[]
+  memoryRules        NinaMemoryRule[]
+  habitStats         NinaHabitStat[]
 }
 
 model FamilyMember {
@@ -208,9 +219,67 @@ model FamilyMember {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   incomes  Income[]
   expenses Expense[]
+  personalGoals SavingsGoal[] @relation("PersonalGoalOwner")
 
   @@unique([familyId, userId])
   @@index([userId])
+}
+
+model FamilyInvite {
+  id           String    @id @default(cuid())
+  familyId     String
+  token        String    @unique
+  createdById  String
+  label        String?
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  acceptedById String?
+  createdAt    DateTime  @default(now())
+
+  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy User   @relation("InviteCreator", fields: [createdById], references: [id])
+
+  @@index([familyId])
+  @@index([token])
+}
+
+model NinaMemoryRule {
+  id            String   @id @default(cuid())
+  userId        String
+  familyId      String?
+  triggerPhrase String
+  scope         FinanceScope?
+  categorySlug  String?
+  notes         String?
+  isActive      Boolean  @default(true)
+  hitCount      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+}
+
+model NinaHabitStat {
+  id                  String   @id @default(cuid())
+  userId              String
+  familyId            String
+  keyType             String   // store | category | phrase
+  keyValue            String
+  personalCount       Int      @default(0)
+  familyCount         Int      @default(0)
+  lastScope           FinanceScope?
+  lastUsedAt          DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId, keyType, keyValue])
+  @@index([userId, familyId])
 }
 
 // ——— Contas ———
@@ -269,19 +338,20 @@ model Category {
 // ——— Receitas ———
 
 model Income {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   familyId    String
   memberId    String?
   accountId   String?
   categoryId  String
   createdById String?
+  scope       FinanceScope @default(PERSONAL)
   amountCents Int
-  currency    String   @default("EUR")
+  currency    String       @default("EUR")
   date        DateTime
   description String
   notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   family    Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
   member    FamilyMember?   @relation(fields: [memberId], references: [id])
@@ -290,6 +360,7 @@ model Income {
   createdBy User?           @relation("IncomeCreator", fields: [createdById], references: [id])
 
   @@index([familyId, date])
+  @@index([familyId, scope])
   @@index([categoryId])
 }
 
@@ -304,10 +375,11 @@ model Expense {
   subcategoryId   String?
   storeId         String?
   createdById     String?
+  scope           FinanceScope  @default(PERSONAL)
   amountCents     Int
   currency        String        @default("EUR")
   date            DateTime
-  time            String?       // HH:mm
+  time            String?
   description     String
   storeName       String?
   paymentMethod   PaymentMethod @default(DEBIT_CARD)
@@ -336,6 +408,7 @@ model Expense {
   lineItems    ExpenseLineItem[]
 
   @@index([familyId, date])
+  @@index([familyId, scope])
   @@index([categoryId])
   @@index([storeName])
   @@index([paymentMethod])
@@ -394,23 +467,27 @@ model Budget {
 // ——— Objetivos de poupança ———
 
 model SavingsGoal {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   familyId        String
+  ownerMemberId   String?
+  scope           FinanceScope @default(FAMILY)
   name            String
-  type            GoalType @default(CUSTOM)
+  type            GoalType     @default(CUSTOM)
   targetCents     Int
-  currentCents    Int      @default(0)
+  currentCents    Int          @default(0)
   deadline        DateTime?
-  color           String   @default("#0f7a4a")
+  color           String       @default("#0f7a4a")
   icon            String?
   notes           String?
-  isCompleted     Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isCompleted     Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  owner  FamilyMember? @relation("PersonalGoalOwner", fields: [ownerMemberId], references: [id])
 
   @@index([familyId])
+  @@index([familyId, scope])
 }
 
 // ——— Pagamentos recorrentes ———

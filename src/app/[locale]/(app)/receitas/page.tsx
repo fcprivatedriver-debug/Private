@@ -2,8 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
+import { getNinaSpace } from "@/actions/household";
 import { prisma } from "@/lib/db";
 import { formatEUR, currentYearMonth, monthBounds } from "@/lib/money";
+import { incomeScopeWhere, spaceLabel } from "@/lib/scope";
 import { Panel } from "@/components/ui/FinanceUI";
 
 export default async function EntradasPage() {
@@ -12,10 +14,15 @@ export default async function EntradasPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
+  const space = await getNinaSpace();
   const { year, month } = currentYearMonth();
   const { start, end } = monthBounds(year, month);
   const incomes = await prisma.income.findMany({
-    where: { familyId: membership.familyId, date: { gte: start, lte: end } },
+    where: {
+      familyId: membership.familyId,
+      date: { gte: start, lte: end },
+      ...incomeScopeWhere(space, membership.id),
+    },
     include: { category: true, member: true, account: true },
     orderBy: { date: "desc" },
   });
@@ -25,10 +32,14 @@ export default async function EntradasPage() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
         <div>
-          <h1 className="page-title">Receitas</h1>
-          <p className="page-sub">Total do mês: <span className="text-income">{formatEUR(total)}</span></p>
+          <h1 className="page-title">Entradas · {spaceLabel(space)}</h1>
+          <p className="page-sub">
+            Total do mês: <span className="text-income">{formatEUR(total)}</span>
+          </p>
         </div>
-        <Link href="/pt/receitas/nova" className="btn btn-success">+ Nova entrada</Link>
+        <Link href="/pt/receitas/nova" className="btn btn-success">
+          + Nova entrada
+        </Link>
       </div>
       <Panel title="Movimentos">
         <div className="table-wrap">

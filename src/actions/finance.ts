@@ -21,14 +21,19 @@ import { generateInsights, buildMonthlyReport } from "@/lib/ai/finance-insights"
 import { toCSV, toExcelTSV, toSimplePdfText } from "@/lib/export";
 import type { ImportProvider, PaymentMethod } from "@prisma/client";
 import { currentYearMonth, monthBounds } from "@/lib/money";
-import { makeInviteCode } from "@/domain/household";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
 } from "@/domain/categories";
+import { getNinaSpace } from "@/actions/household";
 
 function revalidateApp() {
   revalidatePath("/", "layout");
+}
+
+async function scopeFromSpace() {
+  const space = await getNinaSpace();
+  return space === "family" ? ("FAMILY" as const) : ("PERSONAL" as const);
 }
 
 export async function registerFamily(formData: FormData) {
@@ -55,9 +60,8 @@ export async function registerFamily(formData: FormData) {
 
   const family = await prisma.family.create({
     data: {
-      name: parsed.data.familyName || `Família ${parsed.data.name.split(" ")[0]}`,
-      kind: "FAMILY",
-      inviteCode: makeInviteCode(),
+      name: parsed.data.familyName || `Conta de ${parsed.data.name.split(" ")[0]}`,
+      kind: "INDIVIDUAL",
     },
   });
 
@@ -127,6 +131,7 @@ export async function createIncome(formData: FormData) {
   const amountCents = parseEURInput(parsed.data.amount);
   if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
 
+  const scope = await scopeFromSpace();
   await prisma.income.create({
     data: {
       familyId: family.id,
@@ -134,6 +139,7 @@ export async function createIncome(formData: FormData) {
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
       createdById: session.user.id,
+      scope,
       amountCents,
       date: new Date(parsed.data.date),
       description: parsed.data.description,
@@ -182,6 +188,7 @@ export async function createExpense(formData: FormData) {
     storeId = store.id;
   }
 
+  const scope = await scopeFromSpace();
   await prisma.expense.create({
     data: {
       familyId: family.id,
@@ -191,6 +198,7 @@ export async function createExpense(formData: FormData) {
       memberId: parsed.data.memberId || membership.id,
       createdById: session.user.id,
       storeId,
+      scope,
       amountCents,
       date: new Date(parsed.data.date),
       time: parsed.data.time || null,
@@ -241,7 +249,7 @@ export async function createBudget(formData: FormData) {
 }
 
 export async function createGoal(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
   const parsed = goalSchema.safeParse({
     name: formData.get("name"),
     type: formData.get("type") || "CUSTOM",
@@ -255,9 +263,13 @@ export async function createGoal(formData: FormData) {
   const currentCents = parseEURInput(parsed.data.current || "0") ?? 0;
   if (targetCents == null || targetCents <= 0) return { ok: false as const, error: "Meta inválida" };
 
+  const space = await getNinaSpace();
+  const scope = space === "family" ? ("FAMILY" as const) : ("PERSONAL" as const);
   await prisma.savingsGoal.create({
     data: {
       familyId: family.id,
+      ownerMemberId: scope === "PERSONAL" ? membership.id : null,
+      scope,
       name: parsed.data.name,
       type: parsed.data.type,
       targetCents,

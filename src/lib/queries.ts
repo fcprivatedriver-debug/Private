@@ -2,10 +2,20 @@ import { prisma } from "@/lib/db";
 import { currentYearMonth, monthBounds, monthLabel } from "@/lib/money";
 import { computeDashboardTotals, groupByCategory, goalProgress } from "@/domain/finance";
 import { PAYMENT_METHOD_LABELS } from "@/domain/categories";
+import type { NinaSpace } from "@/actions/household";
+import { expenseScopeWhere, goalScopeWhere, incomeScopeWhere } from "@/lib/scope";
 
-export async function getDashboardData(familyId: string) {
+export async function getDashboardData(
+  familyId: string,
+  opts?: { space?: NinaSpace; memberId?: string },
+) {
+  const space = opts?.space ?? "family";
+  const memberId = opts?.memberId ?? "";
   const { year, month } = currentYearMonth();
   const { start, end } = monthBounds(year, month);
+  const expWhere = expenseScopeWhere(space, memberId);
+  const incWhere = incomeScopeWhere(space, memberId);
+  const goalWhere = goalScopeWhere(space, memberId);
 
   const [
     incomes,
@@ -19,11 +29,11 @@ export async function getDashboardData(familyId: string) {
     accounts,
   ] = await Promise.all([
     prisma.income.findMany({
-      where: { familyId, date: { gte: start, lte: end } },
+      where: { familyId, date: { gte: start, lte: end }, ...incWhere },
       include: { category: true, member: true },
     }),
     prisma.expense.findMany({
-      where: { familyId, date: { gte: start, lte: end } },
+      where: { familyId, date: { gte: start, lte: end }, ...expWhere },
       include: { category: true, member: true, account: true },
       orderBy: { date: "desc" },
     }),
@@ -32,7 +42,7 @@ export async function getDashboardData(familyId: string) {
       include: { category: true },
     }),
     prisma.savingsGoal.findMany({
-      where: { familyId },
+      where: { familyId, ...goalWhere },
       orderBy: { createdAt: "asc" },
     }),
     prisma.recurringPayment.findMany({
@@ -68,7 +78,6 @@ export async function getDashboardData(familyId: string) {
     })),
   );
 
-  // Evolução últimos 6 meses
   const evolution = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(year, month - 1 - i, 1);
@@ -77,11 +86,11 @@ export async function getDashboardData(familyId: string) {
     const b = monthBounds(y, m);
     const [inc, exp] = await Promise.all([
       prisma.income.aggregate({
-        where: { familyId, date: { gte: b.start, lte: b.end } },
+        where: { familyId, date: { gte: b.start, lte: b.end }, ...incWhere },
         _sum: { amountCents: true },
       }),
       prisma.expense.aggregate({
-        where: { familyId, date: { gte: b.start, lte: b.end } },
+        where: { familyId, date: { gte: b.start, lte: b.end }, ...expWhere },
         _sum: { amountCents: true },
       }),
     ]);
@@ -110,6 +119,7 @@ export async function getDashboardData(familyId: string) {
     year,
     month,
     monthLabel: monthLabel(year, month),
+    space,
     totals,
     categoryChart,
     evolution,
@@ -137,9 +147,14 @@ export async function getExpensesFiltered(
     max?: number;
     from?: string;
     to?: string;
+    space?: NinaSpace;
+    memberId?: string;
   },
 ) {
   const where: Record<string, unknown> = { familyId };
+  if (filters.space && filters.memberId) {
+    Object.assign(where, expenseScopeWhere(filters.space, filters.memberId));
+  }
   if (filters.categoryId) where.categoryId = filters.categoryId;
   if (filters.accountId) where.accountId = filters.accountId;
   if (filters.paymentMethod) where.paymentMethod = filters.paymentMethod;
@@ -173,13 +188,22 @@ export async function getExpensesFiltered(
   });
 }
 
-export async function getStatsData(familyId: string) {
+export async function getStatsData(
+  familyId: string,
+  opts?: { space?: NinaSpace; memberId?: string },
+) {
   const { year, month } = currentYearMonth();
-  const data = await getDashboardData(familyId);
+  const data = await getDashboardData(familyId, opts);
+  const space = opts?.space ?? "family";
+  const memberId = opts?.memberId ?? "";
+  const expWhere = expenseScopeWhere(space, memberId);
 
-  // Por loja
   const expenses = await prisma.expense.findMany({
-    where: { familyId, date: { gte: monthBounds(year, month).start, lte: monthBounds(year, month).end } },
+    where: {
+      familyId,
+      date: { gte: monthBounds(year, month).start, lte: monthBounds(year, month).end },
+      ...expWhere,
+    },
   });
   const byStore = new Map<string, number>();
   const byMethod = new Map<string, number>();
@@ -189,7 +213,6 @@ export async function getStatsData(familyId: string) {
     byMethod.set(e.paymentMethod, (byMethod.get(e.paymentMethod) ?? 0) + e.amountCents);
   }
 
-  // Semanal (últimas 4 semanas)
   const weekly = [];
   for (let i = 3; i >= 0; i--) {
     const end = new Date();
@@ -198,7 +221,7 @@ export async function getStatsData(familyId: string) {
     start.setDate(start.getDate() - 6);
     start.setHours(0, 0, 0, 0);
     const sum = await prisma.expense.aggregate({
-      where: { familyId, date: { gte: start, lte: end } },
+      where: { familyId, date: { gte: start, lte: end }, ...expWhere },
       _sum: { amountCents: true },
     });
     weekly.push({
@@ -207,12 +230,11 @@ export async function getStatsData(familyId: string) {
     });
   }
 
-  // Anual por mês
   const annual = [];
   for (let m = 1; m <= 12; m++) {
     const b = monthBounds(year, m);
     const sum = await prisma.expense.aggregate({
-      where: { familyId, date: { gte: b.start, lte: b.end } },
+      where: { familyId, date: { gte: b.start, lte: b.end }, ...expWhere },
       _sum: { amountCents: true },
     });
     annual.push({
@@ -220,8 +242,6 @@ export async function getStatsData(familyId: string) {
       expenseCents: sum._sum.amountCents ?? 0,
     });
   }
-
-  const goals = await prisma.savingsGoal.findMany({ where: { familyId } });
 
   return {
     ...data,
@@ -235,11 +255,11 @@ export async function getStatsData(familyId: string) {
     })),
     weekly,
     annual,
-    savingsEvolution: goals.map((g) => ({
+    savingsEvolution: data.goals.map((g) => ({
       name: g.name,
       current: g.currentCents,
       target: g.targetCents,
-      progress: goalProgress(g.currentCents, g.targetCents),
+      progress: g.progress,
     })),
   };
 }

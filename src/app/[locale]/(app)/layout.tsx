@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { AppShell } from "@/components/layout/AppShell";
 import { prisma } from "@/lib/db";
+import { getNinaSpace } from "@/actions/household";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -11,12 +12,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const unread = await prisma.alert.count({
-    where: { familyId: membership.familyId, isRead: false },
-  });
+  const [unread, space] = await Promise.all([
+    prisma.alert.count({
+      where: { familyId: membership.familyId, isRead: false },
+    }),
+    getNinaSpace(),
+  ]);
 
   return (
-    <AppShell userName={session.user.name || membership.displayName} unreadAlerts={unread}>
+    <AppShell
+      userName={session.user.name || membership.displayName}
+      unreadAlerts={unread}
+      space={space}
+    >
       {children}
     </AppShell>
   );

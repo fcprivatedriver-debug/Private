@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
+import { getNinaSpace } from "@/actions/household";
 import { prisma } from "@/lib/db";
 import { formatEUR } from "@/lib/money";
 import { goalProgress } from "@/domain/finance";
+import { goalScopeWhere, spaceLabel } from "@/lib/scope";
 import { Panel, ProgressBar } from "@/components/ui/FinanceUI";
 import { GoalForm, ContributeForm } from "@/components/finance/Forms";
 
@@ -13,15 +15,20 @@ export default async function ObjetivosPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
+  const space = await getNinaSpace();
   const goals = await prisma.savingsGoal.findMany({
-    where: { familyId: membership.familyId },
+    where: { familyId: membership.familyId, ...goalScopeWhere(space, membership.id) },
     orderBy: { createdAt: "asc" },
   });
 
   return (
     <div>
-      <h1 className="page-title">Os teus objetivos</h1>
-      <p className="page-sub">Diz à Nina o que queres alcançar — ela acompanha o progresso contigo.</p>
+      <h1 className="page-title">Objetivos · {spaceLabel(space)}</h1>
+      <p className="page-sub">
+        {space === "family"
+          ? "Objetivos da família — todos contribuem, a Nina acompanha."
+          : "Os teus objetivos pessoais."}
+      </p>
       <div className="two-col">
         <Panel title="Progresso">
           {goals.map((g) => {
@@ -33,23 +40,20 @@ export default async function ObjetivosPage() {
                     <strong>{g.name}</strong>
                     <p className="muted small">
                       {g.type}
-                      {g.deadline
-                        ? ` · até ${g.deadline.toLocaleDateString("pt-PT")}`
-                        : ""}
+                      {g.deadline ? ` · até ${g.deadline.toLocaleDateString("pt-PT")}` : ""}
                     </p>
                   </div>
                   <span className="text-income">{progress}%</span>
                 </div>
                 <ProgressBar percent={progress} color="#0f7a4a" />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-                  <span className="small">
-                    {formatEUR(g.currentCents)} / {formatEUR(g.targetCents)}
-                  </span>
-                  <ContributeForm goalId={g.id} />
-                </div>
+                <p className="muted small">
+                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
+                </p>
+                <ContributeForm goalId={g.id} />
               </div>
             );
           })}
+          {goals.length === 0 ? <p className="muted">Ainda sem objetivos neste espaço.</p> : null}
         </Panel>
         <Panel title="Novo objetivo">
           <GoalForm />

@@ -72,6 +72,9 @@ async function main() {
   await prisma.alert.deleteMany();
   await prisma.importJob.deleteMany();
   await prisma.aiInsight.deleteMany();
+  await prisma.ninaHabitStat.deleteMany();
+  await prisma.ninaMemoryRule.deleteMany();
+  await prisma.familyInvite.deleteMany();
   await prisma.store.deleteMany();
   await prisma.category.deleteMany();
   await prisma.financeAccount.deleteMany();
@@ -89,6 +92,7 @@ async function main() {
       email: "familia@nina.app",
       passwordHash,
       theme: "system",
+      biometricsEnabled: true,
     },
   });
 
@@ -98,6 +102,7 @@ async function main() {
       email: "ana@nina.app",
       passwordHash,
       theme: "light",
+      biometricsEnabled: true,
     },
   });
 
@@ -183,6 +188,7 @@ async function main() {
         accountId: contaCGD.id,
         categoryId: bySlug.salario.id,
         createdById: filipe.id,
+        scope: "PERSONAL",
         amountCents: 185000,
         date: daysAgo(20),
         description: "Salário Filipe",
@@ -193,6 +199,7 @@ async function main() {
         accountId: contaCGD.id,
         categoryId: bySlug.salario.id,
         createdById: ana.id,
+        scope: "PERSONAL",
         amountCents: 160000,
         date: daysAgo(19),
         description: "Salário Ana",
@@ -203,6 +210,7 @@ async function main() {
         accountId: contaRevolut.id,
         categoryId: bySlug["trabalho-extra"].id,
         createdById: filipe.id,
+        scope: "PERSONAL",
         amountCents: 35000,
         date: daysAgo(8),
         description: "Freelance design",
@@ -214,9 +222,21 @@ async function main() {
         accountId: contaRevolut.id,
         categoryId: bySlug.investimentos.id,
         createdById: filipe.id,
+        scope: "PERSONAL",
         amountCents: 4200,
         date: daysAgo(3),
         description: "Dividendos ETF",
+      },
+      {
+        familyId: family.id,
+        memberId: memberFilipe.id,
+        accountId: contaCGD.id,
+        categoryId: bySlug["receita-outros"].id,
+        createdById: filipe.id,
+        scope: "FAMILY",
+        amountCents: 5000,
+        date: daysAgo(6),
+        description: "Reembolso condomínio",
       },
     ],
   });
@@ -232,27 +252,31 @@ async function main() {
     member?: "f" | "a";
     account?: "cgd" | "rev";
     time?: string;
+    scope?: "PERSONAL" | "FAMILY";
   };
 
   const expenses: ExpSeed[] = [
-    { days: 1, cents: 6780, cat: "supermercado", desc: "Compras semanais", store: "Continente", method: "DEBIT_CARD", member: "a" },
-    { days: 2, cents: 4520, cat: "combustivel", desc: "Gasóleo", store: "Galp", method: "MB_WAY", member: "f", time: "08:15" },
-    { days: 3, cents: 2890, cat: "restaurantes", desc: "Almoço equipa", store: "Mercado da Ribeira", method: "REVOLUT", member: "f", account: "rev" },
-    { days: 4, cents: 1599, cat: "internet", desc: "NOS Fibra", store: "NOS", method: "DIRECT_DEBIT", member: "f" },
-    { days: 5, cents: 3200, cat: "luz", desc: "Fatura EDP", store: "EDP", method: "DIRECT_DEBIT" },
-    { days: 6, cents: 1840, cat: "agua", desc: "Águas de Lisboa", store: "EPAL", method: "DIRECT_DEBIT" },
-    { days: 7, cents: 5400, cat: "supermercado", desc: "Pingo Doce", store: "Pingo Doce", method: "DEBIT_CARD", member: "a" },
-    { days: 8, cents: 1299, cat: "lazer", desc: "Netflix", store: "Netflix", method: "CREDIT_CARD" },
-    { days: 9, cents: 999, cat: "lazer", desc: "Spotify Family", store: "Spotify", method: "CREDIT_CARD" },
-    { days: 10, cents: 8500, cat: "saude", desc: "Consulta dentista", store: "Clínica Saúde", method: "MB_WAY", member: "a" },
-    { days: 11, cents: 2100, cat: "farmacia", desc: "Medicamentos", store: "Farmácia Central", method: "MB_WAY", member: "a" },
-    { days: 12, cents: 35000, cat: "casa", desc: "Renda", store: "Senhorio", method: "TRANSFER", member: "f" },
-    { days: 13, cents: 4200, cat: "telemoveis", desc: "Vodafone + MEO", store: "Operadoras", method: "DIRECT_DEBIT" },
-    { days: 14, cents: 1890, cat: "transportes", desc: "Via Verde", store: "Via Verde", method: "DIRECT_DEBIT" },
-    { days: 15, cents: 6700, cat: "roupa", desc: "Roupa crianças", store: "Zara", method: "DEBIT_CARD", member: "a" },
-    { days: 16, cents: 3100, cat: "animais", desc: "Ração + vet", store: "Pet Food", method: "DEBIT_CARD" },
-    { days: 17, cents: 5500, cat: "lazer", desc: "Cinema + jantar", store: "NOS Cinemas", method: "REVOLUT", account: "rev", member: "f" },
-    { days: 18, cents: 2800, cat: "carregamentos-eletricos", desc: "Supercharger", store: "Tesla", method: "CREDIT_CARD", member: "f" },
+    { days: 1, cents: 6780, cat: "supermercado", desc: "Compras semanais", store: "Continente", method: "DEBIT_CARD", member: "a", scope: "FAMILY" },
+    { days: 2, cents: 4520, cat: "combustivel", desc: "Gasóleo", store: "Galp", method: "MB_WAY", member: "f", time: "08:15", scope: "FAMILY" },
+    { days: 3, cents: 2890, cat: "restaurantes", desc: "Almoço equipa", store: "Mercado da Ribeira", method: "REVOLUT", member: "f", account: "rev", scope: "PERSONAL" },
+    { days: 4, cents: 1599, cat: "internet", desc: "NOS Fibra", store: "NOS", method: "DIRECT_DEBIT", member: "f", scope: "FAMILY" },
+    { days: 5, cents: 3200, cat: "luz", desc: "Fatura EDP", store: "EDP", method: "DIRECT_DEBIT", scope: "FAMILY" },
+    { days: 6, cents: 1840, cat: "agua", desc: "Águas de Lisboa", store: "EPAL", method: "DIRECT_DEBIT", scope: "FAMILY" },
+    { days: 7, cents: 5400, cat: "supermercado", desc: "Pingo Doce", store: "Pingo Doce", method: "DEBIT_CARD", member: "a", scope: "FAMILY" },
+    { days: 8, cents: 1299, cat: "lazer", desc: "Netflix", store: "Netflix", method: "CREDIT_CARD", scope: "FAMILY" },
+    { days: 9, cents: 999, cat: "lazer", desc: "Spotify Family", store: "Spotify", method: "CREDIT_CARD", scope: "FAMILY" },
+    { days: 10, cents: 8500, cat: "saude", desc: "Consulta dentista", store: "Clínica Saúde", method: "MB_WAY", member: "a", scope: "PERSONAL" },
+    { days: 11, cents: 2100, cat: "farmacia", desc: "Medicamentos", store: "Farmácia Central", method: "MB_WAY", member: "a", scope: "FAMILY" },
+    { days: 12, cents: 35000, cat: "casa", desc: "Renda", store: "Senhorio", method: "TRANSFER", member: "f", scope: "FAMILY" },
+    { days: 13, cents: 4200, cat: "telemoveis", desc: "Vodafone + MEO", store: "Operadoras", method: "DIRECT_DEBIT", scope: "FAMILY" },
+    { days: 14, cents: 1890, cat: "transportes", desc: "Via Verde", store: "Via Verde", method: "DIRECT_DEBIT", scope: "FAMILY" },
+    { days: 15, cents: 6700, cat: "roupa", desc: "Roupa crianças", store: "Zara", method: "DEBIT_CARD", member: "a", scope: "FAMILY" },
+    { days: 16, cents: 3100, cat: "animais", desc: "Ração + vet", store: "Pet Food", method: "DEBIT_CARD", scope: "FAMILY" },
+    { days: 17, cents: 5500, cat: "lazer", desc: "Cinema + jantar", store: "NOS Cinemas", method: "REVOLUT", account: "rev", member: "f", scope: "FAMILY" },
+    { days: 18, cents: 2800, cat: "carregamentos-eletricos", desc: "Supercharger", store: "Tesla", method: "CREDIT_CARD", member: "f", scope: "PERSONAL" },
+    { days: 1, cents: 220, cat: "restaurantes", desc: "Café", store: "Café", method: "MB_WAY", member: "f", scope: "PERSONAL" },
+    { days: 3, cents: 150, cat: "restaurantes", desc: "Café", store: "Café", method: "CASH", member: "f", scope: "PERSONAL" },
+    { days: 5, cents: 180, cat: "restaurantes", desc: "Café", store: "Café", method: "MB_WAY", member: "f", scope: "PERSONAL" },
   ];
 
   for (const e of expenses) {
@@ -263,6 +287,7 @@ async function main() {
         accountId: e.account === "rev" ? contaRevolut.id : contaCGD.id,
         categoryId: bySlug[e.cat].id,
         createdById: e.member === "a" ? ana.id : filipe.id,
+        scope: e.scope ?? "FAMILY",
         amountCents: e.cents,
         date: daysAgo(e.days),
         time: e.time ?? "12:30",
@@ -308,6 +333,7 @@ async function main() {
     await prisma.savingsGoal.create({
       data: {
         familyId: family.id,
+        scope: "FAMILY",
         name: g.name,
         type: g.type,
         targetCents: g.target,
@@ -317,6 +343,73 @@ async function main() {
       },
     });
   }
+
+  await prisma.savingsGoal.create({
+    data: {
+      familyId: family.id,
+      ownerMemberId: memberFilipe.id,
+      scope: "PERSONAL",
+      name: "Novo portátil",
+      type: "CUSTOM",
+      targetCents: 120000,
+      currentCents: 45000,
+      color: "#1e3a5f",
+    },
+  });
+
+  // Convite seguro demo + memória + hábitos
+  const inviteExpires = new Date();
+  inviteExpires.setDate(inviteExpires.getDate() + 30);
+  await prisma.familyInvite.create({
+    data: {
+      familyId: family.id,
+      token: "nina-demo-invite-token-seguro",
+      createdById: filipe.id,
+      label: "Convite demo",
+      expiresAt: inviteExpires,
+    },
+  });
+
+  await prisma.ninaMemoryRule.createMany({
+    data: [
+      {
+        userId: filipe.id,
+        familyId: family.id,
+        triggerPhrase: "compras para casa",
+        scope: "FAMILY",
+      },
+      {
+        userId: filipe.id,
+        familyId: family.id,
+        triggerPhrase: "tvde",
+        scope: "PERSONAL",
+        categorySlug: "tvde",
+      },
+    ],
+  });
+
+  await prisma.ninaHabitStat.createMany({
+    data: [
+      {
+        userId: filipe.id,
+        familyId: family.id,
+        keyType: "store",
+        keyValue: "continente",
+        personalCount: 0,
+        familyCount: 4,
+        lastScope: "FAMILY",
+      },
+      {
+        userId: filipe.id,
+        familyId: family.id,
+        keyType: "store",
+        keyValue: "café",
+        personalCount: 5,
+        familyCount: 0,
+        lastScope: "PERSONAL",
+      },
+    ],
+  });
 
   // Recorrentes
   const next = new Date();
@@ -408,6 +501,7 @@ async function main() {
   console.log("✅ Demo Nina pronta");
   console.log("   Email: familia@nina.app");
   console.log(`   Password: ${DEMO_PASSWORD}`);
+  console.log("   Convite: /pt/convite/nina-demo-invite-token-seguro");
 }
 
 main()

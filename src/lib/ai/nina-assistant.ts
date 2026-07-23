@@ -31,15 +31,17 @@ export type NinaReply = {
   tone: "warm" | "celebrate" | "careful" | "neutral";
   suggestions?: string[];
   didMutate?: boolean;
+  pendingScope?: unknown;
 };
 
 const SUGGESTIONS = [
-  "Gastei 35 € no Continente",
-  "Fui à farmácia e gastei 18 €",
+  "Gastei 85 € no Continente para casa",
+  "Café 2 €",
   "Quanto gastei este mês?",
   "Quanto posso gastar até ao final do mês?",
   "Onde posso poupar?",
   "Quanto falta para as férias?",
+  "Sempre que eu disser compras para casa, regista na Conta Familiar",
 ];
 
 function firstName(name: string): string {

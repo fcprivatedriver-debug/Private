@@ -8,6 +8,8 @@ export const APP_PROTECTED_PREFIXES = [
   "/estatisticas",
   "/pesquisa",
   "/familia",
+  "/memoria",
+  "/perfil",
   "/recorrentes",
   "/importacoes",
   "/alertas",

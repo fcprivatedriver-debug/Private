@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { SpaceSwitcher } from "@/components/nina/SpaceSwitcher";
+import type { NinaSpace } from "@/actions/household";
 import { cn } from "@/lib/utils";
 
 /** Navegação simples — a conversa com a Nina é o centro. */
@@ -16,6 +18,8 @@ const NAV = [
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/familia", label: "Conta" },
+  { href: "/pt/memoria", label: "Memória" },
+  { href: "/pt/perfil", label: "Perfil" },
   { href: "/pt/alertas", label: "Avisos" },
   { href: "/pt/definicoes", label: "Mais" },
 ];
@@ -23,7 +27,7 @@ const NAV = [
 const MOBILE = [
   { href: "/pt/dashboard", label: "Nina" },
   { href: "/pt/despesas", label: "Gastos" },
-  { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/familia", label: "Conta" },
   { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/definicoes", label: "Mais" },
 ];
@@ -32,10 +36,12 @@ export function AppShell({
   children,
   userName,
   unreadAlerts = 0,
+  space = "personal",
 }: {
   children: React.ReactNode;
   userName: string;
   unreadAlerts?: number;
+  space?: NinaSpace;
 }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -45,7 +51,10 @@ export function AppShell({
       <aside className="app-sidebar">
         <div className="sidebar-top">
           <BrandLogo href="/pt/dashboard" size="sm" />
-          <p className="sidebar-tag">A tua assistente financeira</p>
+          <p className="sidebar-tag">Quanto mais usas, menos trabalho tens</p>
+        </div>
+        <div className="sidebar-space">
+          <SpaceSwitcher space={space} />
         </div>
         <nav className="sidebar-nav" aria-label="Principal">
           {NAV.map((item) => {
@@ -85,6 +94,9 @@ export function AppShell({
         <header className="app-topbar">
           <div className="topbar-brand-mobile">
             <BrandLogo href="/pt/dashboard" size="sm" />
+          </div>
+          <div className="topbar-space-mobile">
+            <SpaceSwitcher space={space} />
           </div>
           <div className="topbar-actions">
             <Link href="/pt/despesas/nova" className="btn btn-primary btn-sm">

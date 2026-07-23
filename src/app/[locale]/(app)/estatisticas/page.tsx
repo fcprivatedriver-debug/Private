@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
+import { getNinaSpace } from "@/actions/household";
 import { getStatsData } from "@/lib/queries";
 import { formatEUR } from "@/lib/money";
+import { spaceLabel } from "@/lib/scope";
 import { Panel, CategoryBars, EvolutionChart, ProgressBar } from "@/components/ui/FinanceUI";
 
 export default async function EstatisticasPage() {
@@ -11,12 +13,16 @@ export default async function EstatisticasPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const stats = await getStatsData(membership.familyId);
+  const space = await getNinaSpace();
+  const stats = await getStatsData(membership.familyId, {
+    space,
+    memberId: membership.id,
+  });
 
   return (
     <div>
-      <h1 className="page-title">O teu resumo</h1>
-      <p className="page-sub">Uma visão calma do teu dinheiro — sem tabelas confusas.</p>
+      <h1 className="page-title">Resumo · {spaceLabel(space)}</h1>
+      <p className="page-sub">Uma visão calma do dinheiro neste espaço — sem tabelas confusas.</p>
 
       <div className="stack-lg">
         <div className="dash-grid">
@@ -38,49 +44,51 @@ export default async function EstatisticasPage() {
               }))}
             />
           </Panel>
-          <Panel title="Anual por mês">
+          <Panel title="Por loja">
             <CategoryBars
-              items={stats.annual.map((a) => ({
-                name: a.label,
-                color: "#2a4a73",
-                cents: a.expenseCents,
+              items={stats.byStore.map((s) => ({
+                name: s.name,
+                color: "#64748b",
+                cents: s.cents,
               }))}
             />
           </Panel>
         </div>
 
         <div className="dash-grid">
-          <Panel title="Despesas por loja">
-            <div className="list-rows">
-              {stats.byStore.map((s) => (
-                <div key={s.name} className="list-row">
-                  <strong>{s.name}</strong>
-                  <span className="amount-expense">{formatEUR(s.cents)}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
           <Panel title="Métodos de pagamento">
             <CategoryBars
-              items={stats.byMethod.map((m) => ({
-                name: m.name,
-                color: "#475569",
-                cents: m.cents,
+              items={stats.byMethod.map((s) => ({
+                name: s.name,
+                color: "#1e3a5f",
+                cents: s.cents,
               }))}
             />
           </Panel>
+          <Panel title="Poupança">
+            {stats.savingsEvolution.map((g) => (
+              <div key={g.name} className="goal-card">
+                <div className="goal-head">
+                  <strong>{g.name}</strong>
+                  <span className="text-income">{g.progress}%</span>
+                </div>
+                <ProgressBar percent={g.progress} color="#0f7a4a" />
+                <p className="muted small">
+                  {formatEUR(g.current)} de {formatEUR(g.target)}
+                </p>
+              </div>
+            ))}
+          </Panel>
         </div>
 
-        <Panel title="Evolução da poupança">
-          {stats.savingsEvolution.map((g) => (
-            <div key={g.name} style={{ marginBottom: "0.85rem" }}>
-              <ProgressBar
-                percent={g.progress}
-                color="#0f7a4a"
-                label={`${g.name} · ${formatEUR(g.current)} / ${formatEUR(g.target)}`}
-              />
-            </div>
-          ))}
+        <Panel title="Ano em curso">
+          <CategoryBars
+            items={stats.annual.map((a) => ({
+              name: a.label,
+              color: "#1e3a5f",
+              cents: a.expenseCents,
+            }))}
+          />
         </Panel>
       </div>
     </div>

@@ -21,6 +21,18 @@ export default async function DefinicoesPage() {
       <div className="stack-lg">
         <Panel title="Atalhos">
           <div className="mais-links">
+            <Link href="/pt/familia">
+              <strong>Conta Familiar</strong>
+              <span className="muted small">Criar, convidar com link/QR, perfis</span>
+            </Link>
+            <Link href="/pt/memoria">
+              <strong>Memória da Nina</strong>
+              <span className="muted small">Regras que aprendeste — editáveis</span>
+            </Link>
+            <Link href="/pt/perfil">
+              <strong>O teu perfil</strong>
+              <span className="muted small">Nome, PIN, biometria, preferências</span>
+            </Link>
             <Link href="/pt/pesquisa">
               <strong>Procurar</strong>
               <span className="muted small">Encontrar um gasto, loja ou categoria</span>
