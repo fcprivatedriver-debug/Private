@@ -71,12 +71,25 @@ const DEFAULT_CLASSES = [
   },
 ] as const;
 
+function hoursFromNow(h: number) {
+  return new Date(Date.now() + h * 60 * 60 * 1000);
+}
+
+function daysFromNow(d: number, hour = 10, minute = 0) {
+  const dt = new Date();
+  dt.setDate(dt.getDate() + d);
+  dt.setHours(hour, minute, 0, 0);
+  return dt;
+}
+
 async function main() {
   await prisma.payment.deleteMany();
   await prisma.review.deleteMany();
   await prisma.booking.deleteMany();
   await prisma.offer.deleteMany();
   await prisma.tripRequest.deleteMany();
+  await prisma.verificationReview.deleteMany();
+  await prisma.driverDocument.deleteMany();
   await prisma.vehicle.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
@@ -99,6 +112,13 @@ async function main() {
       defaultCurrency: "EUR",
       defaultCommissionPercent: 15,
       supportedCurrencies: JSON.stringify(["EUR"]),
+    },
+  });
+
+  await prisma.commissionRule.create({
+    data: {
+      name: "Default marketplace",
+      percent: 15,
     },
   });
 
@@ -179,7 +199,7 @@ async function main() {
             { type: "insurance", status: "verified", label: "Fleet insurance" },
           ]),
           verifiedAt: new Date(),
-          submittedAt: new Date(),
+          submittedAt: daysFromNow(-30),
           vehicles: {
             create: {
               make: "Mercedes-Benz",
@@ -206,6 +226,7 @@ async function main() {
       passwordHash,
       phone: "+351920000002",
       locale: "en",
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
       driverProfile: {
         create: {
           status: "ACTIVE",
@@ -214,7 +235,7 @@ async function main() {
           completenessScore: 100,
           photoUrl:
             "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-          bio: "Specialist in Lisbon–Algarve private transfers.",
+          bio: "Specialist in Lisbon–Algarve private transfers and group vans.",
           languagesSpoken: JSON.stringify(["pt", "en"]),
           yearsOfExperience: 5,
           ratingAvg: 4.7,
@@ -229,7 +250,7 @@ async function main() {
             { type: "license", status: "verified", label: "Driving licence" },
           ]),
           verifiedAt: new Date(),
-          submittedAt: new Date(),
+          submittedAt: daysFromNow(-20),
           vehicles: {
             create: {
               make: "Volkswagen",
@@ -245,27 +266,37 @@ async function main() {
         },
       },
     },
+    include: { driverProfile: { include: { vehicles: true } } },
   });
 
-  await prisma.user.create({
+  const pending = await prisma.user.create({
     data: {
       email: "pendente@movio.app",
       name: "João Pendente",
       role: "DRIVER",
       passwordHash,
+      phone: "+351920000003",
       locale: "pt",
       driverProfile: {
         create: {
           status: "PENDING_VERIFICATION",
-          onboardingStatus: "IN_PROGRESS",
-          onboardingStep: "documents",
-          completenessScore: 45,
-          bio: "Awaiting document verification.",
-          languagesSpoken: JSON.stringify(["pt"]),
-          yearsOfExperience: 2,
+          onboardingStatus: "UNDER_REVIEW",
+          onboardingStep: "review",
+          completenessScore: 92,
+          photoUrl:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
+          bio: "Lisbon-based chauffeur seeking platform approval. Airport transfers and hotel runs.",
+          languagesSpoken: JSON.stringify(["pt", "en"]),
+          yearsOfExperience: 3,
+          aiRiskScore: 34,
+          aiConfidence: 78,
+          aiSummary:
+            "AI flags minor document expiry risk. Recommend manual review of insurance certificate.",
           documents: JSON.stringify([
             { type: "license", status: "pending", label: "Driving licence" },
+            { type: "insurance", status: "pending", label: "Insurance" },
           ]),
+          submittedAt: hoursFromNow(-6),
           vehicles: {
             create: {
               make: "BMW",
@@ -281,13 +312,68 @@ async function main() {
         },
       },
     },
+    include: { driverProfile: true },
   });
 
-  const pickupAt = new Date();
-  pickupAt.setDate(pickupAt.getDate() + 3);
-  pickupAt.setHours(10, 30, 0, 0);
+  const pendingProfileId = pending.driverProfile!.id;
+  const docTypes = [
+    "IDENTITY",
+    "DRIVING_LICENSE",
+    "VEHICLE_REGISTRATION",
+    "INSURANCE",
+    "PROFILE_PHOTO",
+  ] as const;
 
-  const trip = await prisma.tripRequest.create({
+  for (const type of docTypes) {
+    await prisma.driverDocument.create({
+      data: {
+        driverProfileId: pendingProfileId,
+        type,
+        status: type === "INSURANCE" ? "AI_FLAGGED" : "AI_PASSED",
+        fileName: `${type.toLowerCase()}.pdf`,
+        mimeType: "application/pdf",
+        sizeBytes: 120_000,
+        storageKey: `demo/${pendingProfileId}/${type.toLowerCase()}.pdf`,
+        url: `/api/uploads/demo/${type.toLowerCase()}.pdf`,
+        aiScore: type === "INSURANCE" ? 58 : 88,
+        aiFlags:
+          type === "INSURANCE"
+            ? JSON.stringify(["expiry_within_30_days"])
+            : JSON.stringify([]),
+        aiAnalysis: JSON.stringify({
+          readable: true,
+          nameMatch: true,
+          note:
+            type === "INSURANCE"
+              ? "Policy expires soon — verify renewal."
+              : "Document looks consistent.",
+        }),
+      },
+    });
+  }
+
+  await prisma.verificationReview.create({
+    data: {
+      driverProfileId: pendingProfileId,
+      source: "AI",
+      decision: "ESCALATE",
+      riskScore: 34,
+      confidence: 78,
+      recommendation: "REQUEST_INFO or manual approve after insurance check",
+      findings: JSON.stringify([
+        { code: "INSURANCE_EXPIRY", severity: "medium" },
+        { code: "IDENTITY_OK", severity: "low" },
+      ]),
+      notes: "Heuristic AI review seeded for demo queue.",
+    },
+  });
+
+  const carlosVehicleId = driver.driverProfile!.vehicles[0]!.id;
+  const ritaVehicleId = driver2.driverProfile!.vehicles[0]!.id;
+
+  // 1) OPEN trip with competing offers — primary customer demo
+  const openPickup = daysFromNow(3, 10, 30);
+  const openTrip = await prisma.tripRequest.create({
     data: {
       customerId: customer.id,
       pickupAddress: "Aeroporto de Lisboa (LIS), Lisboa",
@@ -296,7 +382,7 @@ async function main() {
       dropoffAddress: "Praça do Comércio, Lisboa",
       dropoffLat: 38.7075,
       dropoffLng: -9.1364,
-      pickupAt,
+      pickupAt: openPickup,
       passengers: 2,
       luggage: 2,
       notes: "Arrival flight TP1234. Name board: Ana.",
@@ -304,34 +390,311 @@ async function main() {
       status: "OPEN",
       preferredVehicleClassId: "vc_executive",
       currency: "EUR",
-      expiresAt: new Date(pickupAt.getTime() - 2 * 60 * 60 * 1000),
+      expiresAt: new Date(openPickup.getTime() - 2 * 60 * 60 * 1000),
     },
   });
 
-  const vehicleId = driver.driverProfile!.vehicles[0]!.id;
+  await prisma.offer.createMany({
+    data: [
+      {
+        tripRequestId: openTrip.id,
+        driverId: driver.id,
+        vehicleId: carlosVehicleId,
+        priceAmount: 4500,
+        currency: "EUR",
+        message: "Includes 60 min waiting time and bottled water.",
+        includesTolls: true,
+        includesWaiting: true,
+        validUntil: openTrip.expiresAt!,
+        status: "PENDING",
+      },
+      {
+        tripRequestId: openTrip.id,
+        driverId: driver2.id,
+        vehicleId: ritaVehicleId,
+        priceAmount: 5200,
+        currency: "EUR",
+        message: "Van available if you bring extra luggage.",
+        includesTolls: true,
+        includesWaiting: true,
+        validUntil: openTrip.expiresAt!,
+        status: "PENDING",
+      },
+    ],
+  });
 
-  await prisma.offer.create({
+  // 2) Second OPEN trip (Cascais) — for driver browse
+  const open2Pickup = daysFromNow(5, 16, 0);
+  const openTrip2 = await prisma.tripRequest.create({
     data: {
-      tripRequestId: trip.id,
-      driverId: driver.id,
-      vehicleId,
-      priceAmount: 4500,
+      customerId: customer.id,
+      pickupAddress: "Hotel Avenida Palace, Lisboa",
+      pickupLat: 38.7155,
+      pickupLng: -9.142,
+      dropoffAddress: "Cascais Marina, Cascais",
+      dropoffLat: 38.6969,
+      dropoffLng: -9.4205,
+      pickupAt: open2Pickup,
+      passengers: 3,
+      luggage: 3,
+      notes: "Family transfer with child seat preference.",
+      status: "OPEN",
+      preferredVehicleClassId: "vc_van",
       currency: "EUR",
-      message: "Includes 60 min waiting time and bottled water.",
+      expiresAt: new Date(open2Pickup.getTime() - 3 * 60 * 60 * 1000),
+    },
+  });
+
+  // 3) CONFIRMED upcoming booking (Carlos)
+  const confirmedPickup = daysFromNow(1, 8, 0);
+  const confirmedTrip = await prisma.tripRequest.create({
+    data: {
+      customerId: customer.id,
+      pickupAddress: "Estação do Oriente, Lisboa",
+      pickupLat: 38.7679,
+      pickupLng: -9.099,
+      dropoffAddress: "Sintra National Palace, Sintra",
+      dropoffLat: 38.7974,
+      dropoffLng: -9.3905,
+      pickupAt: confirmedPickup,
+      passengers: 2,
+      luggage: 1,
+      notes: "Return not needed.",
+      status: "CONFIRMED",
+      preferredVehicleClassId: "vc_executive",
+      currency: "EUR",
+      expiresAt: confirmedPickup,
+    },
+  });
+
+  const confirmedOffer = await prisma.offer.create({
+    data: {
+      tripRequestId: confirmedTrip.id,
+      driverId: driver.id,
+      vehicleId: carlosVehicleId,
+      priceAmount: 6800,
+      currency: "EUR",
+      message: "Meet at main entrance.",
+      includesTolls: true,
+      includesWaiting: false,
+      status: "ACCEPTED",
+    },
+  });
+
+  await prisma.tripRequest.update({
+    where: { id: confirmedTrip.id },
+    data: { acceptedOfferId: confirmedOffer.id },
+  });
+
+  const confirmedBooking = await prisma.booking.create({
+    data: {
+      tripRequestId: confirmedTrip.id,
+      offerId: confirmedOffer.id,
+      customerId: customer.id,
+      driverId: driver.id,
+      status: "PAID",
+      totalAmount: 6800,
+      currency: "EUR",
+      platformFeeAmount: 1020,
+      confirmedAt: hoursFromNow(-20),
+      payment: {
+        create: {
+          provider: "NONE",
+          amount: 6800,
+          currency: "EUR",
+          status: "CAPTURED",
+          rawPayload: JSON.stringify({ demo: true, mode: "auto-confirm" }),
+        },
+      },
+    },
+  });
+
+  // 4) IN_PROGRESS trip (Rita)
+  const progressPickup = hoursFromNow(-1);
+  const progressTrip = await prisma.tripRequest.create({
+    data: {
+      customerId: customer.id,
+      pickupAddress: "Aeroporto de Faro (FAO), Faro",
+      pickupLat: 37.0144,
+      pickupLng: -7.9659,
+      dropoffAddress: "Marina de Lagos, Lagos",
+      dropoffLat: 37.1014,
+      dropoffLng: -8.6744,
+      pickupAt: progressPickup,
+      passengers: 4,
+      luggage: 5,
+      flightNumber: "TP1902",
+      status: "IN_PROGRESS",
+      preferredVehicleClassId: "vc_van",
+      currency: "EUR",
+      expiresAt: progressPickup,
+    },
+  });
+
+  const progressOffer = await prisma.offer.create({
+    data: {
+      tripRequestId: progressTrip.id,
+      driverId: driver2.id,
+      vehicleId: ritaVehicleId,
+      priceAmount: 12500,
+      currency: "EUR",
+      message: "Door-to-door Algarve transfer.",
       includesTolls: true,
       includesWaiting: true,
-      validUntil: trip.expiresAt,
-      status: "PENDING",
+      status: "ACCEPTED",
     },
   });
 
-  console.log("Movio seed complete (DB-driven vehicle classes).");
+  await prisma.tripRequest.update({
+    where: { id: progressTrip.id },
+    data: { acceptedOfferId: progressOffer.id },
+  });
+
+  await prisma.booking.create({
+    data: {
+      tripRequestId: progressTrip.id,
+      offerId: progressOffer.id,
+      customerId: customer.id,
+      driverId: driver2.id,
+      status: "PAID",
+      totalAmount: 12500,
+      currency: "EUR",
+      platformFeeAmount: 1875,
+      confirmedAt: hoursFromNow(-5),
+      payment: {
+        create: {
+          provider: "NONE",
+          amount: 12500,
+          currency: "EUR",
+          status: "CAPTURED",
+        },
+      },
+    },
+  });
+
+  // 5) COMPLETED + review (Carlos)
+  const donePickup = daysFromNow(-4, 14, 0);
+  const doneTrip = await prisma.tripRequest.create({
+    data: {
+      customerId: customer.id,
+      pickupAddress: "Chiado, Lisboa",
+      pickupLat: 38.7108,
+      pickupLng: -9.1427,
+      dropoffAddress: "Aeroporto de Lisboa (LIS), Lisboa",
+      dropoffLat: 38.7756,
+      dropoffLng: -9.1354,
+      pickupAt: donePickup,
+      passengers: 1,
+      luggage: 2,
+      flightNumber: "TP456",
+      notes: "Departures terminal 1.",
+      status: "COMPLETED",
+      preferredVehicleClassId: "vc_executive",
+      currency: "EUR",
+      expiresAt: donePickup,
+    },
+  });
+
+  const doneOffer = await prisma.offer.create({
+    data: {
+      tripRequestId: doneTrip.id,
+      driverId: driver.id,
+      vehicleId: carlosVehicleId,
+      priceAmount: 3800,
+      currency: "EUR",
+      includesTolls: true,
+      includesWaiting: false,
+      status: "ACCEPTED",
+    },
+  });
+
+  await prisma.tripRequest.update({
+    where: { id: doneTrip.id },
+    data: { acceptedOfferId: doneOffer.id },
+  });
+
+  await prisma.booking.create({
+    data: {
+      tripRequestId: doneTrip.id,
+      offerId: doneOffer.id,
+      customerId: customer.id,
+      driverId: driver.id,
+      status: "COMPLETED",
+      totalAmount: 3800,
+      currency: "EUR",
+      platformFeeAmount: 570,
+      confirmedAt: daysFromNow(-5),
+      payment: {
+        create: {
+          provider: "NONE",
+          amount: 3800,
+          currency: "EUR",
+          status: "CAPTURED",
+        },
+      },
+      review: {
+        create: {
+          fromUserId: customer.id,
+          toUserId: driver.id,
+          rating: 5,
+          comment: "Punctual, immaculate car, calm drive to the airport.",
+        },
+      },
+    },
+  });
+
+  // 6) CANCELLED sample
+  await prisma.tripRequest.create({
+    data: {
+      customerId: customer.id,
+      pickupAddress: "Belém Tower, Lisboa",
+      dropoffAddress: "Parque das Nações, Lisboa",
+      pickupAt: daysFromNow(-1, 11, 0),
+      passengers: 2,
+      luggage: 1,
+      status: "CANCELLED",
+      preferredVehicleClassId: "vc_sedan",
+      currency: "EUR",
+      notes: "Plans changed — cancelled by customer.",
+    },
+  });
+
+  await prisma.notification.createMany({
+    data: [
+      {
+        userId: customer.id,
+        type: "OFFER_RECEIVED",
+        title: "New offers on your LIS transfer",
+        body: "Carlos and Rita sent proposals for Aeroporto → Praça do Comércio.",
+      },
+      {
+        userId: driver.id,
+        type: "BOOKING_CONFIRMED",
+        title: "Trip confirmed · Sintra",
+        body: "Ana Cliente confirmed your €68 offer. Contacts are unlocked.",
+      },
+      {
+        userId: admin.id,
+        type: "DRIVER_SUBMITTED",
+        title: "Verification queue",
+        body: "João Pendente submitted documents for AI + admin review.",
+      },
+    ],
+  });
+
+  console.log("Movio seed complete — rich demo dataset.");
   console.log("Accounts (password: movio123):");
   console.log(`  Admin:      ${admin.email}`);
   console.log(`  Customer:   ${customer.email}`);
   console.log(`  Driver:     ${driver.email}`);
   console.log(`  Driver 2:   ${driver2.email}`);
-  console.log(`  Demo OPEN trip: ${trip.id}`);
+  console.log(`  Pending:    ${pending.email}`);
+  console.log("Sample trips:");
+  console.log(`  OPEN (2 offers):     ${openTrip.id}`);
+  console.log(`  OPEN (no offers):    ${openTrip2.id}`);
+  console.log(`  CONFIRMED:           ${confirmedTrip.id} / booking ${confirmedBooking.id}`);
+  console.log(`  IN_PROGRESS:         ${progressTrip.id}`);
+  console.log(`  COMPLETED+review:    ${doneTrip.id}`);
 }
 
 main()

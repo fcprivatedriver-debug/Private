@@ -12,7 +12,14 @@
     "admin": "Admin",
     "login": "Entrar",
     "start": "Começar",
-    "logout": "Sair"
+    "logout": "Sair",
+    "newTrip": "Novo pedido",
+    "openRequests": "Pedidos abertos",
+    "myOffers": "Propostas",
+    "vehicle": "Veículo",
+    "onboarding": "Onboarding",
+    "verifications": "Verificações",
+    "vehicleClasses": "Classes"
   },
   "home": {
     "headline": "Movio",
@@ -28,7 +35,10 @@
     "step3Title": "Escolhe a melhor",
     "step3Body": "Compara, aceita e viaja com transparência.",
     "terms": "Termos",
-    "privacy": "Privacidade"
+    "privacy": "Privacidade",
+    "ctaMyTrips": "Os meus pedidos",
+    "ctaDashboard": "Ir ao painel",
+    "ctaAdmin": "Abrir admin"
   },
   "auth": {
     "loginTitle": "Bem-vindo de volta",

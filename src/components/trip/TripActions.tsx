@@ -83,7 +83,9 @@ export function TripActions({
             {booking.payment ? ` · pagamento ${booking.payment.status}` : ""}
           </p>
           <div className="alert alert-info" style={{ marginBottom: 0 }}>
-            Pagamentos seguros em breve (Stripe Connect preparado).
+            {booking.payment?.status === "CAPTURED" || booking.status === "PAID" || booking.status === "COMPLETED"
+              ? "Demo: pagamento confirmado automaticamente (Stripe Connect chega depois)."
+              : "Demo: com pagamentos desligados, a reserva confirma-se ao aceitar a proposta."}
           </div>
         </div>
       )}
