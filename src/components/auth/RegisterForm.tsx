@@ -33,16 +33,18 @@ export function RegisterForm() {
     <div className="auth-page">
       <div className="auth-card">
         <BrandLogo href="/pt" />
-        <h1>Criar conta</h1>
-        <p className="lead">Comece a organizar as finanças da família.</p>
+        <h1>Conhecer a Nina</h1>
+        <p className="lead">
+          Em minutos tens uma assistente financeira pessoal — simpática, clara e sempre disponível.
+        </p>
         {error ? <p className="form-error">{error}</p> : null}
         <form onSubmit={onSubmit} className="form-grid">
           <label className="field">
-            <span>O seu nome</span>
+            <span>O teu nome</span>
             <input name="name" required autoComplete="name" />
           </label>
           <label className="field">
-            <span>Nome da família</span>
+            <span>Nome da família (opcional)</span>
             <input name="familyName" placeholder="Família Silva" />
           </label>
           <label className="field">
@@ -54,11 +56,11 @@ export function RegisterForm() {
             <input name="password" type="password" required minLength={6} autoComplete="new-password" />
           </label>
           <button className="btn btn-primary" type="submit" disabled={pending}>
-            {pending ? "A criar…" : "Criar conta familiar"}
+            {pending ? "A preparar…" : "Começar com a Nina"}
           </button>
         </form>
         <p className="muted small" style={{ marginTop: "1rem" }}>
-          Já tem conta? <Link href="/pt/login">Entrar</Link>
+          Já tens conta? <Link href="/pt/login">Entrar</Link>
         </p>
       </div>
     </div>

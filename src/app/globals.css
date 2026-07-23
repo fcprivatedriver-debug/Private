@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* MAFIL — azul-marinho, branco, cinzento claro; verde receitas; vermelho despesas */
+/* Nina — azul-marinho, branco, cinzento claro; verde receitas; vermelho despesas */
 
 :root {
   --navy: #1e3a5f;
@@ -712,4 +712,171 @@ html.dark .btn-primary { background: #3d6aa3; }
   .app-content { padding: 1rem 1rem 5.5rem; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-grid, .two-col, .feature-grid { grid-template-columns: 1fr; }
+}
+
+/* ——— Nina chat & home ——— */
+.hero-promise {
+  margin-top: 1.5rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: rgba(247, 250, 252, 0.88);
+  max-width: 36ch;
+}
+.nina-examples .nina-example {
+  display: flex;
+  align-items: center;
+  min-height: 4.5rem;
+}
+.nina-example p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--navy-deep);
+}
+
+.nina-home-intro { margin-bottom: 0.5rem; }
+.nina-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+.nina-home-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.nina-chat-panel .panel-body { padding-top: 0.35rem; }
+
+.nina-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 420px;
+}
+.nina-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: 480px;
+  overflow: auto;
+  padding: 0.25rem 0.15rem 0.5rem;
+}
+.nina-bubble {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  animation: rise 0.4s var(--ease) both;
+}
+.nina-bubble.user {
+  justify-content: flex-end;
+}
+.nina-bubble.user .nina-bubble-body {
+  background: var(--navy-deep);
+  color: #fff;
+  border-radius: 16px 16px 4px 16px;
+}
+html.dark .nina-bubble.user .nina-bubble-body {
+  background: #3d6aa3;
+}
+.nina-bubble.nina .nina-bubble-body {
+  background: var(--bg-soft);
+  border-radius: 16px 16px 16px 4px;
+  border: 1px solid var(--line);
+}
+.nina-bubble-body {
+  max-width: min(100%, 520px);
+  padding: 0.75rem 0.95rem;
+}
+.nina-bubble-body p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.nina-name {
+  display: block;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+  color: var(--navy);
+  letter-spacing: 0.02em;
+}
+.nina-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e3a5f;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-family: var(--font-display);
+}
+.nina-suggestions, .nina-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+.nina-chip {
+  border: 1px solid var(--line-strong);
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.nina-chip:hover {
+  background: var(--navy-mist);
+  transform: translateY(-1px);
+}
+.nina-composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+.nina-composer input {
+  border: 1px solid var(--line-strong);
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  outline: none;
+}
+.nina-composer input:focus {
+  border-color: #1e3a5f;
+  box-shadow: 0 0 0 3px var(--navy-mist);
+}
+.nina-typing {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.mais-links {
+  display: grid;
+  gap: 0.5rem;
+}
+.mais-links a {
+  display: block;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  transition: border-color var(--dur) var(--ease);
+}
+.mais-links a:hover { border-color: #1e3a5f; }
+.mais-links strong { display: block; margin-bottom: 0.15rem; }
+
+@media (max-width: 980px) {
+  .nina-home-grid { grid-template-columns: 1fr; }
+  .nina-chat { min-height: 360px; }
+  .nina-chat-messages { max-height: 360px; }
 }

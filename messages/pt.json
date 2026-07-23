@@ -1,22 +1,22 @@
 {
   "app": {
-    "name": "MAFIL",
-    "tagline": "Gestão Financeira Familiar"
+    "name": "Nina",
+    "tagline": "Assistente financeira pessoal"
   },
   "auth": {
-    "loginTitle": "Entrar",
-    "loginHint": "Aceda à gestão financeira da sua família.",
+    "loginTitle": "Olá outra vez",
+    "loginHint": "Continua a conversa com a Nina.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Entrar",
-    "loggingIn": "A entrar…",
+    "loggingIn": "Um momento…",
     "invalidCredentials": "Email ou password incorretos.",
-    "noAccount": "Ainda não tem conta?",
-    "registerLink": "Criar família"
+    "noAccount": "Ainda não falaste com a Nina?",
+    "registerLink": "Criar conta"
   },
   "nav": {
-    "dashboard": "Início",
-    "incomes": "Receitas",
-    "expenses": "Despesas"
+    "dashboard": "Conversar",
+    "incomes": "Entradas",
+    "expenses": "Gastos"
   }
 }

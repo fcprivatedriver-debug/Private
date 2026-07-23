@@ -95,7 +95,7 @@ export function IncomeForm({
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
       <button className="btn btn-success" disabled={pending} type="submit">
-        {pending ? "A guardar…" : "Guardar receita"}
+        {pending ? "A guardar…" : "Guardar entrada"}
       </button>
     </form>
   );
@@ -199,7 +199,7 @@ export function ExpenseForm({
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
       <button className="btn btn-primary" disabled={pending} type="submit">
-        {pending ? "A guardar…" : "Guardar despesa"}
+        {pending ? "A guardar…" : "Guardar gasto"}
       </button>
     </form>
   );
@@ -436,7 +436,7 @@ export function MemberForm() {
         <input name="email" type="email" required />
       </Field>
       <Field label="Password inicial">
-        <input name="password" type="password" defaultValue="mafil123" />
+        <input name="password" type="password" defaultValue="nina123" />
       </Field>
       <button className="btn btn-primary" disabled={pending} type="submit">
         Adicionar membro

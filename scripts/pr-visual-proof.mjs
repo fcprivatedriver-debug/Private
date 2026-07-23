@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Capture PR visual proof for MAFIL.
+ * Capture PR visual proof for Nina.
  * Usage: node scripts/pr-visual-proof.mjs --pr N [--base http://127.0.0.1:3000]
  */
 import { chromium } from "playwright";
@@ -29,8 +29,8 @@ fs.mkdirSync(VIDEO_DIR, { recursive: true });
 
 async function login(page) {
   await page.goto(`${BASE}/pt/login`, { waitUntil: "networkidle" });
-  await page.locator('input[name="email"]').fill("familia@mafil.pt");
-  await page.locator('input[name="password"]').fill("mafil123");
+  await page.locator('input[name="email"]').fill("familia@nina.app");
+  await page.locator('input[name="password"]').fill("nina123");
   await Promise.all([
     page.waitForURL(/\/pt\/dashboard/, { timeout: 30000 }),
     page.click('button[type="submit"]'),
@@ -61,6 +61,10 @@ async function captureStills() {
 
   await login(page);
   await shot(page, "10-dashboard");
+  // Conversa com a Nina
+  await page.getByRole("button", { name: "Quanto gastei este mês?" }).first().click();
+  await page.waitForTimeout(1200);
+  await shot(page, "10b-nina-chat");
   await gotoShot(page, "/pt/receitas", "11-receitas");
   await gotoShot(page, "/pt/despesas", "12-despesas");
   await gotoShot(page, "/pt/despesas/nova", "13-despesa-nova");
@@ -95,8 +99,8 @@ async function captureFlowVideo() {
   await page.goto(`${BASE}/pt`, { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
   await page.goto(`${BASE}/pt/login`, { waitUntil: "networkidle" });
-  await page.locator('input[name="email"]').fill("familia@mafil.pt");
-  await page.locator('input[name="password"]').fill("mafil123");
+  await page.locator('input[name="email"]').fill("familia@nina.app");
+  await page.locator('input[name="password"]').fill("nina123");
   await Promise.all([
     page.waitForURL(/\/pt\/dashboard/, { timeout: 30000 }),
     page.click('button[type="submit"]'),
@@ -146,7 +150,7 @@ function publishRepoCopies() {
   }
   fs.writeFileSync(
     path.join(REPO_PROOF, "README.md"),
-    `# MAFIL PR ${PR} visual proof\n\nScreenshots and flow capture for review.\n`,
+    `# Nina PR ${PR} visual proof\n\nScreenshots and flow capture for review.\n`,
   );
   console.log("published", REPO_PROOF);
 }

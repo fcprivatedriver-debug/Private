@@ -32,7 +32,7 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
-    const stored = (localStorage.getItem("mafil-theme") as Theme | null) ?? initialTheme;
+    const stored = (localStorage.getItem("nina-theme") as Theme | null) ?? initialTheme;
     setTheme(stored);
   }, [initialTheme]);
 
@@ -40,7 +40,7 @@ export function ThemeProvider({
     const applied = resolveTheme(theme);
     document.documentElement.dataset.theme = applied;
     document.documentElement.classList.toggle("dark", applied === "dark");
-    localStorage.setItem("mafil-theme", theme);
+    localStorage.setItem("nina-theme", theme);
   }, [theme]);
 
   useEffect(() => {

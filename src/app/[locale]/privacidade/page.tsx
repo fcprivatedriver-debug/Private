@@ -7,7 +7,7 @@ export default function PrivacidadePage() {
       <BrandLogo href="/pt" />
       <h1 className="page-title" style={{ marginTop: "1.5rem" }}>Privacidade</h1>
       <p className="page-sub">
-        A MAFIL trata dados financeiros com encriptação em trânsito e em repouso,
+        A Nina trata os teus dados financeiros com encriptação em trânsito e em repouso,
         backups automáticos e controlo de permissões por membro da família.
         Integrações (Open Banking, retalho, energia) só avançam com autorização explícita.
       </p>

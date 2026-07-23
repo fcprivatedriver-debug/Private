@@ -19,9 +19,9 @@ export default async function AlertasPage() {
 
   return (
     <div>
-      <h1 className="page-title">Alertas</h1>
+      <h1 className="page-title">Avisos da Nina</h1>
       <p className="page-sub">
-        Orçamento, despesas fora do habitual, recorrentes, contas por pagar e objetivos.
+        Eu aviso-te a tempo — sempre com tom positivo e sem julgamentos.
       </p>
       <Panel title="Notificações">
         <div className="list-rows">

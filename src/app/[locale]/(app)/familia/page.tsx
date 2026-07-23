@@ -18,7 +18,7 @@ export default async function FamiliaPage() {
 
   return (
     <div>
-      <h1 className="page-title">Família</h1>
+      <h1 className="page-title">A tua família</h1>
       <p className="page-sub">
         {membership.family.name} · multiutilizador com permissões e despesas próprias.
       </p>

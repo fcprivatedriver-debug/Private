@@ -11,7 +11,7 @@ export default function LandingPage() {
             Entrar
           </Link>
           <Link href="/pt/registo" className="btn btn-primary btn-sm">
-            Começar
+            Conhecer a Nina
           </Link>
         </div>
       </nav>
@@ -19,53 +19,65 @@ export default function LandingPage() {
       <section className="hero">
         <div className="hero-bg" aria-hidden />
         <div className="hero-content">
-          <p className="hero-brand">MAFIL</p>
-          <h1>Gestão financeira familiar, com clareza.</h1>
+          <p className="hero-brand">Nina</p>
+          <h1>A assistente que trata das contas por ti.</h1>
           <p>
-            Controlo receitas, despesas e objetivos da família num só lugar —
-            simples, seguro e feito para Portugal.
+            O dinheiro não deve ser uma preocupação. Deve ser uma ferramenta para viver melhor.
+            A Nina simplifica tudo — com calma, clareza e inteligência artificial.
           </p>
           <div className="hero-ctas">
             <Link href="/pt/registo" className="btn btn-primary">
-              Criar conta familiar
+              Começar com a Nina
             </Link>
             <Link href="/pt/login" className="btn btn-ghost">
-              Entrar na demo
+              Já tenho conta
             </Link>
           </div>
+          <p className="hero-promise">
+            “A Nina trata das contas para que tu possas aproveitar a vida.”
+          </p>
         </div>
       </section>
 
       <section className="section">
-        <h2>Tudo o que a família precisa</h2>
+        <h2>Fala com a Nina como falas com uma amiga</h2>
         <p className="section-lead">
-          Da fatura do supermercado ao objetivo das férias — organizado, sincronizado e inteligente.
+          Sem menus complicados. Sem linguagem técnica. Só perguntas naturais — e respostas claras.
+        </p>
+        <div className="feature-grid nina-examples">
+          {[
+            "Nina, quanto gastei este mês?",
+            "Nina, quanto posso gastar até ao final do mês?",
+            "Nina, onde posso poupar?",
+            "Nina, compara este mês com o anterior.",
+            "Nina, quanto falta para o objetivo de férias?",
+            "Nina, mostra as despesas do supermercado.",
+          ].map((q) => (
+            <article key={q} className="feature nina-example">
+              <p>{q}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>O que a Nina faz por ti</h2>
+        <p className="section-lead">
+          Organiza despesas, classifica compras, deteta o fora do normal e motiva-te — sem julgamentos.
         </p>
         <div className="feature-grid">
           {[
             {
-              title: "Dashboard claro",
-              body: "Saldo do mês, orçamento utilizado, últimas despesas e próximos pagamentos num olhar.",
+              title: "Organiza sozinha",
+              body: "Classifica compras e explica para onde está a ir o dinheiro, em linguagem simples.",
             },
             {
-              title: "OCR de faturas",
-              body: "Fotografe a fatura e confirme loja, valor, IVA e categoria sugerida automaticamente.",
+              title: "Alerta com cuidado",
+              body: "Avisos de pagamentos futuros e gastos fora do habitual — sempre com tom positivo.",
             },
             {
-              title: "Importações PT",
-              body: "Arquitetura pronta para Continente, Galp, Via Verde, MB Way, Revolut e Open Banking.",
-            },
-            {
-              title: "Orçamentos com alertas",
-              body: "Defina limites por categoria e receba avisos aos 75%, 90% e 100%.",
-            },
-            {
-              title: "IA financeira",
-              body: "Hábitos, anomalias, previsão de saldo e sugestões personalizadas de poupança.",
-            },
-            {
-              title: "Multiutilizador",
-              body: "Vários membros da família, permissões e despesas próprias — tudo sincronizado.",
+              title: "Ajuda a poupar",
+              body: "Sugestões práticas, objetivos de poupança e motivação para uma vida mais tranquila.",
             },
           ].map((f) => (
             <article key={f.title} className="feature">
@@ -78,7 +90,7 @@ export default function LandingPage() {
 
       <footer className="landing-footer">
         <p>
-          MAFIL · Gestão Financeira Familiar ·{" "}
+          Nina · Assistente financeira pessoal ·{" "}
           <Link href="/pt/privacidade">Privacidade</Link> ·{" "}
           <Link href="/pt/termos">Termos</Link>
         </p>

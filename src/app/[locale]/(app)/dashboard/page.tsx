@@ -9,9 +9,8 @@ import {
   Panel,
   ProgressBar,
   CategoryBars,
-  EvolutionChart,
 } from "@/components/ui/FinanceUI";
-import { PAYMENT_METHOD_LABELS } from "@/domain/categories";
+import { NinaChat } from "@/components/nina/NinaChat";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -20,153 +19,83 @@ export default async function DashboardPage() {
   if (!membership) redirect("/pt/registo");
 
   const data = await getDashboardData(membership.familyId);
+  const name = membership.displayName;
 
   return (
-    <div>
-      <h1 className="page-title">Olá, {membership.displayName}</h1>
-      <p className="page-sub">
-        Resumo de {data.monthLabel} · Família {membership.family.name}
-      </p>
+    <div className="nina-home">
+      <header className="nina-home-intro">
+        <p className="nina-kicker">A tua assistente · disponível sempre</p>
+        <h1 className="page-title">Olá, {name}. Eu trato das contas.</h1>
+        <p className="page-sub">
+          Pergunta-me qualquer coisa sobre o teu dinheiro — em linguagem simples.
+          {` · ${data.monthLabel}`}
+        </p>
+      </header>
 
-      <div className="stats-grid">
-        <StatCard label="Saldo do mês" valueCents={data.totals.balanceCents} tone="neutral" />
-        <StatCard label="Receitas" valueCents={data.totals.incomeCents} tone="income" />
-        <StatCard label="Despesas" valueCents={data.totals.expenseCents} tone="expense" />
+      <div className="stats-grid nina-glance">
+        <StatCard label="Folga este mês" valueCents={data.totals.balanceCents} tone="neutral" />
+        <StatCard label="Entrou" valueCents={data.totals.incomeCents} tone="income" />
+        <StatCard label="Saiu" valueCents={data.totals.expenseCents} tone="expense" />
         <StatCard
-          label="Valor poupado"
+          label="A caminho da poupança"
           valueCents={data.totals.savedCents}
           tone="savings"
-          hint={`Orçamento utilizado: ${data.totals.budgetUsedPercent}%`}
+          hint={
+            data.totals.budgetUsedPercent
+              ? `Usaste ${data.totals.budgetUsedPercent}% do plano`
+              : undefined
+          }
         />
       </div>
 
-      <div className="stack-lg">
-        <Panel title="Orçamento do mês">
-          <ProgressBar
-            percent={data.totals.budgetUsedPercent}
-            label={`${formatEUR(data.totals.budgetUsedCents)} de ${formatEUR(data.totals.budgetLimitCents || data.totals.incomeCents)}`}
-          />
-          <div className="stack-lg" style={{ marginTop: "0.75rem" }}>
-            {data.budgetRows.slice(0, 4).map((b) => (
-              <ProgressBar
-                key={b.id}
-                percent={b.percent}
-                color={b.color}
-                label={`${b.name} · ${formatEUR(b.usedCents)} / ${formatEUR(b.limitCents)}`}
-              />
-            ))}
-          </div>
+      <div className="nina-home-grid">
+        <Panel title="Fala comigo" className="nina-chat-panel">
+          <NinaChat />
         </Panel>
 
-        <div className="dash-grid">
-          <Panel
-            title="Despesas por categoria"
-            action={
-              <Link href="/pt/estatisticas" className="muted small">
-                Ver mais
-              </Link>
-            }
-          >
-            <CategoryBars items={data.categoryChart.slice(0, 6)} />
+        <div className="stack-lg">
+          <Panel title="Onde está a ir o dinheiro">
+            <CategoryBars items={data.categoryChart.slice(0, 5)} />
+            <Link href="/pt/estatisticas" className="muted small" style={{ display: "inline-block", marginTop: "0.75rem" }}>
+              Ver resumo completo
+            </Link>
           </Panel>
-          <Panel title="Evolução mensal">
-            <EvolutionChart points={data.evolution} />
-            <p className="muted small" style={{ marginTop: "0.75rem" }}>
-              Verde = receitas · Vermelho = despesas
-            </p>
-          </Panel>
-        </div>
 
-        <div className="dash-grid">
-          <Panel
-            title="Últimas despesas"
-            action={
-              <Link href="/pt/despesas" className="muted small">
-                Ver todas
-              </Link>
-            }
-          >
-            <div className="list-rows">
-              {data.recentExpenses.map((e) => (
-                <div key={e.id} className="list-row">
-                  <div className="list-row-main">
-                    <strong>{e.description}</strong>
-                    <span>
-                      {e.storeName ? `${e.storeName} · ` : ""}
-                      {e.category.name} ·{" "}
-                      {e.date.toLocaleDateString("pt-PT")}
-                      {e.time ? ` ${e.time}` : ""}
-                    </span>
-                  </div>
-                  <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
+          <Panel title="Os teus objetivos">
+            {data.goals.map((g) => (
+              <div key={g.id} className="goal-card">
+                <div className="goal-head">
+                  <strong>{g.name}</strong>
+                  <span className="text-income">{g.progress}%</span>
                 </div>
-              ))}
-              {data.recentExpenses.length === 0 ? (
-                <p className="muted">Ainda sem despesas este mês.</p>
-              ) : null}
-            </div>
+                <ProgressBar percent={g.progress} color="#0f7a4a" />
+                <p className="muted small">
+                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
+                </p>
+              </div>
+            ))}
+            <Link href="/pt/objetivos" className="btn btn-ghost btn-sm" style={{ marginTop: "0.5rem" }}>
+              Gerir objetivos
+            </Link>
           </Panel>
 
-          <div className="stack-lg">
-            <Panel
-              title="Objetivos de poupança"
-              action={
-                <Link href="/pt/objetivos" className="muted small">
-                  Gerir
-                </Link>
-              }
-            >
-              {data.goals.map((g) => (
-                <div key={g.id} className="goal-card">
-                  <div className="goal-head">
-                    <strong>{g.name}</strong>
-                    <span className="text-income">{g.progress}%</span>
-                  </div>
-                  <ProgressBar percent={g.progress} color="#0f7a4a" />
-                  <p className="muted small">
-                    {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
-                  </p>
-                </div>
-              ))}
-            </Panel>
-
-            <Panel title="Próximos pagamentos">
+          <Panel title="Avisos amigáveis">
+            {data.alerts.length === 0 ? (
+              <p className="muted">Tudo calmo por agora. Eu aviso se algo precisar da tua atenção.</p>
+            ) : (
               <div className="list-rows">
-                {data.upcomingPayments.map((r) => (
-                  <div key={r.id} className="list-row">
+                {data.alerts.slice(0, 4).map((a) => (
+                  <div key={a.id} className="list-row">
                     <div className="list-row-main">
-                      <strong>{r.name}</strong>
-                      <span>
-                        {r.category.name} ·{" "}
-                        {r.nextDueDate.toLocaleDateString("pt-PT")} ·{" "}
-                        {PAYMENT_METHOD_LABELS[r.paymentMethod]}
-                      </span>
+                      <strong>{a.title}</strong>
+                      <span>{a.message}</span>
                     </div>
-                    <span className="amount-expense">{formatEUR(r.amountCents)}</span>
                   </div>
                 ))}
               </div>
-            </Panel>
-          </div>
-        </div>
-
-        {data.insights.length > 0 ? (
-          <Panel
-            title="Insights IA"
-            action={
-              <Link href="/pt/ia" className="muted small">
-                Assistente
-              </Link>
-            }
-          >
-            {data.insights.map((i) => (
-              <div key={i.id} className={`insight ${i.severity}`}>
-                <h3>{i.title}</h3>
-                <p>{i.body}</p>
-              </div>
-            ))}
+            )}
           </Panel>
-        ) : null}
+        </div>
       </div>
     </div>
   );

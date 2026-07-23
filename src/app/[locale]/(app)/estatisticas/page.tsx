@@ -15,8 +15,8 @@ export default async function EstatisticasPage() {
 
   return (
     <div>
-      <h1 className="page-title">Estatísticas</h1>
-      <p className="page-sub">Mensal, semanal, anual · categorias, lojas e métodos de pagamento.</p>
+      <h1 className="page-title">O teu resumo</h1>
+      <p className="page-sub">Uma visão calma do teu dinheiro — sem tabelas confusas.</p>
 
       <div className="stack-lg">
         <div className="dash-grid">

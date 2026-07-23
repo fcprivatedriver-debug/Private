@@ -4,7 +4,7 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
   DIRECT_URL: z.string().min(1).optional(),
   AUTH_SECRET: z.string().optional(),
-  NEXT_PUBLIC_APP_NAME: z.string().default("MAFIL"),
+  NEXT_PUBLIC_APP_NAME: z.string().default("Nina"),
   DEMO_MODE: z.string().optional(),
 });
 

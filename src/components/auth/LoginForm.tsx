@@ -38,14 +38,14 @@ function LoginFormInner() {
         redirect: false,
       });
       if (res?.error) {
-        setError("Email ou password incorretos.");
+        setError("Email ou password incorretos. Tenta outra vez com calma.");
         setLoading(false);
         return;
       }
       const fresh = await getSession();
       go(fresh?.user?.role);
     } catch {
-      setError("Não foi possível entrar. Tente novamente.");
+      setError("Não consegui entrar agora. Tenta daqui a um momento.");
       setLoading(false);
     }
   }
@@ -55,8 +55,8 @@ function LoginFormInner() {
       <div className="auth-page">
         <div className="auth-card">
           <BrandLogo href="/pt" />
-          <h1>A entrar…</h1>
-          <p className="lead">A preparar o dashboard familiar.</p>
+          <h1>Um momento…</h1>
+          <p className="lead">A Nina está a preparar tudo para ti.</p>
         </div>
       </div>
     );
@@ -66,8 +66,8 @@ function LoginFormInner() {
     <div className="auth-page">
       <div className="auth-card">
         <BrandLogo href="/pt" />
-        <h1>Entrar</h1>
-        <p className="lead">Aceda à gestão financeira da sua família.</p>
+        <h1>Olá outra vez</h1>
+        <p className="lead">Entra para continuares a conversa com a Nina.</p>
         {error ? <p className="form-error">{error}</p> : null}
         <form onSubmit={onSubmit} className="form-grid">
           <label className="field">
@@ -77,7 +77,7 @@ function LoginFormInner() {
               type="email"
               required
               autoComplete="email"
-              defaultValue="familia@mafil.pt"
+              defaultValue="familia@nina.app"
             />
           </label>
           <label className="field">
@@ -87,7 +87,7 @@ function LoginFormInner() {
               type="password"
               required
               autoComplete="current-password"
-              defaultValue="mafil123"
+              defaultValue="nina123"
             />
           </label>
           <button className="btn btn-primary" type="submit" disabled={loading}>
@@ -95,10 +95,10 @@ function LoginFormInner() {
           </button>
         </form>
         <p className="muted small" style={{ marginTop: "1rem" }}>
-          Demo: familia@mafil.pt / mafil123
+          Demo: familia@nina.app / nina123
         </p>
         <p className="muted small">
-          Ainda não tem conta? <Link href="/pt/registo">Criar família</Link>
+          Ainda não falaste com a Nina? <Link href="/pt/registo">Criar conta</Link>
         </p>
       </div>
     </div>

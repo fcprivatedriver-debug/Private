@@ -7,21 +7,25 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { cn } from "@/lib/utils";
 
+/** Navegação simples — a conversa com a Nina é o centro. */
 const NAV = [
-  { href: "/pt/dashboard", label: "Início" },
-  { href: "/pt/receitas", label: "Receitas" },
-  { href: "/pt/despesas", label: "Despesas" },
-  { href: "/pt/orcamentos", label: "Orçamentos" },
+  { href: "/pt/dashboard", label: "Conversar" },
+  { href: "/pt/despesas", label: "Gastos" },
+  { href: "/pt/receitas", label: "Entradas" },
   { href: "/pt/objetivos", label: "Objetivos" },
-  { href: "/pt/estatisticas", label: "Estatísticas" },
-  { href: "/pt/pesquisa", label: "Pesquisar" },
-  { href: "/pt/recorrentes", label: "Recorrentes" },
-  { href: "/pt/importacoes", label: "Importar" },
-  { href: "/pt/ocr", label: "OCR" },
-  { href: "/pt/ia", label: "IA" },
+  { href: "/pt/orcamentos", label: "Limites" },
+  { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/familia", label: "Família" },
-  { href: "/pt/alertas", label: "Alertas" },
-  { href: "/pt/definicoes", label: "Definições" },
+  { href: "/pt/alertas", label: "Avisos" },
+  { href: "/pt/definicoes", label: "Mais" },
+];
+
+const MOBILE = [
+  { href: "/pt/dashboard", label: "Nina" },
+  { href: "/pt/despesas", label: "Gastos" },
+  { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/estatisticas", label: "Resumo" },
+  { href: "/pt/definicoes", label: "Mais" },
 ];
 
 export function AppShell({
@@ -41,7 +45,7 @@ export function AppShell({
       <aside className="app-sidebar">
         <div className="sidebar-top">
           <BrandLogo href="/pt/dashboard" size="sm" />
-          <p className="sidebar-tag">Gestão Financeira Familiar</p>
+          <p className="sidebar-tag">A tua assistente financeira</p>
         </div>
         <nav className="sidebar-nav" aria-label="Principal">
           {NAV.map((item) => {
@@ -84,23 +88,17 @@ export function AppShell({
           </div>
           <div className="topbar-actions">
             <Link href="/pt/despesas/nova" className="btn btn-primary btn-sm">
-              + Despesa
+              + Gasto
             </Link>
             <Link href="/pt/receitas/nova" className="btn btn-success btn-sm">
-              + Receita
+              + Entrada
             </Link>
           </div>
         </header>
         <main className="app-content">{children}</main>
       </div>
       <nav className="mobile-nav" aria-label="Mobile">
-        {[
-          { href: "/pt/dashboard", label: "Início" },
-          { href: "/pt/despesas", label: "Despesas" },
-          { href: "/pt/receitas", label: "Receitas" },
-          { href: "/pt/estatisticas", label: "Stats" },
-          { href: "/pt/definicoes", label: "Mais" },
-        ].map((item) => (
+        {MOBILE.map((item) => (
           <Link
             key={item.href}
             href={item.href}

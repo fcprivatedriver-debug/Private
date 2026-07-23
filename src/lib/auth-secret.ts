@@ -8,7 +8,7 @@
  * Prefer setting AUTH_SECRET in Vercel when you can.
  */
 const DEMO_FALLBACK_SECRET =
-  "mafil-demo-auth-secret-do-not-use-in-real-prod-32b";
+  "nina-demo-auth-secret-do-not-use-in-real-prod-32b";
 
 export function resolveAuthSecret(): string {
   const fromEnv = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;

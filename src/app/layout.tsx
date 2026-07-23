@@ -15,10 +15,10 @@ const body = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "MAFIL — Gestão Financeira Familiar",
+  title: "Nina — Assistente financeira pessoal",
   description:
-    "Controlo inteligente de receitas, despesas, orçamentos e objetivos para famílias em Portugal.",
-  applicationName: "MAFIL",
+    "A Nina trata das contas para que tu possas aproveitar a vida. Assistente financeira com IA, simples e em português.",
+  applicationName: "Nina",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

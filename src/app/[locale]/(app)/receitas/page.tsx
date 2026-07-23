@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { formatEUR, currentYearMonth, monthBounds } from "@/lib/money";
 import { Panel } from "@/components/ui/FinanceUI";
 
-export default async function ReceitasPage() {
+export default async function EntradasPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/pt/login");
   const membership = await getActiveFamilyForUser(session.user.id);
@@ -28,7 +28,7 @@ export default async function ReceitasPage() {
           <h1 className="page-title">Receitas</h1>
           <p className="page-sub">Total do mês: <span className="text-income">{formatEUR(total)}</span></p>
         </div>
-        <Link href="/pt/receitas/nova" className="btn btn-success">+ Nova receita</Link>
+        <Link href="/pt/receitas/nova" className="btn btn-success">+ Nova entrada</Link>
       </div>
       <Panel title="Movimentos">
         <div className="table-wrap">

@@ -1,8 +1,8 @@
-# MAFIL — Gestão Financeira Familiar
+# Nina — Assistente financeira pessoal
 
 Aplicação moderna para controlar receitas e despesas da família, orçamentos, objetivos de poupança e insights com IA. Feita para Portugal (EUR, retalho, energia, Open Banking).
 
-**Brand:** MAFIL · **Moeda:** EUR · **Idioma:** Português (EN disponível) · **Base de dados:** PostgreSQL
+**Brand:** Nina · **Moeda:** EUR · **Idioma:** Português (EN disponível) · **Base de dados:** PostgreSQL
 
 ## Stack
 
@@ -25,8 +25,8 @@ npm run dev
 
 | Email | Password |
 |-------|----------|
-| `familia@mafil.pt` | `mafil123` |
-| `ana@mafil.pt` | `mafil123` |
+| `familia@nina.app` | `nina123` |
+| `ana@nina.app` | `nina123` |
 
 ## Funcionalidades
 
@@ -48,6 +48,6 @@ npm run dev
 | `DATABASE_URL` | PostgreSQL |
 | `DIRECT_URL` | PostgreSQL (migrate) |
 | `AUTH_SECRET` | 32+ chars |
-| `NEXT_PUBLIC_APP_NAME` | `MAFIL` |
+| `NEXT_PUBLIC_APP_NAME` | `Nina` |
 
 Ver `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.

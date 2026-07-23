@@ -7,7 +7,7 @@ export default function TermosPage() {
       <BrandLogo href="/pt" />
       <h1 className="page-title" style={{ marginTop: "1.5rem" }}>Termos de utilização</h1>
       <p className="page-sub">
-        A MAFIL é uma ferramenta de gestão financeira familiar. Os dados importados
+        A Nina é uma ferramenta de gestão financeira familiar. Os dados importados
         de terceiros dependem das autorizações do utilizador e das APIs disponíveis.
         A informação apresentada não substitui aconselhamento financeiro profissional.
       </p>

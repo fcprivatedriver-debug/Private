@@ -19,7 +19,7 @@ export default async function NovaDespesaPage() {
 
   return (
     <div>
-      <h1 className="page-title">Nova despesa</h1>
+      <h1 className="page-title">Novo gasto</h1>
       <p className="page-sub">Valor, data, hora, categoria, loja, método, conta, fatura e GPS opcional.</p>
       <Panel title="Detalhes">
         <ExpenseForm categories={categories} accounts={accounts} members={members} />

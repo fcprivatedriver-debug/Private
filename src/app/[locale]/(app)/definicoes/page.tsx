@@ -3,6 +3,7 @@ import { auth, signOut } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { Panel } from "@/components/ui/FinanceUI";
 import { SettingsClient } from "@/components/finance/SettingsClient";
+import Link from "next/link";
 
 export default async function DefinicoesPage() {
   const session = await auth();
@@ -12,35 +13,48 @@ export default async function DefinicoesPage() {
 
   return (
     <div>
-      <h1 className="page-title">Definições</h1>
-      <p className="page-sub">Tema, segurança, exportação e preferências.</p>
+      <h1 className="page-title">Mais opções</h1>
+      <p className="page-sub">
+        Tudo o que precisas está aqui — sem complicar. A conversa com a Nina continua a ser o centro.
+      </p>
 
       <div className="stack-lg">
+        <Panel title="Atalhos">
+          <div className="mais-links">
+            <Link href="/pt/pesquisa">
+              <strong>Procurar</strong>
+              <span className="muted small">Encontrar um gasto, loja ou categoria</span>
+            </Link>
+            <Link href="/pt/recorrentes">
+              <strong>Pagamentos certos</strong>
+              <span className="muted small">Renda, luz, Netflix… a Nina lembra-te</span>
+            </Link>
+            <Link href="/pt/ocr">
+              <strong>Fotografar fatura</strong>
+              <span className="muted small">A Nina lê e organiza por ti</span>
+            </Link>
+            <Link href="/pt/importacoes">
+              <strong>Importar automaticamente</strong>
+              <span className="muted small">Continente, Galp, MB Way e mais</span>
+            </Link>
+            <Link href="/pt/ia">
+              <strong>Insights da Nina</strong>
+              <span className="muted small">Sugestões e relatório do mês</span>
+            </Link>
+          </div>
+        </Panel>
+
         <Panel title="Preferências">
           <SettingsClient />
         </Panel>
 
-        <Panel title="Segurança">
-          <ul className="muted" style={{ margin: 0, paddingLeft: "1.1rem" }}>
-            <li>Login com email e password</li>
-            <li>Google OAuth (quando configurado)</li>
-            <li>Apple Sign-In (preparado)</li>
-            <li>PIN e biometria (flags no perfil — app nativa)</li>
-            <li>Encriptação em trânsito (HTTPS) e backups automáticos (infra)</li>
-          </ul>
-          <p className="small" style={{ marginTop: "0.75rem" }}>
-            Conta: <strong>{session.user.email}</strong> · Papel: {membership.role}
+        <Panel title="A tua conta">
+          <p className="small">
+            {session.user.email} · {membership.role}
           </p>
-        </Panel>
-
-        <Panel title="Futuras funcionalidades">
-          <ul className="muted" style={{ margin: 0, paddingLeft: "1.1rem" }}>
-            <li>Open Banking com bancos portugueses</li>
-            <li>Sincronização automática com cartões</li>
-            <li>Widgets Android e iPhone</li>
-            <li>Notificações push inteligentes</li>
-            <li>Leitura automática de emails com faturas</li>
-          </ul>
+          <p className="muted small">
+            A Nina está do teu lado 24 horas por dia — com confiança, calma e sem julgamentos.
+          </p>
         </Panel>
 
         <form

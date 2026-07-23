@@ -1,7 +1,7 @@
-# MAFIL — Architecture
+# Nina — Architecture
 
-> Gestão Financeira Familiar para o mercado português.  
-> **Brand:** MAFIL  
+> Assistente financeira pessoal para o mercado português.  
+> **Brand:** Nina  
 > **Moeda:** EUR
 
 ---
@@ -10,13 +10,13 @@
 
 | Decision | Choice |
 |----------|--------|
-| Brand | **MAFIL** |
+| Brand | **Nina** |
 | Default currency | **EUR** |
 | Locale | Portuguese first (`/pt`), English available |
 | Multi-user | Family + FamilyMember with roles (OWNER / ADMIN / MEMBER / VIEWER) |
 | Integrations | Adapter layer for retalho, energia, MB Way, Revolut, Open Banking |
 | OCR | Pluggable receipt recognition (confirm-before-save) |
-| AI | Heuristic insights engine (swap-ready for LLM) |
+| AI | **Nina conversational assistant** (center of UX) + insights engine |
 
 ---
 
@@ -36,7 +36,7 @@
 ## Folder structure
 
 ```
-mafil/
+nina/
 ├── prisma/
 ├── messages/
 ├── src/
@@ -72,3 +72,12 @@ Future Open Banking and email invoice reading plug into the same seams without U
 - HTTPS encryption in transit
 - Automated backups via managed Postgres
 - Explicit user consent for third-party imports
+
+
+---
+
+## Conversational core
+
+The home experience is a chat with **Nina**. Natural-language questions in Portuguese
+are answered by `src/lib/ai/nina-assistant.ts` using the family's live financial context.
+Menus stay secondary and use everyday language (Gastos, Entradas, Objetivos…).

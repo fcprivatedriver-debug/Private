@@ -19,7 +19,7 @@ export default async function NovaReceitaPage() {
 
   return (
     <div>
-      <h1 className="page-title">Nova receita</h1>
+      <h1 className="page-title">Nova entrada</h1>
       <p className="page-sub">Salário, TVDE, empresa, extra, investimentos, reembolsos…</p>
       <Panel title="Detalhes">
         <IncomeForm categories={categories} accounts={accounts} members={members} />

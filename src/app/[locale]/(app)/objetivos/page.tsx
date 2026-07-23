@@ -20,8 +20,8 @@ export default async function ObjetivosPage() {
 
   return (
     <div>
-      <h1 className="page-title">Objetivos de poupança</h1>
-      <p className="page-sub">Carro, casa, férias, emergência, investimentos, reforma…</p>
+      <h1 className="page-title">Os teus objetivos</h1>
+      <p className="page-sub">Diz à Nina o que queres alcançar — ela acompanha o progresso contigo.</p>
       <div className="two-col">
         <Panel title="Progresso">
           {goals.map((g) => {

@@ -61,7 +61,7 @@ async function seedCategories(familyId: string) {
 }
 
 async function main() {
-  console.log("🌱 A preparar dados demo MAFIL…");
+  console.log("🌱 A preparar dados demo Nina…");
 
   await prisma.expenseLineItem.deleteMany();
   await prisma.expense.deleteMany();
@@ -86,7 +86,7 @@ async function main() {
   const filipe = await prisma.user.create({
     data: {
       name: "Filipe Casquinha",
-      email: "familia@mafil.pt",
+      email: "familia@nina.app",
       passwordHash,
       theme: "system",
     },
@@ -95,7 +95,7 @@ async function main() {
   const ana = await prisma.user.create({
     data: {
       name: "Ana Silva",
-      email: "ana@mafil.pt",
+      email: "ana@nina.app",
       passwordHash,
       theme: "light",
     },
@@ -403,8 +403,8 @@ async function main() {
   // Atualizar saldo poupança account reference
   void poupanca;
 
-  console.log("✅ Demo MAFIL pronta");
-  console.log("   Email: familia@mafil.pt");
+  console.log("✅ Demo Nina pronta");
+  console.log("   Email: familia@nina.app");
   console.log(`   Password: ${DEMO_PASSWORD}`);
 }
 

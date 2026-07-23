@@ -1,4 +1,4 @@
-/** Rotas protegidas da MAFIL */
+/** Rotas protegidas da Nina */
 export const APP_PROTECTED_PREFIXES = [
   "/dashboard",
   "/receitas",

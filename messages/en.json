@@ -1,22 +1,22 @@
 {
   "app": {
-    "name": "MAFIL",
-    "tagline": "Family Finance Management"
+    "name": "Nina",
+    "tagline": "Personal financial assistant"
   },
   "auth": {
-    "loginTitle": "Sign in",
-    "loginHint": "Access your family finances.",
+    "loginTitle": "Welcome back",
+    "loginHint": "Continue your conversation with Nina.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Sign in",
-    "loggingIn": "Signing in…",
+    "loggingIn": "One moment…",
     "invalidCredentials": "Invalid email or password.",
-    "noAccount": "No account yet?",
-    "registerLink": "Create family"
+    "noAccount": "Haven't met Nina yet?",
+    "registerLink": "Create account"
   },
   "nav": {
-    "dashboard": "Home",
+    "dashboard": "Chat",
     "incomes": "Income",
-    "expenses": "Expenses"
+    "expenses": "Spending"
   }
 }

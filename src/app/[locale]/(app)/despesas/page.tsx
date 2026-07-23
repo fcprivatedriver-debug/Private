@@ -8,7 +8,7 @@ import { formatEUR } from "@/lib/money";
 import { Panel } from "@/components/ui/FinanceUI";
 import { PAYMENT_METHOD_LABELS } from "@/domain/categories";
 
-export default async function DespesasPage({
+export default async function GastosPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
@@ -47,7 +47,7 @@ export default async function DespesasPage({
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <Link href="/pt/ocr" className="btn btn-ghost">OCR fatura</Link>
-          <Link href="/pt/despesas/nova" className="btn btn-primary">+ Nova despesa</Link>
+          <Link href="/pt/despesas/nova" className="btn btn-primary">+ Novo gasto</Link>
         </div>
       </div>
 

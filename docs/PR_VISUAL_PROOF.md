@@ -18,7 +18,7 @@ npm run build && npm run start -- -p 3000
 npm run pr:proof -- --pr <N>
 ```
 
-## Roles / flows to cover (MAFIL)
+## Roles / flows to cover (Nina)
 
 - Landing → login → dashboard
 - Receitas / despesas / orçamentos / objetivos

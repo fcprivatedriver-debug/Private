@@ -22,9 +22,9 @@ export default async function OrcamentosPage() {
 
   return (
     <div>
-      <h1 className="page-title">Orçamentos</h1>
+      <h1 className="page-title">Os teus limites</h1>
       <p className="page-sub">
-        Limites mensais por categoria com alertas a 75%, 90% e 100%.
+        A Nina avisa-te com carinho quando estiveres perto do limite (75%, 90% e 100%).
       </p>
       <div className="two-col">
         <Panel title="Estado atual">

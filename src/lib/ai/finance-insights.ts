@@ -91,7 +91,7 @@ export function generateInsights(snap: FinanceSnapshot): AiSuggestion[] {
 
 export function buildMonthlyReport(snap: FinanceSnapshot): string {
   const lines = [
-    "Relatório financeiro MAFIL",
+    "Relatório financeiro Nina",
     `Receitas: ${formatEUR(snap.incomeCents)}`,
     `Despesas: ${formatEUR(snap.expenseCents)}`,
     `Saldo: ${formatEUR(snap.incomeCents - snap.expenseCents)}`,

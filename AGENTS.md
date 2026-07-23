@@ -1,4 +1,4 @@
-# Agent notes — MAFIL
+# Agent notes — Nina
 
 ## PR completion gate (mandatory)
 
