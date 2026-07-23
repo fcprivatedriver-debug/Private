@@ -15,7 +15,7 @@ const NAV = [
   { href: "/pt/objetivos", label: "Objetivos" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
-  { href: "/pt/familia", label: "Família" },
+  { href: "/pt/familia", label: "Conta" },
   { href: "/pt/alertas", label: "Avisos" },
   { href: "/pt/definicoes", label: "Mais" },
 ];

@@ -84,6 +84,7 @@ export default async function GastosPage({
           <table className="data-table">
             <thead>
               <tr>
+                <th>Quem</th>
                 <th>Data</th>
                 <th>Descrição</th>
                 <th>Categoria</th>
@@ -95,6 +96,7 @@ export default async function GastosPage({
             <tbody>
               {expenses.map((e) => (
                 <tr key={e.id}>
+                  <td>{e.member?.displayName ?? "—"}</td>
                   <td>
                     {e.date.toLocaleDateString("pt-PT")}
                     {e.time ? ` ${e.time}` : ""}

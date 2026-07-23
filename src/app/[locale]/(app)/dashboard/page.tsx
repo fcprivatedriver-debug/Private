@@ -11,6 +11,8 @@ import {
   CategoryBars,
 } from "@/components/ui/FinanceUI";
 import { NinaChat } from "@/components/nina/NinaChat";
+import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
+import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -24,12 +26,19 @@ export default async function DashboardPage() {
   return (
     <div className="nina-home">
       <header className="nina-home-intro">
-        <p className="nina-kicker">A tua assistente · disponível sempre</p>
-        <h1 className="page-title">Olá, {name}. Eu trato das contas.</h1>
-        <p className="page-sub">
-          Pergunta-me qualquer coisa sobre o teu dinheiro — em linguagem simples.
-          {` · ${data.monthLabel}`}
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <div>
+            <p className="nina-kicker">
+              {HOUSEHOLD_KIND_LABELS[membership.family.kind]} · sempre sincronizada
+            </p>
+            <h1 className="page-title">Olá, {name}. Eu trato das contas da família.</h1>
+            <p className="page-sub">
+              Cada um fala comigo — eu organizo, partilho e atualizo tudo em tempo real.
+              {` · ${data.monthLabel}`}
+            </p>
+          </div>
+          <HouseholdLiveSync />
+        </div>
       </header>
 
       <div className="stats-grid nina-glance">
@@ -61,7 +70,7 @@ export default async function DashboardPage() {
             </Link>
           </Panel>
 
-          <Panel title="Os teus objetivos">
+          <Panel title="Objetivos da família">
             {data.goals.map((g) => (
               <div key={g.id} className="goal-card">
                 <div className="goal-head">
@@ -70,7 +79,7 @@ export default async function DashboardPage() {
                 </div>
                 <ProgressBar percent={g.progress} color="#0f7a4a" />
                 <p className="muted small">
-                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
+                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)} · partilhado
                 </p>
               </div>
             ))}

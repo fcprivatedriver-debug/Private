@@ -17,6 +17,13 @@ enum FamilyRole {
   VIEWER
 }
 
+enum HouseholdKind {
+  INDIVIDUAL
+  COUPLE
+  FAMILY
+  SHARED
+}
+
 enum TransactionType {
   INCOME
   EXPENSE
@@ -163,12 +170,14 @@ model VerificationToken {
 // ——— Família ———
 
 model Family {
-  id        String   @id @default(cuid())
-  name      String
-  currency  String   @default("EUR")
-  timezone  String   @default("Europe/Lisbon")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String        @id @default(cuid())
+  name       String
+  kind       HouseholdKind @default(FAMILY)
+  inviteCode String?       @unique
+  currency   String        @default("EUR")
+  timezone   String        @default("Europe/Lisbon")
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   members            FamilyMember[]
   accounts           FinanceAccount[]

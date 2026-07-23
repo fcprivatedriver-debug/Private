@@ -106,6 +106,8 @@ async function main() {
       name: "Família Casquinha",
       currency: "EUR",
       timezone: "Europe/Lisbon",
+      kind: "FAMILY",
+      inviteCode: "NINA-DEMO01",
     },
   });
 

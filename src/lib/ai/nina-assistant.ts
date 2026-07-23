@@ -3,6 +3,8 @@ import { goalProgress } from "@/domain/finance";
 
 export type NinaContext = {
   userName: string;
+  householdName?: string;
+  memberCount?: number;
   incomeCents: number;
   expenseCents: number;
   prevExpenseCents: number;
@@ -14,7 +16,13 @@ export type NinaContext = {
   goals: { name: string; currentCents: number; targetCents: number }[];
   upcomingPayments: { name: string; amountCents: number; dueLabel: string }[];
   unusual: { description: string; amountCents: number }[];
-  recentExpenses: { description: string; storeName: string | null; amountCents: number; category: string }[];
+  recentExpenses: {
+    description: string;
+    storeName: string | null;
+    amountCents: number;
+    category: string;
+    memberName?: string | null;
+  }[];
   monthLabel: string;
 };
 
@@ -22,15 +30,16 @@ export type NinaReply = {
   text: string;
   tone: "warm" | "celebrate" | "careful" | "neutral";
   suggestions?: string[];
+  didMutate?: boolean;
 };
 
 const SUGGESTIONS = [
+  "Gastei 35 € no Continente",
+  "Fui à farmácia e gastei 18 €",
   "Quanto gastei este mês?",
   "Quanto posso gastar até ao final do mês?",
   "Onde posso poupar?",
-  "Compara este mês com o anterior",
   "Quanto falta para as férias?",
-  "Mostra as despesas do supermercado",
 ];
 
 function firstName(name: string): string {
@@ -67,13 +76,17 @@ function matchGoal(q: string, goals: NinaContext["goals"]) {
 export function greeting(ctx: NinaContext): NinaReply {
   const name = firstName(ctx.userName);
   const balance = ctx.incomeCents - ctx.expenseCents;
+  const familyBit =
+    (ctx.memberCount ?? 1) > 1
+      ? `\n\nEstão ${ctx.memberCount} pessoas na conta “${ctx.householdName ?? "partilhada"}”. Tudo o que registarem fica sincronizado para todos.`
+      : "";
   const calm =
     balance >= 0
-      ? `Este mês ainda tens ${formatEUR(balance)} de folga.`
+      ? `Este mês ainda têm ${formatEUR(balance)} de folga.`
       : `Este mês as despesas já ultrapassaram as receitas em ${formatEUR(Math.abs(balance))}. Vamos olhar para isso com calma.`;
 
   return {
-    text: `Olá, ${name}. Sou a Nina — estou aqui para te ajudar com o dinheiro, sem stress.\n\n${calm}\n\nPergunta-me o que quiseres, como se estivéssemos a conversar.`,
+    text: `Olá, ${name}. Sou a Nina — estou aqui para a família, sem stress.\n\n${calm}${familyBit}\n\nPodes dizer-me coisas como “gastei 35 € no Continente” e eu trato do resto.`,
     tone: balance >= 0 ? "warm" : "careful",
     suggestions: SUGGESTIONS.slice(0, 4),
   };
@@ -260,6 +273,8 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
 
 export function buildNinaContextFromRaw(input: {
   userName: string;
+  householdName?: string;
+  memberCount?: number;
   incomeCents: number;
   expenseCents: number;
   prevExpenseCents: number;
@@ -270,13 +285,21 @@ export function buildNinaContextFromRaw(input: {
   goals: { name: string; currentCents: number; targetCents: number }[];
   upcomingPayments: { name: string; amountCents: number; due: Date }[];
   unusual: { description: string; amountCents: number }[];
-  recentExpenses: { description: string; storeName: string | null; amountCents: number; category: string }[];
+  recentExpenses: {
+    description: string;
+    storeName: string | null;
+    amountCents: number;
+    category: string;
+    memberName?: string | null;
+  }[];
 }): NinaContext {
   const { year, month } = currentYearMonth();
   const { end } = monthBounds(year, month);
   const daysLeft = Math.max(0, end.getUTCDate() - new Date().getDate());
   return {
     userName: input.userName,
+    householdName: input.householdName,
+    memberCount: input.memberCount,
     incomeCents: input.incomeCents,
     expenseCents: input.expenseCents,
     prevExpenseCents: input.prevExpenseCents,

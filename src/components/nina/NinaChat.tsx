@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { askNina, getNinaGreeting } from "@/actions/nina";
 import { NINA_SUGGESTIONS } from "@/lib/ai/nina-assistant";
 
@@ -12,6 +13,7 @@ type Msg = {
 };
 
 export function NinaChat({ compact = false }: { compact?: boolean }) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [pending, start] = useTransition();
@@ -41,10 +43,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
     const q = question.trim();
     if (!q || pending) return;
     setInput("");
-    setMessages((m) => [
-      ...m,
-      { id: `u-${Date.now()}`, role: "user", text: q },
-    ]);
+    setMessages((m) => [...m, { id: `u-${Date.now()}`, role: "user", text: q }]);
     start(async () => {
       const res = await askNina(q);
       if (res.ok) {
@@ -57,6 +56,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
             suggestions: res.reply.suggestions,
           },
         ]);
+        if (res.mutated) router.refresh();
       }
     });
   }
@@ -66,7 +66,11 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
       <div className="nina-chat-messages" aria-live="polite">
         {messages.map((m) => (
           <div key={m.id} className={`nina-bubble ${m.role}`}>
-            {m.role === "nina" ? <span className="nina-avatar" aria-hidden>N</span> : null}
+            {m.role === "nina" ? (
+              <span className="nina-avatar" aria-hidden>
+                N
+              </span>
+            ) : null}
             <div className="nina-bubble-body">
               {m.role === "nina" ? <strong className="nina-name">Nina</strong> : null}
               <p>{m.text}</p>
@@ -84,10 +88,12 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
         ))}
         {pending ? (
           <div className="nina-bubble nina">
-            <span className="nina-avatar" aria-hidden>N</span>
+            <span className="nina-avatar" aria-hidden>
+              N
+            </span>
             <div className="nina-bubble-body">
               <strong className="nina-name">Nina</strong>
-              <p className="nina-typing">A pensar…</p>
+              <p className="nina-typing">A atualizar a conta familiar…</p>
             </div>
           </div>
         ) : null}
@@ -104,7 +110,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder='Pergunta à Nina… ex: "Quanto gastei este mês?"'
+          placeholder='Ex: "Gastei 35 € no Continente"'
           aria-label="Mensagem para a Nina"
           disabled={pending}
         />
@@ -115,7 +121,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
 
       {!compact ? (
         <div className="nina-quick">
-          {NINA_SUGGESTIONS.slice(0, 3).map((s) => (
+          {NINA_SUGGESTIONS.slice(0, 4).map((s) => (
             <button key={s} type="button" className="nina-chip" onClick={() => send(s)}>
               {s}
             </button>

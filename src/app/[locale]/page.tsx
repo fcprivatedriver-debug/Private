@@ -68,16 +68,16 @@ export default function LandingPage() {
         <div className="feature-grid">
           {[
             {
+              title: "Conta familiar partilhada",
+              body: "Casal, filhos ou amigos — todos falam com a Nina e veem o mesmo saldo, objetivos e avisos em tempo real.",
+            },
+            {
               title: "Organiza sozinha",
               body: "Classifica compras e explica para onde está a ir o dinheiro, em linguagem simples.",
             },
             {
-              title: "Alerta com cuidado",
-              body: "Avisos de pagamentos futuros e gastos fora do habitual — sempre com tom positivo.",
-            },
-            {
-              title: "Ajuda a poupar",
-              body: "Sugestões práticas, objetivos de poupança e motivação para uma vida mais tranquila.",
+              title: "Ajuda a poupar em conjunto",
+              body: "Objetivos partilhados e progresso automático quando a família poupa ou fica abaixo do orçamento.",
             },
           ].map((f) => (
             <article key={f.title} className="feature">

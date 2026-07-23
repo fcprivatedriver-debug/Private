@@ -21,6 +21,7 @@ import { generateInsights, buildMonthlyReport } from "@/lib/ai/finance-insights"
 import { toCSV, toExcelTSV, toSimplePdfText } from "@/lib/export";
 import type { ImportProvider, PaymentMethod } from "@prisma/client";
 import { currentYearMonth, monthBounds } from "@/lib/money";
+import { makeInviteCode } from "@/domain/household";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
@@ -55,6 +56,8 @@ export async function registerFamily(formData: FormData) {
   const family = await prisma.family.create({
     data: {
       name: parsed.data.familyName || `Família ${parsed.data.name.split(" ")[0]}`,
+      kind: "FAMILY",
+      inviteCode: makeInviteCode(),
     },
   });
 

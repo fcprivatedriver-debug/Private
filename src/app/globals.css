@@ -880,3 +880,40 @@ html.dark .nina-bubble.user .nina-bubble-body {
   .nina-chat { min-height: 360px; }
   .nina-chat-messages { max-height: 360px; }
 }
+
+/* Conta familiar — sync & roles */
+.live-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: var(--income-soft);
+  color: var(--income);
+  font-size: 0.78rem;
+  font-weight: 600;
+  height: fit-content;
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--income);
+  box-shadow: 0 0 0 0 rgba(15, 122, 74, 0.45);
+  animation: livePulse 1.8s ease-out infinite;
+}
+@keyframes livePulse {
+  0% { box-shadow: 0 0 0 0 rgba(15, 122, 74, 0.45); }
+  70% { box-shadow: 0 0 0 8px rgba(15, 122, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 122, 74, 0); }
+}
+.role-select {
+  margin-top: 0.35rem;
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+}
