@@ -120,7 +120,11 @@ export default async function TripDetailPage({ params }: Props) {
     <section className="section fade-up">
       <div className="container">
         <div style={{ marginBottom: "1.5rem" }}>
-          <span className="badge">{TRIP_STATUS_LABELS[trip.status]}</span>
+          <span className="badge">
+            {trip.status === "OPEN" && trip.offers.length > 0
+              ? "Propostas recebidas"
+              : TRIP_STATUS_LABELS[trip.status]}
+          </span>
           <h1
             className="font-display"
             style={{ fontSize: "clamp(1.7rem, 4vw, 2.35rem)", marginTop: "0.75rem" }}
