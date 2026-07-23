@@ -445,16 +445,23 @@ h3,
 .hero-media {
   position: absolute;
   inset: 0;
+  /* Premium executive EV sedan at luxury entrance — no brand logos.
+     Dark left/upper negative space keeps Hegos type + CTAs readable. */
   background:
     linear-gradient(
-      105deg,
-      rgba(10, 11, 13, 0.88) 0%,
-      rgba(10, 11, 13, 0.55) 42%,
-      rgba(13, 79, 107, 0.35) 100%
+      90deg,
+      rgba(10, 11, 13, 0.78) 0%,
+      rgba(10, 11, 13, 0.52) 32%,
+      rgba(10, 11, 13, 0.18) 58%,
+      rgba(10, 11, 13, 0.35) 100%
     ),
-    linear-gradient(180deg, rgba(10, 11, 13, 0.2) 0%, rgba(10, 11, 13, 0.75) 100%),
-    url("https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=2400&q=80")
-      center 35%/cover no-repeat;
+    linear-gradient(
+      180deg,
+      rgba(10, 11, 13, 0.28) 0%,
+      rgba(10, 11, 13, 0.12) 40%,
+      rgba(10, 11, 13, 0.62) 100%
+    ),
+    url("/brand/hegos-hero.jpg") right 40% / cover no-repeat;
   animation: heroDrift 26s ease-in-out infinite alternate;
   transform-origin: center center;
 }
