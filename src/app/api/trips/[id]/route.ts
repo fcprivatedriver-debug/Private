@@ -4,6 +4,7 @@ import { apiError } from "@/lib/utils";
 import { acceptOffer, cancelTrip, publishTrip, DomainError } from "@/domain/marketplace";
 import { paymentsEnabled } from "@/config/env";
 import { confirmBookingWithoutPayment } from "@/domain/marketplace";
+import { canRevealContacts, sanitizeUserContacts } from "@/lib/contacts";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,7 @@ export async function GET(_request: Request, context: Ctx) {
               id: true,
               name: true,
               phone: true,
+              email: true,
               driverProfile: true,
             },
           },
@@ -44,25 +46,40 @@ export async function GET(_request: Request, context: Ctx) {
     return apiError("FORBIDDEN", "Sem permissão", 403);
   }
 
-  // Privacy: phone only after offer accepted / confirmed for the matched driver
-  const revealContacts =
-    trip.status === "OFFER_ACCEPTED" ||
-    trip.status === "CONFIRMED" ||
-    trip.status === "IN_PROGRESS" ||
-    trip.status === "COMPLETED";
+  const reveal =
+    trip.booking != null &&
+    canRevealContacts({
+      viewerId: session.user.id,
+      customerId: trip.customerId,
+      driverId: trip.booking.driverId,
+      bookingStatus: trip.booking.status,
+      paymentStatus: trip.booking.payment?.status,
+      isAdmin,
+    });
 
   if (isDriver && !isAdmin) {
     const sanitized = {
       ...trip,
-      customer: revealContacts && trip.booking?.driverId === session.user.id
-        ? trip.customer
-        : { id: trip.customer.id, name: trip.customer.name, phone: null, email: null },
-      offers: trip.offers.filter((o) => o.driverId === session.user.id),
+      customer: sanitizeUserContacts(trip.customer, reveal && trip.booking?.driverId === session.user.id),
+      offers: trip.offers
+        .filter((o) => o.driverId === session.user.id)
+        .map((o) => ({
+          ...o,
+          driver: sanitizeUserContacts(o.driver, reveal),
+        })),
     };
     return Response.json({ trip: sanitized });
   }
 
-  return Response.json({ trip });
+  const forCustomer = {
+    ...trip,
+    offers: trip.offers.map((o) => ({
+      ...o,
+      driver: sanitizeUserContacts(o.driver, reveal && o.id === trip.acceptedOfferId),
+    })),
+  };
+
+  return Response.json({ trip: forCustomer });
 }
 
 export async function POST(request: Request, context: Ctx) {

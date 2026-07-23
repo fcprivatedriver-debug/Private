@@ -1,34 +1,64 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { signOut } from "@/lib/auth";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Link as LocaleLink } from "@/i18n/navigation";
+import { auth, signOut } from "@/lib/auth";
+import { routing } from "@/i18n/routing";
+
+function LocaleSwitcher({ locale }: { locale: string }) {
+  return (
+    <div style={{ display: "flex", gap: "0.35rem", fontSize: "0.85rem" }}>
+      {routing.locales.map((l) => (
+        <Link
+          key={l}
+          href={`/${l}`}
+          hrefLang={l}
+          style={{
+            opacity: l === locale ? 1 : 0.55,
+            fontWeight: l === locale ? 700 : 500,
+            textTransform: "uppercase",
+          }}
+        >
+          {l}
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 export async function SiteHeader() {
   const session = await auth();
   const role = session?.user?.role;
+  const locale = await getLocale();
+  const t = await getTranslations("nav");
 
   return (
     <header className="site-header">
       <div className="container site-header-inner">
-        <Link href="/" className="logo">
+        <LocaleLink href="/" className="logo">
           Mov<span>io</span>
-        </Link>
+        </LocaleLink>
         <nav className="nav-links">
-          <Link href="/como-funciona">Como funciona</Link>
-          <Link href="/para-motoristas">Motoristas</Link>
-          {role === "CUSTOMER" && <Link href="/pedidos">Os meus pedidos</Link>}
+          <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
+          <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
+          {role === "CUSTOMER" && <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>}
           {role === "DRIVER" && (
             <>
-              <Link href="/painel">Painel</Link>
-              <Link href="/viagens">Viagens</Link>
+              <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
+              <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
             </>
           )}
-          {role === "ADMIN" && <Link href="/admin">Admin</Link>}
+          {role === "ADMIN" && <LocaleLink href="/admin">{t("admin")}</LocaleLink>}
+          <LocaleSwitcher locale={locale} />
           {!session ? (
             <>
-              <Link href="/login">Entrar</Link>
-              <Link href="/registo" className="btn btn-primary" style={{ padding: "0.55rem 1rem" }}>
-                Começar
-              </Link>
+              <LocaleLink href="/login">{t("login")}</LocaleLink>
+              <LocaleLink
+                href="/registo"
+                className="btn btn-primary"
+                style={{ padding: "0.55rem 1rem" }}
+              >
+                {t("start")}
+              </LocaleLink>
             </>
           ) : (
             <>
@@ -38,11 +68,15 @@ export async function SiteHeader() {
               <form
                 action={async () => {
                   "use server";
-                  await signOut({ redirectTo: "/" });
+                  await signOut({ redirectTo: `/${locale}` });
                 }}
               >
-                <button type="submit" className="btn btn-secondary" style={{ padding: "0.55rem 1rem" }}>
-                  Sair
+                <button
+                  type="submit"
+                  className="btn btn-secondary"
+                  style={{ padding: "0.55rem 1rem" }}
+                >
+                  {t("logout")}
                 </button>
               </form>
             </>

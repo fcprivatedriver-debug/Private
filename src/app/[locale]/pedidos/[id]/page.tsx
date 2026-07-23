@@ -12,6 +12,7 @@ import { pt } from "date-fns/locale";
 import { TripActions } from "@/components/trip/TripActions";
 import { OfferForm } from "@/components/offer/OfferForm";
 import { ReviewForm } from "@/components/trip/ReviewForm";
+import { canRevealContacts } from "@/lib/contacts";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -51,8 +52,15 @@ export default async function TripDetailPage({ params }: Props) {
   if (!isOwner && !isDriver && !isAdmin) notFound();
 
   const revealContacts =
-    ["OFFER_ACCEPTED", "CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(trip.status) &&
-    (isOwner || isAssignedDriver || isAdmin);
+    trip.booking != null &&
+    canRevealContacts({
+      viewerId: session.user.id,
+      customerId: trip.customerId,
+      driverId: trip.booking.driverId,
+      bookingStatus: trip.booking.status,
+      paymentStatus: trip.booking.payment?.status,
+      isAdmin,
+    });
 
   const canManageJourney = Boolean(isOwner || isAssignedDriver || isAdmin);
 
@@ -92,10 +100,15 @@ export default async function TripDetailPage({ params }: Props) {
             {trip.notes && <p style={{ marginTop: "0.75rem" }}>{trip.notes}</p>}
             {revealContacts && (
               <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
-                Contactos: {isOwner ? "motorista via proposta aceite" : trip.customer.name}
-                {isOwner && trip.booking
-                  ? ` · ${trip.offers.find((o) => o.id === trip.acceptedOfferId)?.driver.phone || "—"}`
-                  : ` · ${trip.customer.phone || "—"}`}
+                Contacts (visible after payment confirmed):{" "}
+                {isOwner
+                  ? trip.offers.find((o) => o.id === trip.acceptedOfferId)?.driver.phone || "—"
+                  : trip.customer.phone || "—"}
+              </div>
+            )}
+            {!revealContacts && trip.booking && (
+              <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
+                Contact details unlock after payment is confirmed.
               </div>
             )}
           </div>

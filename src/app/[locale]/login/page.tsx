@@ -1,13 +1,15 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useState, Suspense } from "react";
+import { useTranslations } from "next-intl";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const t = useTranslations("auth");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,14 +25,13 @@ function LoginForm() {
     });
     if (res?.error) {
       setLoading(false);
-      setError("Credenciais inválidas");
+      setError(t("invalidCredentials"));
       return;
     }
 
     const callback = params.get("callbackUrl");
     if (callback) {
-      router.push(callback);
-      router.refresh();
+      window.location.href = callback;
       return;
     }
 
@@ -51,32 +52,31 @@ function LoginForm() {
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 480 }}>
         <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.5rem" }}>
-          Entrar na Movio
+          {t("loginTitle")}
         </h1>
         <p className="muted" style={{ marginBottom: "1.5rem" }}>
-          Demo: cliente@movio.app / motorista@movio.app / admin@movio.app — password{" "}
-          <code>movio123</code>
+          {t("loginHint")}
         </p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
           <div className="field">
             <label className="label" htmlFor="email">
-              Email
+              {t("email")}
             </label>
             <input className="input" id="email" name="email" type="email" required />
           </div>
           <div className="field">
             <label className="label" htmlFor="password">
-              Password
+              {t("password")}
             </label>
             <input className="input" id="password" name="password" type="password" required />
           </div>
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? "A entrar…" : "Entrar"}
+            {loading ? t("loggingIn") : t("submitLogin")}
           </button>
         </form>
         <p className="muted" style={{ marginTop: "1rem" }}>
-          Ainda não tens conta? <Link href="/registo">Regista-te</Link>
+          {t("noAccount")} <Link href="/registo">{t("registerLink")}</Link>
         </p>
       </div>
     </section>

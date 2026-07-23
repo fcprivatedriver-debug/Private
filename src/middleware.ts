@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import createMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
+import { routing } from "@/i18n/routing";
+
+const intlMiddleware = createMiddleware(routing);
 
 const protectedPrefixes = [
   { prefix: "/pedidos", roles: ["CUSTOMER", "DRIVER", "ADMIN"] },
@@ -13,50 +17,59 @@ const protectedPrefixes = [
   { prefix: "/admin", roles: ["ADMIN"] },
 ];
 
+function stripLocale(pathname: string): { locale: string | null; path: string } {
+  const parts = pathname.split("/");
+  const maybeLocale = parts[1];
+  if (routing.locales.includes(maybeLocale as "pt" | "en")) {
+    const rest = "/" + parts.slice(2).join("/");
+    return { locale: maybeLocale, path: rest === "/" ? "/" : rest.replace(/\/$/, "") || "/" };
+  }
+  return { locale: null, path: pathname };
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+    return NextResponse.next();
+  }
+
+  const { locale, path } = stripLocale(pathname);
+
   const rule = [...protectedPrefixes]
     .sort((a, b) => b.prefix.length - a.prefix.length)
-    .find((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
+    .find((r) => path === r.prefix || path.startsWith(`${r.prefix}/`));
 
-  if (!rule) return NextResponse.next();
+  if (rule) {
+    const token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET,
+    });
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-  });
+    const loc = locale || routing.defaultLocale;
 
-  if (!token) {
-    const login = new URL("/login", request.url);
-    login.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(login);
+    if (!token) {
+      const login = new URL(`/${loc}/login`, request.url);
+      login.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(login);
+    }
+
+    const role = token.role as string | undefined;
+    if (!role || !rule.roles.includes(role)) {
+      return NextResponse.redirect(new URL(`/${loc}`, request.url));
+    }
+
+    if (path === "/pedidos" && role === "DRIVER") {
+      return NextResponse.redirect(new URL(`/${loc}/pedidos-abertos`, request.url));
+    }
+    if (path.startsWith("/pedidos/novo") && role !== "CUSTOMER") {
+      return NextResponse.redirect(new URL(`/${loc}`, request.url));
+    }
   }
 
-  const role = token.role as string | undefined;
-  if (!role || !rule.roles.includes(role)) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  // Customers own /pedidos list & new; drivers can open /pedidos/[id]
-  if (pathname === "/pedidos" && role === "DRIVER") {
-    return NextResponse.redirect(new URL("/pedidos-abertos", request.url));
-  }
-  if (pathname.startsWith("/pedidos/novo") && role !== "CUSTOMER") {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  return NextResponse.next();
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: [
-    "/pedidos/:path*",
-    "/painel/:path*",
-    "/pedidos-abertos/:path*",
-    "/propostas/:path*",
-    "/veiculo/:path*",
-    "/viagens/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

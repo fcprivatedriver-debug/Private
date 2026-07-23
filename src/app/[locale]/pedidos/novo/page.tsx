@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { createTripAction } from "@/actions/marketplace";
+import { AddressAutocompleteInput } from "@/components/map/AddressAutocompleteInput";
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -34,30 +35,18 @@ export default function NewTripPage() {
         <p className="lead">Publica o trajeto e espera propostas de motoristas.</p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
-          <div className="field">
-            <label className="label" htmlFor="pickupAddress">
-              Origem
-            </label>
-            <input
-              className="input"
-              id="pickupAddress"
-              name="pickupAddress"
-              placeholder="Aeroporto de Lisboa (LIS)"
-              required
-            />
-          </div>
-          <div className="field">
-            <label className="label" htmlFor="dropoffAddress">
-              Destino
-            </label>
-            <input
-              className="input"
-              id="dropoffAddress"
-              name="dropoffAddress"
-              placeholder="Hotel ou morada"
-              required
-            />
-          </div>
+          <AddressAutocompleteInput
+            name="pickupAddress"
+            label="Origem"
+            placeholder="Aeroporto de Lisboa (LIS)"
+            required
+          />
+          <AddressAutocompleteInput
+            name="dropoffAddress"
+            label="Destino"
+            placeholder="Hotel ou morada"
+            required
+          />
           <div className="grid-2">
             <div className="field">
               <label className="label" htmlFor="pickupAt">

@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Syne, Figtree } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { AuthProvider } from "@/components/providers/AuthProvider";
 
 const display = Syne({
   variable: "--font-display",
@@ -16,28 +14,10 @@ const body = Figtree({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Movio — Motoristas privados sob proposta",
-    template: "%s · Movio",
-  },
-  description:
-    "Marketplace de motoristas privados. Publica o teu pedido, recebe propostas e escolhe a melhor.",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt">
-      <body className={`${display.variable} ${body.variable} antialiased`}>
-        <AuthProvider>
-          <SiteHeader />
-          <main>{children}</main>
-        </AuthProvider>
-      </body>
+    <html suppressHydrationWarning>
+      <body className={`${display.variable} ${body.variable} antialiased`}>{children}</body>
     </html>
   );
 }

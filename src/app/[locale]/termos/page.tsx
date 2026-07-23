@@ -1,0 +1,34 @@
+import { getTranslations, setRequestLocale } from "next-intl/server";
+
+type Props = { params: Promise<{ locale: string }> };
+
+export default async function TermosPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("legal");
+
+  return (
+    <section className="section fade-up">
+      <div className="container" style={{ maxWidth: 720 }}>
+        <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
+          {t("termsTitle")}
+        </h1>
+        <p className="muted">{t("preliminary")}</p>
+        <div className="panel" style={{ marginTop: "1.5rem", lineHeight: 1.6 }}>
+          <p>
+            Movio is a marketplace connecting customers with private drivers. The platform is not a
+            carrier: it facilitates trip requests, offers and bookings.
+          </p>
+          <p>
+            Users are responsible for the accuracy of published information and for complying with
+            applicable passenger transport regulations.
+          </p>
+          <p>
+            Cancellations, refunds and payments will be detailed when Stripe Connect goes live.
+            Contact details between parties are revealed only after payment is confirmed.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
