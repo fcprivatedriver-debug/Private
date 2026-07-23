@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { dashboardPathForRole } from "@/lib/auth-routes";
+import { safePostLoginPath } from "@/lib/auth-routes";
 
 function LoginFormInner() {
   const params = useSearchParams();
@@ -18,10 +18,9 @@ function LoginFormInner() {
 
   const configError = params.get("error") === "Configuration";
 
-  function go(dest: string) {
+  function go(role?: string | null) {
     setLeaving(true);
-    const callback = params.get("callbackUrl");
-    const target = callback || `/${locale}${dest === "/" ? "" : dest}`;
+    const target = safePostLoginPath(role, params.get("callbackUrl"), locale);
     // Hard navigation so the login RSC shell is fully replaced
     window.location.assign(target);
   }
@@ -29,7 +28,7 @@ function LoginFormInner() {
   // If session appears (hydration / post-login), never keep the form visible
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      go(dashboardPathForRole(session.user.role));
+      go(session.user.role);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- redirect once when authenticated
   }, [status, session?.user?.role]);
@@ -73,10 +72,11 @@ function LoginFormInner() {
 
       const fresh = await getSession();
       const role = fresh?.user?.role ?? session?.user?.role;
-      go(dashboardPathForRole(role));
+      go(role);
     } catch {
       setError("Não foi possível entrar. Verifique a ligação e tente de novo.");
       setLoading(false);
+      setLeaving(false);
     }
   }
 

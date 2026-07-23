@@ -5,7 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { resolveAuthSecret } from "@/lib/auth-secret";
+import { authConfig } from "@/auth.config";
 import { z } from "zod";
 
 declare module "next-auth" {
@@ -78,20 +78,12 @@ if (googleConfigured) {
   );
 }
 
-/**
- * Auth.js on Vercel requires AUTH_SECRET. MissingSecret / UntrustedHost
- * surface as the "Server error / server configuration" page.
- *
- * Credentials + JWT do not need a DB adapter. Adapter is only attached when
- * Google OAuth is configured (account linking).
- */
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   ...(googleConfigured ? { adapter: PrismaAdapter(prisma) } : {}),
-  trustHost: true,
-  secret: resolveAuthSecret(),
-  session: { strategy: "jwt" },
   providers,
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id!;
@@ -99,8 +91,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return token;
       }
 
-      // Backfill role once if an older cookie lacks it (never throw — Auth.js
-      // remaps unexpected errors to the Configuration error page).
       if (token.email && !token.role) {
         try {
           const dbUser = await prisma.user.findUnique({
