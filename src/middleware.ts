@@ -39,7 +39,14 @@ export async function middleware(request: NextRequest) {
 
   const rule = [...protectedPrefixes]
     .sort((a, b) => b.prefix.length - a.prefix.length)
-    .find((r) => path === r.prefix || path.startsWith(`${r.prefix}/`));
+    .find((r) => {
+      if (path === r.prefix) return true;
+      // Avoid /veiculo matching public /veiculos/[id] profiles
+      if (r.prefix === "/veiculo") {
+        return path.startsWith("/veiculo/") && !path.startsWith("/veiculos");
+      }
+      return path.startsWith(`${r.prefix}/`);
+    });
 
   if (rule) {
     const token = await getToken({
