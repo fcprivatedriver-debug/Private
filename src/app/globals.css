@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand — ink navy + champagne (luxury chauffeur) */
+  --background: #f4f1ec;
+  --foreground: #101820;
+  --surface: #fbfaf7;
+  --surface-elevated: #ffffff;
+  --surface-hover: #ebe6de;
+  --border: #ddd6cb;
+  --border-strong: #c9bfb0;
+  --muted: #6f767d;
+  --muted-foreground: #4a525a;
+  --ink: #0a1628;
+  --ink-foreground: #f7f5f1;
+  --accent: #b8894c;
+  --accent-hover: #a6783f;
+  --accent-foreground: #0a1628;
+  --accent-soft: #f3e8d6;
+  --accent-foreground-soft: #6b4a1f;
+  --success: #1f6b4a;
+  --success-soft: #dceee4;
+  --warning: #9a6b16;
+  --warning-soft: #f5ebd2;
+  --danger: #9b2f2f;
+  --danger-hover: #832626;
+  --danger-soft: #f5dede;
+  --ring: rgba(184, 137, 76, 0.45);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-foreground-soft);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
