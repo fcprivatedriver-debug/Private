@@ -27,12 +27,13 @@ export async function GET(_request: Request, context: Ctx) {
               driverProfile: true,
             },
           },
-          vehicle: true,
+          vehicle: { include: { vehicleClass: true } },
         },
         orderBy: { priceAmount: "asc" },
       },
       booking: { include: { payment: true } },
       customer: { select: { id: true, name: true, phone: true, email: true } },
+      preferredVehicleClass: true,
     },
   });
 

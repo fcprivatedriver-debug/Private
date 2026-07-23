@@ -8,9 +8,7 @@ export const createTripSchema = z.object({
   luggage: z.coerce.number().int().min(0).max(30),
   notes: z.string().optional(),
   flightNumber: z.string().optional(),
-  preferredVehicleCategory: z
-    .enum(["SEDAN", "EXECUTIVE", "VAN", "MINIBUS", "LUXURY"])
-    .optional(),
+  preferredVehicleClassId: z.string().min(1).optional(),
   publish: z.coerce.boolean().optional(),
 });
 
@@ -39,5 +37,5 @@ export const vehicleSchema = z.object({
   plate: z.string().min(2),
   seats: z.coerce.number().int().min(1).max(50),
   luggageCapacity: z.coerce.number().int().min(0).max(50),
-  category: z.enum(["SEDAN", "EXECUTIVE", "VAN", "MINIBUS", "LUXURY"]),
+  vehicleClassId: z.string().min(1),
 });

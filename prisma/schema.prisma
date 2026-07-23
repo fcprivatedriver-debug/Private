@@ -20,14 +20,6 @@ enum DriverStatus {
   REJECTED
 }
 
-enum VehicleCategory {
-  SEDAN
-  EXECUTIVE
-  VAN
-  MINIBUS
-  LUXURY
-}
-
 enum TripStatus {
   DRAFT
   OPEN
@@ -180,74 +172,106 @@ model PlatformSettings {
   updatedAt                 DateTime @updatedAt
 }
 
-/// Future commission overrides (country, vehicle category, etc.)
+/// Future commission overrides (country, vehicle class, etc.)
 model CommissionRule {
-  id          String   @id @default(cuid())
-  name        String
-  percent     Float
+  id             String   @id @default(cuid())
+  name           String
+  percent        Float
   /// Optional ISO country code
-  countryCode String?
-  /// Optional VehicleCategory name as string for SQLite flexibility
-  vehicleCategory String?
-  currency    String?
-  active      Boolean  @default(true)
-  priority    Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  countryCode    String?
+  vehicleClassId String?
+  currency       String?
+  active         Boolean  @default(true)
+  priority       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vehicleClass VehicleClass? @relation(fields: [vehicleClassId], references: [id], onDelete: SetNull)
 
   @@index([active, priority])
+  @@index([vehicleClassId])
+}
+
+/// Database-driven vehicle classification (replaces hardcoded enums)
+model VehicleClass {
+  id            String   @id @default(cuid())
+  /// Stable machine code, e.g. SEDAN, EXECUTIVE
+  code          String   @unique
+  namePt        String
+  nameEn        String
+  descriptionPt String?
+  descriptionEn String?
+  minPassengers Int      @default(1)
+  maxPassengers Int
+  maxLuggage    Int      @default(2)
+  /// Optional UI/icon key for clients
+  iconKey       String?
+  sortOrder     Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  vehicles        Vehicle[]
+  tripRequests    TripRequest[]
+  commissionRules CommissionRule[]
+
+  @@index([active, sortOrder])
 }
 
 model Vehicle {
-  id              String          @id @default(cuid())
+  id              String   @id @default(cuid())
   driverId        String
+  vehicleClassId  String
   make            String
   model           String
   year            Int
   color           String
   plate           String
   seats           Int
-  luggageCapacity Int             @default(2)
-  category        VehicleCategory @default(SEDAN)
-  photoUrls       String          @default("[]")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  luggageCapacity Int      @default(2)
+  photoUrls       String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  offers Offer[]
+  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  vehicleClass VehicleClass  @relation(fields: [vehicleClassId], references: [id])
+  offers       Offer[]
 
   @@index([driverId])
+  @@index([vehicleClassId])
 }
 
 model TripRequest {
-  id                       String     @id @default(cuid())
-  customerId               String
-  pickupAddress            String
-  pickupLat                Float?
-  pickupLng                Float?
-  dropoffAddress           String
-  dropoffLat               Float?
-  dropoffLng               Float?
-  pickupAt                 DateTime
-  passengers               Int        @default(1)
-  luggage                  Int        @default(1)
-  notes                    String?
-  flightNumber             String?
-  status                   TripStatus @default(DRAFT)
-  preferredVehicleCategory VehicleCategory?
-  currency                 String     @default("EUR")
-  expiresAt                DateTime?
-  acceptedOfferId          String?    @unique
-  createdAt                DateTime   @default(now())
-  updatedAt                DateTime   @updatedAt
+  id                      String     @id @default(cuid())
+  customerId              String
+  pickupAddress           String
+  pickupLat               Float?
+  pickupLng               Float?
+  dropoffAddress          String
+  dropoffLat              Float?
+  dropoffLng              Float?
+  pickupAt                DateTime
+  passengers              Int        @default(1)
+  luggage                 Int        @default(1)
+  notes                   String?
+  flightNumber            String?
+  status                  TripStatus @default(DRAFT)
+  preferredVehicleClassId String?
+  currency                String     @default("EUR")
+  expiresAt               DateTime?
+  acceptedOfferId         String?    @unique
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
 
-  customer      User     @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
-  offers        Offer[]
-  booking       Booking?
-  acceptedOffer Offer?   @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
+  customer              User          @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
+  preferredVehicleClass VehicleClass? @relation(fields: [preferredVehicleClassId], references: [id], onDelete: SetNull)
+  offers                Offer[]
+  booking               Booking?
+  acceptedOffer         Offer?        @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
 
   @@index([status, pickupAt])
   @@index([customerId])
+  @@index([preferredVehicleClassId])
 }
 
 model Offer {

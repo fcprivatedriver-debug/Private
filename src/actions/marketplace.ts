@@ -88,8 +88,8 @@ export async function createTripAction(formData: FormData) {
       luggage: formData.get("luggage"),
       notes: formData.get("notes") || undefined,
       flightNumber: formData.get("flightNumber") || undefined,
-      preferredVehicleCategory:
-        formData.get("preferredVehicleCategory") || undefined,
+      preferredVehicleClassId:
+        formData.get("preferredVehicleClassId") || undefined,
       publish: formData.get("publish") === "true",
     });
 
@@ -102,7 +102,7 @@ export async function createTripAction(formData: FormData) {
       luggage: parsed.luggage,
       notes: parsed.notes,
       flightNumber: parsed.flightNumber,
-      preferredVehicleCategory: parsed.preferredVehicleCategory,
+      preferredVehicleClassId: parsed.preferredVehicleClassId,
       publish: parsed.publish,
     });
 
@@ -203,7 +203,7 @@ export async function upsertVehicleAction(formData: FormData) {
       plate: formData.get("plate"),
       seats: formData.get("seats"),
       luggageCapacity: formData.get("luggageCapacity"),
-      category: formData.get("category"),
+      vehicleClassId: formData.get("vehicleClassId"),
     });
 
     const profile = await prisma.driverProfile.findUnique({
@@ -211,6 +211,11 @@ export async function upsertVehicleAction(formData: FormData) {
       include: { vehicles: true },
     });
     if (!profile) return { ok: false as const, error: "Perfil em falta" };
+
+    const vehicleClass = await prisma.vehicleClass.findFirst({
+      where: { id: parsed.vehicleClassId, active: true },
+    });
+    if (!vehicleClass) return { ok: false as const, error: "Classe de veículo inválida" };
 
     if (profile.vehicles[0]) {
       await prisma.vehicle.update({
