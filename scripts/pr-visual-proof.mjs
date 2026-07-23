@@ -61,10 +61,12 @@ async function captureStills() {
 
   await login(page);
   await shot(page, "10-dashboard");
-  // Conversa com a Nina
-  await page.getByRole("button", { name: "Quanto gastei este mês?" }).first().click();
-  await page.waitForTimeout(1200);
+  await page.getByRole("button", { name: "Gastei 35 € no Continente" }).first().click();
+  await page.waitForTimeout(1500);
   await shot(page, "10b-nina-chat");
+  await page.getByRole("button", { name: "Fui à farmácia e gastei 18 €" }).first().click().catch(() => {});
+  await page.waitForTimeout(1200);
+  await gotoShot(page, "/pt/familia", "10c-conta-familiar");
   await gotoShot(page, "/pt/receitas", "11-receitas");
   await gotoShot(page, "/pt/despesas", "12-despesas");
   await gotoShot(page, "/pt/despesas/nova", "13-despesa-nova");

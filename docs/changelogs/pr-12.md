@@ -2,29 +2,35 @@
 
 ## Resumo
 
-Lançamento da **Nina** — assistente financeira pessoal baseada em Inteligência Artificial.
+**Nina** — assistente financeira pessoal com IA e **Conta Familiar partilhada**.
 
-A Nina não é só gestão financeira: é uma conversa. O utilizador pergunta em linguagem natural e recebe respostas claras, positivas e sem julgamentos.
+Vários membros falam com a Nina; a conta atualiza-se em tempo real para todos.
+
+## Conta familiar (nova)
+
+- Tipos: Individual, Casal, Familiar, Partilhada (amigos/colegas)
+- Permissões: Administrador, Editor, Apenas consulta
+- Convites por email ou código (`NINA-DEMO01` na demo)
+- Atividade partilhada com **quem**, data, hora, categoria e valor
+- Objetivos de poupança partilhados com progresso automático
+- Sincronização automática entre membros
+
+## Conversar para registar
+
+Exemplos que a Nina compreende:
+
+- “Gastei 35 € no Continente.”
+- “Fui à farmácia e gastei 18 €.”
+- “Poupei 20 euros para férias.”
+- “Recebi 50 euros.”
 
 ## Identidade
 
-- **Nome:** Nina  
-- **Missão:** Simplificar a vida, ajudando a controlar o dinheiro sem complicações  
-- **Filosofia:** “O dinheiro não deve ser uma preocupação. Deve ser uma ferramenta para viver melhor.”  
-- **Promessa:** “A Nina trata das contas para que tu possas aproveitar a vida.”  
-- **Personalidade:** simpática, inteligente, próxima, organizada, positiva, motivadora, nunca julgadora
-
-## Novas funcionalidades
-
-- Chat central com a Nina (dashboard = conversar)
-- Respostas naturais a perguntas como “Quanto gastei este mês?” ou “Onde posso poupar?”
-- Navegação simplificada (Gastos, Entradas, Objetivos, Limites, Resumo…)
-- Landing e copy alinhados à marca Nina
-- Tema claro/escuro, azul-marinho elegante
-- Organização de despesas, orçamentos, objetivos, OCR, importações, família, avisos
-- Exportação PDF / Excel / CSV
+- Simpática, clara, positiva, nunca julgadora
+- Promessa: “A Nina trata das contas para que tu possas aproveitar a vida.”
 
 ## Demo
 
-- `familia@nina.app` / `nina123`
-- `ana@nina.app` / `nina123`
+- `familia@nina.app` / `nina123` (Administrador)
+- `ana@nina.app` / `nina123` (Editor)
+- Código de convite: `NINA-DEMO01`
