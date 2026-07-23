@@ -13,6 +13,8 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const configError = params.get("error") === "Configuration";
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -25,6 +27,13 @@ function LoginForm() {
     });
     if (res?.error) {
       setLoading(false);
+      // Auth.js remaps MissingSecret / UntrustedHost to a Configuration failure
+      if (res.error === "Configuration" || res.status === 500) {
+        setError(
+          "Erro de configuração do servidor (AUTH_SECRET). Verifique as variáveis de ambiente na Vercel.",
+        );
+        return;
+      }
       setError(t("invalidCredentials"));
       return;
     }
@@ -53,6 +62,12 @@ function LoginForm() {
       <div className="container" style={{ maxWidth: 440 }}>
         <h1 className="page-title">{t("loginTitle")}</h1>
         <p className="page-lead">{t("loginHint")}</p>
+        {configError && (
+          <div className="alert alert-error">
+            Erro de configuração Auth.js: defina <code>AUTH_SECRET</code> e{" "}
+            <code>AUTH_TRUST_HOST=true</code> na Vercel e faça redeploy.
+          </div>
+        )}
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
           <div className="field">

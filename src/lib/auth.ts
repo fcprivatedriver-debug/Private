@@ -34,6 +34,10 @@ const credentialsSchema = z.object({
   password: z.string().min(6),
 });
 
+const googleConfigured = Boolean(
+  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+);
+
 const providers = [
   Credentials({
     name: "credentials",
@@ -64,34 +68,50 @@ const providers = [
   }),
 ];
 
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+if (googleConfigured) {
   providers.push(
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
     }) as never,
   );
 }
 
+/**
+ * Auth.js on Vercel requires AUTH_SECRET. MissingSecret / UntrustedHost
+ * surface as the "Server error / server configuration" page.
+ *
+ * Credentials + JWT do not need a DB adapter. Adapter is only attached when
+ * Google OAuth is configured (account linking).
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  ...(googleConfigured ? { adapter: PrismaAdapter(prisma) } : {}),
+  trustHost: true,
+  secret: process.env.AUTH_SECRET,
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
   providers,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id!;
         token.role = user.role;
-      } else if (token.email && !token.role) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
+        return token;
+      }
+
+      // Backfill role once if an older cookie lacks it (never throw — Auth.js
+      // remaps unexpected errors to the Configuration error page).
+      if (token.email && !token.role) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email },
+            select: { id: true, role: true },
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+          }
+        } catch (err) {
+          console.error("[auth] jwt backfill failed", err);
         }
       }
       return token;

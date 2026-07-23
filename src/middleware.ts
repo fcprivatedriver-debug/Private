@@ -49,9 +49,19 @@ export async function middleware(request: NextRequest) {
     });
 
   if (rule) {
+    const secret = process.env.AUTH_SECRET;
+    if (!secret) {
+      console.error("[middleware] AUTH_SECRET is missing — set it in Vercel env vars");
+      const loc = locale || routing.defaultLocale;
+      const login = new URL(`/${loc}/login`, request.url);
+      login.searchParams.set("callbackUrl", pathname);
+      login.searchParams.set("error", "Configuration");
+      return NextResponse.redirect(login);
+    }
+
     const token = await getToken({
       req: request,
-      secret: process.env.AUTH_SECRET,
+      secret,
     });
 
     const loc = locale || routing.defaultLocale;

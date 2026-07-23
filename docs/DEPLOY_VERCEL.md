@@ -27,7 +27,23 @@ In that case set `DIRECT_URL` = the value of `DATABASE_URL_UNPOOLED`.
 3. Build command: `npm run build` (runs `prisma migrate deploy` then `next build`).
 4. Add environment variables (Production + Preview).
 
-## 3. Seed demo data (once after first deploy)
+## 3. Vercel environment variables (required)
+
+| Name | Required | Notes |
+|------|----------|--------|
+| `DATABASE_URL` | **Yes** | Neon **pooled** (`-pooler`) URL |
+| `DIRECT_URL` | **Yes** | Neon **direct** URL (no `-pooler`) |
+| `AUTH_SECRET` | **Yes** | `openssl rand -base64 32` — **missing this causes** “Server error. There is a problem with the server configuration.” |
+| `AUTH_TRUST_HOST` | **Yes** | `true` |
+| `PAYMENTS_ENABLED` | Recommended | `false` |
+| `PLATFORM_FEE_PERCENT` | Recommended | `15` |
+| `NEXT_PUBLIC_APP_NAME` | Recommended | `Movio` |
+
+After changing env vars, **Redeploy** (env changes are not applied to the previous deployment).
+
+Verify: `GET /api/health` should return `"authSecret": true` and `"database": "ok"`.
+
+## 4. Seed demo data (once after first deploy)
 
 From your machine (with production env):
 
@@ -44,7 +60,7 @@ npx tsx prisma/seed.ts
 
 Demo logins (password `movio123`): `cliente@movio.app`, `motorista@movio.app`, `admin@movio.app`.
 
-## 4. Local PostgreSQL (optional)
+## 5. Local PostgreSQL (optional)
 
 ```bash
 createdb movio
