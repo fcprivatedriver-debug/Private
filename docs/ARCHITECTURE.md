@@ -25,7 +25,7 @@ A **Movio** liga clientes que precisam de transporte privado a motoristas que en
 |--------|---------|--------|
 | Framework | **Next.js 15** (App Router) + **TypeScript** | Full-stack, SSR/SEO, API routes / Route Handlers |
 | UI | **Tailwind CSS** + componentes próprios | Controlo total do design; sem dependência pesada de UI kits genéricos |
-| ORM / DB | **Prisma** + **PostgreSQL** | Tipagem forte, migrações, bom para marketplace |
+| ORM / DB | **Prisma** + **SQLite** (dev) / **PostgreSQL** (prod) | Tipagem forte, migrações; SQLite para arranque local sem infra |
 | Auth | **Auth.js (NextAuth v5)** com Credentials + OAuth (Google) | Sessões JWT/DB, roles, extensível |
 | Validação | **Zod** | Schemas partilhados entre API e formulários |
 | Estado servidor | React Server Components + Server Actions | Menos boilerplate; mutações tipadas |

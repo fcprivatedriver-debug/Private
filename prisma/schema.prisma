@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  DRIVER
+  ADMIN
+}
+
+enum DriverStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum VehicleCategory {
+  SEDAN
+  EXECUTIVE
+  VAN
+  MINIBUS
+  LUXURY
+}
+
+enum TripStatus {
+  DRAFT
+  OPEN
+  OFFER_ACCEPTED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum OfferStatus {
+  PENDING
+  WITHDRAWN
+  REJECTED
+  ACCEPTED
+  EXPIRED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  PAID
+  REFUNDED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentProvider {
+  STRIPE
+  MANUAL
+  NONE
+}
+
+enum PaymentStatus {
+  REQUIRES_PAYMENT
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  name          String
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  locale        String    @default("pt")
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts         Account[]
+  sessions         Session[]
+  customerProfile  CustomerProfile?
+  driverProfile    DriverProfile?
+  tripRequests     TripRequest[]    @relation("CustomerTrips")
+  offers           Offer[]
+  bookingsAsCustomer Booking[]      @relation("CustomerBookings")
+  bookingsAsDriver   Booking[]      @relation("DriverBookings")
+  reviewsFrom      Review[]         @relation("ReviewsFrom")
+  reviewsTo        Review[]         @relation("ReviewsTo")
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model CustomerProfile {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  defaultCurrency String  @default("EUR")
+  ratingAvg       Float?
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DriverProfile {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  status      DriverStatus @default(PENDING_VERIFICATION)
+  bio         String?
+  languages   String       @default("pt") // comma-separated for SQLite
+  ratingAvg   Float?
+  ratingCount Int          @default(0)
+  documents   String       @default("[]") // JSON array as string
+  verifiedAt  DateTime?
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles    Vehicle[]
+
+  @@index([status])
+}
+
+model Vehicle {
+  id              String          @id @default(cuid())
+  driverId        String
+  make            String
+  model           String
+  year            Int
+  color           String
+  plate           String
+  seats           Int
+  luggageCapacity Int             @default(2)
+  category        VehicleCategory @default(SEDAN)
+  photoUrls       String          @default("[]")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  offers Offer[]
+
+  @@index([driverId])
+}
+
+model TripRequest {
+  id                       String     @id @default(cuid())
+  customerId               String
+  pickupAddress            String
+  pickupLat                Float?
+  pickupLng                Float?
+  dropoffAddress           String
+  dropoffLat               Float?
+  dropoffLng               Float?
+  pickupAt                 DateTime
+  passengers               Int        @default(1)
+  luggage                  Int        @default(1)
+  notes                    String?
+  flightNumber             String?
+  status                   TripStatus @default(DRAFT)
+  preferredVehicleCategory VehicleCategory?
+  currency                 String     @default("EUR")
+  expiresAt                DateTime?
+  acceptedOfferId          String?    @unique
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+
+  customer      User     @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
+  offers        Offer[]
+  booking       Booking?
+  acceptedOffer Offer?   @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
+
+  @@index([status, pickupAt])
+  @@index([customerId])
+}
+
+model Offer {
+  id              String      @id @default(cuid())
+  tripRequestId   String
+  driverId        String
+  vehicleId       String?
+  priceAmount     Int
+  currency        String      @default("EUR")
+  message         String?
+  includesTolls   Boolean     @default(true)
+  includesWaiting Boolean     @default(false)
+  validUntil      DateTime?
+  status          OfferStatus @default(PENDING)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  tripRequest    TripRequest  @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
+  driver         User         @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  vehicle        Vehicle?     @relation(fields: [vehicleId], references: [id])
+  acceptedForTrip TripRequest? @relation("AcceptedOffer")
+  booking        Booking?
+
+  @@index([tripRequestId, status])
+  @@index([driverId, status])
+}
+
+model Booking {
+  id                String        @id @default(cuid())
+  tripRequestId     String        @unique
+  offerId           String        @unique
+  customerId        String
+  driverId          String
+  status            BookingStatus @default(PENDING_PAYMENT)
+  totalAmount       Int
+  currency          String        @default("EUR")
+  platformFeeAmount Int
+  paymentIntentId   String?
+  confirmedAt       DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  tripRequest TripRequest @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
+  offer       Offer       @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  customer    User        @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  driver      User        @relation("DriverBookings", fields: [driverId], references: [id], onDelete: Cascade)
+  payment     Payment?
+  review      Review?
+
+  @@index([customerId])
+  @@index([driverId])
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  bookingId         String          @unique
+  provider          PaymentProvider @default(NONE)
+  providerPaymentId String?
+  amount            Int
+  currency          String          @default("EUR")
+  status            PaymentStatus   @default(REQUIRES_PAYMENT)
+  rawPayload        String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  fromUserId String
+  toUserId   String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromUser User    @relation("ReviewsFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User    @relation("ReviewsTo", fields: [toUserId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  readAt    DateTime?
+  meta      String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  meta       String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+}
