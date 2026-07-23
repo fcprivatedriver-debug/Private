@@ -48,6 +48,11 @@ export default function HomePage() {
               <p className="muted">Compara e aceita. A reserva fica pronta.</p>
             </div>
           </div>
+          <p className="muted" style={{ marginTop: "3rem", fontSize: "0.9rem" }}>
+            <Link href="/termos">Termos</Link>
+            {" · "}
+            <Link href="/privacidade">Privacidade</Link>
+          </p>
         </div>
       </section>
     </>

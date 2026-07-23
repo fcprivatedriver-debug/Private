@@ -10,6 +10,9 @@ import {
   withdrawOffer,
   DomainError,
   confirmBookingWithoutPayment,
+  startTrip,
+  completeTrip,
+  createReview,
 } from "@/domain/marketplace";
 import {
   createOfferSchema,
@@ -237,6 +240,49 @@ export async function verifyDriverAction(driverProfileId: string, approve: boole
         status: approve ? "ACTIVE" : "REJECTED",
         verifiedAt: approve ? new Date() : null,
       },
+    });
+    return { ok: true as const };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function startTripAction(tripId: string) {
+  const session = await auth();
+  if (!session?.user) return { ok: false as const, error: "Sem permissão" };
+  try {
+    await startTrip(tripId, session.user.id, session.user.role);
+    return { ok: true as const };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function completeTripAction(tripId: string) {
+  const session = await auth();
+  if (!session?.user) return { ok: false as const, error: "Sem permissão" };
+  try {
+    await completeTrip(tripId, session.user.id, session.user.role);
+    return { ok: true as const };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function createReviewAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "CUSTOMER") {
+    return { ok: false as const, error: "Sem permissão" };
+  }
+  try {
+    const bookingId = String(formData.get("bookingId") || "");
+    const rating = Number(formData.get("rating"));
+    const comment = String(formData.get("comment") || "") || undefined;
+    await createReview({
+      bookingId,
+      fromUserId: session.user.id,
+      rating,
+      comment,
     });
     return { ok: true as const };
   } catch (error) {

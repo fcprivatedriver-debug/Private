@@ -21,12 +21,29 @@ function LoginForm() {
       password: String(form.get("password")),
       redirect: false,
     });
-    setLoading(false);
     if (res?.error) {
+      setLoading(false);
       setError("Credenciais inválidas");
       return;
     }
-    router.push(params.get("callbackUrl") || "/");
+
+    const callback = params.get("callbackUrl");
+    if (callback) {
+      router.push(callback);
+      router.refresh();
+      return;
+    }
+
+    try {
+      const me = await fetch("/api/me");
+      const data = await me.json();
+      const role = data?.user?.role as string | undefined;
+      const dest =
+        role === "DRIVER" ? "/painel" : role === "ADMIN" ? "/admin" : role === "CUSTOMER" ? "/pedidos" : "/";
+      router.push(dest);
+    } catch {
+      router.push("/");
+    }
     router.refresh();
   }
 

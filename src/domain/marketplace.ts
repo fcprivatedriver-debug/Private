@@ -294,3 +294,141 @@ export async function confirmBookingWithoutPayment(bookingId: string) {
     return booking;
   });
 }
+
+export async function startTrip(tripId: string, actorId: string, role: string) {
+  const trip = await prisma.tripRequest.findUnique({
+    where: { id: tripId },
+    include: { booking: true },
+  });
+  if (!trip?.booking) throw new DomainError("NOT_FOUND", "Viagem não encontrada");
+  if (trip.status !== "CONFIRMED") {
+    throw new DomainError("INVALID_STATE", "Só viagens confirmadas podem iniciar");
+  }
+  const allowed =
+    role === "ADMIN" ||
+    trip.booking.driverId === actorId ||
+    trip.customerId === actorId;
+  if (!allowed) throw new DomainError("FORBIDDEN", "Sem permissão");
+
+  return prisma.tripRequest.update({
+    where: { id: tripId },
+    data: { status: "IN_PROGRESS" },
+  });
+}
+
+export async function completeTrip(tripId: string, actorId: string, role: string) {
+  const trip = await prisma.tripRequest.findUnique({
+    where: { id: tripId },
+    include: { booking: true },
+  });
+  if (!trip?.booking) throw new DomainError("NOT_FOUND", "Viagem não encontrada");
+  if (!["CONFIRMED", "IN_PROGRESS"].includes(trip.status)) {
+    throw new DomainError("INVALID_STATE", "Estado inválido para concluir");
+  }
+  const allowed =
+    role === "ADMIN" ||
+    trip.booking.driverId === actorId ||
+    trip.customerId === actorId;
+  if (!allowed) throw new DomainError("FORBIDDEN", "Sem permissão");
+
+  return prisma.$transaction(async (tx) => {
+    await tx.booking.update({
+      where: { id: trip.booking!.id },
+      data: { status: "COMPLETED" },
+    });
+    return tx.tripRequest.update({
+      where: { id: tripId },
+      data: { status: "COMPLETED" },
+    });
+  });
+}
+
+export async function createReview(input: {
+  bookingId: string;
+  fromUserId: string;
+  rating: number;
+  comment?: string;
+}) {
+  if (input.rating < 1 || input.rating > 5) {
+    throw new DomainError("VALIDATION", "Avaliação deve ser entre 1 e 5");
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: input.bookingId },
+    include: { review: true, tripRequest: true },
+  });
+  if (!booking) throw new DomainError("NOT_FOUND", "Reserva não encontrada");
+  if (booking.customerId !== input.fromUserId) {
+    throw new DomainError("FORBIDDEN", "Só o cliente pode avaliar no MVP");
+  }
+  if (booking.tripRequest.status !== "COMPLETED" && booking.status !== "COMPLETED") {
+    throw new DomainError("INVALID_STATE", "Só podes avaliar após a viagem");
+  }
+  if (booking.review) {
+    throw new DomainError("EXISTS", "Já existe uma avaliação");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const review = await tx.review.create({
+      data: {
+        bookingId: booking.id,
+        fromUserId: input.fromUserId,
+        toUserId: booking.driverId,
+        rating: input.rating,
+        comment: input.comment || null,
+      },
+    });
+
+    const agg = await tx.review.aggregate({
+      where: { toUserId: booking.driverId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    await tx.driverProfile.updateMany({
+      where: { userId: booking.driverId },
+      data: {
+        ratingAvg: agg._avg.rating ?? input.rating,
+        ratingCount: agg._count.rating,
+      },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: booking.driverId,
+        type: "REVIEW_RECEIVED",
+        title: "Nova avaliação",
+        body: `Recebeste ${input.rating}★ na Movio.`,
+        meta: JSON.stringify({ bookingId: booking.id, rating: input.rating }),
+      },
+    });
+
+    return review;
+  });
+}
+
+export async function expireStaleTripsAndOffers(now = new Date()) {
+  const expiredTrips = await prisma.tripRequest.updateMany({
+    where: {
+      status: "OPEN",
+      OR: [{ expiresAt: { lt: now } }, { pickupAt: { lt: now } }],
+    },
+    data: { status: "EXPIRED" },
+  });
+
+  const expiredOffers = await prisma.offer.updateMany({
+    where: {
+      status: "PENDING",
+      OR: [
+        { validUntil: { lt: now } },
+        { tripRequest: { status: { in: ["EXPIRED", "CANCELLED", "COMPLETED"] } } },
+      ],
+    },
+    data: { status: "EXPIRED" },
+  });
+
+  return {
+    expiredTrips: expiredTrips.count,
+    expiredOffers: expiredOffers.count,
+  };
+}

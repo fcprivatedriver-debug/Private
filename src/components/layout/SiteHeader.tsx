@@ -16,7 +16,12 @@ export async function SiteHeader() {
           <Link href="/como-funciona">Como funciona</Link>
           <Link href="/para-motoristas">Motoristas</Link>
           {role === "CUSTOMER" && <Link href="/pedidos">Os meus pedidos</Link>}
-          {role === "DRIVER" && <Link href="/painel">Painel</Link>}
+          {role === "DRIVER" && (
+            <>
+              <Link href="/painel">Painel</Link>
+              <Link href="/viagens">Viagens</Link>
+            </>
+          )}
           {role === "ADMIN" && <Link href="/admin">Admin</Link>}
           {!session ? (
             <>

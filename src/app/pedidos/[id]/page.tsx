@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { TripActions } from "@/components/trip/TripActions";
 import { OfferForm } from "@/components/offer/OfferForm";
+import { ReviewForm } from "@/components/trip/ReviewForm";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -35,7 +36,7 @@ export default async function TripDetailPage({ params }: Props) {
         },
         orderBy: { priceAmount: "asc" },
       },
-      booking: { include: { payment: true } },
+      booking: { include: { payment: true, review: true } },
       customer: { select: { id: true, name: true, phone: true } },
     },
   });
@@ -45,12 +46,15 @@ export default async function TripDetailPage({ params }: Props) {
   const isOwner = trip.customerId === session.user.id;
   const isDriver = session.user.role === "DRIVER";
   const isAdmin = session.user.role === "ADMIN";
+  const isAssignedDriver = trip.booking?.driverId === session.user.id;
 
   if (!isOwner && !isDriver && !isAdmin) notFound();
 
   const revealContacts =
     ["OFFER_ACCEPTED", "CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(trip.status) &&
-    (isOwner || trip.booking?.driverId === session.user.id || isAdmin);
+    (isOwner || isAssignedDriver || isAdmin);
+
+  const canManageJourney = Boolean(isOwner || isAssignedDriver || isAdmin);
 
   const driverVehicles =
     isDriver
@@ -96,12 +100,24 @@ export default async function TripDetailPage({ params }: Props) {
             )}
           </div>
 
-          {isOwner && (
+          {(isOwner || isAssignedDriver) && (
             <TripActions
               tripId={trip.id}
               status={trip.status}
               booking={trip.booking}
+              canManageJourney={canManageJourney}
+              canCancel={isOwner || isAdmin}
             />
+          )}
+
+          {isOwner && trip.status === "COMPLETED" && trip.booking && !trip.booking.review && (
+            <ReviewForm bookingId={trip.booking.id} />
+          )}
+          {isOwner && trip.booking?.review && (
+            <div className="panel" style={{ marginTop: "1rem" }}>
+              <strong>A tua avaliação:</strong> ★ {trip.booking.review.rating}
+              {trip.booking.review.comment ? ` — ${trip.booking.review.comment}` : ""}
+            </div>
           )}
         </div>
 

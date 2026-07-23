@@ -6,6 +6,8 @@ import {
   acceptOfferAction,
   cancelTripAction,
   publishTripAction,
+  startTripAction,
+  completeTripAction,
 } from "@/actions/marketplace";
 import { formatMoney } from "@/lib/money";
 
@@ -23,11 +25,15 @@ export function TripActions({
   status,
   acceptOfferId,
   booking,
+  canManageJourney,
+  canCancel = true,
 }: {
   tripId: string;
   status: string;
   acceptOfferId?: string;
   booking?: BookingInfo;
+  canManageJourney?: boolean;
+  canCancel?: boolean;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +97,25 @@ export function TripActions({
             Publicar
           </button>
         )}
-        {!["COMPLETED", "CANCELLED", "EXPIRED"].includes(status) && (
+        {canManageJourney && status === "CONFIRMED" && (
+          <button
+            className="btn btn-primary"
+            disabled={loading}
+            onClick={() => run(() => startTripAction(tripId))}
+          >
+            Iniciar viagem
+          </button>
+        )}
+        {canManageJourney && ["CONFIRMED", "IN_PROGRESS"].includes(status) && (
+          <button
+            className="btn btn-secondary"
+            disabled={loading}
+            onClick={() => run(() => completeTripAction(tripId))}
+          >
+            Concluir viagem
+          </button>
+        )}
+        {canCancel && !["COMPLETED", "CANCELLED", "EXPIRED"].includes(status) && (
           <button
             className="btn btn-danger"
             disabled={loading}

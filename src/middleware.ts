@@ -9,6 +9,7 @@ const protectedPrefixes = [
   { prefix: "/pedidos-abertos", roles: ["DRIVER"] },
   { prefix: "/propostas", roles: ["DRIVER"] },
   { prefix: "/veiculo", roles: ["DRIVER"] },
+  { prefix: "/viagens", roles: ["DRIVER"] },
   { prefix: "/admin", roles: ["ADMIN"] },
 ];
 
@@ -55,6 +56,7 @@ export const config = {
     "/pedidos-abertos/:path*",
     "/propostas/:path*",
     "/veiculo/:path*",
+    "/viagens/:path*",
     "/admin/:path*",
   ],
 };

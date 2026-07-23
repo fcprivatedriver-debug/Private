@@ -54,6 +54,9 @@ export default async function DriverDashboardPage() {
           <Link href="/veiculo" className="btn btn-secondary">
             Gerir veículo
           </Link>
+          <Link href="/viagens" className="btn btn-ghost">
+            Viagens
+          </Link>
           <Link href="/propostas" className="btn btn-ghost">
             As minhas propostas
           </Link>
