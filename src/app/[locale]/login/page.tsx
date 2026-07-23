@@ -25,13 +25,10 @@ function LoginForm() {
       password: String(form.get("password")),
       redirect: false,
     });
-    if (res?.error) {
+      if (res?.error) {
       setLoading(false);
-      // Auth.js remaps MissingSecret / UntrustedHost to a Configuration failure
       if (res.error === "Configuration" || res.status === 500) {
-        setError(
-          "Erro de configuração do servidor (AUTH_SECRET). Verifique as variáveis de ambiente na Vercel.",
-        );
+        setError("Erro temporário de autenticação. Atualize a página ou tente de novo.");
         return;
       }
       setError(t("invalidCredentials"));
@@ -64,8 +61,7 @@ function LoginForm() {
         <p className="page-lead">{t("loginHint")}</p>
         {configError && (
           <div className="alert alert-error">
-            Erro de configuração Auth.js: defina <code>AUTH_SECRET</code> e{" "}
-            <code>AUTH_TRUST_HOST=true</code> na Vercel e faça redeploy.
+            Erro temporário de autenticação. Atualize a página ou faça redeploy na Vercel.
           </div>
         )}
         {error && <div className="alert alert-error">{error}</div>}

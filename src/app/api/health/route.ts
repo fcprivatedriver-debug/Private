@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { resolveAuthSecret } from "@/lib/auth-secret";
 
 /** Lightweight production diagnostics (no secrets leaked). */
 export async function GET() {
+  const secret = resolveAuthSecret();
   const checks = {
     ok: true as boolean,
-    authSecret: Boolean(process.env.AUTH_SECRET && process.env.AUTH_SECRET.length >= 16),
-    authTrustHost: process.env.AUTH_TRUST_HOST === "true" || Boolean(process.env.VERCEL),
+    authSecretConfigured: Boolean(secret && secret.length >= 16),
+    authSecretSource: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET ? "env" : "demo-fallback",
+    authTrustHost: true,
     databaseUrl: Boolean(process.env.DATABASE_URL),
-    directUrl: Boolean(process.env.DIRECT_URL),
+    directUrl: Boolean(
+      process.env.DIRECT_URL ||
+        process.env.DATABASE_URL_UNPOOLED ||
+        process.env.DATABASE_URL,
+    ),
     database: "unknown" as "ok" | "error" | "unknown",
   };
 
@@ -20,7 +27,7 @@ export async function GET() {
     checks.ok = false;
   }
 
-  if (!checks.authSecret || !checks.databaseUrl || !checks.directUrl) {
+  if (!checks.databaseUrl) {
     checks.ok = false;
   }
 

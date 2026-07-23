@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "node scripts/ensure-env.mjs && prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",

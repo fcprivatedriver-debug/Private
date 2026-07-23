@@ -1,72 +1,58 @@
-# Deploy Movio to Vercel (Neon PostgreSQL)
+# Deploy Movio to Vercel (phone-friendly)
 
-Movio uses **PostgreSQL** (Neon recommended). SQLite is no longer supported.
+Movio uses **PostgreSQL** (Neon). SQLite is not supported.
 
-## 1. Create a Neon database
+## Auth secret — no manual setup required
 
-1. Open [https://console.neon.tech](https://console.neon.tech) and create a project (e.g. `movio`).
-2. Open **Connect** and copy **both** connection strings:
-   - **Pooled** (hostname contains `-pooler`) → `DATABASE_URL`
-   - **Direct** (no `-pooler`) → `DIRECT_URL`
-3. Keep `?sslmode=require` on both.
+The app includes a **built-in demo `AUTH_SECRET` fallback**.  
+You do **not** need to find Environment Variables on mobile for login to work.
 
-Example shapes:
+Optional later: set your own `AUTH_SECRET` in Vercel when you can.
 
-```bash
-DATABASE_URL="postgresql://USER:PASSWORD@ep-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require"
-DIRECT_URL="postgresql://USER:PASSWORD@ep-xxxx.REGION.aws.neon.tech/neondb?sslmode=require"
-```
+## Database (Neon)
 
-If you use the **Vercel Neon integration**, it injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` (direct).  
-In that case set `DIRECT_URL` = the value of `DATABASE_URL_UNPOOLED`.
+### Easiest on phone: Vercel Storage → Neon
 
-## 2. Vercel project
+1. Open your project on [vercel.com](https://vercel.com) (mobile browser).
+2. Open the project.
+3. Tap **Storage** (or **Integrations** / **Marketplace** → Neon).
+4. Create / connect **Neon Postgres**.
+5. Vercel injects `DATABASE_URL` automatically.
+6. Redeploy (Deployments → … → Redeploy).
 
-1. Import `fcprivatedriver-debug/Private` (branch `main`).
-2. Framework: **Next.js** (auto-detected).
-3. Build command: `npm run build` (runs `prisma migrate deploy` then `next build`).
-4. Add environment variables (Production + Preview).
+The build script maps Neon’s unpooled URL to Prisma’s `DIRECT_URL` automatically.
 
-## 3. Vercel environment variables (required)
+### If you already created Neon outside Vercel
 
-| Name | Required | Notes |
-|------|----------|--------|
-| `DATABASE_URL` | **Yes** | Neon **pooled** (`-pooler`) URL |
-| `DIRECT_URL` | **Yes** | Neon **direct** URL (no `-pooler`) |
-| `AUTH_SECRET` | **Yes** | `openssl rand -base64 32` — **missing this causes** “Server error. There is a problem with the server configuration.” |
-| `AUTH_TRUST_HOST` | **Yes** | `true` |
-| `PAYMENTS_ENABLED` | Recommended | `false` |
-| `PLATFORM_FEE_PERCENT` | Recommended | `15` |
-| `NEXT_PUBLIC_APP_NAME` | Recommended | `Movio` |
+You must add `DATABASE_URL` + `DIRECT_URL` as env vars (see mobile steps below).
 
-After changing env vars, **Redeploy** (env changes are not applied to the previous deployment).
+## Where are Environment Variables on mobile?
 
-Verify: `GET /api/health` should return `"authSecret": true` and `"database": "ok"`.
+Vercel’s mobile site hides this. Try **Request Desktop Site** in Chrome/Safari, then:
 
-## 4. Seed demo data (once after first deploy)
+1. Open your **project**
+2. Top tabs → **Settings**
+3. Left/menu → **Environment Variables**
 
-From your machine (with production env):
+Or open this URL on your phone (replace `TEAM` and `PROJECT`):
 
-```bash
-DATABASE_URL="…" DIRECT_URL="…" npx tsx prisma/seed.ts
-```
+`https://vercel.com/TEAM/PROJECT/settings/environment-variables`
 
-Or use Vercel CLI:
+You do **not** need this for `AUTH_SECRET` anymore.
 
-```bash
-vercel env pull .env.production.local
-npx tsx prisma/seed.ts
-```
+## After deploy
 
-Demo logins (password `movio123`): `cliente@movio.app`, `motorista@movio.app`, `admin@movio.app`.
+1. Visit `https://YOUR-APP.vercel.app/api/health`  
+   Expect `"database":"ok"` and `"authSecretConfigured":true`.
+2. Seed once (needs a computer or Neon SQL editor on phone — or ask the agent to seed if `DATABASE_URL` is shared).
+3. Login: `motorista@movio.app` / `movio123`
 
-## 5. Local PostgreSQL (optional)
+## Required vs optional
 
-```bash
-createdb movio
-cp .env.example .env
-# set DATABASE_URL + DIRECT_URL to local Postgres
-npx prisma migrate deploy
-npm run db:seed
-npm run dev
-```
+| Variable | Required on phone? |
+|----------|-------------------|
+| `DATABASE_URL` | Yes — via Neon Storage integration (auto) |
+| `DIRECT_URL` | No — auto-derived at build from Neon unpooled / pooled URL |
+| `AUTH_SECRET` | No — demo fallback in code |
+| `AUTH_TRUST_HOST` | No — code sets `trustHost: true` |
+| Maps / Stripe / Google OAuth | Optional later |

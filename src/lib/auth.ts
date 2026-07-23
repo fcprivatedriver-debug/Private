@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import type { Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { resolveAuthSecret } from "@/lib/auth-secret";
 import { z } from "zod";
 
 declare module "next-auth" {
@@ -87,7 +88,7 @@ if (googleConfigured) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...(googleConfigured ? { adapter: PrismaAdapter(prisma) } : {}),
   trustHost: true,
-  secret: process.env.AUTH_SECRET,
+  secret: resolveAuthSecret(),
   session: { strategy: "jwt" },
   providers,
   callbacks: {

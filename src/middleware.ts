@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { routing } from "@/i18n/routing";
+import { resolveAuthSecret } from "@/lib/auth-secret";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -49,15 +50,7 @@ export async function middleware(request: NextRequest) {
     });
 
   if (rule) {
-    const secret = process.env.AUTH_SECRET;
-    if (!secret) {
-      console.error("[middleware] AUTH_SECRET is missing — set it in Vercel env vars");
-      const loc = locale || routing.defaultLocale;
-      const login = new URL(`/${loc}/login`, request.url);
-      login.searchParams.set("callbackUrl", pathname);
-      login.searchParams.set("error", "Configuration");
-      return NextResponse.redirect(login);
-    }
+    const secret = resolveAuthSecret();
 
     const token = await getToken({
       req: request,
