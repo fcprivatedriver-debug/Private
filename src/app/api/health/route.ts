@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma, resolveNinaSchema } from "@/lib/db";
 import { resolveAuthSecret } from "@/lib/auth-secret";
 
 /** Lightweight production diagnostics (no secrets leaked). */
@@ -16,12 +16,15 @@ export async function GET() {
         process.env.DATABASE_URL_UNPOOLED ||
         process.env.DATABASE_URL,
     ),
+    pgSchema: resolveNinaSchema() || "public",
+    userCount: null as number | null,
     database: "unknown" as "ok" | "error" | "unknown",
   };
 
   try {
     await prisma.$queryRaw`SELECT 1`;
     checks.database = "ok";
+    checks.userCount = await prisma.user.count();
   } catch {
     checks.database = "error";
     checks.ok = false;

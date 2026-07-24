@@ -82,64 +82,72 @@ async function ensureCategory(
 }
 
 export async function registerFamily(formData: FormData) {
-  const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    familyName: formData.get("familyName") || undefined,
-  });
-  if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
+  try {
+    const parsed = registerSchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      familyName: formData.get("familyName") || undefined,
+    });
+    if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
 
-  const email = parsed.data.email.toLowerCase();
-  const exists = await prisma.user.findUnique({ where: { email } });
-  if (exists) return { ok: false as const, error: "Email já registado" };
+    const email = parsed.data.email.toLowerCase();
+    const exists = await prisma.user.findUnique({ where: { email } });
+    if (exists) return { ok: false as const, error: "Email já registado" };
 
-  const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  const user = await prisma.user.create({
-    data: {
-      name: parsed.data.name,
-      email,
-      passwordHash,
-    },
-  });
+    const passwordHash = await bcrypt.hash(parsed.data.password, 10);
+    const user = await prisma.user.create({
+      data: {
+        name: parsed.data.name,
+        email,
+        passwordHash,
+      },
+    });
 
-  const family = await prisma.family.create({
-    data: {
-      name: parsed.data.familyName || `Conta de ${parsed.data.name.split(" ")[0]}`,
-      kind: "INDIVIDUAL",
-    },
-  });
+    const family = await prisma.family.create({
+      data: {
+        name: parsed.data.familyName || `Conta de ${parsed.data.name.split(" ")[0]}`,
+        kind: "INDIVIDUAL",
+      },
+    });
 
-  await prisma.familyMember.create({
-    data: {
-      familyId: family.id,
-      userId: user.id,
-      displayName: parsed.data.name.trim(),
-      role: "OWNER",
-    },
-  });
+    await prisma.familyMember.create({
+      data: {
+        familyId: family.id,
+        userId: user.id,
+        displayName: parsed.data.name.trim(),
+        role: "OWNER",
+      },
+    });
 
-  // Conta estrutural vazia — SEM categorias, SEM movimentos, SEM objetivos, saldo 0.
-  // Tudo o resto é criado só quando o utilizador introduz dados.
-  await prisma.financeAccount.create({
-    data: {
-      familyId: family.id,
-      name: "Conta principal",
-      type: "CHECKING",
-      balanceCents: 0,
-    },
-  });
+    // Conta estrutural vazia — SEM categorias, SEM movimentos, SEM objetivos, saldo 0.
+    // Tudo o resto é criado só quando o utilizador introduz dados.
+    await prisma.financeAccount.create({
+      data: {
+        familyId: family.id,
+        name: "Conta principal",
+        type: "CHECKING",
+        balanceCents: 0,
+      },
+    });
 
-  await prisma.shoppingList.create({
-    data: {
-      familyId: family.id,
-      createdById: user.id,
-      name: "Lista de compras",
-      isShared: true,
-    },
-  });
+    await prisma.shoppingList.create({
+      data: {
+        familyId: family.id,
+        createdById: user.id,
+        name: "Lista de compras",
+        isShared: true,
+      },
+    });
 
-  return { ok: true as const };
+    return { ok: true as const };
+  } catch (err) {
+    console.error("[registerFamily]", err);
+    return {
+      ok: false as const,
+      error: "Não consegui criar a conta agora. Tenta daqui a um momento.",
+    };
+  }
 }
 
 export async function createIncome(formData: FormData) {
