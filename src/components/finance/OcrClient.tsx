@@ -88,6 +88,7 @@ export function OcrClient({
               });
               if (res.ok) {
                 router.push("/pt/despesas");
+                router.refresh();
               }
             });
           }}

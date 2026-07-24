@@ -87,7 +87,10 @@ export function IncomeForm({
         start(async () => {
           const res = editing ? await updateIncome(fd) : await createIncome(fd);
           if (!res.ok) setError(res.error);
-          else router.push("/pt/receitas");
+          else {
+            router.push("/pt/receitas");
+            router.refresh();
+          }
         });
       }}
     >
@@ -215,7 +218,10 @@ export function ExpenseForm({
         start(async () => {
           const res = editing ? await updateExpense(fd) : await createExpense(fd);
           if (!res.ok) setError(res.error);
-          else router.push("/pt/despesas");
+          else {
+            router.push("/pt/despesas");
+            router.refresh();
+          }
         });
       }}
     >

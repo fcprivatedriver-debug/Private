@@ -41,9 +41,21 @@ Alias do branch `cursor/nina-stable-c6cd`:
 
 `https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app`
 
+## 4. Dashboard / saldos / gráficos desatualizados após criar ou editar
+
+- **Causa:** `IncomeForm` e `ExpenseForm` faziam `router.push(...)` sem `router.refresh()` após sucesso. O delete já refresca; os outros formulários também. O RSC cache do Next.js mantinha listas, saldos e gráficos antigos.
+- **Ficheiros:** `src/components/finance/Forms.tsx` (e o mesmo padrão em `OcrClient.tsx`).
+- **Correção:** após `create`/`update` bem-sucedido, `router.push` + `router.refresh()` (igual a `TransactionActions.tsx`).
+- **Impacto:** listas, Dashboard, gráficos e saldos passam a refletir receitas/despesas novas ou editadas sem hard-reload.
+
 ## O que já está corrigido sem SSO
 
 - Build Vercel **Ready**
 - Schema `nina` isolado da Zrik
 - PWA sem Offline em túneis efémeros
 - Contas novas vazias; demo só com `DEMO_MODE=true`
+- Refresh após criar/editar receita e despesa
+
+## Processo
+
+Ver `docs/DEV_PROCESS.md` — checkpoint Git antes de alterações; checklist `familia@nina.app` depois.
