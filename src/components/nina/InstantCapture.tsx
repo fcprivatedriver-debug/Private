@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { instantCapturePhoto, instantCaptureSpeak } from "@/actions/capture";
@@ -13,24 +13,61 @@ type CaptureResult = {
 };
 
 const VOICE_EXAMPLES = [
+  "BP 20 euros",
+  "Continente 58 euros",
+  "McDonald's 18 euros",
   "Supermercado, 35 euros",
-  "Farmácia, 18 euros",
-  "McDonald's, 22 euros",
-  "Abasteci o carro, 65 euros",
   "Recebi o salário, 1850 euros",
 ];
 
-export function InstantCapture() {
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  continuous?: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event?: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionEventLike = {
+  results?: { [index: number]: { [index: number]: { transcript?: string } } };
+};
+
+function getSpeechRecognition(): (new () => SpeechRecognitionLike) | undefined {
+  if (typeof window === "undefined") return undefined;
+  const w = window as unknown as {
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  };
+  return w.SpeechRecognition || w.webkitSpeechRecognition;
+}
+
+export function InstantCapture({
+  initialMode = "voice",
+  autoStart = false,
+}: {
+  initialMode?: Mode;
+  autoStart?: boolean;
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("voice");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
   const [pending, start] = useTransition();
   const [result, setResult] = useState<CaptureResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const recognitionRef = useRef<{ stop: () => void } | null>(null);
+  const [needsTap, setNeedsTap] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const autoTried = useRef(false);
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+  const listeningRef = useRef(listening);
+  listeningRef.current = listening;
 
   useEffect(() => {
     return () => {
@@ -39,71 +76,79 @@ export function InstantCapture() {
     };
   }, [previewUrl]);
 
-  function submitUtterance(utterance: string) {
-    const q = utterance.trim();
-    if (!q || pending) return;
-    setError(null);
-    setResult(null);
-    start(async () => {
-      const res = await instantCaptureSpeak(q);
-      if (res.ok) {
-        setResult({ reply: res.reply, detail: res.detail });
-        setText("");
-        router.refresh();
-      } else {
-        setError(res.error);
+  const submitUtterance = useCallback(
+    (utterance: string) => {
+      const q = utterance.trim();
+      if (!q || pendingRef.current) return;
+      setError(null);
+      setResult(null);
+      start(async () => {
+        const res = await instantCaptureSpeak(q);
+        if (res.ok) {
+          setResult({ reply: res.reply, detail: res.detail });
+          setText("");
+          router.refresh();
+        } else {
+          setError(res.error);
+        }
+      });
+    },
+    [router],
+  );
+
+  const startListening = useCallback(
+    (fromAuto: boolean) => {
+      const SpeechRecognition = getSpeechRecognition();
+      if (!SpeechRecognition) {
+        setError("O teu browser não tem reconhecimento de voz. Escreve ou usa os exemplos.");
+        setMode("write");
+        setNeedsTap(false);
+        return;
       }
-    });
-  }
 
-  function toggleListen() {
-    const SpeechRecognition =
-      typeof window !== "undefined"
-        ? (
-            window as unknown as {
-              SpeechRecognition?: new () => SpeechRecognitionLike;
-              webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-            }
-          ).SpeechRecognition ||
-          (
-            window as unknown as {
-              webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-            }
-          ).webkitSpeechRecognition
-        : undefined;
+      if (recognitionRef.current && listeningRef.current) {
+        recognitionRef.current.stop();
+        setListening(false);
+        return;
+      }
 
-    if (!SpeechRecognition) {
-      setError("O teu browser não tem reconhecimento de voz. Escreve ou usa os exemplos.");
-      setMode("write");
-      return;
-    }
-
-    if (listening) {
-      recognitionRef.current?.stop();
-      setListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "pt-PT";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event: SpeechRecognitionEventLike) => {
-      const said = event.results?.[0]?.[0]?.transcript ?? "";
-      setText(said);
-      setListening(false);
-      if (said) submitUtterance(said);
-    };
-    recognition.onerror = () => {
-      setListening(false);
-      setError("Não consegui ouvir. Tenta outra vez ou escreve.");
-    };
-    recognition.onend = () => setListening(false);
-    recognitionRef.current = recognition;
-    setListening(true);
-    setError(null);
-    recognition.start();
-  }
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = "pt-PT";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.onresult = (event: SpeechRecognitionEventLike) => {
+          const said = event.results?.[0]?.[0]?.transcript ?? "";
+          setText(said);
+          setListening(false);
+          setNeedsTap(false);
+          if (said) submitUtterance(said);
+        };
+        recognition.onerror = (event?: { error?: string }) => {
+          setListening(false);
+          if (fromAuto || event?.error === "not-allowed") {
+            setNeedsTap(true);
+            setError(
+              fromAuto
+                ? "Toca no microfone para começar a falar."
+                : "Não consegui ouvir. Toca outra vez ou escreve.",
+            );
+          } else {
+            setError("Não consegui ouvir. Tenta outra vez ou escreve.");
+          }
+        };
+        recognition.onend = () => setListening(false);
+        recognitionRef.current = recognition;
+        setListening(true);
+        setError(null);
+        recognition.start();
+      } catch {
+        setNeedsTap(true);
+        setError("Toca no microfone para começar a falar.");
+      }
+    },
+    [submitUtterance],
+  );
 
   function onPhotoSelected(file: File | null) {
     if (!file) return;
@@ -124,8 +169,21 @@ export function InstantCapture() {
     });
   }
 
+  useEffect(() => {
+    if (!autoStart || autoTried.current) return;
+    autoTried.current = true;
+    if (initialMode === "voice") {
+      const t = window.setTimeout(() => startListening(true), 280);
+      return () => window.clearTimeout(t);
+    }
+    if (initialMode === "photo") {
+      const t = window.setTimeout(() => fileRef.current?.click(), 350);
+      return () => window.clearTimeout(t);
+    }
+  }, [autoStart, initialMode, startListening]);
+
   return (
-    <div className="captura stack-lg">
+    <div className={`captura stack-lg ${listening ? "is-listening-mode" : ""}`}>
       <div className="captura-modes" role="tablist" aria-label="Método de captura">
         {(
           [
@@ -140,7 +198,10 @@ export function InstantCapture() {
             role="tab"
             aria-selected={mode === id}
             className={`captura-mode ${mode === id ? "active" : ""}`}
-            onClick={() => setMode(id)}
+            onClick={() => {
+              setMode(id);
+              setNeedsTap(false);
+            }}
           >
             {label}
           </button>
@@ -148,23 +209,38 @@ export function InstantCapture() {
       </div>
 
       {mode === "voice" ? (
-        <section className="captura-panel">
+        <section className="captura-panel captura-voice-fast">
           <p className="muted" style={{ marginTop: 0 }}>
-            Um toque e fala. A Nina interpreta valor, categoria, data, hora e conta.
+            {autoStart
+              ? "Diz o gasto agora — a Nina regista sozinha."
+              : "Um toque e fala. Exemplos: «BP 20 euros», «Continente 58 euros»."}
           </p>
           <button
             type="button"
-            className={`captura-mic ${listening ? "is-listening" : ""}`}
+            className={`captura-mic ${listening ? "is-listening" : ""} ${needsTap ? "needs-tap" : ""}`}
             disabled={pending}
-            onClick={toggleListen}
+            onClick={() => startListening(false)}
             aria-pressed={listening}
           >
             <span className="captura-mic-pulse" aria-hidden />
-            {listening ? "A ouvir…" : pending ? "A registar…" : "Falar com a Nina"}
+            {listening
+              ? "A ouvir…"
+              : pending
+                ? "A registar…"
+                : needsTap
+                  ? "Toca para falar"
+                  : "Falar com a Nina"}
           </button>
+          {text ? <p className="captura-transcript">«{text}»</p> : null}
           <div className="nina-quick">
             {VOICE_EXAMPLES.map((ex) => (
-              <button key={ex} type="button" className="nina-chip" disabled={pending} onClick={() => submitUtterance(ex)}>
+              <button
+                key={ex}
+                type="button"
+                className="nina-chip"
+                disabled={pending}
+                onClick={() => submitUtterance(ex)}
+              >
                 {ex}
               </button>
             ))}
@@ -184,7 +260,7 @@ export function InstantCapture() {
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder='Ex: "Farmácia, 18 euros"'
+              placeholder='Ex: "BP 20 euros"'
               aria-label="Texto para registar"
               disabled={pending}
               autoFocus
@@ -256,18 +332,3 @@ export function InstantCapture() {
     </div>
   );
 }
-
-type SpeechRecognitionLike = {
-  lang: string;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-
-type SpeechRecognitionEventLike = {
-  results?: { [index: number]: { [index: number]: { transcript?: string } } };
-};

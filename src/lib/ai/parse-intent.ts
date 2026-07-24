@@ -62,6 +62,7 @@ function extractAmountEuros(raw: string): number | null {
 }
 
 const STORE_CATEGORY: { match: RegExp; store: string; category: string }[] = [
+  { match: /\bbp\b|posto\s*bp/, store: "BP", category: "combustivel" },
   { match: /continente/, store: "Continente", category: "supermercado" },
   { match: /pingo\s*doce/, store: "Pingo Doce", category: "supermercado" },
   { match: /lidl/, store: "Lidl", category: "supermercado" },

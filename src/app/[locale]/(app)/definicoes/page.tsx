@@ -3,6 +3,7 @@ import { auth, signOut } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { Panel } from "@/components/ui/FinanceUI";
 import { SettingsClient } from "@/components/finance/SettingsClient";
+import { InstallGuide } from "@/components/pwa/InstallGuide";
 import Link from "next/link";
 
 export default async function DefinicoesPage() {
@@ -19,11 +20,23 @@ export default async function DefinicoesPage() {
       </p>
 
       <div className="stack-lg">
+        <Panel title="Instalar a Nina (app)">
+          <InstallGuide />
+        </Panel>
+
         <Panel title="Atalhos">
           <div className="mais-links">
+            <Link href="/pt/captura?mode=voice&auto=1">
+              <strong>Falar com a Nina</strong>
+              <span className="muted small">Captura por voz imediata</span>
+            </Link>
+            <Link href="/pt/captura?mode=photo&auto=1">
+              <strong>Fotografar fatura</strong>
+              <span className="muted small">Câmara + OCR em segundos</span>
+            </Link>
             <Link href="/pt/captura">
               <strong>Captura Instantânea</strong>
-              <span className="muted small">Falar, escrever ou fotografar — em segundos</span>
+              <span className="muted small">Falar, escrever ou fotografar</span>
             </Link>
             <Link href="/pt/lista">
               <strong>Lista de compras</strong>
@@ -52,10 +65,6 @@ export default async function DefinicoesPage() {
             <Link href="/pt/recorrentes">
               <strong>Pagamentos certos</strong>
               <span className="muted small">Renda, luz, Netflix… a Nina lembra-te</span>
-            </Link>
-            <Link href="/pt/ocr">
-              <strong>Fotografar fatura</strong>
-              <span className="muted small">A Nina lê e organiza por ti</span>
             </Link>
             <Link href="/pt/importacoes">
               <strong>Importar automaticamente</strong>

@@ -3,21 +3,39 @@ import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { InstantCapture } from "@/components/nina/InstantCapture";
 
-export default async function CapturaPage() {
+type Mode = "voice" | "photo" | "write";
+
+export default async function CapturaPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ mode?: string; auto?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) redirect("/pt/login");
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
+  const sp = (await searchParams) || {};
+  const mode: Mode =
+    sp.mode === "photo" || sp.mode === "write" || sp.mode === "voice" ? sp.mode : "voice";
+  const autoStart = sp.auto === "1" || sp.auto === "true";
+
   return (
-    <div className="captura-page">
-      <p className="nina-kicker">Funcionalidade principal</p>
-      <h1 className="page-title">Captura Instantânea</h1>
+    <div className={`captura-page ${autoStart ? "captura-fast" : ""}`}>
+      <p className="nina-kicker">{autoStart ? "Captura rápida" : "Funcionalidade principal"}</p>
+      <h1 className="page-title">
+        {mode === "photo"
+          ? "Fotografar fatura"
+          : autoStart
+            ? "Falar com a Nina"
+            : "Captura Instantânea"}
+      </h1>
       <p className="page-sub">
-        Regista uma despesa ou receita em segundos — fala, escreve ou fotografa. Sem menus. Sem
-        formulários.
+        {autoStart && mode === "voice"
+          ? "Diz o valor e o sítio. A Nina categoriza, guarda e atualiza saldos, gráficos e orçamentos."
+          : "Regista uma despesa ou receita em segundos — fala, escreve ou fotografa. Sem menus. Sem formulários."}
       </p>
-      <InstantCapture />
+      <InstantCapture initialMode={mode} autoStart={autoStart} />
     </div>
   );
 }

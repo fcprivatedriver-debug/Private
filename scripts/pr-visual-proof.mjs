@@ -62,6 +62,8 @@ async function captureStills() {
   await login(page);
   await shot(page, "10-dashboard");
   await gotoShot(page, "/pt/captura", "10h-captura");
+  await gotoShot(page, "/pt/captura?mode=voice&auto=1", "10h2-captura-voz");
+  await gotoShot(page, "/pt/captura?mode=photo&auto=1", "10h3-captura-foto-auto");
   await page.getByRole("button", { name: /Supermercado, 35 euros/i }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   await shot(page, "10i-captura-registado");
@@ -102,6 +104,8 @@ async function captureStills() {
   await gotoShot(page, "/pt/familia", "32-mobile-familia");
   await gotoShot(page, "/pt/poupancas", "33-mobile-poupancas");
   await gotoShot(page, "/pt/objetivos", "34-mobile-objetivos");
+  await gotoShot(page, "/pt/captura?mode=voice&auto=1", "35-mobile-captura-voz");
+  await gotoShot(page, "/pt/definicoes", "36-mobile-install");
   await browser.close();
 }
 

@@ -30,9 +30,9 @@ const NAV = [
 
 const MOBILE = [
   { href: "/pt/dashboard", label: "Nina" },
-  { href: "/pt/despesas", label: "Gastos" },
-  { href: "/pt/captura", label: "Captura" },
-  { href: "/pt/ligacoes", label: "Ligações" },
+  { href: "/pt/lista", label: "Compras" },
+  { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura" },
+  { href: "/pt/objetivos", label: "Objetivos" },
   { href: "/pt/definicoes", label: "Mais" },
 ];
 
@@ -103,37 +103,38 @@ export function AppShell({
             <SpaceSwitcher space={space} />
           </div>
           <div className="topbar-actions">
-            <Link href="/pt/captura" className="btn btn-primary btn-sm">
-              Captura
+            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary btn-sm">
+              Falar
             </Link>
-            <Link href="/pt/despesas/nova" className="btn btn-ghost btn-sm">
-              + Gasto
+            <Link href="/pt/captura?mode=photo&auto=1" className="btn btn-ghost btn-sm">
+              Fatura
             </Link>
           </div>
         </header>
         <main className="app-content">{children}</main>
       </div>
       <Link
-        href="/pt/captura"
+        href="/pt/captura?mode=voice&auto=1"
         className="captura-fab"
-        aria-label="Captura Instantânea — falar ou fotografar"
+        aria-label="Falar com a Nina — captura por voz"
       >
         +
       </Link>
       <nav className="mobile-nav" aria-label="Mobile">
-        {MOBILE.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "mobile-nav-link",
-              item.href === "/pt/captura" && "is-captura",
-              pathname?.startsWith(item.href) && "active",
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
+        {MOBILE.map((item) => {
+          const match = "match" in item && item.match ? item.match : item.href;
+          const active = pathname?.startsWith(match);
+          const isCaptura = match.includes("captura");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn("mobile-nav-link", isCaptura && "is-captura", active && "active")}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );
