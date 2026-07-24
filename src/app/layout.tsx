@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
-import { DM_Sans, Space_Grotesk } from "next/font/google";
+import { Sora, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const display = Space_Grotesk({
+const display = Sora({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const body = DM_Sans({
+const body = Plus_Jakarta_Sans({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],

@@ -32,7 +32,8 @@ Demo emails keep the historical `@movio.app` domain so existing seeded data and 
 
 ## Branding
 
-Temporary typographic logo **ZRIK** (always uppercase). Compare variants A / B / C at `/pt/branding-preview`.
+Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
+Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
 
 | Variable | Example |
 |----------|---------|

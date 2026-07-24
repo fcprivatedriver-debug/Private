@@ -3,24 +3,37 @@ import clsx from "clsx";
 
 export type ZrikLogoVariant = "A" | "B" | "C";
 
-/** Default app logo until a final variant is chosen on /branding-preview. */
-export const DEFAULT_ZRIK_VARIANT: ZrikLogoVariant = "A";
+/**
+ * Default product logo: Option B — Z in petroleum blue,
+ * RIK in ink black (#111111).
+ */
+export const DEFAULT_ZRIK_VARIANT: ZrikLogoVariant = "B";
 
 /**
  * Typographic ZRIK wordmark — always uppercase.
- * A: all black · B: Z blue · C: Z+K blue
+ * A: all black · B: Z petrol · C: Z+K petrol
  */
 export function ZrikWordmark({
   variant = DEFAULT_ZRIK_VARIANT,
   className = "",
   as: Tag = "span",
+  tone = "default",
 }: {
   variant?: ZrikLogoVariant;
   className?: string;
   as?: "span" | "h1" | "div" | "p";
+  tone?: "default" | "on-dark";
 }) {
   return (
-    <Tag className={clsx("zrik-wordmark", `zrik-wordmark-${variant}`, className)} aria-label="ZRIK">
+    <Tag
+      className={clsx(
+        "zrik-wordmark",
+        `zrik-wordmark-${variant}`,
+        tone === "on-dark" && "zrik-wordmark-on-dark",
+        className,
+      )}
+      aria-label="ZRIK"
+    >
       {variant === "A" && <span className="zrik-ink">ZRIK</span>}
       {variant === "B" && (
         <>
@@ -43,15 +56,17 @@ export function BrandLogo({
   href = "/",
   size = "md",
   variant = DEFAULT_ZRIK_VARIANT,
+  tone = "default",
 }: {
   href?: "/" | string;
   size?: "sm" | "md" | "lg";
   variant?: ZrikLogoVariant;
+  tone?: "default" | "on-dark";
 }) {
-  const fontSize = size === "lg" ? "1.55rem" : size === "sm" ? "1.05rem" : "1.25rem";
+  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.2rem";
   return (
     <Link href={href as "/"} className="logo" style={{ fontSize }} aria-label="ZRIK">
-      <ZrikWordmark variant={variant} />
+      <ZrikWordmark variant={variant} tone={tone} />
     </Link>
   );
 }
