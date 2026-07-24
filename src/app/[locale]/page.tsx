@@ -35,30 +35,32 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <section className="hero hero-minimal">
+      <section className="hero hero-premium">
+        <div className="hero-premium-grid" aria-hidden />
         <div className="container hero-content">
+          <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
           <h1 className="hero-brand fade-up">
-            <ZrikWordmark as="span" variant="A" />
+            <ZrikWordmark as="span" variant="B" tone="on-dark" />
           </h1>
           <p className="hero-copy fade-up-delay">{t("copy")}</p>
           <div className="cta-row fade-up-delay">
-            <Link href={primary.href} className="btn btn-primary">
+            <Link href={primary.href} className="btn btn-primary btn-hero">
               {primary.label}
             </Link>
-            {role && (
-              <Link href={secondary.href} className="btn btn-secondary">
-                {secondary.label}
-              </Link>
-            )}
+            <Link href={secondary.href} className="btn btn-secondary btn-hero-ghost">
+              {secondary.label}
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="section">
+      <section className="section section-premium">
         <div className="container">
-          <h2>{t("stepsTitle")}</h2>
-          <p className="lead">{t("stepsLead")}</p>
-          <div className="steps">
+          <div className="section-premium-head">
+            <h2>{t("stepsTitle")}</h2>
+            <p className="lead">{t("stepsLead")}</p>
+          </div>
+          <div className="steps steps-premium">
             <div>
               <div className="step-num">01</div>
               <h3>{t("step1Title")}</h3>

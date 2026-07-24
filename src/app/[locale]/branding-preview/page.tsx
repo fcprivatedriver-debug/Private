@@ -1,9 +1,17 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { ZrikWordmark, type ZrikLogoVariant } from "@/components/layout/BrandLogo";
+import {
+  DEFAULT_ZRIK_VARIANT,
+  ZrikWordmark,
+  type ZrikLogoVariant,
+} from "@/components/layout/BrandLogo";
 
 type Props = { params: Promise<{ locale: string }> };
 
-const VARIANTS: { id: ZrikLogoVariant; titleKey: "optionA" | "optionB" | "optionC"; descKey: "optionADesc" | "optionBDesc" | "optionCDesc" }[] = [
+const VARIANTS: {
+  id: ZrikLogoVariant;
+  titleKey: "optionA" | "optionB" | "optionC";
+  descKey: "optionADesc" | "optionBDesc" | "optionCDesc";
+}[] = [
   { id: "A", titleKey: "optionA", descKey: "optionADesc" },
   { id: "B", titleKey: "optionB", descKey: "optionBDesc" },
   { id: "C", titleKey: "optionC", descKey: "optionCDesc" },
@@ -26,22 +34,37 @@ export default async function BrandingPreviewPage({ params }: Props) {
         </header>
 
         <div className="branding-grid">
-          {VARIANTS.map((v) => (
-            <article key={v.id} className="branding-card">
-              <h2 className="branding-card-title">{t(v.titleKey)}</h2>
-              <p className="muted branding-card-desc">{t(v.descKey)}</p>
+          {VARIANTS.map((v) => {
+            const isDefault = v.id === DEFAULT_ZRIK_VARIANT;
+            return (
+              <article
+                key={v.id}
+                className={isDefault ? "branding-card is-default" : "branding-card"}
+              >
+                <h2 className="branding-card-title">
+                  {t(v.titleKey)}
+                  {isDefault ? (
+                    <span className="branding-default-badge">{t("defaultBadge")}</span>
+                  ) : null}
+                </h2>
+                <p className="muted branding-card-desc">{t(v.descKey)}</p>
 
-              <div className="branding-swatch branding-swatch-light">
-                <span className="branding-swatch-label">{t("onLight")}</span>
-                <ZrikWordmark variant={v.id} className="branding-logo-lg" />
-              </div>
+                <div className="branding-swatch branding-swatch-light">
+                  <span className="branding-swatch-label">{t("onLight")}</span>
+                  <ZrikWordmark variant={v.id} className="branding-logo-lg" />
+                </div>
 
-              <div className="branding-swatch branding-swatch-dark">
-                <span className="branding-swatch-label">{t("onDark")}</span>
-                <ZrikWordmark variant={v.id} className="branding-logo-lg branding-logo-on-dark" />
-              </div>
-            </article>
-          ))}
+                <div className="branding-swatch branding-swatch-dark">
+                  <span className="branding-swatch-label">{t("onDark")}</span>
+                  <ZrikWordmark
+                    variant={v.id}
+                    tone="on-dark"
+                    className="branding-logo-lg branding-logo-on-dark"
+                  />
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

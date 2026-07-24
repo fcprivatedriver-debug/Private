@@ -23,7 +23,7 @@
     "branding": "Branding"
   },
   "home": {
-    "eyebrow": "Private chauffeur",
+    "eyebrow": "Private mobility · Premium",
     "headline": "ZRIK",
     "copy": "Choose the best driver. Choose the best price.",
     "ctaRequest": "Get offers",
@@ -31,8 +31,8 @@
     "ctaMyTrips": "View my trips",
     "ctaDashboard": "Open my dashboard",
     "ctaAdmin": "Open admin",
-    "stepsTitle": "Three steps. One experience.",
-    "stepsLead": "ZRIK is a discreet marketplace: define the trip, receive offers, choose with confidence.",
+    "stepsTitle": "Precision in three steps.",
+    "stepsLead": "ZRIK is an exclusive marketplace: define the trip, receive offers, choose with full control.",
     "step1Title": "Request the trip",
     "step1Body": "Origin, destination, and what matters along the way.",
     "step2Title": "Receive offers",
@@ -84,16 +84,17 @@
   },
   "branding": {
     "title": "Branding Preview",
-    "lead": "Compare the three typographic ZRIK logo variants and pick the one that best signals premium.",
+    "lead": "Compare the three typographic ZRIK logo variants. The premium identity uses deep black and electric blue.",
     "optionA": "Option A — ZRIK in black",
-    "optionADesc": "Full wordmark in #111111. Maximum simplicity.",
+    "optionADesc": "Full wordmark in #0A0A0B. Maximum simplicity.",
     "optionB": "Option B — Z in blue",
-    "optionBDesc": "Z in #1E5EFF · RIK in #111111.",
+    "optionBDesc": "Z in #1E5EFF · RIK in #0A0A0B. Technology + trust.",
     "optionC": "Option C — Z and K in blue",
-    "optionCDesc": "Z and K in #1E5EFF · RI in #111111.",
+    "optionCDesc": "Z and K in #1E5EFF · RI in #0A0A0B.",
     "onLight": "Light background",
     "onDark": "Dark background",
-    "note": "Temporary typographic logo. No 3D, no shadows, no gradients."
+    "defaultBadge": "Product",
+    "note": "Option B is the product default. Sora typography · no 3D icon."
   },
   "tripForm": {
     "title": "Where shall we take you?",

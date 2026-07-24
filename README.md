@@ -32,7 +32,8 @@ Demo emails keep the historical `@movio.app` domain so existing seeded data and 
 
 ## Branding
 
-Temporary typographic logo **ZRIK** (always uppercase). Compare variants A / B / C at `/pt/branding-preview`.
+Premium identity: deep black `#0A0A0B` + electric blue `#1E5EFF`, Sora + Plus Jakarta Sans.
+Default wordmark **Option B** (Z blue · RIK black). Compare A / B / C at `/pt/branding-preview`.
 
 | Variable | Example |
 |----------|---------|

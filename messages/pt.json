@@ -23,7 +23,7 @@
     "branding": "Branding"
   },
   "home": {
-    "eyebrow": "Chauffeur privado",
+    "eyebrow": "Mobilidade privada · Premium",
     "headline": "ZRIK",
     "copy": "Escolhe o melhor motorista. Escolhe o melhor preço.",
     "ctaRequest": "Receber propostas",
@@ -31,8 +31,8 @@
     "ctaMyTrips": "Ver as minhas viagens",
     "ctaDashboard": "Abrir o meu painel",
     "ctaAdmin": "Abrir admin",
-    "stepsTitle": "Três passos. Uma experiência.",
-    "stepsLead": "ZRIK é um marketplace discreto: define a viagem, recebe propostas e escolhe com confiança.",
+    "stepsTitle": "Precisão em três passos.",
+    "stepsLead": "ZRIK é um marketplace exclusivo: define a viagem, recebe propostas e escolhe com controlo total.",
     "step1Title": "Peça a viagem",
     "step1Body": "Origem, destino e o que importa no caminho.",
     "step2Title": "Receba propostas",
@@ -84,16 +84,17 @@
   },
   "branding": {
     "title": "Branding Preview",
-    "lead": "Compare as três variantes tipográficas do logótipo ZRIK e escolha a que transmite melhor uma imagem premium.",
+    "lead": "Compare as três variantes tipográficas do logótipo ZRIK. A identidade premium usa preto profundo e azul elétrico.",
     "optionA": "Opção A — ZRIK a preto",
-    "optionADesc": "Toda a palavra em #111111. Máxima simplicidade.",
+    "optionADesc": "Toda a palavra em #0A0A0B. Máxima simplicidade.",
     "optionB": "Opção B — Z em azul",
-    "optionBDesc": "Z em #1E5EFF · RIK em #111111.",
+    "optionBDesc": "Z em #1E5EFF · RIK em #0A0A0B. Tecnologia + confiança.",
     "optionC": "Opção C — Z e K em azul",
-    "optionCDesc": "Z e K em #1E5EFF · RI em #111111.",
+    "optionCDesc": "Z e K em #1E5EFF · RI em #0A0A0B.",
     "onLight": "Fundo claro",
     "onDark": "Fundo escuro",
-    "note": "Logótipo temporário tipográfico. Sem 3D, sem sombras, sem gradientes."
+    "defaultBadge": "Produto",
+    "note": "Opção B é o logótipo padrão do produto. Tipografia Sora · sem ícone 3D."
   },
   "tripForm": {
     "title": "Para onde vamos?",
