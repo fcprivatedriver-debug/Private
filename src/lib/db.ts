@@ -21,8 +21,6 @@ function sanitizeDatabaseUrl(url: string): string {
     const forceSchema = resolveNinaSchema();
     if (forceSchema) {
       u.searchParams.set("schema", forceSchema);
-      // Neon serverless / raw SQL: also set search_path via libpq options
-      u.searchParams.set("options", `-csearch_path=${forceSchema}`);
     }
     return u.toString();
   } catch {
