@@ -16,3 +16,9 @@ A Nina passa a comportar-se como assistente financeira pessoal: empática, human
 ## Demo
 
 `familia@nina.app` / `nina123`
+
+## Prova visual
+
+- Screenshots: `docs/pr-proof/pr-16/`
+- Fluxo (GIF/WebM): `docs/pr-proof/pr-16/flow-phone.gif`
+- Artefactos Cursor: `/opt/cursor/artifacts/screenshots/pr-16/` e `/opt/cursor/artifacts/pr-16-flow.gif`
