@@ -1,5 +1,5 @@
 /* Nina service worker — cache inteligente + atualização automática */
-const CACHE_VERSION = "nina-v1";
+const CACHE_VERSION = "nina-v1-1";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_URL = "/offline.html";
