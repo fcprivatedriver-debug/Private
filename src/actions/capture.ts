@@ -12,6 +12,11 @@ import { storeFamilyFile } from "@/lib/storage";
 import { formatEUR } from "@/lib/money";
 import { canEditFinances } from "@/domain/household";
 import { inferHumorKind, lightHumor, pickWarmAck } from "@/lib/ai/personality";
+import {
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_INCOME_CATEGORIES,
+} from "@/domain/categories";
+import { slugify } from "@/lib/utils";
 import type { FinanceScope, PaymentMethod } from "@prisma/client";
 
 function revalidateAll() {
@@ -23,12 +28,46 @@ async function resolveCategoryId(
   slugHint: string | undefined,
   kind: "EXPENSE" | "INCOME",
 ) {
-  const categories = await prisma.category.findMany({ where: { familyId, kind } });
-  if (slugHint) {
-    const hit = categories.find((c) => c.slug === slugHint || c.name.toLowerCase().includes(slugHint));
-    if (hit) return hit;
-  }
-  return categories.find((c) => c.slug.includes("outros")) || categories[0];
+  const presets = kind === "INCOME" ? DEFAULT_INCOME_CATEGORIES : DEFAULT_EXPENSE_CATEGORIES;
+  const hint = (slugHint || "").toLowerCase();
+  const preset =
+    presets.find(
+      (c) =>
+        c.slug === hint ||
+        c.name.toLowerCase() === hint ||
+        (hint && c.name.toLowerCase().includes(hint)) ||
+        (hint && c.slug.includes(hint)),
+    ) ||
+    presets.find((c) => c.slug.includes("outro")) ||
+    presets[presets.length - 1];
+
+  const slug = preset?.slug || slugify(hint || "outros") || "outros";
+  const name = preset?.name || (hint ? hint : "Outros");
+
+  const existing = await prisma.category.findFirst({
+    where: {
+      familyId,
+      kind,
+      OR: [
+        { slug },
+        ...(hint ? [{ slug: { contains: hint } }, { name: { contains: hint, mode: "insensitive" as const } }] : []),
+      ],
+    },
+  });
+  if (existing) return existing;
+
+  return prisma.category.create({
+    data: {
+      familyId,
+      name,
+      slug,
+      icon: preset?.icon || "tag",
+      color: preset?.color || (kind === "INCOME" ? "#0f7a4a" : "#1e3a5f"),
+      kind,
+      isSystem: Boolean(preset),
+      sortOrder: 0,
+    },
+  });
 }
 
 async function spaceFallbackScope(): Promise<FinanceScope> {

@@ -398,7 +398,15 @@ async function main() {
     },
   });
 
-  // Lista de compras preenchida
+  // Lista de compras preenchida (apenas modo Demo)
+  const demoList = await prisma.shoppingList.create({
+    data: {
+      familyId: family.id,
+      createdById: filipe.id,
+      name: "Lista de compras",
+      isShared: true,
+    },
+  });
   const shopping = [
     ["Leite meio-gordo", "2L", "supermercado"],
     ["Pão de forma", "1", "supermercado"],
@@ -414,6 +422,7 @@ async function main() {
     await prisma.shoppingListItem.create({
       data: {
         familyId: family.id,
+        listId: demoList.id,
         createdById: i % 2 === 0 ? filipe.id : ana.id,
         name,
         quantity,

@@ -14,17 +14,19 @@ import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 const NAV = [
   { href: "/pt/captura", label: "Captura" },
   { href: "/pt/dashboard", label: "Conversar" },
-  { href: "/pt/despesas", label: "Gastos" },
+  { href: "/pt/receitas", label: "Receitas" },
+  { href: "/pt/despesas", label: "Despesas" },
   { href: "/pt/lista", label: "Compras" },
-  { href: "/pt/receitas", label: "Entradas" },
   { href: "/pt/poupancas", label: "Poupanças" },
   { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/guia", label: "Guia" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/familia", label: "Conta" },
   { href: "/pt/ligacoes", label: "Ligações" },
   { href: "/pt/memoria", label: "Memória" },
   { href: "/pt/perfil", label: "Perfil" },
+  { href: "/pt/privacidade-dados", label: "Privacidade" },
   { href: "/pt/alertas", label: "Avisos" },
   { href: "/pt/definicoes", label: "Mais" },
 ];
@@ -33,7 +35,7 @@ const MOBILE = [
   { href: "/pt/dashboard", label: "Nina" },
   { href: "/pt/lista", label: "Compras" },
   { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura" },
-  { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/guia", label: "Guia" },
   { href: "/pt/definicoes", label: "Mais" },
 ];
 

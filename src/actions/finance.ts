@@ -36,6 +36,42 @@ async function scopeFromSpace() {
   return space === "family" ? ("FAMILY" as const) : ("PERSONAL" as const);
 }
 
+/** Cria categoria só quando o utilizador a usa pela primeira vez. */
+async function ensureCategory(
+  familyId: string,
+  kind: "INCOME" | "EXPENSE",
+  ref: string,
+): Promise<string | null> {
+  const raw = ref.trim();
+  if (!raw) return null;
+
+  const byId = await prisma.category.findFirst({ where: { id: raw, familyId, kind } });
+  if (byId) return byId.id;
+
+  const presets = kind === "INCOME" ? DEFAULT_INCOME_CATEGORIES : DEFAULT_EXPENSE_CATEGORIES;
+  const preset =
+    presets.find((c) => c.slug === raw || c.name.toLowerCase() === raw.toLowerCase()) || null;
+  const slug = preset?.slug || slugify(raw);
+  const name = preset?.name || raw;
+
+  const existing = await prisma.category.findFirst({ where: { familyId, slug } });
+  if (existing) return existing.id;
+
+  const created = await prisma.category.create({
+    data: {
+      familyId,
+      name,
+      slug,
+      icon: preset?.icon || "tag",
+      color: preset?.color || (kind === "INCOME" ? "#0f7a4a" : "#1e3a5f"),
+      kind,
+      isSystem: Boolean(preset),
+      sortOrder: 0,
+    },
+  });
+  return created.id;
+}
+
 export async function registerFamily(formData: FormData) {
   const parsed = registerSchema.safeParse({
     name: formData.get("name"),
@@ -74,6 +110,8 @@ export async function registerFamily(formData: FormData) {
     },
   });
 
+  // Conta estrutural vazia — SEM categorias, SEM movimentos, SEM objetivos.
+  // Tudo o resto é criado só quando o utilizador introduz dados.
   await prisma.financeAccount.create({
     data: {
       familyId: family.id,
@@ -82,47 +120,29 @@ export async function registerFamily(formData: FormData) {
     },
   });
 
-  for (let i = 0; i < DEFAULT_EXPENSE_CATEGORIES.length; i++) {
-    const c = DEFAULT_EXPENSE_CATEGORIES[i];
-    await prisma.category.create({
-      data: {
-        familyId: family.id,
-        name: c.name,
-        slug: c.slug,
-        icon: c.icon,
-        color: c.color,
-        kind: "EXPENSE",
-        isSystem: true,
-        sortOrder: i,
-      },
-    });
-  }
-  for (let i = 0; i < DEFAULT_INCOME_CATEGORIES.length; i++) {
-    const c = DEFAULT_INCOME_CATEGORIES[i];
-    await prisma.category.create({
-      data: {
-        familyId: family.id,
-        name: c.name,
-        slug: c.slug,
-        icon: c.icon,
-        color: c.color,
-        kind: "INCOME",
-        isSystem: true,
-        sortOrder: i,
-      },
-    });
-  }
+  await prisma.shoppingList.create({
+    data: {
+      familyId: family.id,
+      createdById: user.id,
+      name: "Lista de compras",
+      isShared: true,
+    },
+  });
 
   return { ok: true as const };
 }
 
 export async function createIncome(formData: FormData) {
   const { session, family, membership } = await requireFamilyContext();
+  const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
+  const categoryId = await ensureCategory(family.id, "INCOME", categoryRef);
+  if (!categoryId) return { ok: false as const, error: "Escolhe o tipo de receita" };
+
   const parsed = incomeSchema.safeParse({
     amount: formData.get("amount"),
     date: formData.get("date"),
     description: formData.get("description"),
-    categoryId: formData.get("categoryId"),
+    categoryId,
     accountId: formData.get("accountId") || null,
     notes: formData.get("notes") || null,
     memberId: formData.get("memberId") || membership.id,
@@ -135,7 +155,7 @@ export async function createIncome(formData: FormData) {
   await prisma.income.create({
     data: {
       familyId: family.id,
-      categoryId: parsed.data.categoryId,
+      categoryId,
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
       createdById: session.user.id,
@@ -152,12 +172,16 @@ export async function createIncome(formData: FormData) {
 
 export async function createExpense(formData: FormData) {
   const { session, family, membership } = await requireFamilyContext();
+  const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
+  const categoryId = await ensureCategory(family.id, "EXPENSE", categoryRef);
+  if (!categoryId) return { ok: false as const, error: "Escolhe uma categoria" };
+
   const parsed = expenseSchema.safeParse({
     amount: formData.get("amount"),
     date: formData.get("date"),
     time: formData.get("time") || null,
     description: formData.get("description"),
-    categoryId: formData.get("categoryId"),
+    categoryId,
     subcategoryId: formData.get("subcategoryId") || null,
     storeName: formData.get("storeName") || null,
     paymentMethod: formData.get("paymentMethod") || "DEBIT_CARD",
@@ -192,7 +216,7 @@ export async function createExpense(formData: FormData) {
   await prisma.expense.create({
     data: {
       familyId: family.id,
-      categoryId: parsed.data.categoryId,
+      categoryId,
       subcategoryId: parsed.data.subcategoryId || null,
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
@@ -210,6 +234,128 @@ export async function createExpense(formData: FormData) {
       receiptPdfUrl: parsed.data.receiptPdfUrl || null,
     },
   });
+  revalidateApp();
+  return { ok: true as const };
+}
+
+export async function updateIncome(formData: FormData) {
+  const { family, membership } = await requireFamilyContext();
+  const id = String(formData.get("id") || "");
+  if (!id) return { ok: false as const, error: "Receita em falta" };
+  const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
+  const categoryId = await ensureCategory(family.id, "INCOME", categoryRef);
+  if (!categoryId) return { ok: false as const, error: "Escolhe o tipo de receita" };
+
+  const parsed = incomeSchema.safeParse({
+    amount: formData.get("amount"),
+    date: formData.get("date"),
+    description: formData.get("description"),
+    categoryId,
+    accountId: formData.get("accountId") || null,
+    notes: formData.get("notes") || null,
+    memberId: formData.get("memberId") || membership.id,
+  });
+  if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
+  const amountCents = parseEURInput(parsed.data.amount);
+  if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
+
+  const existing = await prisma.income.findFirst({ where: { id, familyId: family.id } });
+  if (!existing) return { ok: false as const, error: "Receita não encontrada" };
+
+  await prisma.income.update({
+    where: { id },
+    data: {
+      categoryId,
+      accountId: parsed.data.accountId || null,
+      memberId: parsed.data.memberId || membership.id,
+      amountCents,
+      date: new Date(parsed.data.date),
+      description: parsed.data.description,
+      notes: parsed.data.notes || null,
+    },
+  });
+  revalidateApp();
+  return { ok: true as const };
+}
+
+export async function deleteIncome(id: string) {
+  const { family } = await requireFamilyContext();
+  await prisma.income.deleteMany({ where: { id, familyId: family.id } });
+  revalidateApp();
+  return { ok: true as const };
+}
+
+export async function updateExpense(formData: FormData) {
+  const { family, membership } = await requireFamilyContext();
+  const id = String(formData.get("id") || "");
+  if (!id) return { ok: false as const, error: "Despesa em falta" };
+  const parsed = expenseSchema.safeParse({
+    amount: formData.get("amount"),
+    date: formData.get("date"),
+    time: formData.get("time") || null,
+    description: formData.get("description"),
+    categoryId: formData.get("categoryId"),
+    subcategoryId: formData.get("subcategoryId") || null,
+    storeName: formData.get("storeName") || null,
+    paymentMethod: formData.get("paymentMethod") || "DEBIT_CARD",
+    accountId: formData.get("accountId") || null,
+    notes: formData.get("notes") || null,
+    memberId: formData.get("memberId") || membership.id,
+    receiptImageUrl: formData.get("receiptImageUrl") || null,
+    receiptPdfUrl: formData.get("receiptPdfUrl") || null,
+  });
+  if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
+  const amountCents = parseEURInput(parsed.data.amount);
+  if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
+
+  const existing = await prisma.expense.findFirst({ where: { id, familyId: family.id } });
+  if (!existing) return { ok: false as const, error: "Despesa não encontrada" };
+
+  let storeId: string | null = existing.storeId;
+  if (parsed.data.storeName) {
+    const normalized = parsed.data.storeName.trim().toLowerCase();
+    const store = await prisma.store.upsert({
+      where: {
+        familyId_normalizedName: { familyId: family.id, normalizedName: normalized },
+      },
+      create: {
+        familyId: family.id,
+        name: parsed.data.storeName.trim(),
+        normalizedName: normalized,
+      },
+      update: {},
+    });
+    storeId = store.id;
+  } else {
+    storeId = null;
+  }
+
+  await prisma.expense.update({
+    where: { id },
+    data: {
+      categoryId: parsed.data.categoryId,
+      subcategoryId: parsed.data.subcategoryId || null,
+      accountId: parsed.data.accountId || null,
+      memberId: parsed.data.memberId || membership.id,
+      storeId,
+      amountCents,
+      date: new Date(parsed.data.date),
+      time: parsed.data.time || null,
+      description: parsed.data.description,
+      storeName: parsed.data.storeName || null,
+      paymentMethod: parsed.data.paymentMethod as PaymentMethod,
+      notes: parsed.data.notes || null,
+      receiptImageUrl: parsed.data.receiptImageUrl || null,
+      receiptPdfUrl: parsed.data.receiptPdfUrl || null,
+    },
+  });
+  revalidateApp();
+  return { ok: true as const };
+}
+
+export async function deleteExpense(id: string) {
+  const { family } = await requireFamilyContext();
+  await prisma.expense.deleteMany({ where: { id, familyId: family.id } });
   revalidateApp();
   return { ok: true as const };
 }

@@ -1,12 +1,16 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   addShoppingItem,
   clearCheckedShoppingItems,
+  createShoppingList,
+  deleteShoppingList,
   removeShoppingItem,
+  renameShoppingList,
   toggleShoppingItem,
+  updateShoppingItem,
 } from "@/actions/shopping";
 
 type Item = {
@@ -17,19 +21,120 @@ type Item = {
   isChecked: boolean;
 };
 
-export function ShoppingListClient({ items }: { items: Item[] }) {
+type List = {
+  id: string;
+  name: string;
+  isShared: boolean;
+  items: Item[];
+};
+
+export function ShoppingListClient({
+  lists,
+  activeListId,
+}: {
+  lists: List[];
+  activeListId: string;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const active = lists.find((l) => l.id === activeListId) || lists[0];
+  const items = active?.items ?? [];
   const open = items.filter((i) => !i.isChecked);
   const done = items.filter((i) => i.isChecked);
 
+  if (!active) {
+    return <p className="muted">Sem listas ainda.</p>;
+  }
+
   return (
     <div className="stack-lg">
+      <div className="list-tabs">
+        {lists.map((l) => (
+          <a
+            key={l.id}
+            href={`/pt/lista?list=${l.id}`}
+            className={`list-tab ${l.id === active.id ? "active" : ""}`}
+          >
+            {l.name}
+          </a>
+        ))}
+      </div>
+
       <form
         className="form-grid form-grid-compact"
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
+          start(async () => {
+            await createShoppingList(fd);
+            (e.target as HTMLFormElement).reset();
+            router.refresh();
+          });
+        }}
+      >
+        <label className="field">
+          <span>Nova lista</span>
+          <input name="name" placeholder="Ex: Fim de semana" required />
+        </label>
+        <button className="btn btn-ghost" type="submit" disabled={pending}>
+          Criar lista
+        </button>
+      </form>
+
+      <form
+        className="form-grid form-grid-compact"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          fd.set("listId", active.id);
+          start(async () => {
+            await renameShoppingList(fd);
+            router.refresh();
+          });
+        }}
+      >
+        <label className="field">
+          <span>Nome da lista</span>
+          <input name="name" defaultValue={active.name} required />
+        </label>
+        <input type="hidden" name="listId" value={active.id} />
+        <div className="btn-row">
+          <button className="btn btn-ghost btn-sm" type="submit" disabled={pending}>
+            Guardar nome
+          </button>
+          {lists.length > 1 ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm text-expense"
+              disabled={pending}
+              onClick={() => {
+                if (!confirm("Eliminar esta lista e os seus artigos?")) return;
+                start(async () => {
+                  await deleteShoppingList(active.id);
+                  router.push("/pt/lista");
+                  router.refresh();
+                });
+              }}
+            >
+              Eliminar lista
+            </button>
+          ) : null}
+        </div>
+      </form>
+
+      <p className="muted small">
+        {active.isShared
+          ? "Partilhada na Conta Familiar — todos os membros veem e atualizam."
+          : "Lista pessoal."}
+      </p>
+
+      <form
+        className="form-grid form-grid-compact"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          fd.set("listId", active.id);
           start(async () => {
             await addShoppingItem(fd);
             (e.target as HTMLFormElement).reset();
@@ -54,43 +159,76 @@ export function ShoppingListClient({ items }: { items: Item[] }) {
         {open.map((item) => (
           <div key={item.id} className="list-row">
             <div className="list-row-main">
-              <label style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
-                <input
-                  type="checkbox"
-                  checked={false}
-                  disabled={pending}
-                  onChange={() => {
+              {editingId === item.id ? (
+                <form
+                  className="inline-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    fd.set("id", item.id);
                     start(async () => {
-                      await toggleShoppingItem(item.id);
+                      await updateShoppingItem(fd);
+                      setEditingId(null);
                       router.refresh();
                     });
                   }}
-                />
-                <span>
-                  <strong>{item.name}</strong>
-                  <span className="muted small" style={{ display: "block" }}>
-                    {item.quantity}
-                    {item.categorySlug ? ` · ${item.categorySlug}` : ""}
+                >
+                  <input name="name" defaultValue={item.name} required />
+                  <input name="quantity" defaultValue={item.quantity} style={{ width: "4rem" }} />
+                  <button className="btn btn-sm btn-primary" type="submit">
+                    Ok
+                  </button>
+                </form>
+              ) : (
+                <label style={{ display: "flex", gap: "0.6rem", alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    disabled={pending}
+                    onChange={() => {
+                      start(async () => {
+                        await toggleShoppingItem(item.id);
+                        router.refresh();
+                      });
+                    }}
+                  />
+                  <span>
+                    <strong>{item.name}</strong>
+                    <span className="muted small" style={{ display: "block" }}>
+                      {item.quantity}
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+              )}
             </div>
-            <button
-              type="button"
-              className="btn btn-ghost btn-sm"
-              disabled={pending}
-              onClick={() => {
-                start(async () => {
-                  await removeShoppingItem(item.id);
-                  router.refresh();
-                });
-              }}
-            >
-              Remover
-            </button>
+            <div className="row-actions">
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={pending}
+                onClick={() => setEditingId(item.id)}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={pending}
+                onClick={() => {
+                  start(async () => {
+                    await removeShoppingItem(item.id);
+                    router.refresh();
+                  });
+                }}
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
         ))}
-        {open.length === 0 ? <p className="muted">Lista vazia — adiciona o que falta em casa.</p> : null}
+        {open.length === 0 ? (
+          <p className="muted">Lista vazia — adiciona o que falta em casa.</p>
+        ) : null}
       </div>
 
       {done.length ? (
@@ -103,7 +241,7 @@ export function ShoppingListClient({ items }: { items: Item[] }) {
               disabled={pending}
               onClick={() => {
                 start(async () => {
-                  await clearCheckedShoppingItems();
+                  await clearCheckedShoppingItems(active.id);
                   router.refresh();
                 });
               }}

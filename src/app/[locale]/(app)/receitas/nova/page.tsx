@@ -18,9 +18,11 @@ export default async function NovaReceitaPage() {
   ]);
 
   return (
-    <div>
-      <h1 className="page-title">Nova entrada</h1>
-      <p className="page-sub">Salário, TVDE, empresa, extra, investimentos, reembolsos…</p>
+    <div className="page-stack">
+      <h1 className="page-title">Adicionar receita</h1>
+      <p className="page-sub">
+        Salário, subsídio, donativo, reembolso, venda, renda ou outro — tu decides.
+      </p>
       <Panel title="Detalhes">
         <IncomeForm categories={categories} accounts={accounts} members={members} />
       </Panel>

@@ -816,7 +816,16 @@ html.dark .btn-primary { background: #3d6aa3; }
 .empty-state { padding: 1.5rem 0.5rem; text-align: center; }
 .empty-title { font-weight: 600; margin: 0 0 0.25rem; }
 
-.stack-lg { display: grid; gap: 1rem; }
+.stack-lg { display: grid; gap: 1.25rem; }
+.nina-home-intro { margin-bottom: 0.25rem; }
+.nina-glance { gap: 0.85rem; }
+.panel { margin: 0; }
+.empty-state { padding: 1.75rem 0.75rem; text-align: center; }
+.empty-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  margin: 0 0 0.35rem;
+}
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1061,14 +1070,14 @@ html.dark .nina-bubble.user .nina-bubble-body {
 
 /* ——— Espaços Nina + convite + memória ——— */
 .sidebar-space {
-  padding: 0 0.85rem 0.75rem;
+  padding: 0 0.85rem 1rem;
 }
 .space-switcher {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
-  padding: 0.2rem;
-  border-radius: 12px;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border-radius: 16px;
   background: var(--bg-soft);
   border: 1px solid var(--line);
 }
@@ -1076,29 +1085,106 @@ html.dark .nina-bubble.user .nina-bubble-body {
   border: none;
   background: transparent;
   color: var(--fg-muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.45rem 0.35rem;
-  border-radius: 9px;
+  padding: 0.7rem 0.55rem;
+  border-radius: 12px;
   cursor: pointer;
-  line-height: 1.2;
+  line-height: 1.25;
+  min-height: 44px;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.space-switch-btn:disabled {
+  opacity: 0.6;
 }
 .space-switch-btn.active {
   background: var(--bg-elevated);
   color: var(--navy-deep);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
+.space-switch-short { display: none; }
+.space-switch-full { display: inline; }
 .topbar-space-mobile { display: none; }
 @media (max-width: 980px) {
   .topbar-space-mobile {
     display: block;
-    flex: 1;
+    flex: 1 1 100%;
+    order: 3;
     min-width: 0;
+    margin-top: 0.25rem;
   }
-  .topbar-space-mobile .space-switch-btn { font-size: 0.65rem; }
-  .app-topbar { gap: 0.5rem; flex-wrap: wrap; }
+  .topbar-brand-mobile { flex: 1; }
+  .topbar-actions {
+    flex-shrink: 0;
+    gap: 0.4rem;
+  }
+  .app-topbar {
+    height: auto;
+    min-height: var(--header-h);
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    align-items: center;
+  }
+  .space-switch-short { display: inline; }
+  .space-switch-full { display: none; }
+  .topbar-space-mobile .space-switch-btn {
+    font-size: 0.85rem;
+    padding: 0.75rem 0.5rem;
+  }
 }
 
+.page-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.btn-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.row-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.list-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.list-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--fg-muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 40px;
+}
+.list-tab.active {
+  background: var(--navy-deep);
+  border-color: var(--navy-deep);
+  color: #fff;
+}
 .nina-scope-actions {
   display: flex;
   gap: 0.5rem;
@@ -1401,15 +1487,15 @@ html.dark .nina-bubble.user .nina-bubble-body {
     display: grid;
     place-items: center;
     position: fixed;
-    right: 1rem;
-    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
-    z-index: 40;
-    width: 56px;
-    height: 56px;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    z-index: 35;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: #1e3a5f;
     color: #fff;
-    font-size: 1.75rem;
+    font-size: 1.6rem;
     font-weight: 500;
     line-height: 1;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.28);
@@ -1417,6 +1503,9 @@ html.dark .nina-bubble.user .nina-bubble-body {
   }
   .mobile-nav-link.is-captura {
     font-weight: 700;
+  }
+  .app-content {
+    padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

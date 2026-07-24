@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   createIncome,
   createExpense,
+  updateIncome,
+  updateExpense,
   createBudget,
   createGoal,
   createRecurring,
@@ -12,9 +14,9 @@ import {
   contributeToGoal,
   addFamilyMember,
 } from "@/actions/finance";
-import { PAYMENT_METHOD_LABELS } from "@/domain/categories";
+import { PAYMENT_METHOD_LABELS, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from "@/domain/categories";
 
-type Cat = { id: string; name: string; kind: string };
+type Cat = { id: string; name: string; kind: string; slug?: string };
 type Acc = { id: string; name: string };
 type Mem = { id: string; displayName: string };
 
@@ -33,18 +35,47 @@ function Field({
   );
 }
 
+function incomeOptions(categories: Cat[]) {
+  const fromDb = categories.filter((c) => c.kind === "INCOME");
+  if (fromDb.length > 0) {
+    return fromDb.map((c) => ({ value: c.id, label: c.name }));
+  }
+  return DEFAULT_INCOME_CATEGORIES.map((c) => ({ value: c.slug, label: c.name }));
+}
+
+function expenseOptions(categories: Cat[]) {
+  const fromDb = categories.filter((c) => c.kind === "EXPENSE");
+  if (fromDb.length > 0) {
+    return fromDb.map((c) => ({ value: c.id, label: c.name }));
+  }
+  return DEFAULT_EXPENSE_CATEGORIES.map((c) => ({ value: c.slug, label: c.name }));
+}
+
 export function IncomeForm({
   categories,
   accounts,
   members,
+  initial,
 }: {
   categories: Cat[];
   accounts: Acc[];
   members: Mem[];
+  initial?: {
+    id: string;
+    amountCents: number;
+    date: string;
+    description: string;
+    categoryId: string;
+    accountId: string | null;
+    memberId: string | null;
+    notes: string | null;
+  };
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const options = incomeOptions(categories);
+  const editing = Boolean(initial?.id);
 
   return (
     <form
@@ -53,49 +84,74 @@ export function IncomeForm({
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         start(async () => {
-          const res = await createIncome(fd);
+          const res = editing ? await updateIncome(fd) : await createIncome(fd);
           if (!res.ok) setError(res.error);
           else router.push("/pt/receitas");
         });
       }}
     >
-      <Field label="Valor (€)">
-        <input name="amount" required placeholder="0,00" inputMode="decimal" />
-      </Field>
-      <Field label="Data">
-        <input name="date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
-      </Field>
-      <Field label="Descrição">
-        <input name="description" required placeholder="Ex: Salário" />
-      </Field>
-      <Field label="Categoria">
-        <select name="categoryId" required>
-          {categories.filter((c) => c.kind === "INCOME").map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+      {editing ? <input type="hidden" name="id" value={initial!.id} /> : null}
+      <Field label="Tipo de receita">
+        <select name="categoryId" required defaultValue={initial?.categoryId ?? options[0]?.value}>
+          {options.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
           ))}
         </select>
       </Field>
+      <Field label="Descrição">
+        <input
+          name="description"
+          required
+          placeholder="Ex: Salário março"
+          defaultValue={initial?.description}
+        />
+      </Field>
+      <Field label="Valor (€)">
+        <input
+          name="amount"
+          required
+          placeholder="0,00"
+          inputMode="decimal"
+          defaultValue={
+            initial ? (initial.amountCents / 100).toFixed(2).replace(".", ",") : undefined
+          }
+        />
+      </Field>
+      <Field label="Data">
+        <input
+          name="date"
+          type="date"
+          required
+          defaultValue={initial?.date ?? new Date().toISOString().slice(0, 10)}
+        />
+      </Field>
       <Field label="Conta">
-        <select name="accountId">
+        <select name="accountId" defaultValue={initial?.accountId ?? accounts[0]?.id ?? ""}>
           <option value="">—</option>
           {accounts.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="Membro">
-        <select name="memberId">
+        <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
           {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.displayName}</option>
+            <option key={m.id} value={m.id}>
+              {m.displayName}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="Observações">
-        <textarea name="notes" rows={3} placeholder="Opcional" />
+        <textarea name="notes" rows={3} placeholder="Opcional" defaultValue={initial?.notes ?? ""} />
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
       <button className="btn btn-success" disabled={pending} type="submit">
-        {pending ? "A guardar…" : "Guardar entrada"}
+        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar receita"}
       </button>
     </form>
   );
@@ -106,6 +162,7 @@ export function ExpenseForm({
   accounts,
   members,
   defaults,
+  initial,
 }: {
   categories: Cat[];
   accounts: Acc[];
@@ -117,11 +174,29 @@ export function ExpenseForm({
     categoryId: string;
     storeName: string;
   }>;
+  initial?: {
+    id: string;
+    amountCents: number;
+    date: string;
+    time: string | null;
+    description: string;
+    categoryId: string;
+    subcategoryId: string | null;
+    storeName: string | null;
+    paymentMethod: string;
+    accountId: string | null;
+    memberId: string | null;
+    notes: string | null;
+    receiptImageUrl: string | null;
+    receiptPdfUrl: string | null;
+  };
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const expenseCats = categories.filter((c) => c.kind === "EXPENSE");
+  const options = expenseOptions(categories);
+  const editing = Boolean(initial?.id);
 
   return (
     <form
@@ -130,76 +205,123 @@ export function ExpenseForm({
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         start(async () => {
-          const res = await createExpense(fd);
+          const res = editing ? await updateExpense(fd) : await createExpense(fd);
           if (!res.ok) setError(res.error);
           else router.push("/pt/despesas");
         });
       }}
     >
+      {editing ? <input type="hidden" name="id" value={initial!.id} /> : null}
       <Field label="Valor (€)">
-        <input name="amount" required placeholder="0,00" inputMode="decimal" defaultValue={defaults?.amount} />
+        <input
+          name="amount"
+          required
+          placeholder="0,00"
+          inputMode="decimal"
+          defaultValue={
+            initial
+              ? (initial.amountCents / 100).toFixed(2).replace(".", ",")
+              : defaults?.amount
+          }
+        />
       </Field>
       <Field label="Data">
-        <input name="date" type="date" required defaultValue={defaults?.date ?? new Date().toISOString().slice(0, 10)} />
+        <input
+          name="date"
+          type="date"
+          required
+          defaultValue={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
+        />
       </Field>
       <Field label="Hora">
-        <input name="time" type="time" defaultValue={new Date().toTimeString().slice(0, 5)} />
+        <input
+          name="time"
+          type="time"
+          defaultValue={initial?.time ?? new Date().toTimeString().slice(0, 5)}
+        />
       </Field>
       <Field label="Descrição">
-        <input name="description" required placeholder="Ex: Compras Continente" defaultValue={defaults?.description} />
+        <input
+          name="description"
+          required
+          placeholder="Ex: Compras Continente"
+          defaultValue={initial?.description ?? defaults?.description}
+        />
       </Field>
       <Field label="Categoria">
-        <select name="categoryId" required defaultValue={defaults?.categoryId}>
-          {expenseCats.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+        <select
+          name="categoryId"
+          required
+          defaultValue={initial?.categoryId ?? defaults?.categoryId ?? options[0]?.value}
+        >
+          {options.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="Subcategoria">
-        <select name="subcategoryId">
+        <select name="subcategoryId" defaultValue={initial?.subcategoryId ?? ""}>
           <option value="">—</option>
           {expenseCats.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="Loja">
-        <input name="storeName" placeholder="Ex: Continente" defaultValue={defaults?.storeName} />
+        <input
+          name="storeName"
+          placeholder="Ex: Continente"
+          defaultValue={initial?.storeName ?? defaults?.storeName ?? ""}
+        />
       </Field>
       <Field label="Método de pagamento">
-        <select name="paymentMethod" defaultValue="DEBIT_CARD">
+        <select name="paymentMethod" defaultValue={initial?.paymentMethod ?? "DEBIT_CARD"}>
           {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
+            <option key={k} value={k}>
+              {v}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="Conta">
-        <select name="accountId">
+        <select name="accountId" defaultValue={initial?.accountId ?? ""}>
           <option value="">—</option>
           {accounts.map((a) => (
-            <option key={a.id} value={a.id}>{a.name}</option>
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="Membro">
-        <select name="memberId">
+        <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
           {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.displayName}</option>
+            <option key={m.id} value={m.id}>
+              {m.displayName}
+            </option>
           ))}
         </select>
       </Field>
       <Field label="URL fotografia fatura">
-        <input name="receiptImageUrl" placeholder="https://…" />
+        <input
+          name="receiptImageUrl"
+          placeholder="https://…"
+          defaultValue={initial?.receiptImageUrl ?? ""}
+        />
       </Field>
       <Field label="URL PDF fatura">
-        <input name="receiptPdfUrl" placeholder="https://…" />
+        <input name="receiptPdfUrl" placeholder="https://…" defaultValue={initial?.receiptPdfUrl ?? ""} />
       </Field>
       <Field label="Observações">
-        <textarea name="notes" rows={3} />
+        <textarea name="notes" rows={3} defaultValue={initial?.notes ?? ""} />
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
       <button className="btn btn-primary" disabled={pending} type="submit">
-        {pending ? "A guardar…" : "Guardar gasto"}
+        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar despesa"}
       </button>
     </form>
   );

@@ -18,22 +18,28 @@ export function SpaceSwitcher({ space }: { space: NinaSpace }) {
   }
 
   return (
-    <div className="space-switcher" role="group" aria-label="Espaço financeiro">
+    <div className="space-switcher" role="tablist" aria-label="Espaço financeiro">
       <button
         type="button"
+        role="tab"
+        aria-selected={space === "personal"}
         className={cn("space-switch-btn", space === "personal" && "active")}
         disabled={pending}
         onClick={() => switchTo("personal")}
       >
-        As Minhas Finanças
+        <span className="space-switch-full">As Minhas Finanças</span>
+        <span className="space-switch-short">Pessoal</span>
       </button>
       <button
         type="button"
+        role="tab"
+        aria-selected={space === "family"}
         className={cn("space-switch-btn", space === "family" && "active")}
         disabled={pending}
         onClick={() => switchTo("family")}
       >
-        Conta Familiar
+        <span className="space-switch-full">Conta Familiar</span>
+        <span className="space-switch-short">Familiar</span>
       </button>
     </div>
   );

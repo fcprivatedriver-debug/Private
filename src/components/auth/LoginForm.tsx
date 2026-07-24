@@ -8,7 +8,7 @@ import { useLocale } from "next-intl";
 import { safePostLoginPath } from "@/lib/auth-routes";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 
-function LoginFormInner() {
+function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const params = useSearchParams();
   const locale = useLocale();
   const { data: session, status } = useSession();
@@ -67,18 +67,12 @@ function LoginFormInner() {
       <div className="auth-card">
         <BrandLogo href="/pt" />
         <h1>Olá outra vez</h1>
-        <p className="lead">Entra para continuares a conversa com a Nina.</p>
+        <p className="lead">Entra para continuares com a Nina. Contas novas começam sempre vazias.</p>
         {error ? <p className="form-error">{error}</p> : null}
         <form onSubmit={onSubmit} className="form-grid">
           <label className="field">
             <span>Email</span>
-            <input
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              defaultValue="familia@nina.app"
-            />
+            <input name="email" type="email" required autoComplete="email" placeholder="o.teu@email.com" />
           </label>
           <label className="field">
             <span>Password</span>
@@ -87,26 +81,27 @@ function LoginFormInner() {
               type="password"
               required
               autoComplete="current-password"
-              defaultValue="nina123"
+              placeholder="••••••••"
             />
           </label>
           <button className="btn btn-primary" type="submit" disabled={loading}>
             Entrar
           </button>
         </form>
+        {demoMode ? (
+          <p className="muted small" style={{ marginTop: "1rem" }}>
+            <strong>Modo Demo interno</strong> (dados de exemplo): familia@nina.app · nina123
+          </p>
+        ) : null}
         <p className="muted small" style={{ marginTop: "1rem" }}>
-          Demo: <strong>familia@nina.app</strong> ou <strong>nina@nina.app</strong> · password{" "}
-          <strong>nina123</strong>
-        </p>
-        <p className="muted small">
-          Ainda não falaste com a Nina? <Link href="/pt/registo">Criar conta</Link>
+          Conta nova? <Link href="/pt/registo">Criar conta vazia</Link>
         </p>
       </div>
     </div>
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ demoMode = false }: { demoMode?: boolean }) {
   return (
     <Suspense
       fallback={
@@ -117,7 +112,7 @@ export function LoginForm() {
         </div>
       }
     >
-      <LoginFormInner />
+      <LoginFormInner demoMode={demoMode} />
     </Suspense>
   );
 }

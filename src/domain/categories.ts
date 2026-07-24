@@ -30,12 +30,12 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
 /** Categorias iniciais de receitas */
 export const DEFAULT_INCOME_CATEGORIES = [
   { name: "Salário", slug: "salario", icon: "wallet", color: "#0f7a4a" },
-  { name: "TVDE", slug: "receita-tvde", icon: "car", color: "#0f766e" },
-  { name: "Empresa", slug: "receita-empresa", icon: "briefcase", color: "#166534" },
-  { name: "Trabalho extra", slug: "trabalho-extra", icon: "clock", color: "#15803d" },
-  { name: "Investimentos", slug: "investimentos", icon: "trending", color: "#047857" },
-  { name: "Reembolsos", slug: "reembolsos", icon: "refresh", color: "#059669" },
-  { name: "Outros", slug: "receita-outros", icon: "plus", color: "#10b981" },
+  { name: "Subsídio", slug: "subsidio", icon: "star", color: "#15803d" },
+  { name: "Donativo", slug: "donativo", icon: "heart", color: "#047857" },
+  { name: "Reembolso", slug: "reembolso", icon: "refresh", color: "#059669" },
+  { name: "Venda", slug: "venda", icon: "tag", color: "#0f766e" },
+  { name: "Renda", slug: "renda-receita", icon: "home", color: "#166534" },
+  { name: "Outro", slug: "receita-outro", icon: "plus", color: "#10b981" },
 ] as const;
 
 export const BUDGET_GROUPS = [

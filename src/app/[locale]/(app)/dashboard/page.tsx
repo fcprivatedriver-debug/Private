@@ -11,12 +11,14 @@ import {
   Panel,
   ProgressBar,
   CategoryBars,
+  EmptyState,
 } from "@/components/ui/FinanceUI";
 import { NinaChat } from "@/components/nina/NinaChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
 import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
 import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
 import { NINA_MISSION_LINE } from "@/lib/ai/mission";
+import { isDemoEmail } from "@/lib/demo-mode";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -31,20 +33,28 @@ export default async function DashboardPage() {
   });
   const name = membership.displayName;
   const label = spaceLabel(space);
+  const isEmpty =
+    data.totals.incomeCents === 0 &&
+    data.totals.expenseCents === 0 &&
+    (data.goals?.length ?? 0) === 0;
+  const demo = isDemoEmail(session.user.email);
 
   return (
-    <div className="nina-home">
+    <div className="nina-home page-stack">
       <header className="nina-home-intro">
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+        <div className="page-header-row">
           <div>
             <p className="nina-kicker">
               {label} · {HOUSEHOLD_KIND_LABELS[membership.family.kind]}
+              {demo ? " · Demo" : ""}
             </p>
             <h1 className="page-title">Olá, {name}. Eu trato disto por ti.</h1>
             <p className="page-sub">
-              {space === "family"
-                ? "Receitas partilhadas, despesas da casa e objetivos da família — sincronizados."
-                : "Só as tuas receitas, despesas e objetivos pessoais."}
+              {isEmpty
+                ? "A tua conta está vazia — como deve ser. Diz-me o primeiro movimento quando quiseres."
+                : space === "family"
+                  ? "Receitas partilhadas, despesas da casa e objetivos da família — sincronizados."
+                  : "Só as tuas receitas, despesas e objetivos pessoais."}
               {` · ${data.monthLabel}`}
             </p>
             <p className="mission-whisper muted small">{NINA_MISSION_LINE}</p>
@@ -53,23 +63,38 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <SmartSuggestions />
+      {!isEmpty ? <SmartSuggestions /> : null}
 
       <div className="stats-grid nina-glance">
-        <StatCard label="Folga este mês" valueCents={data.totals.balanceCents} tone="neutral" />
-        <StatCard label="Entrou" valueCents={data.totals.incomeCents} tone="income" />
-        <StatCard label="Saiu" valueCents={data.totals.expenseCents} tone="expense" />
+        <StatCard label="Saldo este mês" valueCents={data.totals.balanceCents} tone="neutral" />
+        <StatCard label="Receitas" valueCents={data.totals.incomeCents} tone="income" />
+        <StatCard label="Despesas" valueCents={data.totals.expenseCents} tone="expense" />
         <StatCard
-          label="A caminho da poupança"
-          valueCents={data.totals.savedCents}
+          label="Poupanças"
+          valueCents={data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents}
           tone="savings"
-          hint={
-            data.totals.budgetUsedPercent
-              ? `Usaste ${data.totals.budgetUsedPercent}% do plano`
-              : undefined
-          }
         />
       </div>
+
+      {isEmpty ? (
+        <Panel title="Começar com a Nina">
+          <EmptyState
+            title="Tudo a zeros"
+            body="Nenhuma receita, despesa ou objetivo. Adiciona o primeiro movimento — ou fala comigo."
+          />
+          <div className="btn-row" style={{ marginTop: "1rem", justifyContent: "center" }}>
+            <Link href="/pt/receitas/nova" className="btn btn-success">
+              Adicionar receita
+            </Link>
+            <Link href="/pt/despesas/nova" className="btn btn-primary">
+              Adicionar despesa
+            </Link>
+            <Link href="/pt/guia" className="btn btn-ghost">
+              Ver Guia
+            </Link>
+          </div>
+        </Panel>
+      ) : null}
 
       <div className="nina-home-grid">
         <Panel title="Fala comigo" className="nina-chat-panel">
@@ -78,46 +103,49 @@ export default async function DashboardPage() {
 
         <div className="stack-lg">
           <Panel title="Onde está a ir o dinheiro">
-            <CategoryBars items={data.categoryChart.slice(0, 5)} />
-            <Link href="/pt/estatisticas" className="muted small" style={{ display: "inline-block", marginTop: "0.75rem" }}>
-              Ver resumo completo
-            </Link>
+            {data.categoryChart.length === 0 ? (
+              <EmptyState title="Gráficos vazios" body="Quando houver despesas, aparecem aqui." />
+            ) : (
+              <>
+                <CategoryBars items={data.categoryChart.slice(0, 5)} />
+                <Link
+                  href="/pt/estatisticas"
+                  className="muted small"
+                  style={{ display: "inline-block", marginTop: "0.75rem" }}
+                >
+                  Ver resumo completo
+                </Link>
+              </>
+            )}
           </Panel>
 
           <Panel title={space === "family" ? "Poupanças e objetivos" : "As tuas poupanças"}>
-            <div className="stats-grid" style={{ marginBottom: "0.75rem" }}>
-              <StatCard
-                label="Total poupanças"
-                valueCents={data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents}
-                tone="savings"
+            {(data.goals?.length ?? 0) === 0 ? (
+              <EmptyState
+                title="Sem objetivos ainda"
+                body="Cria o primeiro quando fizer sentido — sem pressa."
               />
-              <StatCard
-                label="Investido"
-                valueCents={data.savingsSummary?.totalInvestedCents ?? 0}
-                tone="income"
-              />
-            </div>
-            <p className="muted small" style={{ marginBottom: "0.5rem" }}>
-              {data.savingsSummary
-                ? `${data.savingsSummary.activeGoals} ativos · ${data.savingsSummary.completedGoals} concluídos · falta ${formatEUR(data.savingsSummary.totalStillNeededCents)}`
-                : null}
-              {data.savingsSummary?.nextGoal
-                ? ` · próximo: ${data.savingsSummary.nextGoal.name} (${data.savingsSummary.nextGoal.progress}%)`
-                : null}
-            </p>
-            {data.goals.map((g) => (
-              <div key={g.id} className="goal-card">
-                <div className="goal-head">
-                  <strong>{g.name}</strong>
-                  <span className="text-income">{g.progress}%</span>
-                </div>
-                <ProgressBar percent={g.progress} color="#0f7a4a" />
-                <p className="muted small">
-                  {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
+            ) : (
+              <>
+                <p className="muted small" style={{ marginBottom: "0.5rem" }}>
+                  {formatEUR(data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents)} em
+                  poupanças
                 </p>
-              </div>
-            ))}
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+                {data.goals.map((g) => (
+                  <div key={g.id} className="goal-card">
+                    <div className="goal-head">
+                      <strong>{g.name}</strong>
+                      <span className="text-income">{g.progress}%</span>
+                    </div>
+                    <ProgressBar percent={g.progress} color="#0f7a4a" />
+                    <p className="muted small">
+                      {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
+                    </p>
+                  </div>
+                ))}
+              </>
+            )}
+            <div className="btn-row" style={{ marginTop: "0.75rem" }}>
               <Link href="/pt/poupancas" className="btn btn-ghost btn-sm">
                 Poupanças
               </Link>
@@ -127,22 +155,24 @@ export default async function DashboardPage() {
             </div>
           </Panel>
 
-          <Panel title="Avisos amigáveis">
-            {data.alerts.length === 0 ? (
-              <p className="muted">Tudo calmo por agora. Eu aviso se algo precisar da tua atenção.</p>
-            ) : (
-              <div className="list-rows">
-                {data.alerts.slice(0, 4).map((a) => (
-                  <div key={a.id} className="list-row">
-                    <div className="list-row-main">
-                      <strong>{a.title}</strong>
-                      <span>{a.message}</span>
+          {!isEmpty ? (
+            <Panel title="Avisos amigáveis">
+              {data.alerts.length === 0 ? (
+                <p className="muted">Tudo calmo por agora. Eu aviso se algo precisar da tua atenção.</p>
+              ) : (
+                <div className="list-rows">
+                  {data.alerts.slice(0, 4).map((a) => (
+                    <div key={a.id} className="list-row">
+                      <div className="list-row-main">
+                        <strong>{a.title}</strong>
+                        <span>{a.message}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Panel>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          ) : null}
         </div>
       </div>
     </div>

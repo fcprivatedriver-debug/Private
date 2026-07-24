@@ -216,6 +216,7 @@ model User {
   invitesCreated FamilyInvite[] @relation("InviteCreator")
   connections   NinaConnection[]
   shoppingItems ShoppingListItem[]
+  shoppingLists ShoppingList[] @relation("ShoppingListCreator")
 }
 
 model AuthAccount {
@@ -281,6 +282,7 @@ model Family {
   memoryRules        NinaMemoryRule[]
   habitStats         NinaHabitStat[]
   connections        NinaConnection[]
+  shoppingLists      ShoppingList[]
   shoppingItems      ShoppingListItem[]
 }
 
@@ -363,24 +365,44 @@ model NinaHabitStat {
   @@index([userId, familyId])
 }
 
-/// Lista de compras partilhada da Conta Familiar
-model ShoppingListItem {
+/// Lista de compras (pode haver várias por Conta Familiar)
+model ShoppingList {
   id          String   @id @default(cuid())
   familyId    String
   createdById String?
-  name        String
-  quantity    String   @default("1")
-  categorySlug String?
-  notes       String?
-  isChecked   Boolean  @default(false)
-  sortOrder   Int      @default(0)
+  name        String   @default("Lista de compras")
+  isShared    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  createdBy User?  @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  family    Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy User?              @relation("ShoppingListCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  items     ShoppingListItem[]
+
+  @@index([familyId])
+}
+
+/// Artigo numa lista de compras partilhada
+model ShoppingListItem {
+  id           String   @id @default(cuid())
+  familyId     String
+  listId       String
+  createdById  String?
+  name         String
+  quantity     String   @default("1")
+  categorySlug String?
+  notes        String?
+  isChecked    Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  family    Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  createdBy User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([familyId, isChecked])
+  @@index([listId, isChecked])
 }
 
 /// Ligação opcional a um serviço externo — só ativa com autorização explícita.
