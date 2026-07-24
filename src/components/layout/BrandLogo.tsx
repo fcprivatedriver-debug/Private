@@ -58,7 +58,7 @@ export function BrandLogo({
   variant = DEFAULT_ZRIK_VARIANT,
   tone = "default",
 }: {
-  href?: "/" | string;
+  href?: string;
   size?: "sm" | "md" | "lg";
   variant?: ZrikLogoVariant;
   tone?: "default" | "on-dark";

@@ -394,8 +394,8 @@ export async function confirmBookingPayment(bookingId: string, customerId: strin
         status: "CAPTURED",
         provider: paymentsEnabled() ? "STRIPE" : "MANUAL",
         rawPayload: JSON.stringify({
-          demo: !paymentsEnabled(),
-          mode: paymentsEnabled() ? "stripe_ready" : "sandbox_confirm",
+          manual: !paymentsEnabled(),
+          mode: paymentsEnabled() ? "stripe" : "manual_confirm",
           at: new Date().toISOString(),
         }),
       },

@@ -29,12 +29,12 @@ export function absoluteUrl(path: string) {
 }
 
 /**
- * Always stores the email in EmailLog (demo mailbox).
+ * Always stores the email in EmailLog for audit / support.
  * Optionally delivers via Resend when RESEND_API_KEY is set.
  */
 export async function sendEmail(input: SendEmailInput) {
   const resendKey = process.env.RESEND_API_KEY;
-  let channel = "demo";
+  let channel = "log";
   let providerId: string | null = null;
 
   if (resendKey) {
@@ -61,14 +61,14 @@ export async function sendEmail(input: SendEmailInput) {
       } else {
         const errText = await res.text();
         console.error("[email] Resend failed", res.status, errText);
-        channel = "demo";
+        channel = "log";
       }
     } catch (err) {
       console.error("[email] Resend error", err);
-      channel = "demo";
+      channel = "log";
     }
   } else {
-    console.info(`[email:demo] → ${input.toEmail} · ${input.template} · ${input.subject}`);
+    console.info(`[email] → ${input.toEmail} · ${input.template} · ${input.subject}`);
   }
 
   const log = await prisma.emailLog.create({

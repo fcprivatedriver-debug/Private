@@ -13,13 +13,13 @@ export default async function VerifyEmailPage({
       <section className="auth-shell fade-up">
         <div className="container" style={{ maxWidth: 520 }}>
           <h1 className="page-title">Ativar conta</h1>
-          <p className="page-lead">Abra o link ATIVAR CONTA que recebeu por email.</p>
+          <p className="page-lead">
+            Abra o email que lhe enviámos e clique em <strong>ATIVAR CONTA</strong>.
+          </p>
           <p className="muted">
-            Em modo demo, veja a{" "}
-            <Link href="/demo/emails" style={{ textDecoration: "underline" }}>
-              caixa de emails
+            <Link href="/login" style={{ textDecoration: "underline" }}>
+              Voltar ao login
             </Link>
-            .
           </p>
         </div>
       </section>
@@ -35,8 +35,8 @@ export default async function VerifyEmailPage({
           <h1 className="page-title">Não foi possível ativar</h1>
           <div className="alert alert-error">{result.error}</div>
           <p className="muted" style={{ marginTop: "1rem" }}>
-            <Link href="/demo/emails" style={{ textDecoration: "underline" }}>
-              Abrir caixa de emails demo
+            <Link href="/registo" style={{ textDecoration: "underline" }}>
+              Criar conta
             </Link>
             {" · "}
             <Link href="/login" style={{ textDecoration: "underline" }}>
@@ -58,13 +58,6 @@ export default async function VerifyEmailPage({
         <Link href="/login" className="btn btn-primary">
           Entrar
         </Link>
-        <p className="muted" style={{ marginTop: "1.25rem" }}>
-          Enviámos também o email de confirmação — consulte a{" "}
-          <Link href="/demo/emails" style={{ textDecoration: "underline" }}>
-            caixa demo
-          </Link>
-          .
-        </p>
       </div>
     </section>
   );

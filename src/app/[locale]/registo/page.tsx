@@ -95,8 +95,8 @@ function RegisterFormInner() {
             </ol>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
-            <Link href="/demo/emails" className="btn btn-primary">
-              {t("openDemoMailbox")}
+            <Link href="/login" className="btn btn-primary">
+              {t("loginLink")}
             </Link>
             <button type="button" className="btn btn-secondary" onClick={onResend}>
               {t("resendVerification")}

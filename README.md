@@ -1,8 +1,8 @@
 # ZRIK
 
-Private-chauffeur marketplace — choose the best driver, choose the best price.
+Private-chauffeur marketplace — customers request trips, drivers send offers, bookings are confirmed after payment.
 
-**Brand:** ZRIK · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** ZRIK · **Currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
 
 ## Stack
 
@@ -10,40 +10,46 @@ Private-chauffeur marketplace — choose the best driver, choose the best price.
 - Auth.js (credentials) · Prisma · Neon PostgreSQL
 - next-intl (`/pt`, `/en`)
 
+## App entry
+
+`/` redirects by authentication:
+
+| State | Destination |
+|-------|-------------|
+| Anonymous | `/login` |
+| Customer | `/pedidos` |
+| Driver | `/painel` |
+| Admin | `/admin` |
+
 ## Local setup
 
 ```bash
 cp .env.example .env
 npm install
 npx prisma migrate deploy
-npm run db:seed
+npm run db:seed   # optional local fixtures
 npm run dev
 ```
 
-### Demo accounts (password: `movio123`)
+### Optional seed accounts (password: `movio123`)
+
+For local development only — never shown in the product UI.
 
 | Email | Role |
 |-------|------|
 | `cliente@movio.app` | Customer |
-| `motorista@movio.app` | Driver (active) |
+| `motorista@movio.app` | Driver |
 | `admin@movio.app` | Admin |
 
-Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
+## Environment
 
-## Branding
-
-Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
-Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
-
-| Variable | Example |
+| Variable | Purpose |
 |----------|---------|
 | `DATABASE_URL` | Neon pooled URL |
-| `DIRECT_URL` | Neon unpooled URL |
-| `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZRIK` |
-
-See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
-
-## Package
-
-- Package name: **zrik**
+| `DIRECT_URL` | Neon direct URL (migrations) |
+| `AUTH_SECRET` | Auth.js secret (required in production) |
+| `NEXTAUTH_URL` | Public app URL (email links) |
+| `RESEND_API_KEY` | Optional real email delivery |
+| `PAYMENTS_ENABLED` | `true` when Stripe is configured |
+| `STRIPE_SECRET_KEY` | Stripe secret |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Maps / places |

@@ -5,7 +5,7 @@ import type {
   PaymentProvider,
 } from "./types";
 
-/** Demo / offline provider — no real charges. */
+/** Manual confirmation provider when Stripe is not enabled. */
 export class NullPaymentProvider implements PaymentProvider {
   async createPaymentIntent(input: CreateIntentInput): Promise<CreateIntentResult> {
     return {
@@ -14,7 +14,7 @@ export class NullPaymentProvider implements PaymentProvider {
       amount: input.amount,
       currency: input.currency,
       message:
-        "Pagamentos seguros em breve. A reserva foi criada; a cobrança será ativada com Stripe Connect.",
+        "Confirme o pagamento para garantir a reserva. A cobrança com cartão activa-se quando Stripe estiver configurado.",
     };
   }
 
@@ -35,10 +35,8 @@ export class NullPaymentProvider implements PaymentProvider {
 }
 
 /**
- * Stripe-ready scaffolding. Activates when PAYMENTS_ENABLED=true and
- * STRIPE_SECRET_KEY is present. Without the Stripe SDK installed, returns a
- * structured "created" intent so the UI can show Elements-ready state.
- * Platform fee stays server-side only (never returned to the customer UI).
+ * Stripe provider scaffolding. Activates when PAYMENTS_ENABLED=true and
+ * STRIPE_SECRET_KEY is present.
  */
 export class StripePaymentProvider implements PaymentProvider {
   async createPaymentIntent(input: CreateIntentInput): Promise<CreateIntentResult> {
@@ -53,17 +51,15 @@ export class StripePaymentProvider implements PaymentProvider {
       };
     }
 
-    // Intent id is deterministic for demo wiring without the Stripe SDK.
-    // Replace with stripe.paymentIntents.create when @stripe/stripe-js is added.
-    const providerPaymentId = `pi_demo_${input.bookingId.slice(-10)}`;
+    const providerPaymentId = `pi_${input.bookingId.slice(-10)}`;
     return {
       status: "created",
       provider: "STRIPE",
       amount: input.amount,
       currency: input.currency,
       providerPaymentId,
-      clientSecret: `${providerPaymentId}_secret_demo`,
-      message: "PaymentIntent preparado (Stripe Connect). Taxa de plataforma processada no servidor.",
+      clientSecret: `${providerPaymentId}_secret`,
+      message: "PaymentIntent preparado. Taxa de plataforma processada no servidor.",
     };
   }
 
@@ -79,7 +75,7 @@ export class StripePaymentProvider implements PaymentProvider {
   async parseWebhook(rawBody: Buffer, signature: string): Promise<PaymentEvent> {
     void rawBody;
     void signature;
-    return { type: "payment_intent.succeeded", paymentId: null };
+    return { type: "ignored", paymentId: null };
   }
 }
 

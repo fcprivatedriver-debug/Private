@@ -69,13 +69,13 @@ async function seedSettings() {
       defaultCurrency: "EUR",
       defaultCommissionPercent: 15,
       supportedCurrencies: JSON.stringify(["EUR"]),
-      demoMode: true,
+      demoMode: false,
     },
     update: {
       defaultCurrency: "EUR",
       defaultCommissionPercent: 15,
       supportedCurrencies: JSON.stringify(["EUR"]),
-      demoMode: true,
+      demoMode: false,
     },
   });
 
@@ -722,13 +722,13 @@ async function seedNotifications(adminId: string, anaId: string, carlosId: strin
       userId: adminId,
       type: "DRIVER_SUBMITTED",
       title: "Verification queue",
-      body: `${pendingCount} drivers need review in Demo Mode.`,
+      body: `${pendingCount} drivers need review.`,
     },
     {
       userId: adminId,
       type: "PLATFORM_DIGEST",
-      title: "Demo Mode active",
-      body: "Sample marketplace data is loaded for product review.",
+      title: "Marketplace ready",
+      body: "Seed data loaded for local development.",
     },
   ];
 
@@ -748,7 +748,7 @@ async function seedNotifications(adminId: string, anaId: string, carlosId: strin
 }
 
 async function main() {
-  console.log("Seeding ZRIK Demo Mode…");
+  console.log("Seeding ZRIK…");
   await clearDemoData();
   await seedSettings();
 
@@ -824,12 +824,12 @@ async function main() {
     openTrips: await prisma.tripRequest.count({ where: { status: "OPEN" } }),
   };
 
-  console.log("Demo Mode seed complete.");
+  console.log("Seed complete.");
   console.log(JSON.stringify(counts, null, 2));
-  console.log("Accounts (password: movio123):");
+  console.log("Dev accounts (password: movio123):");
   console.log("  admin@movio.app / cliente@movio.app / motorista@movio.app");
   console.log(`  Sample OPEN trip: ${openTripId}`);
-  console.log("  PlatformSettings.demoMode = true");
+  console.log("  PlatformSettings.demoMode = false");
 }
 
 main()
