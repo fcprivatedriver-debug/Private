@@ -1,7 +1,7 @@
 {
   "meta": {
-    "appName": "Hegos",
-    "tagline": "Motoristas privados. Escolhidos com confiança."
+    "appName": "ZRIK",
+    "tagline": "Escolhe o melhor motorista. Escolhe o melhor preço."
   },
   "nav": {
     "howItWorks": "Como funciona",
@@ -19,30 +19,31 @@
     "vehicleClasses": "Classes",
     "login": "Entrar",
     "start": "Começar",
-    "logout": "Sair"
+    "logout": "Sair",
+    "branding": "Branding"
   },
   "home": {
-    "eyebrow": "Motoristas privados · Internacional",
-    "headline": "Hegos",
-    "copy": "Peça um transfer privado. Receba propostas de motoristas verificados. Escolha a que lhe parece certa — sem pressa, sem ruído.",
-    "ctaRequest": "Pedir uma viagem",
-    "ctaDriver": "Conduzir com a Hegos",
+    "eyebrow": "Chauffeur privado",
+    "headline": "ZRIK",
+    "copy": "Escolhe o melhor motorista. Escolhe o melhor preço.",
+    "ctaRequest": "Receber propostas",
+    "ctaDriver": "Conduzir com ZRIK",
     "ctaMyTrips": "Ver as minhas viagens",
     "ctaDashboard": "Abrir o meu painel",
     "ctaAdmin": "Abrir admin",
-    "stepsTitle": "Três momentos, uma experiência.",
-    "stepsLead": "A Hegos não é um táxi. É um marketplace discreto onde define a viagem e escolhe a proposta.",
-    "step1Title": "Conte-nos o trajeto",
-    "step1Body": "Onde o queremos encontrar, para onde vai, e o que importa no caminho.",
+    "stepsTitle": "Três passos. Uma experiência.",
+    "stepsLead": "ZRIK é um marketplace discreto: define a viagem, recebe propostas e escolhe com confiança.",
+    "step1Title": "Peça a viagem",
+    "step1Body": "Origem, destino e o que importa no caminho.",
     "step2Title": "Receba propostas",
-    "step2Body": "Motoristas verificados respondem com preço, veículo e condições claras.",
+    "step2Body": "Motoristas verificados respondem com preço e veículo.",
     "step3Title": "Escolha com confiança",
-    "step3Body": "Compare, aceite, e viaje com transparência do início ao fim.",
+    "step3Body": "Compare, aceite e viaje com transparência.",
     "terms": "Termos",
     "privacy": "Privacidade"
   },
   "auth": {
-    "loginTitle": "Que bom vê-lo de novo",
+    "loginTitle": "Entrar",
     "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
     "email": "Email",
     "password": "Palavra-passe",
@@ -51,7 +52,7 @@
     "invalidCredentials": "Email ou palavra-passe incorretos",
     "noAccount": "Ainda não tem conta?",
     "registerLink": "Criar conta",
-    "registerTitle": "Bem-vindo à Hegos",
+    "registerTitle": "Bem-vindo à ZRIK",
     "registerLead": "Peça viagens ou envie propostas — uma conta, um papel para começar.",
     "accountType": "Como quer começar?",
     "customer": "Quero viajar",
@@ -64,8 +65,8 @@
     "loginLink": "Entrar"
   },
   "how": {
-    "title": "Como a Hegos funciona",
-    "lead": "Um marketplace de motoristas privados reduzido ao essencial: pedir, propor, escolher."
+    "title": "Como a ZRIK funciona",
+    "lead": "Marketplace de motoristas privados reduzido ao essencial: pedir, propor, escolher."
   },
   "forDrivers": {
     "title": "Conduza com intenção",
@@ -76,10 +77,23 @@
   "legal": {
     "termsTitle": "Termos de utilização",
     "privacyTitle": "Privacidade",
-    "preliminary": "Versão preliminar · Hegos"
+    "preliminary": "Versão preliminar · ZRIK"
   },
   "common": {
     "loading": "A carregar…"
+  },
+  "branding": {
+    "title": "Branding Preview",
+    "lead": "Compare as três variantes tipográficas do logótipo ZRIK e escolha a que transmite melhor uma imagem premium.",
+    "optionA": "Opção A — ZRIK a preto",
+    "optionADesc": "Toda a palavra em #111111. Máxima simplicidade.",
+    "optionB": "Opção B — Z em azul",
+    "optionBDesc": "Z em #1E5EFF · RIK em #111111.",
+    "optionC": "Opção C — Z e K em azul",
+    "optionCDesc": "Z e K em #1E5EFF · RI em #111111.",
+    "onLight": "Fundo claro",
+    "onDark": "Fundo escuro",
+    "note": "Logótipo temporário tipográfico. Sem 3D, sem sombras, sem gradientes."
   },
   "tripForm": {
     "title": "Para onde vamos?",

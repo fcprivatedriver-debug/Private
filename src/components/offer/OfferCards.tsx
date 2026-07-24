@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatMoney } from "@/lib/money";
-import { isHegosElite } from "@/config/constants";
+import { isZrikElite } from "@/config/constants";
 import { acceptOfferAction } from "@/actions/marketplace";
 
 export type OfferCardData = {
@@ -124,7 +124,7 @@ export function OfferCards({
       {error && <div className="alert alert-error">{error}</div>}
       <div style={{ display: "grid", gap: "1rem" }}>
         {sorted.map((offer) => {
-          const elite = isHegosElite(offer.driver);
+          const elite = isZrikElite(offer.driver);
           const driverPhoto =
             offer.driver.photoUrl ||
             offer.driver.image ||
@@ -158,7 +158,7 @@ export function OfferCards({
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
                       <strong style={{ fontSize: "1.05rem" }}>{offer.driver.name}</strong>
-                      {elite && <span className="badge">Hegos Elite</span>}
+                      {elite && <span className="badge">ZRIK Elite</span>}
                     </div>
                     <div className="profile-meta" style={{ marginTop: "0.35rem" }}>
                       {offer.driver.ratingAvg != null && (

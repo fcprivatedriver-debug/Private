@@ -1,4 +1,4 @@
-export const APP_NAME = "Hegos";
+export const APP_NAME = "ZRIK";
 export const DEFAULT_CURRENCY = "EUR";
 export const PLATFORM_FEE_PERCENT_DEFAULT = 15;
 
@@ -42,7 +42,7 @@ export const DRIVER_STATUS_LABELS: Record<string, string> = {
   REJECTED: "Recusado",
 };
 
-export function isHegosElite(profile: {
+export function isZrikElite(profile: {
   ratingAvg?: number | null;
   completedTripsCount?: number | null;
   ratingCount?: number | null;
@@ -54,9 +54,11 @@ export function isHegosElite(profile: {
   );
 }
 
-/** @deprecated Use isHegosElite */
-export const isMovioElite = isHegosElite;
+/** @deprecated Use isZrikElite */
+export const isHegosElite = isZrikElite;
+/** @deprecated Use isZrikElite */
+export const isMovioElite = isZrikElite;
 
 export function bookingReference(bookingId: string): string {
-  return `HEG-${bookingId.slice(-8).toUpperCase()}`;
+  return `ZRK-${bookingId.slice(-8).toUpperCase()}`;
 }

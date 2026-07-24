@@ -332,7 +332,7 @@ export async function submitOnboarding(userId: string) {
       userId,
       type: "ONBOARDING_SUBMITTED",
       title: "Pedido de verificação enviado",
-      body: "A IA da Hegos analisou o teu perfil. A equipa irá confirmar em breve.",
+      body: "A IA da ZRIK analisou o teu perfil. A equipa irá confirmar em breve.",
       meta: JSON.stringify({ riskScore: ai.riskScore, recommendation: ai.recommendation }),
     },
   });
@@ -397,7 +397,7 @@ export async function adminDecideVerification(input: {
           userId: profile.userId,
           type: "DRIVER_APPROVED",
           title: "Conta verificada",
-          body: "Parabéns! O teu perfil Hegos foi aprovado. Já podes enviar propostas.",
+          body: "Parabéns! O teu perfil ZRIK foi aprovado. Já podes enviar propostas.",
         },
       });
     });

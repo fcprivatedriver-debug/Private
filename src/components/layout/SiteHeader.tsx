@@ -37,6 +37,7 @@ export async function SiteHeader() {
             <>
               <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
               <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
+              <LocaleLink href="/branding-preview">{t("branding")}</LocaleLink>
             </>
           )}
           {role === "CUSTOMER" && (

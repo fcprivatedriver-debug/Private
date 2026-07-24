@@ -1,7 +1,7 @@
-# Hegos — Architecture (Phase 0 Foundation)
+# ZRIK — Architecture (Phase 0 Foundation)
 
 > Private-driver marketplace (GetTransfer-style).  
-> **Brand:** Hegos  
+> **Brand:** ZRIK  
 > **Phase in scope:** Phase 0 — Foundation only
 
 ---
@@ -10,7 +10,7 @@
 
 | Decision | Choice |
 |----------|--------|
-| Brand / project name | **Hegos** (repo target: `movio`) |
+| Brand / project name | **ZRIK** (repo target: `movio`) |
 | Default currency | **EUR** — multi-currency ready |
 | Platform commission | **15%** default — rates configurable (global + overrides later) |
 | Contact visibility | Phone/email **only after payment is successfully confirmed** (`Booking` paid / `Payment` CAPTURED) |

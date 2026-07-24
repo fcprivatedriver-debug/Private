@@ -17,7 +17,7 @@ export default async function OnboardingPage() {
           Driver onboarding
         </h1>
         <p className="page-lead">
-          Premium verification powered by Hegos AI — complete your profile, vehicle and documents.
+          Premium verification powered by ZRIK AI — complete your profile, vehicle and documents.
         </p>
         <OnboardingWizard
           profile={{

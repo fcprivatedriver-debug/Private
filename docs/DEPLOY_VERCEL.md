@@ -1,6 +1,6 @@
-# Deploy Hegos to Vercel (phone-friendly)
+# Deploy ZRIK to Vercel (phone-friendly)
 
-Hegos uses **PostgreSQL** (Neon). SQLite is not supported.
+ZRIK uses **PostgreSQL** (Neon). SQLite is not supported.
 
 ## Login on Vercel (important)
 

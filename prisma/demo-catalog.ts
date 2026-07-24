@@ -1,5 +1,5 @@
 /**
- * Catalog of realistic Portuguese demo fixtures for Hegos Demo Mode.
+ * Catalog of realistic Portuguese demo fixtures for ZRIK Demo Mode.
  */
 export const VEHICLE_CLASSES = [
   {

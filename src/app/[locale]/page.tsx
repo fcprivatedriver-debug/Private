@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { ZrikWordmark } from "@/components/layout/BrandLogo";
 
 export const dynamic = "force-dynamic";
 
@@ -34,21 +35,21 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <section className="hero">
-        <div className="hero-media" aria-hidden />
+      <section className="hero hero-minimal">
         <div className="container hero-content">
-          <p className="hero-eyebrow">{t("eyebrow")}</p>
-          <h1 className="hero-brand">
-            Heg<span>os</span>
+          <h1 className="hero-brand fade-up">
+            <ZrikWordmark as="span" variant="A" />
           </h1>
-          <p className="hero-copy">{t("copy")}</p>
-          <div className="cta-row">
+          <p className="hero-copy fade-up-delay">{t("copy")}</p>
+          <div className="cta-row fade-up-delay">
             <Link href={primary.href} className="btn btn-primary">
               {primary.label}
             </Link>
-            <Link href={secondary.href} className="btn btn-secondary">
-              {secondary.label}
-            </Link>
+            {role && (
+              <Link href={secondary.href} className="btn btn-secondary">
+                {secondary.label}
+              </Link>
+            )}
           </div>
         </div>
       </section>

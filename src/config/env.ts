@@ -9,7 +9,7 @@ const envSchema = z.object({
   AUTH_GOOGLE_SECRET: z.string().optional(),
   PAYMENTS_ENABLED: z.string().default("false"),
   PLATFORM_FEE_PERCENT: z.coerce.number().default(15),
-  NEXT_PUBLIC_APP_NAME: z.string().default("Hegos"),
+  NEXT_PUBLIC_APP_NAME: z.string().default("ZRIK"),
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   DEMO_MODE: z.string().optional(),

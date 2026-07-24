@@ -1,54 +1,54 @@
 @import "tailwindcss";
 
-/* ——— Hegos design tokens ——— */
+/* ——— ZRIK design tokens ——— */
 :root {
   /* Surfaces */
-  --bg: #f4f5f7;
+  --bg: #fafafa;
   --bg-elevated: #ffffff;
-  --bg-soft: #e8eaee;
-  --bg-ink: #0a0b0d;
-  --bg-ink-soft: #14171c;
+  --bg-soft: #f0f0f0;
+  --bg-ink: #111111;
+  --bg-ink-soft: #1a1a1a;
 
   /* Text */
-  --fg: #0a0b0d;
-  --fg-muted: #5c6370;
-  --fg-on-ink: #f7f8f9;
+  --fg: #111111;
+  --fg-muted: #6b6b6b;
+  --fg-on-ink: #ffffff;
 
-  /* Brand — black + petrol blue */
-  --brand: #0a0b0d;
-  --brand-strong: #1a1d24;
-  --accent: #1f6f8b;
-  --accent-strong: #155a72;
-  --accent-soft: rgba(31, 111, 139, 0.12);
-  --accent-glow: rgba(31, 111, 139, 0.22);
-  --petrol: #0d4f6b;
-  --petrol-soft: #5ba3c0;
+  /* Brand — black + premium blue */
+  --brand: #111111;
+  --brand-strong: #000000;
+  --accent: #1e5eff;
+  --accent-strong: #1548cc;
+  --accent-soft: rgba(30, 94, 255, 0.1);
+  --accent-glow: rgba(30, 94, 255, 0.16);
+  --petrol: #1e5eff;
+  --petrol-soft: #5b8cff;
 
   /* Lines & status */
-  --line: rgba(10, 11, 13, 0.08);
-  --line-strong: rgba(10, 11, 13, 0.16);
+  --line: rgba(17, 17, 17, 0.08);
+  --line-strong: rgba(17, 17, 17, 0.14);
   --danger: #b42318;
   --success: #0f7a4a;
   --warning: #9a6700;
 
   /* Shape */
   --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
-  /* Elevation */
-  --shadow-soft: 0 1px 0 rgba(10, 11, 13, 0.04);
-  --shadow-lift: 0 14px 40px rgba(10, 11, 13, 0.08);
-  --shadow-float: 0 24px 64px rgba(10, 11, 13, 0.12);
+  /* Elevation — kept minimal (Linear / Stripe) */
+  --shadow-soft: none;
+  --shadow-lift: 0 1px 2px rgba(17, 17, 17, 0.04);
+  --shadow-float: 0 8px 24px rgba(17, 17, 17, 0.06);
 
   /* Motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --dur: 0.4s;
+  --dur: 0.35s;
 
   /* Layout */
   --container: 1120px;
-  --header-h: 68px;
+  --header-h: 64px;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -81,11 +81,8 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--fg);
-  background:
-    radial-gradient(920px 520px at 0% -8%, rgba(31, 111, 139, 0.07), transparent 55%),
-    radial-gradient(700px 420px at 100% 0%, rgba(10, 11, 13, 0.04), transparent 50%),
-    linear-gradient(180deg, #fafbfc 0%, var(--bg) 42%, #eef0f3 100%);
-  font-family: var(--font-body), "Segoe UI", sans-serif;
+  background: var(--bg);
+  font-family: var(--font-body), system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.55;
   letter-spacing: -0.011em;
@@ -331,7 +328,7 @@ h3,
   font-size: 0.76rem;
   letter-spacing: 0.03em;
   padding: 0.55rem 0;
-  border-bottom: 1px solid rgba(91, 163, 192, 0.25);
+  border-bottom: 1px solid rgba(30, 94, 255, 0.25);
 }
 
 .demo-banner strong {
@@ -343,16 +340,9 @@ h3,
   position: sticky;
   top: 0;
   z-index: 40;
-  backdrop-filter: blur(18px) saturate(1.2);
-  background: rgba(244, 245, 247, 0.82);
-  border-bottom: 1px solid transparent;
-  animation: headerLine 0.8s ease both;
-}
-
-@keyframes headerLine {
-  to {
-    border-bottom-color: var(--line);
-  }
+  backdrop-filter: blur(12px);
+  background: rgba(250, 250, 250, 0.9);
+  border-bottom: 1px solid var(--line);
 }
 
 .site-header-inner {
@@ -360,44 +350,40 @@ h3,
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.9rem 0;
+  padding: 0.85rem 0;
   min-height: var(--header-h);
 }
 
 .logo {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: -0.05em;
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
   color: var(--fg);
+  text-decoration: none;
 }
 
-.logo .logo-word span {
-  color: var(--accent);
+.zrik-wordmark {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  display: inline-flex;
 }
 
-.logo-on-dark {
-  color: var(--fg-on-ink);
+.zrik-ink {
+  color: #111111;
 }
 
-.logo-on-dark .logo-word span {
-  color: var(--petrol-soft);
+.zrik-accent {
+  color: #1e5eff;
 }
 
-.logo svg {
-  flex-shrink: 0;
-  color: var(--brand);
+.branding-logo-on-dark .zrik-ink {
+  color: #ffffff;
 }
 
-.logo-on-dark svg {
-  color: #0a0b0d;
-}
-
-.hegos-mark-bg {
-  /* filled via currentColor on svg */
+.branding-logo-on-dark.zrik-wordmark-A .zrik-ink {
+  color: #ffffff;
 }
 
 .nav-links {
@@ -442,26 +428,24 @@ h3,
   overflow: hidden;
 }
 
+.hero-minimal {
+  align-items: center;
+  min-height: calc(100svh - var(--header-h) - 4rem);
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
 .hero-media {
   position: absolute;
   inset: 0;
-  /* Premium executive EV sedan at luxury entrance — no brand logos.
-     Dark left/upper negative space keeps Hegos type + CTAs readable. */
   background:
     linear-gradient(
       90deg,
-      rgba(10, 11, 13, 0.78) 0%,
-      rgba(10, 11, 13, 0.52) 32%,
-      rgba(10, 11, 13, 0.18) 58%,
-      rgba(10, 11, 13, 0.35) 100%
+      rgba(17, 17, 17, 0.78) 0%,
+      rgba(17, 17, 17, 0.45) 40%,
+      rgba(17, 17, 17, 0.2) 100%
     ),
-    linear-gradient(
-      180deg,
-      rgba(10, 11, 13, 0.28) 0%,
-      rgba(10, 11, 13, 0.12) 40%,
-      rgba(10, 11, 13, 0.62) 100%
-    ),
-    url("/brand/hegos-hero.jpg") right 40% / cover no-repeat;
+    url("/brand/zrik-hero.jpg") right 40% / cover no-repeat;
   animation: heroDrift 26s ease-in-out infinite alternate;
   transform-origin: center center;
 }
@@ -483,10 +467,17 @@ h3,
   animation: riseIn 0.95s var(--ease-out) both;
 }
 
+.hero-minimal .hero-content {
+  color: var(--fg);
+  padding: 4rem 0 3.5rem;
+  max-width: 40rem;
+  animation: none;
+}
+
 @keyframes riseIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -498,7 +489,7 @@ h3,
   display: inline-block;
   margin-bottom: 1.1rem;
   font-size: 0.74rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(247, 248, 249, 0.65);
   font-weight: 500;
@@ -506,24 +497,36 @@ h3,
 
 .hero-brand {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-size: clamp(3.8rem, 15vw, 7.8rem);
-  line-height: 0.88;
-  margin: 0 0 1.1rem;
+  font-size: clamp(3.8rem, 14vw, 7.2rem);
+  line-height: 0.9;
+  margin: 0 0 1.25rem;
   font-weight: 700;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.06em;
 }
 
-.hero-brand span {
-  color: var(--petrol-soft);
+.hero-minimal .hero-brand {
+  font-size: clamp(4rem, 16vw, 7.5rem);
+  margin-bottom: 1.5rem;
+}
+
+.hero-brand .zrik-wordmark {
+  font-size: inherit;
 }
 
 .hero-copy {
   max-width: 28rem;
   color: rgba(247, 248, 249, 0.82);
-  font-size: 1.08rem;
-  line-height: 1.55;
+  font-size: 1.15rem;
+  line-height: 1.5;
   margin: 0 0 1.85rem;
   font-weight: 400;
+}
+
+.hero-minimal .hero-copy {
+  color: var(--fg-muted);
+  font-size: 1.25rem;
+  max-width: 22rem;
+  margin-bottom: 2rem;
 }
 
 .hero .btn-primary {
@@ -531,14 +534,27 @@ h3,
   color: var(--brand);
 }
 
+.hero-minimal .btn-primary {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.hero-minimal .btn-primary:hover {
+  background: var(--brand-strong);
+}
+
 .hero .btn-primary:hover {
   background: #ffffff;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
 }
 
 .hero .btn-secondary {
   color: #f7f8f9;
   border-color: rgba(247, 248, 249, 0.35);
+}
+
+.hero-minimal .btn-secondary {
+  color: var(--fg);
+  border-color: var(--line-strong);
 }
 
 .hero .btn-secondary:hover {
@@ -550,7 +566,6 @@ h3,
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  animation: riseIn 1.05s var(--ease-out) 0.12s both;
 }
 
 /* ——— Sections ——— */
@@ -951,7 +966,7 @@ h3,
   height: clamp(140px, 22vw, 220px);
   background:
     linear-gradient(120deg, rgba(10, 11, 13, 0.92) 0%, rgba(13, 79, 107, 0.78) 55%, rgba(31, 111, 139, 0.55) 100%),
-    url("/brand/hegos-hero.jpg") center 45% / cover no-repeat;
+    url("/brand/zrik-hero.jpg") center 45% / cover no-repeat;
   border-bottom: 1px solid var(--line);
 }
 

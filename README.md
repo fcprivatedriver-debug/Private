@@ -1,8 +1,8 @@
-# Hegos
+# ZRIK
 
-Private-chauffeur marketplace — request a trip, receive offers from verified drivers, choose with confidence.
+Private-chauffeur marketplace — choose the best driver, choose the best price.
 
-**Brand:** Hegos · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** ZRIK · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
 
 ## Stack
 
@@ -30,17 +30,19 @@ npm run dev
 
 Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
 
-## Environment
+## Branding
+
+Temporary typographic logo **ZRIK** (always uppercase). Compare variants A / B / C at `/pt/branding-preview`.
 
 | Variable | Example |
 |----------|---------|
 | `DATABASE_URL` | Neon pooled URL |
 | `DIRECT_URL` | Neon unpooled URL |
 | `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `Hegos` |
+| `NEXT_PUBLIC_APP_NAME` | `ZRIK` |
 
 See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
 
 ## Package
 
-- Package name: **hegos**
+- Package name: **zrik**

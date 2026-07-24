@@ -1,7 +1,7 @@
 {
   "meta": {
-    "appName": "Hegos",
-    "tagline": "Private chauffeurs. Chosen with confidence."
+    "appName": "ZRIK",
+    "tagline": "Choose the best driver. Choose the best price."
   },
   "nav": {
     "howItWorks": "How it works",
@@ -19,30 +19,31 @@
     "vehicleClasses": "Classes",
     "login": "Log in",
     "start": "Get started",
-    "logout": "Log out"
+    "logout": "Log out",
+    "branding": "Branding"
   },
   "home": {
-    "eyebrow": "Private chauffeurs · International",
-    "headline": "Hegos",
-    "copy": "Request a private transfer. Receive offers from verified drivers. Choose the one that feels right — calmly, clearly, on your terms.",
-    "ctaRequest": "Request a trip",
-    "ctaDriver": "Drive with Hegos",
+    "eyebrow": "Private chauffeur",
+    "headline": "ZRIK",
+    "copy": "Choose the best driver. Choose the best price.",
+    "ctaRequest": "Get offers",
+    "ctaDriver": "Drive with ZRIK",
     "ctaMyTrips": "View my trips",
     "ctaDashboard": "Open my dashboard",
     "ctaAdmin": "Open admin",
-    "stepsTitle": "Three moments. One experience.",
-    "stepsLead": "Hegos is not a taxi. It is a discreet marketplace where you define the trip and choose the offer.",
-    "step1Title": "Tell us the journey",
-    "step1Body": "Where we should meet you, where you are going, and what matters along the way.",
+    "stepsTitle": "Three steps. One experience.",
+    "stepsLead": "ZRIK is a discreet marketplace: define the trip, receive offers, choose with confidence.",
+    "step1Title": "Request the trip",
+    "step1Body": "Origin, destination, and what matters along the way.",
     "step2Title": "Receive offers",
-    "step2Body": "Verified drivers reply with price, vehicle and clear conditions.",
+    "step2Body": "Verified drivers reply with price and vehicle.",
     "step3Title": "Choose with confidence",
-    "step3Body": "Compare, accept, and travel with transparency from start to finish.",
+    "step3Body": "Compare, accept, and travel with transparency.",
     "terms": "Terms",
     "privacy": "Privacy"
   },
   "auth": {
-    "loginTitle": "Welcome back",
+    "loginTitle": "Log in",
     "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
     "email": "Email",
     "password": "Password",
@@ -51,7 +52,7 @@
     "invalidCredentials": "Incorrect email or password",
     "noAccount": "Don't have an account yet?",
     "registerLink": "Create account",
-    "registerTitle": "Welcome to Hegos",
+    "registerTitle": "Welcome to ZRIK",
     "registerLead": "Request trips or send offers — one account, one role to start.",
     "accountType": "How would you like to begin?",
     "customer": "I want to travel",
@@ -64,7 +65,7 @@
     "loginLink": "Log in"
   },
   "how": {
-    "title": "How Hegos works",
+    "title": "How ZRIK works",
     "lead": "A private-chauffeur marketplace reduced to the essentials: request, propose, choose."
   },
   "forDrivers": {
@@ -76,10 +77,23 @@
   "legal": {
     "termsTitle": "Terms of use",
     "privacyTitle": "Privacy",
-    "preliminary": "Preliminary version · Hegos"
+    "preliminary": "Preliminary version · ZRIK"
   },
   "common": {
     "loading": "Loading…"
+  },
+  "branding": {
+    "title": "Branding Preview",
+    "lead": "Compare the three typographic ZRIK logo variants and pick the one that best signals premium.",
+    "optionA": "Option A — ZRIK in black",
+    "optionADesc": "Full wordmark in #111111. Maximum simplicity.",
+    "optionB": "Option B — Z in blue",
+    "optionBDesc": "Z in #1E5EFF · RIK in #111111.",
+    "optionC": "Option C — Z and K in blue",
+    "optionCDesc": "Z and K in #1E5EFF · RI in #111111.",
+    "onLight": "Light background",
+    "onDark": "Dark background",
+    "note": "Temporary typographic logo. No 3D, no shadows, no gradients."
   },
   "tripForm": {
     "title": "Where shall we take you?",

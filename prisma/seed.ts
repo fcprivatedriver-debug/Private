@@ -330,7 +330,7 @@ async function createCompletedTrip(opts: {
       vehicleId: opts.vehicleId,
       priceAmount: price,
       currency: "EUR",
-      message: "Thank you for choosing Hegos.",
+      message: "Thank you for choosing ZRIK.",
       includesTolls: true,
       includesWaiting: opts.routeIndex % 2 === 0,
       status: "ACCEPTED",
@@ -733,7 +733,7 @@ async function seedNotifications(adminId: string, anaId: string, carlosId: strin
     notes.push({
       userId: i % 2 === 0 ? anaId : carlosId,
       type: i % 3 === 0 ? "OFFER_RECEIVED" : "SYSTEM",
-      title: i % 3 === 0 ? "Offer activity" : "Hegos update",
+      title: i % 3 === 0 ? "Offer activity" : "ZRIK update",
       body: `Demo notification #${i + 1} — marketplace looks active.`,
       readAt: i % 4 === 0 ? hoursFromNow(-i) : null,
       createdAt: hoursFromNow(-i * 3),
@@ -744,7 +744,7 @@ async function seedNotifications(adminId: string, anaId: string, carlosId: strin
 }
 
 async function main() {
-  console.log("Seeding Hegos Demo Mode…");
+  console.log("Seeding ZRIK Demo Mode…");
   await clearDemoData();
   await seedSettings();
 
@@ -753,7 +753,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       email: "admin@movio.app",
-      name: "Admin Hegos",
+      name: "Admin ZRIK",
       role: "ADMIN",
       passwordHash,
       phone: "+351900000001",

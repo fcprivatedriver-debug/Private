@@ -26,7 +26,7 @@ export async function generateMetadata({
     description: t("tagline"),
     applicationName: t("appName"),
     icons: {
-      icon: [{ url: "/brand/hegos-mark.svg", type: "image/svg+xml" }],
+      icon: [{ url: "/brand/zrik-mark.svg", type: "image/svg+xml" }],
     },
     openGraph: {
       title: `${t("appName")} — ${t("tagline")}`,

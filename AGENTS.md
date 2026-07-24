@@ -1,4 +1,4 @@
-# Agent notes — Hegos
+# Agent notes — ZRIK
 
 ## PR completion gate (mandatory)
 
