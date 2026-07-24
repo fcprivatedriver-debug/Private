@@ -1157,12 +1157,85 @@ h3,
   overflow: hidden;
   background: var(--bg-soft);
   box-shadow: var(--shadow-soft);
+  position: relative;
 }
 
-.trip-map iframe {
+.trip-map-canvas {
   width: 100%;
   height: 100%;
+  min-height: 220px;
+}
+
+.trip-map-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg-soft) 55%, transparent);
+  color: var(--fg-muted);
+  font-size: 0.92rem;
+}
+
+.trip-map-overlay-error {
+  background: color-mix(in srgb, #fff 80%, transparent);
+  color: var(--fg);
+  padding: 1rem;
+  text-align: center;
+}
+
+.places-field {
+  position: relative;
+}
+
+.places-hint {
+  font-size: 0.8rem;
+  margin: 0.25rem 0 0;
+}
+
+.places-suggestions {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0.35rem 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 0.15rem);
+  z-index: 30;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  max-height: 280px;
+  overflow: auto;
+}
+
+.places-suggestion {
+  width: 100%;
+  appearance: none;
   border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.15rem;
+  font: inherit;
+  color: inherit;
+}
+
+.places-suggestion:hover {
+  background: rgba(31, 90, 150, 0.06);
+}
+
+.places-suggestion-main {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.places-suggestion-secondary {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
 }
 
 .profile-hero {
@@ -1552,6 +1625,105 @@ h3,
 
 .booking-route-metrics {
   margin-bottom: 0.85rem;
+}
+
+.booking-planner-toggle-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.booking-planner-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.booking-planner-switch input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+}
+
+.booking-planner-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.booking-planner-type {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 560;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.booking-planner-type:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.booking-planner-type.is-selected {
+  background: var(--bg-ink);
+  border-color: var(--bg-ink);
+  color: #fff;
+}
+
+.booking-planner-type-hint {
+  opacity: 0.72;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.booking-planner-buffer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.booking-planner-buffer .input {
+  max-width: 7.5rem;
+}
+
+.booking-planner-results {
+  margin-top: 0.35rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  background:
+    linear-gradient(180deg, rgba(31, 90, 150, 0.07), rgba(255, 255, 255, 0.7));
+}
+
+.booking-planner-results .summary-strip {
+  margin: 0;
+}
+
+.booking-planner-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--fg-muted);
 }
 
 .booking-class-fieldset {

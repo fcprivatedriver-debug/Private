@@ -372,6 +372,14 @@ model TripRequest {
   distanceMeters          Int?
   /// Route duration in seconds (estimated)
   durationSeconds         Int?
+  /// Optional trip planner (arrive-by) mode
+  plannerEnabled          Boolean    @default(false)
+  /// AIRPORT | MEETING | EVENT | HOTEL | CUSTOM
+  plannerTripType         String?
+  desiredArrivalAt        DateTime?
+  safetyBufferMinutes     Int?
+  /// DOMESTIC | INTERNATIONAL (airport trips)
+  flightScope             String?
   expiresAt               DateTime?
   acceptedOfferId         String?    @unique
   createdAt               DateTime   @default(now())

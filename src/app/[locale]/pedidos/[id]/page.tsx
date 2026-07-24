@@ -157,6 +157,38 @@ export default async function TripDetailPage({ params }: Props) {
           </div>
         </div>
 
+        {trip.plannerEnabled && trip.desiredArrivalAt && (
+          <div className="panel" style={{ marginBottom: "1rem" }}>
+            <div className="label-sm" style={{ marginBottom: "0.55rem" }}>
+              Plano de viagem
+            </div>
+            <div className="summary-strip" style={{ margin: 0 }}>
+              <div className="summary-item">
+                <div className="label-sm">Tipo</div>
+                <strong>{trip.plannerTripType || "—"}</strong>
+              </div>
+              <div className="summary-item">
+                <div className="label-sm">Chegada desejada</div>
+                <strong>
+                  {format(trip.desiredArrivalAt, "d MMM · HH:mm", { locale: pt })}
+                </strong>
+              </div>
+              <div className="summary-item">
+                <div className="label-sm">Margem</div>
+                <strong>{trip.safetyBufferMinutes ?? 0} min</strong>
+              </div>
+              {trip.flightScope && (
+                <div className="summary-item">
+                  <div className="label-sm">Voo</div>
+                  <strong>
+                    {trip.flightScope === "INTERNATIONAL" ? "Internacional" : "Doméstico"}
+                  </strong>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <TripRouteMap
           pickupAddress={trip.pickupAddress}
           dropoffAddress={trip.dropoffAddress}

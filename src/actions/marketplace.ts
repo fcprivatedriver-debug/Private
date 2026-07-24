@@ -26,10 +26,19 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from "@/domain/onboarding";
 import { estimateRoute } from "@/lib/maps/route";
+import { ZodError } from "zod";
 
 function fail(error: unknown) {
   if (error instanceof DomainError) {
     return { ok: false as const, error: error.message, code: error.code };
+  }
+  if (error instanceof ZodError) {
+    const first = error.issues[0];
+    return {
+      ok: false as const,
+      error: first?.message || "Dados inválidos",
+      code: "VALIDATION",
+    };
   }
   console.error(error);
   return { ok: false as const, error: "Erro inesperado", code: "INTERNAL" };
@@ -187,6 +196,11 @@ export async function createTripAction(formData: FormData) {
       dropoffLng: formData.get("dropoffLng") || undefined,
       distanceMeters: formData.get("distanceMeters") || undefined,
       durationSeconds: formData.get("durationSeconds") || undefined,
+      plannerEnabled: formData.get("plannerEnabled") === "true",
+      plannerTripType: formData.get("plannerTripType") || undefined,
+      desiredArrivalAt: formData.get("desiredArrivalAt") || undefined,
+      safetyBufferMinutes: formData.get("safetyBufferMinutes") || undefined,
+      flightScope: formData.get("flightScope") || undefined,
     });
 
     let coords = {
@@ -231,6 +245,13 @@ export async function createTripAction(formData: FormData) {
       preferredVehicleClassId: parsed.preferredVehicleClassId,
       publish: parsed.publish,
       ...coords,
+      plannerEnabled: parsed.plannerEnabled,
+      plannerTripType: parsed.plannerTripType,
+      desiredArrivalAt: parsed.desiredArrivalAt
+        ? new Date(parsed.desiredArrivalAt)
+        : null,
+      safetyBufferMinutes: parsed.safetyBufferMinutes ?? null,
+      flightScope: parsed.flightScope ?? null,
     });
 
     return { ok: true as const, tripId: trip.id };

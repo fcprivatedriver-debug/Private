@@ -46,6 +46,11 @@ export async function createTripRequest(input: {
   dropoffLng?: number;
   distanceMeters?: number;
   durationSeconds?: number;
+  plannerEnabled?: boolean;
+  plannerTripType?: string;
+  desiredArrivalAt?: Date | null;
+  safetyBufferMinutes?: number | null;
+  flightScope?: string | null;
 }) {
   if (input.preferredVehicleClassId) {
     await assertActiveVehicleClass(input.preferredVehicleClassId);
@@ -74,6 +79,16 @@ export async function createTripRequest(input: {
       dropoffLng: input.dropoffLng ?? null,
       distanceMeters: input.distanceMeters ?? null,
       durationSeconds: input.durationSeconds ?? null,
+      plannerEnabled: Boolean(input.plannerEnabled),
+      plannerTripType: input.plannerEnabled ? input.plannerTripType || null : null,
+      desiredArrivalAt: input.plannerEnabled ? input.desiredArrivalAt || null : null,
+      safetyBufferMinutes: input.plannerEnabled
+        ? input.safetyBufferMinutes ?? null
+        : null,
+      flightScope:
+        input.plannerEnabled && input.plannerTripType === "AIRPORT"
+          ? input.flightScope || null
+          : null,
     },
   });
 

@@ -1,12 +1,17 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { createTripAction } from "@/actions/marketplace";
-import { AddressAutocompleteInput } from "@/components/map/AddressAutocompleteInput";
+import { AddressAutocompleteInput, type SelectedPlace } from "@/components/map/AddressAutocompleteInput";
 import { TripRouteMap } from "@/components/map/TripRouteMap";
+import {
+  TripPlannerSection,
+  type TripPlannerValues,
+} from "@/components/trip/TripPlannerSection";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDistance, formatDuration } from "@/lib/maps/route";
+import { formatPlanTime, parseDatetimeLocal } from "@/lib/maps/trip-planner";
 
 type VehicleClassOption = {
   id: string;
@@ -26,6 +31,7 @@ type RouteInfo = {
   dropoffLng: number;
   distanceLabel: string;
   durationLabel: string;
+  provider?: string;
 };
 
 function BookingIcon({ name }: { name: "route" | "schedule" | "party" | "details" }) {
@@ -74,6 +80,18 @@ function BookingIcon({ name }: { name: "route" | "schedule" | "party" | "details
   );
 }
 
+function defaultPlannerValues(): TripPlannerValues {
+  return {
+    enabled: false,
+    tripType: "CUSTOM",
+    flightScope: "DOMESTIC",
+    arrivalDate: "",
+    arrivalTime: "",
+    bufferMinutes: 10,
+    bufferTouched: false,
+  };
+}
+
 export default function NewTripPage() {
   const router = useRouter();
   const locale = useLocale();
@@ -83,9 +101,23 @@ export default function NewTripPage() {
   const [classes, setClasses] = useState<VehicleClassOption[]>([]);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupPlace, setPickupPlace] = useState<SelectedPlace | null>(null);
+  const [dropoffPlace, setDropoffPlace] = useState<SelectedPlace | null>(null);
   const [route, setRoute] = useState<RouteInfo | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
+  const [pickupAt, setPickupAt] = useState("");
+  const [planner, setPlanner] = useState<TripPlannerValues>(defaultPlannerValues);
+
+  const intlLocale = locale.startsWith("pt") ? "pt-PT" : "en-GB";
+
+  const estimatedArrivalLabel = (() => {
+    if (!route || !pickupAt) return null;
+    const start = parseDatetimeLocal(pickupAt);
+    if (!start) return null;
+    const eta = new Date(start.getTime() + route.durationSeconds * 1000);
+    return formatPlanTime(eta, intlLocale);
+  })();
 
   useEffect(() => {
     fetch(`/api/vehicle-classes?locale=${locale}`)
@@ -95,7 +127,7 @@ export default function NewTripPage() {
   }, [locale]);
 
   useEffect(() => {
-    if (pickup.trim().length < 5 || dropoff.trim().length < 5) {
+    if (pickup.trim().length < 3 || dropoff.trim().length < 3) {
       setRoute(null);
       return;
     }
@@ -103,6 +135,14 @@ export default function NewTripPage() {
       setEstimating(true);
       try {
         const qs = new URLSearchParams({ pickup, dropoff });
+        if (pickupPlace?.lat != null && pickupPlace?.lng != null) {
+          qs.set("pickupLat", String(pickupPlace.lat));
+          qs.set("pickupLng", String(pickupPlace.lng));
+        }
+        if (dropoffPlace?.lat != null && dropoffPlace?.lng != null) {
+          qs.set("dropoffLat", String(dropoffPlace.lat));
+          qs.set("dropoffLng", String(dropoffPlace.lng));
+        }
         const res = await fetch(`/api/routes/estimate?${qs}`);
         const data = await res.json();
         if (res.ok) setRoute(data);
@@ -112,9 +152,23 @@ export default function NewTripPage() {
       } finally {
         setEstimating(false);
       }
-    }, 650);
+    }, 450);
     return () => clearTimeout(handle);
-  }, [pickup, dropoff]);
+  }, [pickup, dropoff, pickupPlace?.lat, pickupPlace?.lng, dropoffPlace?.lat, dropoffPlace?.lng]);
+
+  const onRecommendedDepartureChange = useCallback((datetimeLocal: string | null) => {
+    if (datetimeLocal) setPickupAt(datetimeLocal);
+  }, []);
+
+  function onPickupPlace(place: SelectedPlace) {
+    setPickup(place.description);
+    setPickupPlace(place);
+  }
+
+  function onDropoffPlace(place: SelectedPlace) {
+    setDropoff(place.description);
+    setDropoffPlace(place);
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -122,6 +176,7 @@ export default function NewTripPage() {
     setError(null);
     const formData = new FormData(e.currentTarget);
     formData.set("publish", "true");
+    formData.set("pickupAt", pickupAt);
     const preferred = String(formData.get("preferredVehicleClassId") || "");
     if (!preferred) formData.delete("preferredVehicleClassId");
     if (route) {
@@ -174,14 +229,14 @@ export default function NewTripPage() {
                 label={t("pickup")}
                 placeholder={t("pickupPlaceholder")}
                 required
-                onChangeValue={setPickup}
+                onPlaceChange={onPickupPlace}
               />
               <AddressAutocompleteInput
                 name="dropoffAddress"
                 label={t("dropoff")}
                 placeholder={t("dropoffPlaceholder")}
                 required
-                onChangeValue={setDropoff}
+                onPlaceChange={onDropoffPlace}
               />
 
               {(route || estimating) && (
@@ -198,10 +253,12 @@ export default function NewTripPage() {
                           <div className="label-sm">{t("duration")}</div>
                           <strong>{formatDuration(route.durationSeconds)}</strong>
                         </div>
-                        <div className="summary-item">
-                          <div className="label-sm">{t("mapLabel")}</div>
-                          <strong>Live</strong>
-                        </div>
+                        {estimatedArrivalLabel && (
+                          <div className="summary-item">
+                            <div className="label-sm">{t("eta")}</div>
+                            <strong>{estimatedArrivalLabel}</strong>
+                          </div>
+                        )}
                       </div>
                       <TripRouteMap
                         pickupAddress={pickup}
@@ -218,6 +275,21 @@ export default function NewTripPage() {
             </div>
           </section>
 
+          <TripPlannerSection
+            values={planner}
+            onChange={setPlanner}
+            route={
+              route
+                ? {
+                    distanceMeters: route.distanceMeters,
+                    durationSeconds: route.durationSeconds,
+                  }
+                : null
+            }
+            estimating={estimating}
+            onRecommendedDepartureChange={onRecommendedDepartureChange}
+          />
+
           <section className="booking-section">
             <div className="booking-section-head">
               <span className="booking-section-icon">
@@ -225,15 +297,30 @@ export default function NewTripPage() {
               </span>
               <div>
                 <h2>{t("scheduleSection")}</h2>
-                <p>{t("scheduleHint")}</p>
+                <p>
+                  {planner.enabled ? t("scheduleHintPlanner") : t("scheduleHint")}
+                </p>
               </div>
             </div>
             <div className="booking-section-body">
               <div className="field">
                 <label className="label" htmlFor="pickupAt">
-                  {t("when")}
+                  {planner.enabled ? t("whenDeparture") : t("when")}
                 </label>
-                <input className="input" id="pickupAt" name="pickupAt" type="datetime-local" required />
+                <input
+                  className="input"
+                  id="pickupAt"
+                  name="pickupAt"
+                  type="datetime-local"
+                  required
+                  value={pickupAt}
+                  onChange={(e) => setPickupAt(e.target.value)}
+                />
+                {planner.enabled && (
+                  <p className="muted" style={{ fontSize: "0.85rem", margin: "0.4rem 0 0" }}>
+                    {t("departureSynced")}
+                  </p>
+                )}
               </div>
 
               <fieldset className="booking-class-fieldset">
@@ -259,9 +346,7 @@ export default function NewTripPage() {
                       <span className="booking-class-meta">
                         {c.description || `Até ${c.maxPassengers} · ${c.maxLuggage} bags`}
                       </span>
-                      <span className="booking-class-capacity">
-                        ≤ {c.maxPassengers} pax
-                      </span>
+                      <span className="booking-class-capacity">≤ {c.maxPassengers} pax</span>
                     </button>
                   ))}
                 </div>

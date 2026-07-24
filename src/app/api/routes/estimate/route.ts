@@ -34,6 +34,7 @@ export async function GET(req: Request) {
     pickupLng: estimate.pickup.lng,
     dropoffLat: estimate.dropoff.lat,
     dropoffLng: estimate.dropoff.lng,
+    provider: estimate.provider,
     distanceLabel: `${(estimate.distanceMeters / 1000).toFixed(1)} km`,
     durationLabel:
       estimate.durationSeconds < 3600

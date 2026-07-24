@@ -94,6 +94,41 @@
     "estimating": "A calcular o trajeto…",
     "distance": "Distância",
     "duration": "Duração estimada",
-    "mapLabel": "Pré-visualização da rota"
+    "mapLabel": "Pré-visualização da rota",
+    "eta": "Chegada estimada",
+    "scheduleHintPlanner": "A partida recomendada é calculada pelo planeador — pode ajustá-la.",
+    "whenDeparture": "Partida (recolha)",
+    "departureSynced": "Sincronizado com o planeador. Pode editar se preferir outra hora."
+  },
+  "tripPlanner": {
+    "title": "Planear a minha viagem",
+    "lead": "Indique quando precisa de chegar — calculamos a partida ideal.",
+    "enable": "Ativar",
+    "enabled": "Ativo",
+    "tripType": "Tipo de viagem",
+    "types": {
+      "AIRPORT": "Aeroporto",
+      "MEETING": "Reunião",
+      "EVENT": "Evento",
+      "HOTEL": "Hotel",
+      "CUSTOM": "Personalizado"
+    },
+    "flightScope": "Tipo de voo",
+    "domestic": "Doméstico",
+    "international": "Internacional",
+    "airportHint": "Recomendamos chegar 2 h antes (doméstico) ou 3 h antes (internacional). Pode alterar o buffer.",
+    "arrivalDate": "Data de chegada",
+    "arrivalTime": "Hora de chegada",
+    "buffer": "Margem de segurança",
+    "bufferUnit": "minutos",
+    "resetBuffer": "Repor recomendado",
+    "calculating": "A recalcular a rota…",
+    "needRoute": "Indique origem e destino para calcular o plano.",
+    "needArrival": "Escolha a data e hora de chegada desejadas.",
+    "distance": "Distância",
+    "travelTime": "Tempo de viagem",
+    "recommendedDeparture": "Partida recomendada",
+    "expectedArrival": "Chegada prevista",
+    "syncNote": "Partida = chegada desejada − {travel} min de viagem − {buffer} min de margem."
   }
 }
