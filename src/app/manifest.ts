@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Nina",
     short_name: "Nina",
     description:
-      "Assistente financeira pessoal e familiar. Captura por voz, fotografia e texto — a Nina trata do resto.",
+      "A vida é para ser vivida. A Nina trata das contas. Captura por voz, fotografia e texto.",
     start_url: "/pt/dashboard",
     scope: "/",
     display: "standalone",

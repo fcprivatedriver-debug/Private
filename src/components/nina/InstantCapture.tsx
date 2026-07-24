@@ -325,7 +325,7 @@ export function InstantCapture({
             </li>
           </ul>
           <p className="muted small" style={{ marginBottom: 0 }}>
-            O utilizador vive a sua vida. A Nina trata do resto.
+            A vida é para ser vivida. A Nina trata das contas.
           </p>
         </div>
       </section>

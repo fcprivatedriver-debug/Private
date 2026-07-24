@@ -32,8 +32,8 @@ export default async function CapturaPage({
       </h1>
       <p className="page-sub">
         {autoStart && mode === "voice"
-          ? "Diz o valor e o sítio. A Nina categoriza, guarda e atualiza saldos, gráficos e orçamentos."
-          : "Regista uma despesa ou receita em segundos — fala, escreve ou fotografa. Sem menus. Sem formulários."}
+          ? "Diz o valor e o sítio. A Nina interpreta a intenção, categoriza e atualiza tudo — tu continua a viver."
+          : "Fala, escreve ou fotografa a fatura. A Nina interpreta e executa — sem menus, sem formulários, sem burocracia."}
       </p>
       <InstantCapture initialMode={mode} autoStart={autoStart} />
     </div>

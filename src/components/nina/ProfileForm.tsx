@@ -80,7 +80,7 @@ export function ProfileForm({
         <input name="pin" type="password" inputMode="numeric" minLength={4} placeholder="••••" />
       </label>
       <p className="muted small">
-        A Nina nunca te culpa. Adapta o tom ao que preferes — e escolhe sempre o caminho mais simples.
+        A vida é para ser vivida. A Nina trata das contas — sem culpas, no teu ritmo, pelo caminho mais simples.
       </p>
       <button className="btn btn-primary" type="submit" disabled={pending}>
         Guardar perfil

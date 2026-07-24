@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s · Nina",
   },
   description:
-    "A Nina trata das contas para que tu possas aproveitar a vida. Assistente financeira com IA, simples e em português.",
+    "A vida é para ser vivida. A Nina trata das contas. Assistente financeira inteligente com IA — voz, texto e fotografia.",
   applicationName: "Nina",
   appleWebApp: {
     capable: true,

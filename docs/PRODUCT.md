@@ -45,7 +45,12 @@ O utilizador pode definir regras explícitas — «sempre que eu disser compras 
 
 ## Filosofia
 
-**Quanto mais a Nina é utilizada, menos trabalho o utilizador tem.**
+> **A vida é para ser vivida. A Nina trata das contas.**
+
+Quanto mais a Nina é utilizada, menos trabalho o utilizador tem.  
+A aplicação adapta-se ao utilizador — nunca o contrário.
+
+Documento canónico: [`docs/MISSION.md`](./MISSION.md).
 
 ---
 
@@ -91,4 +96,4 @@ Com autorização da câmara, fotografa faturas, talões, recibos e contas. O OC
 
 Falar · escrever · fotografar · importação automática (Ligações) · conversa longa — todos produzem o mesmo registo final.
 
-**Princípio:** o utilizador vive a sua vida; a Nina trata do resto.
+**Princípio:** A vida é para ser vivida. A Nina trata das contas.

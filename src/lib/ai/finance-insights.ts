@@ -118,10 +118,22 @@ export function generateInsights(
       kind: "save",
       title: "Há folga — boa oportunidade",
       body: shapeLength(
-        `Tens cerca de ${formatEUR(balance)} de margem. Se fizer sentido, podes pôr ${formatEUR(Math.round(balance * 0.2))} de lado num objetivo — só se quiseres.`,
+        `Tens cerca de ${formatEUR(balance)} de margem. Se fizer sentido, reforça um objetivo com ${formatEUR(Math.round(balance * 0.2))} — a vida continua, a Nina trata das contas.`,
         prefs,
       ),
       severity: "success",
+    });
+  }
+
+  if (!stress) {
+    out.push({
+      kind: "automation",
+      title: "Menos trabalho repetitivo",
+      body: shapeLength(
+        "Se alguma despesa se repete todos os meses (renda, Netflix, ginásio…), posso automatizá-la em Recorrentes. Diz-me qual e eu trato disso.",
+        prefs,
+      ),
+      severity: "info",
     });
   }
 

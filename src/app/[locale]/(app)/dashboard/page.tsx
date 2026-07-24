@@ -16,6 +16,7 @@ import { NinaChat } from "@/components/nina/NinaChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
 import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
 import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
+import { NINA_MISSION_LINE } from "@/lib/ai/mission";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -46,6 +47,7 @@ export default async function DashboardPage() {
                 : "Só as tuas receitas, despesas e objetivos pessoais."}
               {` · ${data.monthLabel}`}
             </p>
+            <p className="mission-whisper muted small">{NINA_MISSION_LINE}</p>
           </div>
           {space === "family" ? <HouseholdLiveSync /> : null}
         </div>

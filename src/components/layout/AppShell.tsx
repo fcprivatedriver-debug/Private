@@ -8,6 +8,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import { SpaceSwitcher } from "@/components/nina/SpaceSwitcher";
 import type { NinaSpace } from "@/actions/household";
 import { cn } from "@/lib/utils";
+import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 
 /** Navegação simples — captura e conversa no centro. */
 const NAV = [
@@ -55,7 +56,7 @@ export function AppShell({
       <aside className="app-sidebar">
         <div className="sidebar-top">
           <BrandLogo href="/pt/dashboard" size="sm" />
-          <p className="sidebar-tag">Quanto mais usas, menos trabalho tens</p>
+          <p className="sidebar-tag">{NINA_MISSION_SHORT}</p>
         </div>
         <div className="sidebar-space">
           <SpaceSwitcher space={space} />

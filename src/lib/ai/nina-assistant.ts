@@ -108,7 +108,7 @@ export function greeting(ctx: NinaContext): NinaReply {
       : `Este mês as despesas passaram um pouco as receitas (${formatEUR(Math.abs(balance))}). Vamos olhar para isso com calma — juntos.`;
 
   return withVoice(
-    `Olá, ${name}. Sou a Nina — a tua assistente financeira, sem stress e sem julgamentos.\n\n${calm}${familyBit}\n\nFala comigo como falarias com uma amiga. Por exemplo: “gastei 22 euros na BP” ou “quanto me resta para supermercado?”.`,
+    `Olá, ${name}. Sou a Nina — a tua assistente financeira.\n\nA vida é para ser vivida; eu trato das contas — sem stress e sem julgamentos.\n\n${calm}${familyBit}\n\nFala comigo como falarias com uma amiga. Por exemplo: “gastei 22 euros na BP” ou “quanto me resta para supermercado?”.`,
     balance >= 0 ? "warm" : "careful",
     ctx,
     SUGGESTIONS.slice(0, 4),

@@ -21,7 +21,7 @@ export default async function AlertasPage() {
     <div>
       <h1 className="page-title">Avisos da Nina</h1>
       <p className="page-sub">
-        Eu aviso-te a tempo — sempre com tom positivo e sem julgamentos.
+        Eu aviso-te a tempo — sempre com tom positivo e construtivo, sem julgamentos. A vida continua; eu trato das contas.
       </p>
       <Panel title="Notificações">
         <div className="list-rows">

@@ -445,7 +445,7 @@ export async function getSmartSuggestions() {
       ? { scope: "FAMILY" as const }
       : { scope: "PERSONAL" as const, memberId: membership.id };
 
-  const [exp, prevExp, goals] = await Promise.all([
+  const [exp, prevExp, goals, recurring] = await Promise.all([
     prisma.expense.findMany({
       where: { familyId: family.id, date: { gte: start, lte: end }, ...scopeWhere },
       include: { category: true },
@@ -461,11 +461,21 @@ export async function getSmartSuggestions() {
     prisma.savingsGoal.findMany({
       where: space === "family" ? { familyId: family.id, scope: "FAMILY" } : { familyId: family.id, scope: "PERSONAL" },
     }),
+    prisma.recurringPayment.findMany({
+      where: { familyId: family.id, isActive: true },
+      select: { name: true, categoryId: true },
+    }),
   ]);
 
   const suggestions: { title: string; body: string; tone: string }[] = [];
   const total = exp.reduce((s, e) => s + e.amountCents, 0);
   const prevTotal = prevExp.reduce((s, e) => s + e.amountCents, 0);
+  const incomeAgg = await prisma.income.aggregate({
+    where: { familyId: family.id, date: { gte: start, lte: end }, ...scopeWhere },
+    _sum: { amountCents: true },
+  });
+  const incomeCents = incomeAgg._sum.amountCents ?? 0;
+  const surplus = incomeCents - total;
 
   const resto = exp.filter((e) => /restaurante/i.test(e.category.name));
   const prevResto = prevExp.filter((e) => /restaurante/i.test(e.category.name));
@@ -483,8 +493,49 @@ export async function getSmartSuggestions() {
   if (prevTotal > 0 && total < prevTotal) {
     suggestions.push({
       title: "Este mês já poupaste mais do que no mês passado",
-      body: `Gastaste ${formatEUR(prevTotal - total)} a menos até agora.`,
+      body: `Gastaste ${formatEUR(prevTotal - total)} a menos até agora. A vida continua — eu trato das contas.`,
       tone: "success",
+    });
+  }
+
+  // Dinheiro disponível → reforçar poupanças / objetivos
+  if (surplus >= 50_00) {
+    const focus = goals
+      .filter((g) => g.targetCents > g.currentCents)
+      .sort(
+        (a, b) =>
+          b.currentCents / Math.max(1, b.targetCents) -
+          a.currentCents / Math.max(1, a.targetCents),
+      )[0];
+    const soft = Math.min(surplus, 50_00);
+    suggestions.push({
+      title: "Há margem este mês",
+      body: focus
+        ? `Ainda tens cerca de ${formatEUR(surplus)} de folga. Queres reforçar “${focus.name}” com ${formatEUR(soft)}? Diz-me e eu trato disso.`
+        : `Ainda tens cerca de ${formatEUR(surplus)} de folga. Se quiseres, criamos um objetivo e metemos ${formatEUR(soft)} de lado.`,
+      tone: "celebrate",
+    });
+  }
+
+  // Tarefa repetitiva → sugerir automatizar
+  const storeCounts = new Map<string, { count: number; sample: string }>();
+  for (const e of exp) {
+    if (e.recurringPaymentId) continue;
+    const key = (e.storeName || e.category.name || "").trim().toLowerCase();
+    if (!key || key.length < 3) continue;
+    const cur = storeCounts.get(key) || { count: 0, sample: e.storeName || e.category.name };
+    cur.count += 1;
+    storeCounts.set(key, cur);
+  }
+  const recurringNames = new Set(recurring.map((r) => r.name.toLowerCase()));
+  const repeat = [...storeCounts.entries()]
+    .filter(([key, v]) => v.count >= 3 && ![...recurringNames].some((n) => key.includes(n) || n.includes(key)))
+    .sort((a, b) => b[1].count - a[1].count)[0];
+  if (repeat) {
+    suggestions.push({
+      title: `“${repeat[1].sample}” aparece muitas vezes`,
+      body: `Já viste isto ${repeat[1].count} vezes este mês. Queres que eu automatize este pagamento em Recorrentes? Assim não precisas de voltar a registar.`,
+      tone: "info",
     });
   }
 
@@ -531,7 +582,7 @@ export async function getSmartSuggestions() {
     });
   }
 
-  return { ok: true as const, suggestions: suggestions.slice(0, 4) };
+  return { ok: true as const, suggestions: suggestions.slice(0, 5) };
 }
 
 export async function getHouseholdSyncSnapshot() {

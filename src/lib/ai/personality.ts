@@ -1,8 +1,11 @@
 /**
  * Personalidade da Nina — assistente financeira humana, nunca robótica.
  *
+ * Missão: ver `mission.ts` — "A vida é para ser vivida. A Nina trata das contas."
  * Filosofia: "Isto torna a vida do utilizador mais simples?"
  */
+
+import { NINA_MISSION_LINE, NINA_SIMPLE_RULE } from "@/lib/ai/mission";
 
 export type NinaTone = "warm" | "celebrate" | "careful" | "neutral" | "playful";
 
@@ -211,8 +214,10 @@ export function resolveVoicePrefs(input: {
   return { replyLength, humor, source };
 }
 
-export const NINA_PHILOSOPHY =
-  "A tecnologia nunca deve complicar. Sempre que existirem duas formas, escolhe a mais simples.";
+/** @deprecated Prefer NINA_MISSION_LINE / NINA_SIMPLE_RULE from mission.ts */
+export const NINA_PHILOSOPHY = NINA_SIMPLE_RULE;
+
+export const NINA_MISSION_TAGLINE = NINA_MISSION_LINE;
 
 export const NATURAL_EXAMPLES = [
   "Gastei 22 euros na BP",
