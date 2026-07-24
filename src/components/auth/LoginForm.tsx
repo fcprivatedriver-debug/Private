@@ -21,11 +21,9 @@ function LoginFormInner() {
   function go(role?: string | null) {
     setLeaving(true);
     const target = safePostLoginPath(role, params.get("callbackUrl"), locale);
-    // Hard navigation so the login RSC shell is fully replaced
     window.location.assign(target);
   }
 
-  // If session appears (hydration / post-login), never keep the form visible
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       go(session.user.role);
@@ -55,15 +53,20 @@ function LoginFormInner() {
       const res = await Promise.race([signInPromise, timeout]);
 
       if (res === null) {
-        setError(
-          "O login demorou demasiado (base de dados). Tente de novo daqui a alguns segundos.",
-        );
+        setLoading(false);
+        setError(t("loginTimeout"));
         return;
       }
 
       if (res.error) {
+        setLoading(false);
         if (res.error === "Configuration" || res.status === 500) {
-          setError("Erro temporário de autenticação. Atualize a página ou tente de novo.");
+          setError(t("authConfigError"));
+          return;
+        }
+        const code = "code" in res ? String((res as { code?: string }).code || "") : "";
+        if (code === "email_not_verified" || res.error === "email_not_verified") {
+          setError(t("emailNotVerified"));
           return;
         }
         setError(t("invalidCredentials"));
@@ -74,7 +77,7 @@ function LoginFormInner() {
       const role = fresh?.user?.role ?? session?.user?.role;
       go(role);
     } catch {
-      setError("Não foi possível entrar. Verifique a ligação e tente de novo.");
+      setError(t("loginFailed"));
       setLoading(false);
       setLeaving(false);
     }
@@ -85,7 +88,7 @@ function LoginFormInner() {
       <section className="auth-shell fade-up">
         <div className="container" style={{ maxWidth: 440 }}>
           <h1 className="page-title">{t("loginTitle")}</h1>
-          <p className="page-lead">{loading ? t("loggingIn") : "A redirecionar…"}</p>
+          <p className="page-lead">{loading ? t("loggingIn") : t("redirecting")}</p>
         </div>
       </section>
     );
@@ -95,7 +98,7 @@ function LoginFormInner() {
     return (
       <section className="auth-shell fade-up">
         <div className="container" style={{ maxWidth: 440 }}>
-          <p className="page-lead">…</p>
+          <p className="page-lead">{t("loadingSession")}</p>
         </div>
       </section>
     );
@@ -106,11 +109,7 @@ function LoginFormInner() {
       <div className="container" style={{ maxWidth: 440 }}>
         <h1 className="page-title">{t("loginTitle")}</h1>
         <p className="page-lead">{t("loginHint")}</p>
-        {configError && (
-          <div className="alert alert-error">
-            Erro temporário de autenticação. Atualize a página ou faça redeploy na Vercel.
-          </div>
-        )}
+        {configError && <div className="alert alert-error">{t("authConfigError")}</div>}
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">
           <div className="field">

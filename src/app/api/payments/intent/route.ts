@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     return Response.json({
       status: "not_configured",
       message:
-        "Pagamentos seguros em breve. Com PAYMENTS_ENABLED=false a reserva é confirmada manualmente no fluxo demo.",
+        "Confirme o pagamento na aplicação para garantir a reserva. Active Stripe com PAYMENTS_ENABLED=true quando estiver pronto.",
       payment: booking.payment,
     });
   }

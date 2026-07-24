@@ -1046,10 +1046,21 @@ h3,
 }
 
 .site-footer {
+  margin-top: auto;
   border-top: 1px solid var(--line);
   padding: 2.25rem 0 3rem;
   color: var(--fg-muted);
   font-size: 0.9rem;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
 }
 
 .site-footer-inner {

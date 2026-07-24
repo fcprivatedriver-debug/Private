@@ -3,6 +3,7 @@ import { Link as LocaleLink } from "@/i18n/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { routing } from "@/i18n/routing";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { dashboardPathForRole } from "@/lib/auth-routes";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
@@ -27,19 +28,13 @@ export async function SiteHeader() {
   const role = session?.user?.role;
   const locale = await getLocale();
   const t = await getTranslations("nav");
+  const homeHref = session?.user ? dashboardPathForRole(role) : "/login";
 
   return (
     <header className="site-header">
       <div className="container site-header-inner">
-        <BrandLogo />
+        <BrandLogo href={homeHref} />
         <nav className="nav-links">
-          {!session && (
-            <>
-              <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
-              <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
-              <LocaleLink href="/homepage-lab">{t("branding")}</LocaleLink>
-            </>
-          )}
           {role === "CUSTOMER" && (
             <>
               <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>
@@ -78,7 +73,7 @@ export async function SiteHeader() {
               <form
                 action={async () => {
                   "use server";
-                  await signOut({ redirectTo: `/${locale}` });
+                  await signOut({ redirectTo: `/${locale}/login` });
                 }}
               >
                 <button type="submit" className="btn btn-secondary btn-sm">

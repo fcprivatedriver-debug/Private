@@ -24,7 +24,7 @@ export function PaymentCheckout({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function confirmDemo() {
+  async function confirmPayment() {
     setLoading(true);
     setError(null);
     const result = await confirmPaymentAction(bookingId);
@@ -55,55 +55,27 @@ export function PaymentCheckout({
           background: "var(--surface-2)",
         }}
       >
-        <div style={{ fontWeight: 600, marginBottom: "0.65rem" }}>Cartão</div>
+        <div style={{ fontWeight: 600, marginBottom: "0.65rem" }}>Pagamento</div>
         {stripeReady && clientSecret ? (
           <p className="muted" style={{ margin: 0 }}>
-            Stripe Elements pronto. Client secret recebido — finalize com o formulário Stripe em
-            produção.
+            Pagamento seguro preparado. Finalize com o formulário de cartão para confirmar a
+            reserva.
           </p>
         ) : (
-          <>
-            <div className="field" style={{ marginBottom: "0.65rem" }}>
-              <label className="label" htmlFor="card">
-                Número do cartão
-              </label>
-              <input
-                className="input"
-                id="card"
-                name="card"
-                defaultValue="4242 4242 4242 4242"
-                readOnly
-              />
-            </div>
-            <div className="grid-2" style={{ gap: "0.65rem" }}>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label className="label" htmlFor="exp">
-                  Validade
-                </label>
-                <input className="input" id="exp" defaultValue="12 / 28" readOnly />
-              </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label className="label" htmlFor="cvc">
-                  CVC
-                </label>
-                <input className="input" id="cvc" defaultValue="123" readOnly />
-              </div>
-            </div>
-            <p className="muted" style={{ fontSize: "0.82rem", margin: "0.75rem 0 0" }}>
-              Modo demonstração — Stripe Connect ativa-se com{" "}
-              <code>PAYMENTS_ENABLED=true</code> e chaves Stripe.
-            </p>
-          </>
+          <p className="muted" style={{ margin: 0, fontSize: "0.92rem" }}>
+            Confirme o pagamento para garantir a reserva. Os contactos entre cliente e motorista
+            ficam disponíveis após a confirmação.
+          </p>
         )}
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      <button className="btn btn-primary" type="button" disabled={loading} onClick={confirmDemo}>
+      <button className="btn btn-primary" type="button" disabled={loading} onClick={confirmPayment}>
         {loading ? "A confirmar…" : "Confirmar pagamento"}
       </button>
       <p className="muted" style={{ fontSize: "0.82rem", marginTop: "0.85rem", marginBottom: 0 }}>
-        Pagamento seguro. A confirmação da reserva aparece de seguida.
+        Pagamento seguro. A reserva é confirmada de imediato após a validação.
       </p>
     </div>
   );

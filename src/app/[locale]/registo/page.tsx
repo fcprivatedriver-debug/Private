@@ -3,8 +3,8 @@
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
-import { registerAction } from "@/actions/marketplace";
-import { signIn, useSession } from "next-auth/react";
+import { registerAction, resendVerificationAction } from "@/actions/marketplace";
+import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { dashboardPathForRole } from "@/lib/auth-routes";
 
@@ -17,6 +17,8 @@ function RegisterFormInner() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [resendNote, setResendNote] = useState<string | null>(null);
 
   function go(dest: string) {
     setLeaving(true);
@@ -39,31 +41,77 @@ function RegisterFormInner() {
       const result = await registerAction(formData);
       if (!result.ok) {
         setError(result.error);
+        setLoading(false);
         return;
       }
-      const login = await signIn("credentials", {
-        email: String(formData.get("email")),
-        password: String(formData.get("password")),
-        redirect: false,
-      });
-      if (login?.error) {
-        window.location.assign(`/${locale}/login`);
+      if ("needsVerification" in result && result.needsVerification) {
+        setPendingEmail(result.email);
+        setLoading(false);
         return;
       }
-      const role = String(formData.get("role"));
-      go(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
+      window.location.assign(`/${locale}/login`);
     } catch {
       setError("Não foi possível registar. Tente de novo.");
       setLoading(false);
     }
   }
 
-  if (status === "authenticated" || leaving || loading) {
+  async function onResend() {
+    if (!pendingEmail) return;
+    setResendNote(null);
+    const result = await resendVerificationAction(pendingEmail);
+    if (!result.ok) {
+      setResendNote(result.error);
+      return;
+    }
+    setResendNote(t("verificationResent"));
+  }
+
+  if (status === "authenticated" || leaving) {
     return (
       <section className="auth-shell fade-up">
         <div className="container" style={{ maxWidth: 480 }}>
           <h1 className="page-title">{t("registerTitle")}</h1>
-          <p className="page-lead">{loading ? "…" : "A redirecionar…"}</p>
+          <p className="page-lead">A redirecionar…</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (pendingEmail) {
+    return (
+      <section className="auth-shell fade-up">
+        <div className="container" style={{ maxWidth: 520 }}>
+          <h1 className="page-title">{t("checkEmailTitle")}</h1>
+          <p className="page-lead">
+            {t("checkEmailLead", { email: pendingEmail })}
+          </p>
+          <div className="panel" style={{ marginBottom: "1rem" }}>
+            <p style={{ margin: "0 0 0.75rem" }}>{t("checkEmailSteps")}</p>
+            <ol style={{ margin: 0, paddingLeft: "1.2rem", color: "var(--muted)" }}>
+              <li>{t("checkEmailStep1")}</li>
+              <li>{t("checkEmailStep2")}</li>
+              <li>{t("checkEmailStep3")}</li>
+            </ol>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
+            <Link href="/login" className="btn btn-primary">
+              {t("loginLink")}
+            </Link>
+            <button type="button" className="btn btn-secondary" onClick={onResend}>
+              {t("resendVerification")}
+            </button>
+          </div>
+          {resendNote && (
+            <p className="muted" style={{ marginTop: "1rem" }}>
+              {resendNote}
+            </p>
+          )}
+          <p className="muted" style={{ marginTop: "1.25rem" }}>
+            <Link href="/login" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+              {t("loginLink")}
+            </Link>
+          </p>
         </div>
       </section>
     );

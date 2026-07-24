@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export function generateStaticParams() {
@@ -51,14 +51,15 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  const tLegal = await getTranslations("legal");
 
   return (
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
-        <div lang={locale}>
-          <DemoModeBanner />
+        <div lang={locale} className="app-shell">
           <SiteHeader />
-          <main>{children}</main>
+          <main className="app-main">{children}</main>
+          <SiteFooter termsLabel={tLegal("termsLink")} privacyLabel={tLegal("privacyLink")} />
         </div>
       </AuthProvider>
     </NextIntlClientProvider>

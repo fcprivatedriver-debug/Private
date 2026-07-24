@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -8,26 +8,8 @@ import { prisma } from "@/lib/db";
 import { authConfig } from "@/auth.config";
 import { z } from "zod";
 
-declare module "next-auth" {
-  interface User {
-    role: Role;
-  }
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: Role;
-      image?: string | null;
-    };
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-  }
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "email_not_verified";
 }
 
 const credentialsSchema = z.object({
@@ -57,6 +39,10 @@ const providers = [
 
       const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
       if (!valid) return null;
+
+      if (!user.emailVerified) {
+        throw new EmailNotVerifiedError();
+      }
 
       return {
         id: user.id,

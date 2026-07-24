@@ -4,12 +4,28 @@ import { resolveCommissionPercent } from "@/lib/commission";
 import { getPaymentProvider } from "@/lib/payments/provider";
 import { assertActiveVehicleClass } from "@/domain/vehicle-class";
 import type { TripStatus } from "@prisma/client";
+import {
+  notifyOfferAccepted,
+  notifyOfferReceived,
+  notifyPaymentConfirmed,
+  notifyTripCompleted,
+  notifyTripCreated,
+  notifyTripStarted,
+} from "@/lib/email/notifications";
 
 export class DomainError extends Error {
   code: string;
   constructor(code: string, message: string) {
     super(message);
     this.code = code;
+  }
+}
+
+async function safeNotify(label: string, fn: () => Promise<unknown>) {
+  try {
+    await fn();
+  } catch (err) {
+    console.error(`[notify:${label}]`, err);
   }
 }
 
@@ -38,7 +54,7 @@ export async function createTripRequest(input: {
   const expiresAt = new Date(input.pickupAt.getTime() - 2 * 60 * 60 * 1000);
   const status: TripStatus = input.publish ? "OPEN" : "DRAFT";
 
-  return prisma.tripRequest.create({
+  const trip = await prisma.tripRequest.create({
     data: {
       customerId: input.customerId,
       pickupAddress: input.pickupAddress,
@@ -60,6 +76,19 @@ export async function createTripRequest(input: {
       durationSeconds: input.durationSeconds ?? null,
     },
   });
+
+  if (input.publish) {
+    await safeNotify("trip_created", () =>
+      notifyTripCreated({
+        customerId: trip.customerId,
+        tripId: trip.id,
+        pickup: trip.pickupAddress,
+        dropoff: trip.dropoffAddress,
+      }),
+    );
+  }
+
+  return trip;
 }
 
 export async function publishTrip(tripId: string, customerId: string) {
@@ -70,10 +99,19 @@ export async function publishTrip(tripId: string, customerId: string) {
   if (trip.status !== "DRAFT") {
     throw new DomainError("INVALID_STATE", "Só rascunhos podem ser publicados");
   }
-  return prisma.tripRequest.update({
+  const updated = await prisma.tripRequest.update({
     where: { id: tripId },
     data: { status: "OPEN" },
   });
+  await safeNotify("trip_created", () =>
+    notifyTripCreated({
+      customerId: updated.customerId,
+      tripId: updated.id,
+      pickup: updated.pickupAddress,
+      dropoff: updated.dropoffAddress,
+    }),
+  );
+  return updated;
 }
 
 export async function cancelTrip(tripId: string, userId: string, role: string) {
@@ -157,7 +195,7 @@ export async function createOrUpdateOffer(input: {
   });
 
   if (existing) {
-    return prisma.offer.update({
+    const updated = await prisma.offer.update({
       where: { id: existing.id },
       data: {
         vehicleId,
@@ -169,9 +207,19 @@ export async function createOrUpdateOffer(input: {
         validUntil,
       },
     });
+    await safeNotify("offer_received", () =>
+      notifyOfferReceived({
+        customerId: trip.customerId,
+        tripId: trip.id,
+        offerId: updated.id,
+        priceAmount: updated.priceAmount,
+        currency: updated.currency,
+      }),
+    );
+    return updated;
   }
 
-  return prisma.offer.create({
+  const created = await prisma.offer.create({
     data: {
       tripRequestId: input.tripRequestId,
       driverId: input.driverId,
@@ -186,6 +234,16 @@ export async function createOrUpdateOffer(input: {
       status: "PENDING",
     },
   });
+  await safeNotify("offer_received", () =>
+    notifyOfferReceived({
+      customerId: trip.customerId,
+      tripId: trip.id,
+      offerId: created.id,
+      priceAmount: created.priceAmount,
+      currency: created.currency,
+    }),
+  );
+  return created;
 }
 
 export async function withdrawOffer(offerId: string, driverId: string) {
@@ -294,7 +352,16 @@ export async function acceptOffer(tripId: string, offerId: string, customerId: s
       platformFeeAmount: fee,
     });
 
-    return { trip: updatedTrip, booking, paymentResult };
+    return { trip: updatedTrip, booking, paymentResult, driverId: offer.driverId };
+  }).then(async (result) => {
+    await safeNotify("offer_accepted", () =>
+      notifyOfferAccepted({
+        driverId: result.driverId,
+        tripId,
+        offerId,
+      }),
+    );
+    return result;
   });
 }
 
@@ -327,8 +394,8 @@ export async function confirmBookingPayment(bookingId: string, customerId: strin
         status: "CAPTURED",
         provider: paymentsEnabled() ? "STRIPE" : "MANUAL",
         rawPayload: JSON.stringify({
-          demo: !paymentsEnabled(),
-          mode: paymentsEnabled() ? "stripe_ready" : "demo_confirm",
+          manual: !paymentsEnabled(),
+          mode: paymentsEnabled() ? "stripe" : "manual_confirm",
           at: new Date().toISOString(),
         }),
       },
@@ -347,6 +414,18 @@ export async function confirmBookingPayment(bookingId: string, customerId: strin
       },
     });
     return booking;
+  }).then(async (paid) => {
+    await safeNotify("payment_confirmed", () =>
+      notifyPaymentConfirmed({
+        customerId: paid.customerId,
+        driverId: paid.driverId,
+        tripId: paid.tripRequestId,
+        bookingId: paid.id,
+        amount: paid.totalAmount,
+        currency: paid.currency,
+      }),
+    );
+    return paid;
   });
 }
 
@@ -365,9 +444,10 @@ export async function advanceJourney(
     include: { booking: true },
   });
   if (!trip?.booking) throw new DomainError("NOT_FOUND", "Viagem não encontrada");
+  const booking = trip.booking;
   const allowed =
     role === "ADMIN" ||
-    trip.booking.driverId === actorId ||
+    booking.driverId === actorId ||
     trip.customerId === actorId;
   if (!allowed) throw new DomainError("FORBIDDEN", "Sem permissão");
 
@@ -380,10 +460,22 @@ export async function advanceJourney(
     throw new DomainError("INVALID_STATE", `Não é possível avançar de ${trip.status} para ${next}`);
   }
 
-  return prisma.tripRequest.update({
+  const updated = await prisma.tripRequest.update({
     where: { id: tripId },
     data: { status: next },
   });
+
+  if (next === "IN_PROGRESS") {
+    await safeNotify("trip_started", () =>
+      notifyTripStarted({
+        customerId: trip.customerId,
+        driverId: booking.driverId,
+        tripId,
+      }),
+    );
+  }
+
+  return updated;
 }
 
 export async function startTrip(tripId: string, actorId: string, role: string) {
@@ -414,6 +506,15 @@ export async function completeTrip(tripId: string, actorId: string, role: string
       where: { id: tripId },
       data: { status: "COMPLETED" },
     });
+  }).then(async (completed) => {
+    await safeNotify("trip_completed", () =>
+      notifyTripCompleted({
+        customerId: trip.customerId,
+        driverId: trip.booking!.driverId,
+        tripId,
+      }),
+    );
+    return completed;
   });
 }
 

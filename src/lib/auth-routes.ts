@@ -11,7 +11,7 @@ export function dashboardPathForRole(role?: AppRole | string | null): string {
     case "CUSTOMER":
       return "/pedidos";
     default:
-      return "/";
+      return "/login";
   }
 }
 
@@ -21,8 +21,11 @@ export function canRoleAccessPath(role: string | undefined | null, pathname: str
   const normalized = path.startsWith("/") ? path : `/${path}`;
 
   if (normalized === "/" || normalized === "") return true;
-  if (normalized.startsWith("/login") || normalized.startsWith("/registo")) return true;
-  if (normalized.startsWith("/como-funciona") || normalized.startsWith("/para-motoristas")) {
+  if (
+    normalized.startsWith("/login") ||
+    normalized.startsWith("/registo") ||
+    normalized.startsWith("/verificar-email")
+  ) {
     return true;
   }
   if (normalized.startsWith("/termos") || normalized.startsWith("/privacidade")) return true;
@@ -40,7 +43,7 @@ export function canRoleAccessPath(role: string | undefined | null, pathname: str
   if (normalized.startsWith("/onboarding")) return role === "DRIVER";
   if (normalized.startsWith("/admin")) return role === "ADMIN";
 
-  return true;
+  return false;
 }
 
 /**
@@ -68,5 +71,5 @@ export function safePostLoginPath(
     }
   }
   const dest = dashboardPathForRole(role);
-  return `/${locale}${dest === "/" ? "" : dest}`;
+  return `/${locale}${dest.startsWith("/") ? dest : `/${dest}`}`;
 }
