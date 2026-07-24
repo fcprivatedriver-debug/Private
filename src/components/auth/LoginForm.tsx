@@ -55,6 +55,7 @@ function LoginFormInner() {
       const res = await Promise.race([signInPromise, timeout]);
 
       if (res === null) {
+        setLoading(false);
         setError(
           "O login demorou demasiado (base de dados). Tente de novo daqui a alguns segundos.",
         );
@@ -62,8 +63,14 @@ function LoginFormInner() {
       }
 
       if (res.error) {
+        setLoading(false);
         if (res.error === "Configuration" || res.status === 500) {
           setError("Erro temporário de autenticação. Atualize a página ou tente de novo.");
+          return;
+        }
+        const code = "code" in res ? String((res as { code?: string }).code || "") : "";
+        if (code === "email_not_verified" || res.error === "email_not_verified") {
+          setError(t("emailNotVerified"));
           return;
         }
         setError(t("invalidCredentials"));
@@ -140,6 +147,15 @@ function LoginFormInner() {
           {t("noAccount")}{" "}
           <Link href="/registo" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
             {t("registerLink")}
+          </Link>
+        </p>
+        <p className="muted" style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
+          <Link href="/demo-e2e" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+            Guia de teste E2E
+          </Link>
+          {" · "}
+          <Link href="/demo/emails" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+            Caixa de emails
           </Link>
         </p>
       </div>

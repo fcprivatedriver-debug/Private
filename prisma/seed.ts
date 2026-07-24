@@ -50,6 +50,8 @@ async function clearDemoData() {
   await prisma.driverDocument.deleteMany();
   await prisma.vehicle.deleteMany();
   await prisma.notification.deleteMany();
+  await prisma.emailLog.deleteMany();
+  await prisma.verificationToken.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.commissionRule.deleteMany();
   await prisma.driverProfile.deleteMany();
@@ -160,6 +162,7 @@ async function seedDrivers(passwordHash: string): Promise<DriverBundle[]> {
         passwordHash,
         phone: spec.phone,
         locale: spec.locale,
+        emailVerified: new Date(),
         image: pick(DRIVER_PHOTOS, i),
         driverProfile: {
           create: {
@@ -274,6 +277,7 @@ async function seedCustomers(passwordHash: string) {
         passwordHash,
         phone: c.phone,
         locale: c.locale,
+        emailVerified: new Date(),
         image: pick(CUSTOMER_PHOTOS, i),
         customerProfile: {
           create: {
@@ -758,6 +762,7 @@ async function main() {
       passwordHash,
       phone: "+351900000001",
       locale: "pt",
+      emailVerified: new Date(),
     },
   });
 

@@ -90,8 +90,8 @@ export function PaymentCheckout({
               </div>
             </div>
             <p className="muted" style={{ fontSize: "0.82rem", margin: "0.75rem 0 0" }}>
-              Modo demonstração — Stripe Connect ativa-se com{" "}
-              <code>PAYMENTS_ENABLED=true</code> e chaves Stripe.
+              Modo Sandbox / Teste — nenhum dinheiro real é movimentado. Para Stripe (test ou
+              live €1), defina <code>PAYMENTS_ENABLED=true</code> e as chaves Stripe.
             </p>
           </>
         )}
@@ -100,10 +100,10 @@ export function PaymentCheckout({
       {error && <div className="alert alert-error">{error}</div>}
 
       <button className="btn btn-primary" type="button" disabled={loading} onClick={confirmDemo}>
-        {loading ? "A confirmar…" : "Confirmar pagamento"}
+        {loading ? "A confirmar…" : "Confirmar pagamento (Sandbox)"}
       </button>
       <p className="muted" style={{ fontSize: "0.82rem", marginTop: "0.85rem", marginBottom: 0 }}>
-        Pagamento seguro. A confirmação da reserva aparece de seguida.
+        Pagamento em modo teste. A reserva confirma-se de seguida e os emails ficam na caixa demo.
       </p>
     </div>
   );

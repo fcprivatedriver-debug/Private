@@ -37,6 +37,7 @@ export async function SiteHeader() {
             <>
               <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
               <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
+              <LocaleLink href="/demo-e2e">{t("demoE2E")}</LocaleLink>
               <LocaleLink href="/homepage-lab">{t("branding")}</LocaleLink>
             </>
           )}
