@@ -4,14 +4,14 @@ import clsx from "clsx";
 export type ZrikLogoVariant = "A" | "B" | "C";
 
 /**
- * Default product logo: Option B — Z in premium blue signals
- * technology; RIK in black signals trust and exclusivity.
+ * Default product logo: Option B — Z in petroleum blue,
+ * RIK in ink black (#111111).
  */
 export const DEFAULT_ZRIK_VARIANT: ZrikLogoVariant = "B";
 
 /**
  * Typographic ZRIK wordmark — always uppercase.
- * A: all black · B: Z blue · C: Z+K blue
+ * A: all black · B: Z petrol · C: Z+K petrol
  */
 export function ZrikWordmark({
   variant = DEFAULT_ZRIK_VARIANT,

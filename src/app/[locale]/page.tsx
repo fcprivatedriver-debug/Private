@@ -31,16 +31,17 @@ export default async function HomePage({ params }: Props) {
         ? { href: "/pedidos-abertos" as const, label: t("ctaDriver") }
         : role === "ADMIN"
           ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
-          : { href: "/para-motoristas" as const, label: t("ctaDriver") };
+          : { href: "/como-funciona" as const, label: t("ctaHow") };
 
   return (
     <>
-      <section className="hero hero-premium">
-        <div className="hero-premium-grid" aria-hidden />
+      <section className="hero hero-atmosphere">
+        <div className="hero-atmosphere-media" aria-hidden />
+        <div className="hero-atmosphere-veil" aria-hidden />
         <div className="container hero-content">
           <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
           <h1 className="hero-brand fade-up">
-            <ZrikWordmark as="span" variant="B" tone="on-dark" />
+            <ZrikWordmark as="span" variant="B" />
           </h1>
           <p className="hero-copy fade-up-delay">{t("copy")}</p>
           <div className="cta-row fade-up-delay">

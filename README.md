@@ -32,8 +32,8 @@ Demo emails keep the historical `@movio.app` domain so existing seeded data and 
 
 ## Branding
 
-Premium identity: deep black `#0A0A0B` + electric blue `#1E5EFF`, Sora + Plus Jakarta Sans.
-Default wordmark **Option B** (Z blue · RIK black). Compare A / B / C at `/pt/branding-preview`.
+Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
+Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
 
 | Variable | Example |
 |----------|---------|
