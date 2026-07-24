@@ -81,7 +81,7 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
   const isPt = locale.startsWith("pt");
   const [versionId, setVersionId] = useState<HeroVersionId>("V1");
   const [colorId, setColorId] = useState<AccentCandidateId>("C1");
-  const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O65");
+  const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O55");
 
   const version = HERO_VERSIONS.find((v) => v.id === versionId)!;
   const color = ACCENT_CANDIDATES.find((c) => c.id === colorId)!;

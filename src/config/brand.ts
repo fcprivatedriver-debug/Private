@@ -76,9 +76,9 @@ export type HeroVersionId = (typeof HERO_VERSIONS)[number]["id"];
 
 /** Soft white veil on the photo panel only (photo stays clearly visible). */
 export const OVERLAY_CANDIDATES = [
+  { id: "O55", label: "55%", value: 0.55 },
   { id: "O60", label: "60%", value: 0.6 },
   { id: "O65", label: "65%", value: 0.65 },
-  { id: "O70", label: "70%", value: 0.7 },
 ] as const;
 
 /** @deprecated use HERO_VERSIONS — kept for type compatibility during transition */
