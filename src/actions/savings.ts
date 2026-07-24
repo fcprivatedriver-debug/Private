@@ -413,7 +413,6 @@ export async function getSavingsModuleData() {
     pulse,
   );
 
-  const investedPots = pots.filter((p) => p.isInvested && p.investedCapitalCents != null);
   let totalInvested = 0;
   let totalAccrued = 0;
   const potViews = pots.map((p) => {

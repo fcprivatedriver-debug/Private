@@ -82,6 +82,8 @@ async function captureStills() {
   await gotoShot(page, "/pt/despesas", "12-despesas");
   await gotoShot(page, "/pt/despesas/nova", "13-despesa-nova");
   await gotoShot(page, "/pt/orcamentos", "14-orcamentos");
+  await gotoShot(page, "/pt/poupancas", "14b-poupancas");
+  await gotoShot(page, "/pt/poupancas?tab=simulador", "14c-simulador");
   await gotoShot(page, "/pt/objetivos", "15-objetivos");
   await gotoShot(page, "/pt/estatisticas", "16-estatisticas");
   await gotoShot(page, "/pt/pesquisa?q=Continente", "17-pesquisa");
@@ -98,6 +100,8 @@ async function captureStills() {
   await gotoShot(page, "/pt/dashboard", "30-mobile-dashboard");
   await gotoShot(page, "/pt/despesas", "31-mobile-despesas");
   await gotoShot(page, "/pt/familia", "32-mobile-familia");
+  await gotoShot(page, "/pt/poupancas", "33-mobile-poupancas");
+  await gotoShot(page, "/pt/objetivos", "34-mobile-objetivos");
   await browser.close();
 }
 
@@ -132,6 +136,10 @@ async function captureFlowVideo() {
   await page.goto(`${BASE}/pt/memoria`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/despesas`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.goto(`${BASE}/pt/poupancas`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/poupancas?tab=simulador`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/objetivos`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
