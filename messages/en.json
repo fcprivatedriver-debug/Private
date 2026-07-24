@@ -28,6 +28,8 @@
     "copy": "Choose the best driver.\nChoose the best price.",
     "copyLine1": "Choose the best driver.",
     "copyLine2": "Choose the best price.",
+    "labHint": "Compare the 3 Hero versions →",
+    "labPhotoPending": "Editorial photography · choose in Homepage Lab",
     "ctaRequest": "Get offers",
     "ctaHow": "How it works",
     "ctaDriver": "Drive with ZRIK",
@@ -104,17 +106,19 @@
     "logoLead": "No 3D icon. A / B / C comparison."
   },
   "homepageLab": {
-    "title": "Homepage Lab",
-    "lead": "Compare photography, color, and contrast. Nothing is applied to the production homepage until you pick a winner.",
-    "note": "Inspiration: Apple · Porsche · Mercedes · Polestar · Linear — European identity, not an Uber lookalike.",
-    "photoTitle": "1 · Photography",
-    "colorTitle": "2 · Brand color",
-    "overlayTitle": "3 · White overlay",
-    "previewTitle": "4 · Homepage preview",
-    "selectionTitle": "Your current selection (not locked)",
+    "title": "Homepage Lab — Editorial hero",
+    "lead": "Three campaign proposals: copy on the left, photography on the right. Nothing ships to production until you pick a winner.",
+    "note": "No phones, no mockups, no abstract backgrounds. Experience is the protagonist — Mercedes / Porsche / Polestar / Apple calibre.",
+    "versionsTitle": "1 · Three hero versions",
+    "colorTitle": "2 · Premium blue",
+    "overlayTitle": "3 · White overlay (photo panel only)",
+    "previewTitle": "4 · Featured preview",
+    "selectionTitle": "Current selection (not locked)",
     "preferred": "Preferred",
     "current": "Current",
-    "notLocked": "Preview only — production stays unchanged until you decide."
+    "notLocked": "Preview only — production homepage stays unchanged until you decide.",
+    "textSide": "Private mobility · Premium",
+    "photoSide": "Editorial photography"
   },
   "tripForm": {
     "title": "Where shall we take you?",

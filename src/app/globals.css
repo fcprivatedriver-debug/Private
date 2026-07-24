@@ -601,6 +601,96 @@ h3,
   gap: 0.85rem;
 }
 
+
+/* Editorial split hero — production shell (photo unlocked via lab) */
+.hero-editorial {
+  align-items: stretch;
+  min-height: calc(100svh - var(--header-h));
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg);
+  display: block;
+  padding: 0;
+}
+
+.hero-editorial-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: calc(100svh - var(--header-h));
+  align-items: stretch;
+  gap: 0;
+  max-width: var(--container);
+}
+
+@media (min-width: 900px) {
+  .hero-editorial-split {
+    grid-template-columns: minmax(300px, 0.9fr) minmax(340px, 1.1fr);
+  }
+}
+
+.hero-editorial-copy {
+  display: grid;
+  align-content: center;
+  padding: 2.5rem 0 3rem;
+  max-width: 28rem;
+}
+
+.hero-editorial .hero-eyebrow {
+  color: var(--accent);
+}
+
+.hero-editorial .hero-brand {
+  font-size: clamp(3.4rem, 12vw, 6.2rem);
+  margin-bottom: 1.1rem;
+  letter-spacing: -0.075em;
+}
+
+.hero-editorial .hero-copy {
+  color: var(--fg-muted);
+  font-size: 1.12rem;
+  line-height: 1.45;
+  max-width: 20rem;
+  margin-bottom: 1.75rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.hero-editorial-photo-slot {
+  position: relative;
+  min-height: 280px;
+  background: linear-gradient(160deg, #f3f4f6 0%, #e8eaee 100%);
+  border-left: 1px solid var(--line);
+}
+
+.hero-editorial-photo-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.hero-lab-hint {
+  margin: 1.25rem 0 0;
+  font-size: 0.88rem;
+}
+
+.hero-lab-hint a {
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 1px solid transparent;
+}
+
+.hero-lab-hint a:hover {
+  border-bottom-color: var(--accent);
+}
+
 /* ——— Sections ——— */
 .section {
   padding: 4.25rem 0;
@@ -1743,4 +1833,116 @@ h3,
   .lab-hero-content {
     padding: 2rem 1.15rem 2.25rem;
   }
+}
+
+/* ——— Editorial hero (Homepage Lab proposals) ——— */
+.lab-option-grid-3 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .lab-option-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lab-mood {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lab-versions-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.editorial-hero {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.editorial-hero-label {
+  margin: 0;
+  padding: 0.65rem 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--fg-muted);
+  border-bottom: 1px solid var(--line);
+  background: #fafafa;
+}
+
+.editorial-hero-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 360px;
+}
+
+@media (min-width: 860px) {
+  .editorial-hero-split {
+    grid-template-columns: minmax(280px, 0.92fr) minmax(320px, 1.08fr);
+    min-height: 440px;
+  }
+}
+
+.editorial-hero-copy-col {
+  display: grid;
+  align-content: center;
+  gap: 0;
+  padding: 2.25rem 1.5rem 2.5rem;
+  background: #ffffff;
+}
+
+@media (min-width: 860px) {
+  .editorial-hero-copy-col {
+    padding: 2.75rem 2rem 3rem 2.25rem;
+  }
+}
+
+.editorial-hero-copy-col .lab-hero-eyebrow {
+  color: var(--lab-accent);
+}
+
+.editorial-hero-copy-col .lab-hero-copy {
+  display: grid;
+  gap: 0.15rem;
+  white-space: normal;
+  max-width: 18rem;
+}
+
+.editorial-hero-photo-col {
+  position: relative;
+  min-height: 260px;
+  background: #e8e8ea;
+  overflow: hidden;
+}
+
+.editorial-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+
+.editorial-hero-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, var(--lab-overlay, 0.65));
+  pointer-events: none;
+}
+
+/* Ensure lab never shows phone/device chrome */
+.editorial-hero-photo-col::after {
+  content: none;
 }

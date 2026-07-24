@@ -11,24 +11,26 @@ export default async function HomepageLabPage({ params }: Props) {
 
   return (
     <section className="section branding-preview fade-up">
-      <div className="container" style={{ maxWidth: 1120 }}>
+      <div className="container" style={{ maxWidth: 1180 }}>
         <HomepageLab
           locale={locale}
           labels={{
             title: t("title"),
             lead: t("lead"),
             note: t("note"),
-            photoTitle: t("photoTitle"),
+            versionsTitle: t("versionsTitle"),
             colorTitle: t("colorTitle"),
             overlayTitle: t("overlayTitle"),
             previewTitle: t("previewTitle"),
             selectionTitle: t("selectionTitle"),
-            copy: home("copy"),
+            copyLine1: home("copyLine1"),
+            copyLine2: home("copyLine2"),
             ctaPrimary: home("ctaRequest"),
             ctaSecondary: home("ctaHow"),
             preferred: t("preferred"),
-            current: t("current"),
             notLocked: t("notLocked"),
+            textSide: t("textSide"),
+            photoSide: t("photoSide"),
           }}
         />
       </div>

@@ -1,10 +1,10 @@
 /**
- * ZRIK brand candidates — nothing here is locked as final until chosen in /homepage-lab.
+ * ZRIK brand candidates — nothing locked until chosen in /homepage-lab.
  */
 
 export const BRAND_INK = "#111111";
 
-/** Color candidates for comparison (preferred first). */
+/** Premium blues under active comparison (no production lock). */
 export const ACCENT_CANDIDATES = [
   {
     id: "C1",
@@ -30,55 +30,64 @@ export const ACCENT_CANDIDATES = [
     vibe: "Open · tech-forward",
     preferred: false,
   },
-  {
-    id: "C4",
-    hex: "#0D3B66",
-    name: "Atlantic Navy",
-    namePt: "Navy atlântico",
-    vibe: "Current · denser / darker",
-    preferred: false,
-  },
 ] as const;
 
 export type AccentCandidateId = (typeof ACCENT_CANDIDATES)[number]["id"];
 
-/** Hero photography candidates — editorial chauffeur stories. */
-export const HERO_PHOTO_CANDIDATES = [
-  {
-    id: "A",
-    src: "/brand/zrik-hero-a.jpg",
-    title: "Option A — White Model 3",
-    titlePt: "Opção A — Model 3 branco",
-    desc: "White Tesla · 3/4 crop · hotel porte-cochère · golden hour · left negative space",
-    descPt: "Tesla branco · enquadramento 3/4 · hotel · golden hour · espaço negativo à esquerda",
-  },
-  {
-    id: "B",
-    src: "/brand/zrik-hero-b.jpg",
-    title: "Option B — Black Model 3",
-    titlePt: "Opção B — Model 3 preto",
-    desc: "Black Tesla · same crop · hotel entrance · golden hour · stronger paint contrast",
-    descPt: "Tesla preto · mesmo enquadramento · hotel · golden hour · mais contraste na pintura",
-  },
-] as const;
-
-export type HeroPhotoId = (typeof HERO_PHOTO_CANDIDATES)[number]["id"];
-
-/** Overlay opacity candidates for readability (not locked). */
-export const OVERLAY_CANDIDATES = [
-  { id: "O70", label: "70%", value: 0.7 },
-  { id: "O72", label: "72%", value: 0.72 },
-  { id: "O75", label: "75%", value: 0.75 },
-] as const;
-
 /**
- * Production homepage still uses the previous locked tokens until a winner
- * is chosen in the lab. Lab previews override via inline CSS variables.
+ * Three complete editorial Hero proposals.
+ * Layout: text LEFT · photography RIGHT (campaign split — not text-over-image).
+ * Experience is the protagonist; car is supporting.
  */
+export const HERO_VERSIONS = [
+  {
+    id: "V1",
+    src: "/brand/zrik-hero-v1.jpg",
+    title: "Version 1 — White arrival",
+    titlePt: "Versão 1 — Chegada em branco",
+    desc: "White Model 3 · hotel porte-cochère · entering the cabin · bright European air",
+    descPt: "Model 3 branco · porte-cochère · a entrar · luz europeia clara",
+    mood: "Open · welcoming · luminous",
+    moodPt: "Aberta · acolhedora · luminosa",
+  },
+  {
+    id: "V2",
+    src: "/brand/zrik-hero-v2.jpg",
+    title: "Version 2 — Black contrast",
+    titlePt: "Versão 2 — Contraste em preto",
+    desc: "Black Model 3 · stronger paint contrast · same editorial crop · golden hour",
+    descPt: "Model 3 preto · mais contraste · mesmo corte editorial · golden hour",
+    mood: "Exclusive · cinematic · decisive",
+    moodPt: "Exclusiva · cinematográfica · decisiva",
+  },
+  {
+    id: "V3",
+    src: "/brand/zrik-hero-v3.jpg",
+    title: "Version 3 — The pause",
+    titlePt: "Versão 3 — A pausa",
+    desc: "Graphite sedan · traveler about to enter · experience before motion",
+    descPt: "Berlina graphite · viajante a entrar · a experiência antes do movimento",
+    mood: "Narrative · discreet luxury · human",
+    moodPt: "Narrativa · luxo discreto · humana",
+  },
+] as const;
+
+export type HeroVersionId = (typeof HERO_VERSIONS)[number]["id"];
+
+/** Soft white veil on the photo panel only (photo stays clearly visible). */
+export const OVERLAY_CANDIDATES = [
+  { id: "O60", label: "60%", value: 0.6 },
+  { id: "O65", label: "65%", value: 0.65 },
+  { id: "O70", label: "70%", value: 0.7 },
+] as const;
+
+/** @deprecated use HERO_VERSIONS — kept for type compatibility during transition */
+export const HERO_PHOTO_CANDIDATES = HERO_VERSIONS;
+export type HeroPhotoId = HeroVersionId;
+
 export const PRODUCTION_ACCENT = "#0D3B66";
 export const PRODUCTION_HERO = "/brand/zrik-hero.jpg";
 
-/** Legacy petrol list kept for older branding-preview sections. */
 export const PETROL_BLUES = ACCENT_CANDIDATES.map((c) => ({
   id: c.id,
   hex: c.hex,
@@ -87,4 +96,4 @@ export const PETROL_BLUES = ACCENT_CANDIDATES.map((c) => ({
   vibe: c.vibe,
 }));
 
-export const DEFAULT_PETROL_BLUE = ACCENT_CANDIDATES.find((c) => c.id === "C4")!;
+export const DEFAULT_PETROL_BLUE = ACCENT_CANDIDATES[0]!;

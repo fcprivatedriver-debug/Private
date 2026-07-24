@@ -35,25 +35,40 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <section className="hero hero-atmosphere">
-        <div className="hero-atmosphere-media" aria-hidden />
-        <div className="hero-atmosphere-veil" aria-hidden />
-        <div className="container hero-content">
-          <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
-          <h1 className="hero-brand fade-up">
-            <ZrikWordmark as="span" variant="B" />
-          </h1>
-          <p className="hero-copy fade-up-delay">
-            <span className="hero-copy-line">{t("copyLine1")}</span>
-            <span className="hero-copy-line">{t("copyLine2")}</span>
-          </p>
-          <div className="cta-row fade-up-delay">
-            <Link href={primary.href} className="btn btn-primary btn-hero">
-              {primary.label}
-            </Link>
-            <Link href={secondary.href} className="btn btn-secondary btn-hero-ghost">
-              {secondary.label}
-            </Link>
+      {/*
+        Production hero stays unlocked: clean editorial shell only.
+        Photo + color winners are chosen in /homepage-lab — not applied here yet.
+        No phone mockups. No abstract blur backdrop behind copy.
+      */}
+      <section className="hero hero-editorial hero-editorial-pending">
+        <div className="container hero-editorial-split">
+          <div className="hero-editorial-copy">
+            <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
+            <h1 className="hero-brand fade-up">
+              <ZrikWordmark as="span" variant="B" />
+            </h1>
+            <p className="hero-copy fade-up-delay">
+              <span className="hero-copy-line">{t("copyLine1")}</span>
+              <span className="hero-copy-line">{t("copyLine2")}</span>
+            </p>
+            <div className="cta-row fade-up-delay">
+              <Link href={primary.href} className="btn btn-primary btn-hero">
+                {primary.label}
+              </Link>
+              <Link href={secondary.href} className="btn btn-secondary btn-hero-ghost">
+                {secondary.label}
+              </Link>
+            </div>
+            {!role ? (
+              <p className="hero-lab-hint fade-up-delay">
+                <Link href="/homepage-lab">{t("labHint")}</Link>
+              </p>
+            ) : null}
+          </div>
+          <div className="hero-editorial-photo-slot" aria-hidden>
+            <div className="hero-editorial-photo-placeholder">
+              <span>{t("labPhotoPending")}</span>
+            </div>
           </div>
         </div>
       </section>

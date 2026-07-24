@@ -4,48 +4,96 @@ import { useMemo, useState, type CSSProperties } from "react";
 import {
   ACCENT_CANDIDATES,
   BRAND_INK,
-  HERO_PHOTO_CANDIDATES,
+  HERO_VERSIONS,
   OVERLAY_CANDIDATES,
   type AccentCandidateId,
-  type HeroPhotoId,
+  type HeroVersionId,
 } from "@/config/brand";
 
 type Labels = {
   title: string;
   lead: string;
   note: string;
-  photoTitle: string;
+  versionsTitle: string;
   colorTitle: string;
   overlayTitle: string;
   previewTitle: string;
   selectionTitle: string;
-  copy: string;
+  copyLine1: string;
+  copyLine2: string;
   ctaPrimary: string;
   ctaSecondary: string;
   preferred: string;
-  current: string;
   notLocked: string;
+  textSide: string;
+  photoSide: string;
 };
+
+function EditorialHeroPreview({
+  photoSrc,
+  accent,
+  overlay,
+  labels,
+  versionLabel,
+}: {
+  photoSrc: string;
+  accent: string;
+  overlay: number;
+  labels: Labels;
+  versionLabel: string;
+}) {
+  const style = {
+    "--lab-accent": accent,
+    "--lab-overlay": String(overlay),
+  } as CSSProperties;
+
+  return (
+    <article className="editorial-hero" style={style}>
+      <p className="editorial-hero-label">{versionLabel}</p>
+      <div className="editorial-hero-split">
+        <div className="editorial-hero-copy-col">
+          <p className="lab-hero-eyebrow">{labels.textSide}</p>
+          <h3 className="lab-hero-brand" aria-label="ZRIK">
+            <span style={{ color: "var(--lab-accent)" }}>Z</span>
+            <span style={{ color: BRAND_INK }}>RIK</span>
+          </h3>
+          <p className="lab-hero-copy">
+            <span className="hero-copy-line">{labels.copyLine1}</span>
+            <span className="hero-copy-line">{labels.copyLine2}</span>
+          </p>
+          <div className="lab-hero-ctas">
+            <span className="btn btn-primary lab-btn-primary">{labels.ctaPrimary}</span>
+            <span className="btn btn-secondary lab-btn-secondary">{labels.ctaSecondary}</span>
+          </div>
+        </div>
+
+        <div className="editorial-hero-photo-col" aria-label={labels.photoSide}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photoSrc} alt="" className="editorial-hero-photo" />
+          <div className="editorial-hero-veil" aria-hidden />
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export function HomepageLab({ locale, labels }: { locale: string; labels: Labels }) {
   const isPt = locale.startsWith("pt");
-  const [photoId, setPhotoId] = useState<HeroPhotoId>("A");
+  const [versionId, setVersionId] = useState<HeroVersionId>("V1");
   const [colorId, setColorId] = useState<AccentCandidateId>("C1");
-  const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O72");
+  const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O65");
 
-  const photo = HERO_PHOTO_CANDIDATES.find((p) => p.id === photoId)!;
+  const version = HERO_VERSIONS.find((v) => v.id === versionId)!;
   const color = ACCENT_CANDIDATES.find((c) => c.id === colorId)!;
   const overlay = OVERLAY_CANDIDATES.find((o) => o.id === overlayId)!;
 
-  const previewStyle = useMemo(
+  const featuredStyle = useMemo(
     () =>
       ({
         "--lab-accent": color.hex,
-        "--lab-accent-strong": color.hex,
-        "--lab-photo": `url("${photo.src}")`,
         "--lab-overlay": String(overlay.value),
       }) as CSSProperties,
-    [color.hex, photo.src, overlay.value],
+    [color.hex, overlay.value],
   );
 
   return (
@@ -58,25 +106,26 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
 
       <div className="lab-controls">
         <section className="lab-panel">
-          <h2 className="lab-panel-title">{labels.photoTitle}</h2>
-          <div className="lab-option-grid lab-option-grid-2">
-            {HERO_PHOTO_CANDIDATES.map((p) => {
-              const active = p.id === photoId;
+          <h2 className="lab-panel-title">{labels.versionsTitle}</h2>
+          <div className="lab-option-grid lab-option-grid-3">
+            {HERO_VERSIONS.map((v) => {
+              const active = v.id === versionId;
               return (
                 <button
-                  key={p.id}
+                  key={v.id}
                   type="button"
                   className={active ? "lab-option is-active" : "lab-option"}
-                  onClick={() => setPhotoId(p.id)}
+                  onClick={() => setVersionId(v.id)}
                   aria-pressed={active}
                 >
                   <span
                     className="lab-option-thumb"
-                    style={{ backgroundImage: `url(${p.src})` }}
+                    style={{ backgroundImage: `url(${v.src})` }}
                   />
                   <span className="lab-option-body">
-                    <strong>{isPt ? p.titlePt : p.title}</strong>
-                    <span className="muted">{isPt ? p.descPt : p.desc}</span>
+                    <strong>{isPt ? v.titlePt : v.title}</strong>
+                    <span className="muted">{isPt ? v.descPt : v.desc}</span>
+                    <span className="lab-mood">{isPt ? v.moodPt : v.mood}</span>
                   </span>
                 </button>
               );
@@ -86,7 +135,7 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
 
         <section className="lab-panel">
           <h2 className="lab-panel-title">{labels.colorTitle}</h2>
-          <div className="lab-option-grid lab-option-grid-4">
+          <div className="lab-option-grid lab-option-grid-3">
             {ACCENT_CANDIDATES.map((c) => {
               const active = c.id === colorId;
               return (
@@ -103,9 +152,6 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
                       {isPt ? c.namePt : c.name}
                       {c.preferred ? (
                         <span className="branding-default-badge">{labels.preferred}</span>
-                      ) : null}
-                      {c.id === "C4" ? (
-                        <span className="lab-current-badge">{labels.current}</span>
                       ) : null}
                     </strong>
                     <span className="petrol-hex">{c.hex}</span>
@@ -138,29 +184,40 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
         </section>
       </div>
 
-      <section className="lab-panel lab-preview-wrap">
+      <section className="lab-panel lab-preview-wrap" style={featuredStyle}>
         <div className="lab-preview-head">
           <h2 className="lab-panel-title">{labels.previewTitle}</h2>
           <p className="lab-not-locked">{labels.notLocked}</p>
         </div>
+        <EditorialHeroPreview
+          photoSrc={version.src}
+          accent={color.hex}
+          overlay={overlay.value}
+          labels={labels}
+          versionLabel={isPt ? version.titlePt : version.title}
+        />
+      </section>
 
-        <div className="lab-hero-frame" style={previewStyle}>
-          <div className="lab-hero-media" aria-hidden />
-          <div className="lab-hero-veil" aria-hidden />
-          <div className="lab-hero-content">
-            <p className="lab-hero-eyebrow">
-              {isPt ? "Mobilidade privada · Premium" : "Private mobility · Premium"}
-            </p>
-            <h3 className="lab-hero-brand" aria-label="ZRIK">
-              <span style={{ color: "var(--lab-accent)" }}>Z</span>
-              <span style={{ color: BRAND_INK }}>RIK</span>
-            </h3>
-            <p className="lab-hero-copy">{labels.copy}</p>
-            <div className="lab-hero-ctas">
-              <span className="btn btn-primary lab-btn-primary">{labels.ctaPrimary}</span>
-              <span className="btn btn-secondary lab-btn-secondary">{labels.ctaSecondary}</span>
-            </div>
-          </div>
+      <section className="lab-panel">
+        <h2 className="lab-panel-title">
+          {isPt ? "As 3 versões lado a lado" : "All 3 versions side by side"}
+        </h2>
+        <p className="muted" style={{ margin: "0 0 1rem", maxWidth: "40rem" }}>
+          {isPt
+            ? "Mesma cor e overlay seleccionados — só muda a fotografia e a história."
+            : "Same selected color and overlay — only the photograph and story change."}
+        </p>
+        <div className="lab-versions-stack">
+          {HERO_VERSIONS.map((v) => (
+            <EditorialHeroPreview
+              key={v.id}
+              photoSrc={v.src}
+              accent={color.hex}
+              overlay={overlay.value}
+              labels={labels}
+              versionLabel={isPt ? v.titlePt : v.title}
+            />
+          ))}
         </div>
       </section>
 
@@ -168,8 +225,8 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
         <h2 className="lab-panel-title">{labels.selectionTitle}</h2>
         <ul className="lab-selection-list">
           <li>
-            <span className="muted">Photo</span>
-            <strong>{isPt ? photo.titlePt : photo.title}</strong>
+            <span className="muted">Hero</span>
+            <strong>{isPt ? version.titlePt : version.title}</strong>
           </li>
           <li>
             <span className="muted">Color</span>
