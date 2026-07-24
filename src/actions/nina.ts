@@ -13,11 +13,11 @@ import {
 import { parseMoneyIntent } from "@/lib/ai/parse-intent";
 import { canEditFinances } from "@/domain/household";
 import {
-  contributeSharedGoals,
   maybeAutoSaveFromSurplus,
   addMemoryRule,
   getNinaSpace,
 } from "@/actions/household";
+import { applySavingsTransfer } from "@/lib/savings-transfer";
 import {
   learnScopeHabit,
   parseMemoryRuleCommand,
@@ -326,14 +326,17 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     }
 
     if (intent.kind === "save") {
-      await contributeSharedGoals(family.id, intent.amountCents, intent.goalHint);
+      const transferred = await applySavingsTransfer(family.id, intent.amountCents, intent.goalHint);
       revalidatePath("/", "layout");
+      const target =
+        transferred.ok ? ` em “${transferred.targetName}”` : " na tua poupança";
       return {
         ok: true as const,
         reply: {
-          text: `Adorei. Somei ${formatEUR(intent.amountCents)} ao objetivo partilhado. A família avança junta.`,
+          text: `Feito. Coloquei ${formatEUR(intent.amountCents)}${target}. Os saldos já estão atualizados.`,
           tone: "celebrate" as const,
           didMutate: true,
+          suggestions: ["Quanto falta para as férias?", "Onde posso poupar?"],
         },
         mutated: true,
       };

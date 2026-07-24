@@ -16,6 +16,7 @@ const NAV = [
   { href: "/pt/despesas", label: "Gastos" },
   { href: "/pt/lista", label: "Compras" },
   { href: "/pt/receitas", label: "Entradas" },
+  { href: "/pt/poupancas", label: "Poupanças" },
   { href: "/pt/objetivos", label: "Objetivos" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },

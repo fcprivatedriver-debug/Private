@@ -6,6 +6,7 @@ export const APP_PROTECTED_PREFIXES = [
   "/receitas",
   "/despesas",
   "/orcamentos",
+  "/poupancas",
   "/objetivos",
   "/estatisticas",
   "/pesquisa",

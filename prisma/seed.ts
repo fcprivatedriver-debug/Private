@@ -64,6 +64,8 @@ async function main() {
   console.log("🌱 A preparar dados demo Nina…");
 
   await prisma.expenseLineItem.deleteMany();
+  await prisma.goalItem.deleteMany();
+  await prisma.savingPot.deleteMany();
   await prisma.expense.deleteMany();
   await prisma.income.deleteMany();
   await prisma.budget.deleteMany();
@@ -445,27 +447,75 @@ async function main() {
   }
 
   // Objetivos
-  const goals: { name: string; type: GoalType; target: number; current: number; days: number }[] = [
-    { name: "Férias Algarve", type: "VACATION", target: 250000, current: 120000, days: 90 },
-    { name: "Fundo de emergência", type: "EMERGENCY", target: 500000, current: 350000, days: 365 },
-    { name: "Entrada carro", type: "CAR", target: 800000, current: 210000, days: 180 },
+  const goals: {
+    name: string;
+    type: GoalType;
+    target: number;
+    current: number;
+    days: number;
+    priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    description?: string;
+    items?: { name: string; amount: number }[];
+  }[] = [
+    {
+      name: "Férias Algarve",
+      type: "VACATION",
+      target: 154000,
+      current: 93000,
+      days: 90,
+      priority: "HIGH",
+      description: "Semana em família no Algarve",
+      items: [
+        { name: "Hotel", amount: 70000 },
+        { name: "Alimentação", amount: 30000 },
+        { name: "Combustível", amount: 15000 },
+        { name: "Portagens", amount: 4000 },
+        { name: "Atividades", amount: 25000 },
+        { name: "Fundo para imprevistos", amount: 10000 },
+      ],
+    },
+    {
+      name: "Remodelar a cozinha",
+      type: "HOUSE",
+      target: 450000,
+      current: 120000,
+      days: 240,
+      priority: "MEDIUM",
+      description: "Bancada, eletrodomésticos e pintura",
+    },
+    { name: "Entrada carro", type: "CAR", target: 800000, current: 210000, days: 180, priority: "HIGH" },
   ];
 
+  const createdGoals: { id: string; name: string }[] = [];
   for (const g of goals) {
     const deadline = new Date();
     deadline.setDate(deadline.getDate() + g.days);
-    await prisma.savingsGoal.create({
+    const targetCents = g.items?.reduce((s, it) => s + it.amount, 0) ?? g.target;
+    const goal = await prisma.savingsGoal.create({
       data: {
         familyId: family.id,
         scope: "FAMILY",
+        accountKind: "FAMILY",
         name: g.name,
+        description: g.description,
         type: g.type,
-        targetCents: g.target,
+        priority: g.priority ?? "MEDIUM",
+        targetCents,
         currentCents: g.current,
         deadline,
         color: "#0f7a4a",
+        items: g.items
+          ? {
+              create: g.items.map((it, i) => ({
+                name: it.name,
+                amountCents: it.amount,
+                sortOrder: i,
+              })),
+            }
+          : undefined,
       },
     });
+    createdGoals.push({ id: goal.id, name: goal.name });
   }
 
   await prisma.savingsGoal.create({
@@ -473,11 +523,89 @@ async function main() {
       familyId: family.id,
       ownerMemberId: memberFilipe.id,
       scope: "PERSONAL",
-      name: "Novo portátil",
+      accountKind: "PERSONAL",
+      name: "Novo computador",
+      description: "Portátil para trabalho",
       type: "CUSTOM",
+      priority: "MEDIUM",
       targetCents: 120000,
       currentCents: 45000,
       color: "#1e3a5f",
+    },
+  });
+
+  // Poupanças + investimentos
+  const feriasGoal = createdGoals.find((g) => /ferias/i.test(g.name));
+  const investStart = new Date();
+  investStart.setMonth(investStart.getMonth() - 8);
+
+  await prisma.savingPot.create({
+    data: {
+      familyId: family.id,
+      scope: "FAMILY",
+      accountKind: "FAMILY",
+      name: "Fundo de Emergência",
+      kind: "EMERGENCY",
+      targetCents: 500000,
+      currentCents: 350000,
+      deadline: new Date(Date.now() + 365 * 86400000),
+      notes: "3 a 6 meses de despesas essenciais",
+      isInvested: true,
+      investmentVehicle: "INTEREST_ACCOUNT",
+      investedCapitalCents: 350000,
+      annualRatePercent: 2.5,
+      capitalization: "COMPOUND",
+      interestPeriod: "MONTHLY",
+      investmentStartDate: investStart,
+    },
+  });
+
+  await prisma.savingPot.create({
+    data: {
+      familyId: family.id,
+      scope: "FAMILY",
+      accountKind: "FAMILY",
+      name: "Férias",
+      kind: "VACATION",
+      targetCents: 154000,
+      currentCents: 93000,
+      linkedGoalId: feriasGoal?.id,
+      deadline: new Date(Date.now() + 90 * 86400000),
+      notes: "Ligada ao objetivo Férias Algarve",
+    },
+  });
+
+  await prisma.savingPot.create({
+    data: {
+      familyId: family.id,
+      scope: "FAMILY",
+      accountKind: "FAMILY",
+      name: "Entrada para Casa",
+      kind: "HOUSE",
+      targetCents: 2000000,
+      currentCents: 480000,
+      isInvested: true,
+      investmentVehicle: "ETF",
+      investedCapitalCents: 480000,
+      annualRatePercent: 6.5,
+      capitalization: "COMPOUND",
+      interestPeriod: "YEARLY",
+      investmentStartDate: investStart,
+      notes: "ETF global diversificado",
+    },
+  });
+
+  await prisma.savingPot.create({
+    data: {
+      familyId: family.id,
+      ownerMemberId: memberFilipe.id,
+      scope: "PERSONAL",
+      accountKind: "BUSINESS",
+      name: "Reserva Empresa",
+      kind: "OTHER",
+      targetCents: 300000,
+      currentCents: 75000,
+      notes: "Conta Empresa — margem de segurança",
     },
   });
 

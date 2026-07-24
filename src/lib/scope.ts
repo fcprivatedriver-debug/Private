@@ -33,6 +33,17 @@ export function goalScopeWhere(
   };
 }
 
+export function potScopeWhere(
+  space: NinaSpace,
+  memberId: string,
+): Prisma.SavingPotWhereInput {
+  if (space === "family") return { scope: "FAMILY" };
+  return {
+    scope: "PERSONAL",
+    OR: [{ ownerMemberId: memberId }, { ownerMemberId: null }],
+  };
+}
+
 export function spaceLabel(space: NinaSpace): string {
   return space === "family" ? "Conta Familiar" : "As Minhas Finanças";
 }

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { parseMoneyIntent } from "@/lib/ai/parse-intent";
 import { resolveScope, learnScopeHabit } from "@/lib/ai/learning";
 import { getNinaSpace } from "@/actions/household";
-import { contributeSharedGoals } from "@/actions/household";
+import { applySavingsTransfer } from "@/lib/savings-transfer";
 import { recognizeReceipt } from "@/lib/ocr";
 import { storeFamilyFile } from "@/lib/storage";
 import { formatEUR } from "@/lib/money";
@@ -100,12 +100,12 @@ export async function instantCaptureSpeak(utterance: string) {
   }
 
   if (intent.kind === "save") {
-    await contributeSharedGoals(family.id, intent.amountCents, intent.goalHint);
+    const transferred = await applySavingsTransfer(family.id, intent.amountCents, intent.goalHint);
     revalidateAll();
     return {
       ok: true as const,
-      reply: "Registado.",
-      detail: `Poupança ${formatEUR(intent.amountCents)}`,
+      reply: transferred.ok ? `Registado em ${transferred.targetName}.` : "Registado.",
+      detail: `Poupança ${formatEUR(intent.amountCents)}${transferred.ok ? ` · ${transferred.targetName}` : ""}`,
       kind: "save" as const,
       scope: "FAMILY" as const,
     };

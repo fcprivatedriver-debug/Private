@@ -47,11 +47,67 @@ export const budgetSchema = z.object({
 
 export const goalSchema = z.object({
   name: z.string().min(1).max(120),
-  type: z.enum(["CAR", "HOUSE", "VACATION", "EMERGENCY", "INVESTMENT", "RETIREMENT", "CUSTOM"]),
+  type: z.enum([
+    "CAR",
+    "HOUSE",
+    "VACATION",
+    "EMERGENCY",
+    "INVESTMENT",
+    "RETIREMENT",
+    "EDUCATION",
+    "OTHER",
+    "CUSTOM",
+  ]),
   target: z.string().min(1),
   current: z.string().optional(),
   deadline: z.string().optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
+  description: z.string().max(4000).optional().nullable(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+  accountKind: z.enum(["PERSONAL", "FAMILY", "BUSINESS"]).optional(),
+});
+
+export const savingPotSchema = z.object({
+  name: z.string().min(1).max(120),
+  kind: z.enum([
+    "CAR",
+    "HOUSE",
+    "VACATION",
+    "EMERGENCY",
+    "INVESTMENT",
+    "RETIREMENT",
+    "EDUCATION",
+    "OTHER",
+    "CUSTOM",
+  ]),
+  target: z.string().min(1),
+  current: z.string().optional(),
+  deadline: z.string().optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+  accountKind: z.enum(["PERSONAL", "FAMILY", "BUSINESS"]).optional(),
+});
+
+export const investmentSchema = z.object({
+  potId: z.string().min(1),
+  investmentVehicle: z.enum([
+    "TERM_DEPOSIT",
+    "SAVINGS_CERTIFICATES",
+    "ETF",
+    "INVESTMENT_FUND",
+    "INTEREST_ACCOUNT",
+    "OTHER",
+  ]),
+  investedCapital: z.string().min(1),
+  annualRatePercent: z.coerce.number().min(0).max(100),
+  capitalization: z.enum(["SIMPLE", "COMPOUND"]),
+  interestPeriod: z.enum(["MONTHLY", "QUARTERLY", "SEMIANNUAL", "YEARLY", "AT_MATURITY"]),
+  investmentStartDate: z.string().min(1),
+});
+
+export const goalItemSchema = z.object({
+  goalId: z.string().min(1),
+  name: z.string().min(1).max(120),
+  amount: z.string().min(1),
 });
 
 export const recurringSchema = z.object({

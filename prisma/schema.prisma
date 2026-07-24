@@ -137,7 +137,45 @@ enum GoalType {
   EMERGENCY
   INVESTMENT
   RETIREMENT
+  EDUCATION
+  OTHER
   CUSTOM
+}
+
+enum AccountKind {
+  PERSONAL
+  FAMILY
+  BUSINESS
+}
+
+enum GoalPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum InvestmentVehicle {
+  NONE
+  TERM_DEPOSIT
+  SAVINGS_CERTIFICATES
+  ETF
+  INVESTMENT_FUND
+  INTEREST_ACCOUNT
+  OTHER
+}
+
+enum Capitalization {
+  SIMPLE
+  COMPOUND
+}
+
+enum InterestPeriod {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  YEARLY
+  AT_MATURITY
 }
 
 enum RecurrenceFrequency {
@@ -229,6 +267,7 @@ model Family {
   expenses           Expense[]
   budgets            Budget[]
   goals              SavingsGoal[]
+  savingPots         SavingPot[]
   recurringPayments  RecurringPayment[]
   alerts             Alert[]
   importJobs         ImportJob[]
@@ -257,6 +296,7 @@ model FamilyMember {
   incomes  Income[]
   expenses Expense[]
   personalGoals SavingsGoal[] @relation("PersonalGoalOwner")
+  personalPots  SavingPot[]   @relation("PersonalPotOwner")
 
   @@unique([familyId, userId])
   @@index([userId])
@@ -548,15 +588,55 @@ model Budget {
   @@index([familyId, year, month])
 }
 
-// ——— Objetivos de poupança ———
+// ——— Poupanças (com investimento opcional) ———
+
+model SavingPot {
+  id                    String              @id @default(cuid())
+  familyId              String
+  ownerMemberId         String?
+  scope                 FinanceScope        @default(FAMILY)
+  accountKind           AccountKind         @default(PERSONAL)
+  name                  String
+  kind                  GoalType            @default(CUSTOM)
+  currentCents          Int                 @default(0)
+  targetCents           Int
+  deadline              DateTime?
+  notes                 String?
+  color                 String              @default("#0f7a4a")
+  isCompleted           Boolean             @default(false)
+  /// Investimento associado
+  isInvested            Boolean             @default(false)
+  investmentVehicle     InvestmentVehicle   @default(NONE)
+  investedCapitalCents  Int?
+  annualRatePercent     Float?
+  capitalization        Capitalization?
+  interestPeriod        InterestPeriod?
+  investmentStartDate   DateTime?
+  linkedGoalId          String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  family     Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  owner      FamilyMember? @relation("PersonalPotOwner", fields: [ownerMemberId], references: [id])
+  linkedGoal SavingsGoal?  @relation(fields: [linkedGoalId], references: [id], onDelete: SetNull)
+
+  @@index([familyId])
+  @@index([familyId, scope])
+  @@index([linkedGoalId])
+}
+
+// ——— Objetivos de vida / financeiros ———
 
 model SavingsGoal {
   id              String       @id @default(cuid())
   familyId        String
   ownerMemberId   String?
   scope           FinanceScope @default(FAMILY)
+  accountKind     AccountKind  @default(PERSONAL)
   name            String
+  description     String?      @db.Text
   type            GoalType     @default(CUSTOM)
+  priority        GoalPriority @default(MEDIUM)
   targetCents     Int
   currentCents    Int          @default(0)
   deadline        DateTime?
@@ -569,9 +649,25 @@ model SavingsGoal {
 
   family Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
   owner  FamilyMember? @relation("PersonalGoalOwner", fields: [ownerMemberId], references: [id])
+  items  GoalItem[]
+  pots   SavingPot[]
 
   @@index([familyId])
   @@index([familyId, scope])
+}
+
+model GoalItem {
+  id          String   @id @default(cuid())
+  goalId      String
+  name        String
+  amountCents Int
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  goal SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
 }
 
 // ——— Pagamentos recorrentes ———

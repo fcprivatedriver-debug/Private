@@ -543,6 +543,121 @@ html.dark .btn-primary { background: #3d6aa3; }
   font-size: 0.92rem;
 }
 
+.savings-tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.25rem;
+  padding: 0.25rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel) 80%, var(--line));
+}
+.savings-tab {
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.savings-tab.active {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 8%, transparent);
+}
+.invest-box {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, #0f7a4a 8%, var(--panel));
+}
+.invest-title {
+  font-weight: 650;
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+}
+.invest-stats {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  display: grid;
+  gap: 0.2rem;
+}
+.invest-projections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.invest-chip {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg-muted);
+}
+.invest-details {
+  margin-top: 0.65rem;
+  font-size: 0.88rem;
+}
+.invest-details summary {
+  cursor: pointer;
+  color: var(--fg-muted);
+  margin-bottom: 0.5rem;
+}
+.goal-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+.goal-items-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed var(--line);
+}
+.goal-items-total {
+  border-bottom: 0 !important;
+  margin-top: 0.25rem;
+}
+.nina-tips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.nina-tip {
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  background: color-mix(in srgb, var(--panel) 70%, var(--line));
+}
+.nina-tip.tone-celebrate {
+  background: color-mix(in srgb, #0f7a4a 12%, var(--panel));
+}
+.nina-tip.tone-careful {
+  background: color-mix(in srgb, #c45c26 12%, var(--panel));
+}
+.nina-tip.tone-warm {
+  background: color-mix(in srgb, #1e3a5f 10%, var(--panel));
+}
+.nina-sim-result {
+  margin: 0;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, #0f7a4a 10%, var(--panel));
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.nina-tips-panel {
+  margin-bottom: 1.25rem;
+}
+
 /* Forms */
 .form-grid {
   display: grid;

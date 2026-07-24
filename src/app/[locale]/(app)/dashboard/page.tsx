@@ -82,7 +82,27 @@ export default async function DashboardPage() {
             </Link>
           </Panel>
 
-          <Panel title={space === "family" ? "Objetivos da família" : "Os teus objetivos"}>
+          <Panel title={space === "family" ? "Poupanças e objetivos" : "As tuas poupanças"}>
+            <div className="stats-grid" style={{ marginBottom: "0.75rem" }}>
+              <StatCard
+                label="Total poupanças"
+                valueCents={data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents}
+                tone="savings"
+              />
+              <StatCard
+                label="Investido"
+                valueCents={data.savingsSummary?.totalInvestedCents ?? 0}
+                tone="income"
+              />
+            </div>
+            <p className="muted small" style={{ marginBottom: "0.5rem" }}>
+              {data.savingsSummary
+                ? `${data.savingsSummary.activeGoals} ativos · ${data.savingsSummary.completedGoals} concluídos · falta ${formatEUR(data.savingsSummary.totalStillNeededCents)}`
+                : null}
+              {data.savingsSummary?.nextGoal
+                ? ` · próximo: ${data.savingsSummary.nextGoal.name} (${data.savingsSummary.nextGoal.progress}%)`
+                : null}
+            </p>
             {data.goals.map((g) => (
               <div key={g.id} className="goal-card">
                 <div className="goal-head">
@@ -95,9 +115,14 @@ export default async function DashboardPage() {
                 </p>
               </div>
             ))}
-            <Link href="/pt/objetivos" className="btn btn-ghost btn-sm" style={{ marginTop: "0.5rem" }}>
-              Gerir objetivos
-            </Link>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+              <Link href="/pt/poupancas" className="btn btn-ghost btn-sm">
+                Poupanças
+              </Link>
+              <Link href="/pt/objetivos" className="btn btn-ghost btn-sm">
+                Objetivos
+              </Link>
+            </div>
           </Panel>
 
           <Panel title="Avisos amigáveis">

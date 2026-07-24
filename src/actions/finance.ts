@@ -257,6 +257,9 @@ export async function createGoal(formData: FormData) {
     current: formData.get("current") || "0",
     deadline: formData.get("deadline") || null,
     notes: formData.get("notes") || null,
+    description: formData.get("description") || null,
+    priority: formData.get("priority") || "MEDIUM",
+    accountKind: formData.get("accountKind") || "PERSONAL",
   });
   if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
   const targetCents = parseEURInput(parsed.data.target);
@@ -270,8 +273,11 @@ export async function createGoal(formData: FormData) {
       familyId: family.id,
       ownerMemberId: scope === "PERSONAL" ? membership.id : null,
       scope,
+      accountKind: parsed.data.accountKind || "PERSONAL",
       name: parsed.data.name,
+      description: parsed.data.description || null,
       type: parsed.data.type,
+      priority: parsed.data.priority || "MEDIUM",
       targetCents,
       currentCents,
       deadline: parsed.data.deadline ? new Date(parsed.data.deadline) : null,

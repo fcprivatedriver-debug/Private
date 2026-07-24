@@ -49,7 +49,9 @@ function extractAmountEuros(raw: string): number | null {
   const n = normalize(raw).replace(/\s*€\s*/g, " euro ");
   const m =
     n.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:euros?|eur)\b/) ||
-    n.match(/(?:gastei|gasto|paguei|custou|recebi|ganhei|poupei|poupar|abasteci)\s+(\d+(?:[.,]\d{1,2})?)/) ||
+    n.match(
+      /(?:gastei|gasto|paguei|custou|recebi|ganhei|poupei|poupar|coloca|reserva|acrescenta|mete|transfere|abasteci)\s+(\d+(?:[.,]\d{1,2})?)/,
+    ) ||
     n.match(/,\s*(\d+(?:[.,]\d{1,2})?)\b/) ||
     n.match(/\b(\d+(?:[.,]\d{1,2})?)\s*(?:no|na|em|ao|a)\b/) ||
     n.match(/\b(\d+(?:[.,]\d{1,2})?)$/);
@@ -129,11 +131,24 @@ export function parseMoneyIntent(raw: string): ParsedMoneyIntent {
   if (euros == null) return null;
   const amountCents = eurosToCents(euros);
 
-  if (/(poupei|poupar|guardei|meter na poupanca|para as ferias|para o objetivo)/.test(n)) {
+  if (
+    /(poupei|poupar|guardei|meter na poupanca)/.test(n) ||
+    /(coloca|reserva|acrescenta|mete|transfere).{0,40}(ferias|viagem|objetivo|poupanca|fundo|emergencia|carro|casa|reforma|estudo|algarve)/.test(
+      n,
+    ) ||
+    /(para as ferias|para o objetivo|nas ferias|no fundo)/.test(n)
+  ) {
     let goalHint: string | undefined;
     if (/ferias|viagem|algarve/.test(n)) goalHint = "férias";
     else if (/carro/.test(n)) goalHint = "carro";
     else if (/emergencia|fundo/.test(n)) goalHint = "emergência";
+    else if (/casa|entrada/.test(n)) goalHint = "casa";
+    else if (/estudo|educacao|educação/.test(n)) goalHint = "estudo";
+    else if (/reforma/.test(n)) goalHint = "reforma";
+    else {
+      const m = n.match(/(?:nas?|para(?:\s+o|\s+a)?|ao)\s+([a-zà-ú\s]{3,40})$/);
+      if (m) goalHint = m[1].trim();
+    }
     return {
       kind: "save",
       amountCents,

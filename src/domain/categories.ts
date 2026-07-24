@@ -85,6 +85,8 @@ export const GOAL_PRESETS = [
   { type: "EMERGENCY", name: "Fundo de emergência", icon: "shield" },
   { type: "INVESTMENT", name: "Investimentos", icon: "trending" },
   { type: "RETIREMENT", name: "Reforma", icon: "sunset" },
+  { type: "EDUCATION", name: "Estudos", icon: "book" },
+  { type: "OTHER", name: "Outros", icon: "more" },
 ] as const;
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {

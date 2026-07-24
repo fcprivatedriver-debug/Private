@@ -3,7 +3,8 @@ import { currentYearMonth, monthBounds, monthLabel } from "@/lib/money";
 import { computeDashboardTotals, groupByCategory, goalProgress } from "@/domain/finance";
 import { PAYMENT_METHOD_LABELS } from "@/domain/categories";
 import type { NinaSpace } from "@/actions/household";
-import { expenseScopeWhere, goalScopeWhere, incomeScopeWhere } from "@/lib/scope";
+import { expenseScopeWhere, goalScopeWhere, incomeScopeWhere, potScopeWhere } from "@/lib/scope";
+import { computeInvestmentSnapshot } from "@/domain/investments";
 
 export async function getDashboardData(
   familyId: string,
@@ -16,12 +17,14 @@ export async function getDashboardData(
   const expWhere = expenseScopeWhere(space, memberId);
   const incWhere = incomeScopeWhere(space, memberId);
   const goalWhere = goalScopeWhere(space, memberId);
+  const potWhere = potScopeWhere(space, memberId);
 
   const [
     incomes,
     expenses,
     budgets,
     goals,
+    pots,
     recurring,
     alerts,
     insights,
@@ -43,6 +46,10 @@ export async function getDashboardData(
     }),
     prisma.savingsGoal.findMany({
       where: { familyId, ...goalWhere },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.savingPot.findMany({
+      where: { familyId, ...potWhere },
       orderBy: { createdAt: "asc" },
     }),
     prisma.recurringPayment.findMany({
@@ -115,6 +122,35 @@ export async function getDashboardData(
     };
   });
 
+  let totalInvestedCents = 0;
+  let accruedReturnCents = 0;
+  for (const p of pots) {
+    if (
+      p.isInvested &&
+      p.investedCapitalCents != null &&
+      p.annualRatePercent != null &&
+      p.investmentStartDate
+    ) {
+      const snap = computeInvestmentSnapshot({
+        investedCapitalCents: p.investedCapitalCents,
+        annualRatePercent: p.annualRatePercent,
+        capitalization: p.capitalization,
+        interestPeriod: p.interestPeriod,
+        startDate: p.investmentStartDate,
+      });
+      totalInvestedCents += snap.principalCents;
+      accruedReturnCents += snap.accruedInterestCents;
+    }
+  }
+
+  const activeGoals = goals.filter((g) => !g.isCompleted);
+  const completedGoals = goals.filter((g) => g.isCompleted);
+  const nextGoal = [...activeGoals].sort((a, b) => {
+    const pa = a.currentCents / Math.max(1, a.targetCents);
+    const pb = b.currentCents / Math.max(1, b.targetCents);
+    return pb - pa;
+  })[0];
+
   return {
     year,
     month,
@@ -126,6 +162,26 @@ export async function getDashboardData(
     recentExpenses: expenses.slice(0, 8),
     upcomingPayments: recurring,
     goals: goals.map((g) => ({ ...g, progress: goalProgress(g.currentCents, g.targetCents) })),
+    pots: pots.map((p) => ({ ...p, progress: goalProgress(p.currentCents, p.targetCents) })),
+    savingsSummary: {
+      totalSavingsCents: pots.reduce((s, p) => s + p.currentCents, 0),
+      totalInvestedCents,
+      accruedReturnCents,
+      activeGoals: activeGoals.length,
+      completedGoals: completedGoals.length,
+      nextGoal: nextGoal
+        ? {
+            id: nextGoal.id,
+            name: nextGoal.name,
+            progress: goalProgress(nextGoal.currentCents, nextGoal.targetCents),
+            remainingCents: Math.max(0, nextGoal.targetCents - nextGoal.currentCents),
+          }
+        : null,
+      totalStillNeededCents: activeGoals.reduce(
+        (s, g) => s + Math.max(0, g.targetCents - g.currentCents),
+        0,
+      ),
+    },
     budgetRows,
     alerts,
     insights,

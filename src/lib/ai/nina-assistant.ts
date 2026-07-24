@@ -167,7 +167,32 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
     };
   }
 
-  // Objetivos / férias
+  // Objetivos / férias / simulações
+  if (
+    /se eu poupar|se aumentar|se retirar|quando atingo|simul/.test(q) ||
+    (/poupar/.test(q) && /mes|mês|objetivo/.test(q))
+  ) {
+    const goal = matchGoal(question, ctx.goals);
+    if (!goal) {
+      return {
+        text: `Ainda não tenho um objetivo para simular. Cria um em Objetivos ou Poupanças e volta a perguntar.`,
+        tone: "warm",
+        suggestions: ["Quanto falta para as férias?"],
+      };
+    }
+    const left = Math.max(0, goal.targetCents - goal.currentCents);
+    const monthlyMatch = q.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:euros?|eur)?/);
+    const monthly = monthlyMatch ? Math.round(Number(monthlyMatch[1].replace(",", ".")) * 100) : 15000;
+    const months = monthly > 0 ? Math.ceil(left / monthly) : null;
+    return {
+      text: goal
+        ? `Para “${goal.name}” faltam ${formatEUR(left)}.\n\nSe poupares ${formatEUR(monthly)} por mês, chegas em cerca de ${months ?? "—"} ${months === 1 ? "mês" : "meses"}.\n\nSe aumentares 50 €/mês, o prazo encolhe. Queres que eu faça outra simulação?`
+        : "Sem objetivo.",
+      tone: "warm",
+      suggestions: ["Quanto falta para as férias?", "Onde posso poupar?"],
+    };
+  }
+
   if (/objetivo|meta|falta para|poupan/.test(q) || /ferias|carro|emergencia|reforma|casa/.test(q)) {
     const goal = matchGoal(question, ctx.goals);
     if (!goal) {

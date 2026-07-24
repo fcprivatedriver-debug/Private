@@ -282,23 +282,11 @@ export async function inviteMemberToHousehold(formData: FormData) {
   return { ok: true as const };
 }
 
+import { applySavingsTransfer } from "@/lib/savings-transfer";
+
 export async function contributeSharedGoals(familyId: string, amountCents: number, hint?: string) {
   if (amountCents <= 0) return;
-  const goals = await prisma.savingsGoal.findMany({
-    where: { familyId, isCompleted: false, scope: "FAMILY" },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!goals.length) return;
-  const target =
-    (hint && goals.find((g) => g.name.toLowerCase().includes(hint.toLowerCase().slice(0, 5)))) ||
-    goals.find((g) => /ferias|viagem/i.test(g.name)) ||
-    goals[0];
-  if (!target) return;
-  const next = Math.min(target.targetCents, target.currentCents + amountCents);
-  await prisma.savingsGoal.update({
-    where: { id: target.id },
-    data: { currentCents: next, isCompleted: next >= target.targetCents },
-  });
+  await applySavingsTransfer(familyId, amountCents, hint);
 }
 
 export async function maybeAutoSaveFromSurplus(familyId: string) {
