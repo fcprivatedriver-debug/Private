@@ -190,31 +190,34 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
   // Quanto gastei
   if (/(quanto|o que).*(gastei|gaste|despes)/.test(q) || /^despesas?( deste)? mes$/.test(q)) {
     const top = ctx.categoryBreakdown[0];
-    return {
-      text: `${name}, este mês (${ctx.monthLabel}) já gastaste ${formatEUR(ctx.expenseCents)}.\n\n${
+    return withVoice(
+      `${name}, este mês (${ctx.monthLabel}) já gastaste ${formatEUR(ctx.expenseCents)}.\n\n${
         top
           ? `A maior fatia foi ${top.name} (${formatEUR(top.cents)}).`
           : "Ainda não tenho despesas registadas."
       }\n\nSe quiseres, posso mostrar uma categoria específica — por exemplo o supermercado.`,
-      tone: "neutral",
-      suggestions: ["Mostra as despesas do supermercado", "Onde posso poupar?", "Compara este mês com o anterior"],
-    };
+      "neutral",
+      ctx,
+      ["Mostra as despesas do supermercado", "Onde posso poupar?", "Compara este mês com o anterior"],
+    );
   }
 
   // Quanto posso gastar
   if (/(quanto|o que).*(posso|posso ainda).*(gast|sobra|falta)/.test(q) || /ate ao final do mes/.test(q)) {
     if (budgetLeft <= 0) {
-      return {
-        text: `${name}, com o ritmo atual o orçamento do mês já está esgotado.\n\nNão te preocupes — vamos ajustar juntos. Posso sugerir onde cortar um pouco sem estragar o essencial.`,
-        tone: "careful",
-        suggestions: ["Onde posso poupar?", "Mostra as despesas do supermercado"],
-      };
+      return withVoice(
+        `${name}, com o ritmo atual o orçamento do mês já está esgotado.\n\nNão te preocupes — vamos ajustar juntos. Posso sugerir onde cortar um pouco sem estragar o essencial.`,
+        "careful",
+        ctx,
+        ["Onde posso poupar?", "Mostra as despesas do supermercado"],
+      );
     }
-    return {
-      text: `Boa pergunta. Até ao fim do mês podes gastar cerca de ${formatEUR(budgetLeft)} sem sair do plano.\n\nIsso dá mais ou menos ${formatEUR(daily)} por dia, nos próximos ${ctx.daysLeftInMonth} dias.\n\nQueres que eu te diga onde estás a gastar mais?`,
-      tone: "warm",
-      suggestions: ["Onde posso poupar?", "Quanto gastei este mês?"],
-    };
+    return withVoice(
+      `Boa pergunta. Até ao fim do mês podes gastar cerca de ${formatEUR(budgetLeft)} sem sair do plano.\n\nIsso dá mais ou menos ${formatEUR(daily)} por dia, nos próximos ${ctx.daysLeftInMonth} dias.\n\nQueres que eu te diga onde estás a gastar mais?`,
+      "warm",
+      ctx,
+      ["Onde posso poupar?", "Quanto gastei este mês?"],
+    );
   }
 
   // Onde poupar
@@ -225,32 +228,34 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
         `${i + 1}. ${t.name} — ${formatEUR(t.cents)}. Uma pequena redução aqui já ajuda.`,
     );
     const unusual = ctx.unusual[0];
-    return {
-      text: `${name}, olhei para os teus hábitos com carinho — sem julgamentos.\n\nOnde faz mais sentido ajustar agora:\n${lines.join("\n")}${
+    return withVoice(
+      `${name}, olhei para os teus hábitos com carinho — sem julgamentos.\n\nOnde faz mais sentido ajustar agora:\n${lines.join("\n")}${
         unusual
           ? `\n\nTambém notei algo fora do habitual: “${unusual.description}” (${formatEUR(unusual.amountCents)}). Vale a pena confirmar se foi pontual.`
           : ""
       }\n\nPequenos passos contam. Queres criar um objetivo de poupança?`,
-      tone: "warm",
-      suggestions: ["Quanto falta para as férias?", "Compara este mês com o anterior"],
-    };
+      "warm",
+      ctx,
+      ["Quanto falta para as férias?", "Compara este mês com o anterior"],
+    );
   }
 
   // Comparar meses
   if (/compara/.test(q) || /mes (anterior|passado)/.test(q) || /versus|vs/.test(q)) {
     const delta = ctx.expenseCents - ctx.prevExpenseCents;
     const more = delta > 0;
-    return {
-      text: `Comparei ${ctx.monthLabel} com o mês anterior.\n\nDespesas agora: ${formatEUR(ctx.expenseCents)}\nMês passado: ${formatEUR(ctx.prevExpenseCents)}\n\n${
+    return withVoice(
+      `Comparei ${ctx.monthLabel} com o mês anterior.\n\nDespesas agora: ${formatEUR(ctx.expenseCents)}\nMês passado: ${formatEUR(ctx.prevExpenseCents)}\n\n${
         more
-          ? `Gastaste ${formatEUR(delta)} a mais. Não é um problema — é informação. Podemos ver juntos o que mudou.`
+          ? `Este mês as despesas ficaram ${formatEUR(delta)} acima do mês passado. Não é um problema — é informação. Podemos ver juntos o que mudou.`
           : delta < 0
             ? `${pickCelebration()} Gastaste ${formatEUR(Math.abs(delta))} a menos. Estás no caminho certo.`
             : `Os gastos estão muito parecidos com o mês passado — estabilidade também é uma vitória.`
       }`,
-      tone: more ? "careful" : "celebrate",
-      suggestions: ["Onde posso poupar?", "Quanto gastei este mês?"],
-    };
+      more ? "careful" : "celebrate",
+      ctx,
+      ["Onde posso poupar?", "Quanto gastei este mês?"],
+    );
   }
 
   // Objetivos / férias / simulações
@@ -260,45 +265,49 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
   ) {
     const goal = matchGoal(question, ctx.goals);
     if (!goal) {
-      return {
-        text: `Ainda não tenho um objetivo para simular. Cria um em Objetivos ou Poupanças e volta a perguntar.`,
-        tone: "warm",
-        suggestions: ["Quanto falta para as férias?"],
-      };
+      return withVoice(
+        `Ainda não tenho um objetivo para simular. Cria um em Objetivos ou Poupanças e volta a perguntar.`,
+        "warm",
+        ctx,
+        ["Quanto falta para as férias?"],
+      );
     }
     const left = Math.max(0, goal.targetCents - goal.currentCents);
     const monthlyMatch = q.match(/(\d+(?:[.,]\d{1,2})?)\s*(?:euros?|eur)?/);
     const monthly = monthlyMatch ? Math.round(Number(monthlyMatch[1].replace(",", ".")) * 100) : 15000;
     const months = monthly > 0 ? Math.ceil(left / monthly) : null;
-    return {
-      text: goal
-        ? `Para “${goal.name}” faltam ${formatEUR(left)}.\n\nSe poupares ${formatEUR(monthly)} por mês, chegas em cerca de ${months ?? "—"} ${months === 1 ? "mês" : "meses"}.\n\nSe aumentares 50 €/mês, o prazo encolhe. Queres que eu faça outra simulação?`
-        : "Sem objetivo.",
-      tone: "warm",
-      suggestions: ["Quanto falta para as férias?", "Onde posso poupar?"],
-    };
+    return withVoice(
+      `Para “${goal.name}” faltam ${formatEUR(left)}.\n\nSe poupares ${formatEUR(monthly)} por mês, chegas em cerca de ${months ?? "—"} ${months === 1 ? "mês" : "meses"}.\n\nSe aumentares 50 €/mês, o prazo encolhe. Queres que eu faça outra simulação?`,
+      "warm",
+      ctx,
+      ["Quanto falta para as férias?", "Onde posso poupar?"],
+    );
   }
 
   if (/objetivo|meta|falta para|poupan/.test(q) || /ferias|carro|emergencia|reforma|casa/.test(q)) {
     const goal = matchGoal(question, ctx.goals);
     if (!goal) {
-      return {
-        text: `Ainda não tens objetivos de poupança. Queres que criemos um juntos? Pode ser férias, um fundo de emergência ou o que for importante para ti.`,
-        tone: "warm",
-        suggestions: ["Onde posso poupar?"],
-      };
+      return withVoice(
+        `Ainda não tens objetivos de poupança. Queres que criemos um juntos? Pode ser férias, um fundo de emergência ou o que for importante para ti.`,
+        "warm",
+        ctx,
+        ["Onde posso poupar?"],
+      );
     }
     const left = Math.max(0, goal.targetCents - goal.currentCents);
     const pct = goalProgress(goal.currentCents, goal.targetCents);
-    return {
-      text: `Para “${goal.name}” já tens ${formatEUR(goal.currentCents)} de ${formatEUR(goal.targetCents)} (${pct}%).\n\nFaltam ${formatEUR(left)}.\n\n${
-        pct >= 70
-          ? "Estás tão perto — continua com o mesmo ritmo. Eu acredito em ti."
-          : "Vamos a poucos, mas vamos. Cada euro conta e eu ajudo-te a manter o foco."
+    return withVoice(
+      `Para “${goal.name}” já tens ${formatEUR(goal.currentCents)} de ${formatEUR(goal.targetCents)} (${pct}%).\n\nFaltam ${formatEUR(left)}.\n\n${
+        pct >= 100
+          ? `${pickCelebration()} Mais um objetivo atingido.`
+          : pct >= 70
+            ? `${pickCelebration()} Estás tão perto — continua com o mesmo ritmo. Eu acredito em ti.`
+            : "Vamos a poucos, mas vamos. Cada euro conta e eu ajudo-te a manter o foco."
       }`,
-      tone: pct >= 50 ? "celebrate" : "warm",
-      suggestions: ["Quanto posso gastar até ao final do mês?", "Onde posso poupar?"],
-    };
+      pct >= 50 ? "celebrate" : "warm",
+      ctx,
+      ["Quanto posso gastar até ao final do mês?", "Onde posso poupar?"],
+    );
   }
 
   // Categoria específica / supermercado
@@ -309,11 +318,12 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
       ctx.categoryBreakdown.find((c) => /super|aliment/i.test(c.name)) ||
       ctx.categoryBreakdown[0];
     if (!target) {
-      return {
-        text: `Ainda não tenho despesas nessa categoria este mês. Quando registares compras, eu organizo tudo automaticamente.`,
-        tone: "warm",
-        suggestions: SUGGESTIONS.slice(0, 3),
-      };
+      return withVoice(
+        `Ainda não tenho despesas nessa categoria este mês. Quando registares compras, eu organizo tudo automaticamente.`,
+        "warm",
+        ctx,
+        SUGGESTIONS.slice(0, 3),
+      );
     }
     const related = ctx.recentExpenses.filter((e) =>
       normalize(e.category).includes(normalize(target.name).slice(0, 6)),
@@ -322,45 +332,49 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
       .slice(0, 5)
       .map((e) => `• ${e.storeName || e.description}: ${formatEUR(e.amountCents)}`)
       .join("\n");
-    return {
-      text: `Em ${target.name} gastaste ${formatEUR(target.cents)} este mês.\n\n${
+    return withVoice(
+      `Em ${target.name} gastaste ${formatEUR(target.cents)} este mês.\n\n${
         list || "Ainda sem detalhe recente."
       }\n\nQueres que compare com o mês passado ou que sugira uma poupança nesta área?`,
-      tone: "neutral",
-      suggestions: ["Onde posso poupar?", "Compara este mês com o anterior"],
-    };
+      "neutral",
+      ctx,
+      ["Onde posso poupar?", "Compara este mês com o anterior"],
+    );
   }
 
   // Receitas / saldo
   if (/receit|salario|saldo|sobrou|sobra/.test(q)) {
-    return {
-      text: `Receitas deste mês: ${formatEUR(ctx.incomeCents)}.\nDespesas: ${formatEUR(ctx.expenseCents)}.\nSaldo: ${formatEUR(balance)}.\n\n${
+    return withVoice(
+      `Receitas deste mês: ${formatEUR(ctx.incomeCents)}.\nDespesas: ${formatEUR(ctx.expenseCents)}.\nSaldo: ${formatEUR(balance)}.\n\n${
         balance >= 0
           ? "Há margem — se quiseres, posso ajudar a encaminhar uma parte para um objetivo."
           : "Estamos um pouco no vermelho. Vamos encontrar ajustes suaves, sem drama."
       }`,
-      tone: balance >= 0 ? "warm" : "careful",
-      suggestions: ["Quanto posso gastar até ao final do mês?", "Onde posso poupar?"],
-    };
+      balance >= 0 ? "warm" : "careful",
+      ctx,
+      ["Quanto posso gastar até ao final do mês?", "Onde posso poupar?"],
+    );
   }
 
   // Pagamentos futuros
   if (/pagament|conta|renda|proxima|próxima|vencer|a pagar/.test(q)) {
     if (!ctx.upcomingPayments.length) {
-      return {
-        text: `Neste momento não tenho pagamentos futuros agendados. Se quiseres, podemos marcar a renda, a luz ou as subscrições para eu te avisar a tempo.`,
-        tone: "warm",
-      };
+      return withVoice(
+        `Neste momento não tenho pagamentos futuros agendados. Se quiseres, podemos marcar a renda, a luz ou as subscrições para eu te avisar a tempo.`,
+        "warm",
+        ctx,
+      );
     }
     const lines = ctx.upcomingPayments
       .slice(0, 5)
       .map((p) => `• ${p.name}: ${formatEUR(p.amountCents)} · ${p.dueLabel}`)
       .join("\n");
-    return {
-      text: `${name}, estes são os próximos pagamentos que estou a acompanhar:\n\n${lines}\n\nEu aviso-te com antecedência para não haver surpresas.`,
-      tone: "warm",
-      suggestions: ["Quanto posso gastar até ao final do mês?"],
-    };
+    return withVoice(
+      `${name}, estes são os próximos pagamentos que estou a acompanhar:\n\n${lines}\n\nEu aviso-te com antecedência para não haver surpresas.`,
+      "warm",
+      ctx,
+      ["Quanto posso gastar até ao final do mês?"],
+    );
   }
 
   // Para onde vai o dinheiro
@@ -369,11 +383,12 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
       .slice(0, 5)
       .map((c, i) => `${i + 1}. ${c.name}: ${formatEUR(c.cents)}`)
       .join("\n");
-    return {
-      text: `Deixa-me explicar com simplicidade para onde está a ir o dinheiro em ${ctx.monthLabel}:\n\n${lines || "Ainda sem movimentos."}\n\nO dinheiro deve servir a tua vida — não o contrário. Diz-me se queres aprofundar alguma linha.`,
-      tone: "warm",
-      suggestions: ["Onde posso poupar?", "Mostra as despesas do supermercado"],
-    };
+    return withVoice(
+      `Deixa-me explicar com simplicidade para onde está a ir o dinheiro em ${ctx.monthLabel}:\n\n${lines || "Ainda sem movimentos."}\n\nO dinheiro deve servir a tua vida — não o contrário. Diz-me se queres aprofundar alguma linha.`,
+      "warm",
+      ctx,
+      ["Onde posso poupar?", "Mostra as despesas do supermercado"],
+    );
   }
 
   // Default
