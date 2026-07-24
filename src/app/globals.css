@@ -192,10 +192,13 @@ html.dark .btn-primary { background: #3d6aa3; }
   margin: 0 auto;
   padding: 4rem 1.5rem 5rem;
   width: 100%;
+  /* Never start at opacity:0 with fill-mode:both — if the animation does not
+     run (some mobile browsers), the hero stays invisible → white screen. */
+  opacity: 1;
   animation: rise 0.8s var(--ease) both;
 }
 @keyframes rise {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0.92; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
 .hero-brand {

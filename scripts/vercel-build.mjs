@@ -22,6 +22,8 @@ function run(cmd, args) {
 
 run("npx", ["prisma", "generate"]);
 run("node", ["scripts/migrate-deploy.mjs"]);
+// First deploy / empty `nina` schema: load familia@nina.app so login works
+run("node", ["scripts/ensure-demo-users.mjs"]);
 run("npx", ["next", "build"]);
 
 // Best-effort: disable Vercel Authentication so the preview/prod URL is public

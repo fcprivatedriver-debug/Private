@@ -4,7 +4,7 @@ import { SessionProvider } from "next-auth/react";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider refetchOnWindowFocus refetchWhenOffline={false}>
+    <SessionProvider basePath="/api/auth" refetchOnWindowFocus refetchWhenOffline={false}>
       {children}
     </SessionProvider>
   );

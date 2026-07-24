@@ -100,10 +100,10 @@ export function applyEnsureEnv({ exitOnError = true } = {}) {
     console.log(`[ensure-env] Using PostgreSQL schema "${schema}" for Nina`);
   }
 
-  if (process.env.VERCEL_URL && !process.env.AUTH_URL && !process.env.NEXTAUTH_URL) {
-    process.env.AUTH_URL = `https://${process.env.VERCEL_URL}`;
-    console.log("[ensure-env] AUTH_URL set from VERCEL_URL");
-  }
+  // Do NOT set AUTH_URL from VERCEL_URL.
+  // Baking a deployment-specific host breaks branch aliases and can send
+  // Auth.js to the wrong origin (blank/error screens on mobile).
+  // trustHost: true is enough on Vercel.
 
   return true;
 }

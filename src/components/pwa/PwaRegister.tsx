@@ -107,8 +107,11 @@ export function PwaRegister() {
     window.addEventListener("beforeinstallprompt", onBip);
 
     if (isIos()) {
+      const path = window.location.pathname;
+      const onAuth = /\/(login|registo)\/?$/.test(path);
       const dismissed = localStorage.getItem("nina-ios-install-dismissed");
-      if (!dismissed) setShowIosTip(true);
+      // Never cover the login/register form on iPhone (toast intercepts taps).
+      if (!dismissed && !onAuth) setShowIosTip(true);
     }
 
     return () => window.removeEventListener("beforeinstallprompt", onBip);
