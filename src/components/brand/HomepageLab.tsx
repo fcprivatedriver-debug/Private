@@ -79,7 +79,7 @@ function EditorialHeroPreview({
 
 export function HomepageLab({ locale, labels }: { locale: string; labels: Labels }) {
   const isPt = locale.startsWith("pt");
-  const [versionId, setVersionId] = useState<HeroVersionId>("V1");
+  const [versionId, setVersionId] = useState<HeroVersionId>("V3");
   const [colorId, setColorId] = useState<AccentCandidateId>("C1");
   const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O55");
 

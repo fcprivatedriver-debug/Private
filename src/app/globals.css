@@ -14,15 +14,15 @@
   --fg-muted: #5a5a62;
   --fg-on-ink: #f7f7f8;
 
-  /* Brand — ink black + petroleum blue (Atlantic Navy default) */
+  /* Brand — ink black + Azure Prestige (lab winner accent) */
   --brand: #111111;
   --brand-strong: #000000;
-  --accent: #0d3b66;
-  --accent-strong: #0a2f52;
-  --accent-soft: rgba(13, 59, 102, 0.1);
-  --accent-glow: rgba(13, 59, 102, 0.16);
-  --petrol: #0d3b66;
-  --petrol-soft: #3d6f94;
+  --accent: #1f5a96;
+  --accent-strong: #184a7c;
+  --accent-soft: rgba(31, 90, 150, 0.1);
+  --accent-glow: rgba(31, 90, 150, 0.16);
+  --petrol: #1f5a96;
+  --petrol-soft: #5b8ebe;
 
   /* Lines & status */
   --line: rgba(10, 10, 11, 0.08);
@@ -214,7 +214,7 @@ h3,
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: rgba(13, 59, 102, 0.55);
+  border-color: rgba(31, 90, 150, 0.55);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
@@ -272,7 +272,7 @@ h3,
 .card-interactive:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lift);
-  border-color: rgba(13, 59, 102, 0.28);
+  border-color: rgba(31, 90, 150, 0.28);
 }
 
 .badge {
@@ -328,7 +328,7 @@ h3,
   font-size: 0.76rem;
   letter-spacing: 0.03em;
   padding: 0.55rem 0;
-  border-bottom: 1px solid rgba(13, 59, 102, 0.25);
+  border-bottom: 1px solid rgba(31, 90, 150, 0.25);
 }
 
 .demo-banner strong {
@@ -602,7 +602,7 @@ h3,
 }
 
 
-/* Editorial split hero — production shell (photo unlocked via lab) */
+/* Editorial split hero — locked Version 3 */
 .hero-editorial {
   align-items: stretch;
   min-height: calc(100svh - var(--header-h));
@@ -658,8 +658,26 @@ h3,
 .hero-editorial-photo-slot {
   position: relative;
   min-height: 280px;
-  background: linear-gradient(160deg, #f3f4f6 0%, #e8eaee 100%);
+  background: #e8eaee;
   border-left: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.hero-editorial-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  display: block;
+}
+
+.hero-editorial-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, var(--hero-overlay, 0.55));
+  pointer-events: none;
 }
 
 .hero-editorial-photo-placeholder {
@@ -928,7 +946,7 @@ h3,
 
 .alert-info {
   background: var(--accent-soft);
-  border-color: rgba(13, 59, 102, 0.22);
+  border-color: rgba(31, 90, 150, 0.22);
   color: var(--petrol);
 }
 
@@ -1088,7 +1106,7 @@ h3,
 
 .ink-band {
   background:
-    radial-gradient(ellipse 70% 80% at 90% 10%, rgba(13, 59, 102, 0.28), transparent 55%),
+    radial-gradient(ellipse 70% 80% at 90% 10%, rgba(31, 90, 150, 0.28), transparent 55%),
     linear-gradient(135deg, #050506 0%, #0c0c10 55%, #0a1228 140%);
   color: var(--fg-on-ink);
   border-radius: var(--radius-xl);
@@ -1165,7 +1183,7 @@ h3,
 }
 
 .branding-card.is-default {
-  border-color: rgba(13, 59, 102, 0.45);
+  border-color: rgba(31, 90, 150, 0.45);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
@@ -1211,7 +1229,7 @@ h3,
 
 .branding-swatch-dark {
   background:
-    radial-gradient(ellipse 80% 70% at 80% 20%, rgba(13, 59, 102, 0.22), transparent 55%),
+    radial-gradient(ellipse 80% 70% at 80% 20%, rgba(31, 90, 150, 0.22), transparent 55%),
     #0a0a0b;
 }
 
@@ -1273,7 +1291,7 @@ h3,
 }
 
 .petrol-card.is-default {
-  border-color: rgba(13, 59, 102, 0.45);
+  border-color: rgba(31, 90, 150, 0.45);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
@@ -1329,7 +1347,7 @@ h3,
   position: relative;
   height: clamp(140px, 22vw, 220px);
   background:
-    linear-gradient(120deg, rgba(17, 17, 17, 0.88) 0%, rgba(13, 59, 102, 0.72) 55%, rgba(13, 59, 102, 0.4) 100%),
+    linear-gradient(120deg, rgba(17, 17, 17, 0.88) 0%, rgba(31, 90, 150, 0.72) 55%, rgba(31, 90, 150, 0.4) 100%),
     url("/brand/zrik-hero.jpg") center 45% / cover no-repeat;
   border-bottom: 1px solid var(--line);
 }
@@ -1339,7 +1357,7 @@ h3,
   inset: auto 10% -40% auto;
   width: min(420px, 60vw);
   height: 220px;
-  background: radial-gradient(circle, rgba(13, 59, 102, 0.35), transparent 70%);
+  background: radial-gradient(circle, rgba(31, 90, 150, 0.35), transparent 70%);
   pointer-events: none;
 }
 
@@ -1397,7 +1415,7 @@ h3,
   padding: 1.15rem 1.25rem 0.85rem;
   border-bottom: 1px solid var(--line);
   background:
-    linear-gradient(180deg, rgba(13, 59, 102, 0.06), transparent 90%);
+    linear-gradient(180deg, rgba(31, 90, 150, 0.06), transparent 90%);
 }
 
 .booking-section-icon {
@@ -1473,14 +1491,14 @@ h3,
 }
 
 .booking-class-card:hover {
-  border-color: rgba(13, 59, 102, 0.35);
+  border-color: rgba(31, 90, 150, 0.35);
   transform: translateY(-1px);
 }
 
 .booking-class-card.is-selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
-  background: linear-gradient(180deg, rgba(13, 59, 102, 0.08), #fff 70%);
+  background: linear-gradient(180deg, rgba(31, 90, 150, 0.08), #fff 70%);
 }
 
 .booking-class-name {

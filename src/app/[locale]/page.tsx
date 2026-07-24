@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ZrikWordmark } from "@/components/layout/BrandLogo";
+import { PRODUCTION_HERO, PRODUCTION_OVERLAY } from "@/config/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +36,7 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      {/*
-        Production hero stays unlocked: clean editorial shell only.
-        Photo + color winners are chosen in /homepage-lab — not applied here yet.
-        No phone mockups. No abstract blur backdrop behind copy.
-      */}
-      <section className="hero hero-editorial hero-editorial-pending">
+      <section className="hero hero-editorial">
         <div className="container hero-editorial-split">
           <div className="hero-editorial-copy">
             <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
@@ -59,16 +55,19 @@ export default async function HomePage({ params }: Props) {
                 {secondary.label}
               </Link>
             </div>
-            {!role ? (
-              <p className="hero-lab-hint fade-up-delay">
-                <Link href="/homepage-lab">{t("labHint")}</Link>
-              </p>
-            ) : null}
           </div>
-          <div className="hero-editorial-photo-slot" aria-hidden>
-            <div className="hero-editorial-photo-placeholder">
-              <span>{t("labPhotoPending")}</span>
-            </div>
+          <div className="hero-editorial-photo-slot">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={PRODUCTION_HERO}
+              alt=""
+              className="hero-editorial-photo"
+            />
+            <div
+              className="hero-editorial-veil"
+              style={{ ["--hero-overlay" as string]: String(PRODUCTION_OVERLAY) }}
+              aria-hidden
+            />
           </div>
         </div>
       </section>

@@ -1,17 +1,17 @@
 /**
- * ZRIK brand candidates — nothing locked until chosen in /homepage-lab.
+ * ZRIK brand — production locks from Homepage Lab choices.
  */
 
 export const BRAND_INK = "#111111";
 
-/** Premium blues under active comparison (no production lock). */
+/** Premium blues (lab still available for reference). */
 export const ACCENT_CANDIDATES = [
   {
     id: "C1",
     hex: "#1F5A96",
     name: "Azure Prestige",
     namePt: "Azul prestígio",
-    vibe: "Preferred · clear premium contrast",
+    vibe: "Locked product accent",
     preferred: true,
   },
   {
@@ -35,9 +35,8 @@ export const ACCENT_CANDIDATES = [
 export type AccentCandidateId = (typeof ACCENT_CANDIDATES)[number]["id"];
 
 /**
- * Three complete editorial Hero proposals.
- * Layout: text LEFT · photography RIGHT (campaign split — not text-over-image).
- * Experience is the protagonist; car is supporting.
+ * Editorial Hero proposals.
+ * Winner locked: V3 — The pause.
  */
 export const HERO_VERSIONS = [
   {
@@ -74,19 +73,23 @@ export const HERO_VERSIONS = [
 
 export type HeroVersionId = (typeof HERO_VERSIONS)[number]["id"];
 
-/** Soft white veil on the photo panel only (photo stays clearly visible). */
 export const OVERLAY_CANDIDATES = [
   { id: "O55", label: "55%", value: 0.55 },
   { id: "O60", label: "60%", value: 0.6 },
   { id: "O65", label: "65%", value: 0.65 },
 ] as const;
 
-/** @deprecated use HERO_VERSIONS — kept for type compatibility during transition */
 export const HERO_PHOTO_CANDIDATES = HERO_VERSIONS;
 export type HeroPhotoId = HeroVersionId;
 
-export const PRODUCTION_ACCENT = "#0D3B66";
-export const PRODUCTION_HERO = "/brand/zrik-hero.jpg";
+/** Locked: Homepage Lab winner — Version 3 */
+export const LOCKED_HERO_VERSION = HERO_VERSIONS.find((v) => v.id === "V3")!;
+
+/** Locked product accent — Azure Prestige (preferred blue from lab) */
+export const PRODUCTION_ACCENT = "#1F5A96";
+export const PRODUCTION_ACCENT_STRONG = "#184a7c";
+export const PRODUCTION_HERO = LOCKED_HERO_VERSION.src;
+export const PRODUCTION_OVERLAY = 0.55;
 
 export const PETROL_BLUES = ACCENT_CANDIDATES.map((c) => ({
   id: c.id,
