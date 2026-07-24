@@ -1,14 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import {
   DEFAULT_ZRIK_VARIANT,
   ZrikWordmark,
   type ZrikLogoVariant,
 } from "@/components/layout/BrandLogo";
-import {
-  DEFAULT_PETROL_BLUE,
-  PETROL_BLUES,
-  BRAND_INK,
-} from "@/config/brand";
+import { BRAND_INK } from "@/config/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -26,7 +23,6 @@ export default async function BrandingPreviewPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("branding");
-  const isPt = locale.startsWith("pt");
 
   return (
     <section className="section branding-preview fade-up">
@@ -35,47 +31,14 @@ export default async function BrandingPreviewPage({ params }: Props) {
           <h1 className="page-title">{t("title")}</h1>
           <p className="page-lead">{t("lead")}</p>
           <p className="muted" style={{ marginTop: "-0.75rem" }}>
-            {t("note")}
+            {t("note")}{" "}
+            <Link href="/homepage-lab" style={{ color: "var(--accent)", fontWeight: 600 }}>
+              Homepage Lab →
+            </Link>
           </p>
         </header>
 
-        <div className="branding-block">
-          <h2 className="branding-block-title">{t("petrolTitle")}</h2>
-          <p className="muted branding-block-lead">{t("petrolLead")}</p>
-          <div className="petrol-grid">
-            {PETROL_BLUES.map((c) => {
-              const isDefault = c.id === DEFAULT_PETROL_BLUE.id;
-              return (
-                <article
-                  key={c.id}
-                  className={isDefault ? "petrol-card is-default" : "petrol-card"}
-                >
-                  <div
-                    className="petrol-swatch"
-                    style={{ background: c.hex }}
-                    aria-hidden
-                  />
-                  <div className="petrol-meta">
-                    <h3 className="petrol-name">
-                      {isPt ? c.namePt : c.name}
-                      {isDefault ? (
-                        <span className="branding-default-badge">{t("defaultBadge")}</span>
-                      ) : null}
-                    </h3>
-                    <p className="petrol-hex">{c.hex}</p>
-                    <p className="muted petrol-vibe">{c.vibe}</p>
-                    <div className="petrol-logo-sample">
-                      <span style={{ color: c.hex, fontWeight: 700 }}>Z</span>
-                      <span style={{ color: BRAND_INK, fontWeight: 700 }}>RIK</span>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="branding-block">
+        <div className="branding-block" style={{ marginTop: 0 }}>
           <h2 className="branding-block-title">{t("logoTitle")}</h2>
           <p className="muted branding-block-lead">{t("logoLead")}</p>
           <div className="branding-grid">
@@ -111,6 +74,9 @@ export default async function BrandingPreviewPage({ params }: Props) {
               );
             })}
           </div>
+          <p className="muted" style={{ marginTop: "1.25rem", fontSize: "0.88rem" }}>
+            Ink reference: {BRAND_INK}
+          </p>
         </div>
       </div>
     </section>

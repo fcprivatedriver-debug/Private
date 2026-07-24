@@ -43,7 +43,10 @@ export default async function HomePage({ params }: Props) {
           <h1 className="hero-brand fade-up">
             <ZrikWordmark as="span" variant="B" />
           </h1>
-          <p className="hero-copy fade-up-delay">{t("copy")}</p>
+          <p className="hero-copy fade-up-delay">
+            <span className="hero-copy-line">{t("copyLine1")}</span>
+            <span className="hero-copy-line">{t("copyLine2")}</span>
+          </p>
           <div className="cta-row fade-up-delay">
             <Link href={primary.href} className="btn btn-primary btn-hero">
               {primary.label}
