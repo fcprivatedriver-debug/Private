@@ -1,7 +1,21 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { isGoogleMapsConfigured, suggestPlaces, type PlaceSuggestion } from "@/lib/maps";
+import { useLocale } from "next-intl";
+
+export type SelectedPlace = {
+  description: string;
+  placeId?: string;
+  lat?: number;
+  lng?: number;
+};
+
+type Suggestion = {
+  placeId: string;
+  description: string;
+  mainText?: string;
+  secondaryText?: string;
+};
 
 type Props = {
   id?: string;
@@ -10,12 +24,11 @@ type Props = {
   placeholder?: string;
   defaultValue?: string;
   required?: boolean;
-  onChangeValue?: (value: string) => void;
+  onPlaceChange?: (place: SelectedPlace) => void;
 };
 
 /**
- * Address input with Google Places Autocomplete when configured.
- * Degrades to a plain text field in Phase 0 without an API key.
+ * Google Places Autocomplete via server API (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).
  */
 export function AddressAutocompleteInput({
   id,
@@ -24,33 +37,82 @@ export function AddressAutocompleteInput({
   placeholder,
   defaultValue,
   required,
-  onChangeValue,
+  onPlaceChange,
 }: Props) {
   const autoId = useId();
   const inputId = id || autoId;
+  const locale = useLocale();
   const [value, setValue] = useState(defaultValue || "");
-  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
-  const mapsReady = isGoogleMapsConfigured();
-
-  function updateValue(next: string) {
-    setValue(next);
-    onChangeValue?.(next);
-  }
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [mapsReady, setMapsReady] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!mapsReady || value.trim().length < 3) {
+    fetch("/api/maps/status")
+      .then((r) => r.json())
+      .then((d) => setMapsReady(Boolean(d.configured)))
+      .catch(() => setMapsReady(false));
+  }, []);
+
+  useEffect(() => {
+    if (!mapsReady || value.trim().length < 2) {
       setSuggestions([]);
       return;
     }
     const handle = setTimeout(async () => {
-      const next = await suggestPlaces(value);
-      setSuggestions(next.slice(0, 5));
-    }, 250);
+      setLoading(true);
+      try {
+        const qs = new URLSearchParams({ input: value, locale });
+        const res = await fetch(`/api/places/autocomplete?${qs}`);
+        const data = await res.json();
+        if (res.ok) {
+          setSuggestions(data.suggestions || []);
+          setOpen(true);
+        } else {
+          setSuggestions([]);
+        }
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 220);
     return () => clearTimeout(handle);
-  }, [value, mapsReady]);
+  }, [value, mapsReady, locale]);
+
+  function updateText(next: string) {
+    setValue(next);
+    onPlaceChange?.({ description: next });
+  }
+
+  async function selectSuggestion(s: Suggestion) {
+    setValue(s.description);
+    setSuggestions([]);
+    setOpen(false);
+    try {
+      const res = await fetch(
+        `/api/places/details?placeId=${encodeURIComponent(s.placeId)}`,
+      );
+      if (res.ok) {
+        const details = await res.json();
+        onPlaceChange?.({
+          description: details.formattedAddress || s.description,
+          placeId: details.placeId || s.placeId,
+          lat: details.lat,
+          lng: details.lng,
+        });
+        if (details.formattedAddress) setValue(details.formattedAddress);
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    onPlaceChange?.({ description: s.description, placeId: s.placeId });
+  }
 
   return (
-    <div className="field" style={{ position: "relative" }}>
+    <div className="field places-field">
       <label className="label" htmlFor={inputId}>
         {label}
       </label>
@@ -59,48 +121,42 @@ export function AddressAutocompleteInput({
         id={inputId}
         name={name}
         value={value}
-        onChange={(e) => updateValue(e.target.value)}
+        onChange={(e) => updateText(e.target.value)}
+        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        onBlur={() => {
+          // Allow click on suggestion before closing
+          window.setTimeout(() => setOpen(false), 180);
+        }}
         placeholder={placeholder}
         required={required}
         autoComplete="off"
+        role="combobox"
+        aria-expanded={open && suggestions.length > 0}
+        aria-autocomplete="list"
       />
-      {suggestions.length > 0 && (
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: "0.35rem 0",
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: "100%",
-            zIndex: 20,
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--line)",
-            borderRadius: 12,
-          }}
-        >
+      {loading && (
+        <p className="muted places-hint">…</p>
+      )}
+      {open && suggestions.length > 0 && (
+        <ul className="places-suggestions" role="listbox">
           {suggestions.map((s) => (
-            <li key={s.placeId}>
+            <li key={s.placeId} role="option">
               <button
                 type="button"
-                className="btn btn-ghost"
-                style={{ width: "100%", justifyContent: "flex-start", borderRadius: 0 }}
-                onClick={() => {
-                  updateValue(s.description);
-                  setSuggestions([]);
-                }}
+                className="places-suggestion"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => selectSuggestion(s)}
               >
-                {s.description}
+                <span className="places-suggestion-main">
+                  {s.mainText || s.description}
+                </span>
+                {s.secondaryText && (
+                  <span className="places-suggestion-secondary">{s.secondaryText}</span>
+                )}
               </button>
             </li>
           ))}
         </ul>
-      )}
-      {!mapsReady && (
-        <p className="muted" style={{ fontSize: "0.8rem", marginTop: "0.35rem" }}>
-          Google Maps key not set — free-text address mode.
-        </p>
       )}
     </div>
   );

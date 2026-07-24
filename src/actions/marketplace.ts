@@ -26,10 +26,19 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from "@/domain/onboarding";
 import { estimateRoute } from "@/lib/maps/route";
+import { ZodError } from "zod";
 
 function fail(error: unknown) {
   if (error instanceof DomainError) {
     return { ok: false as const, error: error.message, code: error.code };
+  }
+  if (error instanceof ZodError) {
+    const first = error.issues[0];
+    return {
+      ok: false as const,
+      error: first?.message || "Dados inválidos",
+      code: "VALIDATION",
+    };
   }
   console.error(error);
   return { ok: false as const, error: "Erro inesperado", code: "INTERNAL" };

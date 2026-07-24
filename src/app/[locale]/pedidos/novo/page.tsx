@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { createTripAction } from "@/actions/marketplace";
-import { AddressAutocompleteInput } from "@/components/map/AddressAutocompleteInput";
+import { AddressAutocompleteInput, type SelectedPlace } from "@/components/map/AddressAutocompleteInput";
 import { TripRouteMap } from "@/components/map/TripRouteMap";
 import {
   TripPlannerSection,
@@ -11,6 +11,7 @@ import {
 } from "@/components/trip/TripPlannerSection";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDistance, formatDuration } from "@/lib/maps/route";
+import { formatPlanTime, parseDatetimeLocal } from "@/lib/maps/trip-planner";
 
 type VehicleClassOption = {
   id: string;
@@ -100,11 +101,23 @@ export default function NewTripPage() {
   const [classes, setClasses] = useState<VehicleClassOption[]>([]);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupPlace, setPickupPlace] = useState<SelectedPlace | null>(null);
+  const [dropoffPlace, setDropoffPlace] = useState<SelectedPlace | null>(null);
   const [route, setRoute] = useState<RouteInfo | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [pickupAt, setPickupAt] = useState("");
   const [planner, setPlanner] = useState<TripPlannerValues>(defaultPlannerValues);
+
+  const intlLocale = locale.startsWith("pt") ? "pt-PT" : "en-GB";
+
+  const estimatedArrivalLabel = (() => {
+    if (!route || !pickupAt) return null;
+    const start = parseDatetimeLocal(pickupAt);
+    if (!start) return null;
+    const eta = new Date(start.getTime() + route.durationSeconds * 1000);
+    return formatPlanTime(eta, intlLocale);
+  })();
 
   useEffect(() => {
     fetch(`/api/vehicle-classes?locale=${locale}`)
@@ -114,7 +127,7 @@ export default function NewTripPage() {
   }, [locale]);
 
   useEffect(() => {
-    if (pickup.trim().length < 5 || dropoff.trim().length < 5) {
+    if (pickup.trim().length < 3 || dropoff.trim().length < 3) {
       setRoute(null);
       return;
     }
@@ -122,6 +135,14 @@ export default function NewTripPage() {
       setEstimating(true);
       try {
         const qs = new URLSearchParams({ pickup, dropoff });
+        if (pickupPlace?.lat != null && pickupPlace?.lng != null) {
+          qs.set("pickupLat", String(pickupPlace.lat));
+          qs.set("pickupLng", String(pickupPlace.lng));
+        }
+        if (dropoffPlace?.lat != null && dropoffPlace?.lng != null) {
+          qs.set("dropoffLat", String(dropoffPlace.lat));
+          qs.set("dropoffLng", String(dropoffPlace.lng));
+        }
         const res = await fetch(`/api/routes/estimate?${qs}`);
         const data = await res.json();
         if (res.ok) setRoute(data);
@@ -131,13 +152,23 @@ export default function NewTripPage() {
       } finally {
         setEstimating(false);
       }
-    }, 650);
+    }, 450);
     return () => clearTimeout(handle);
-  }, [pickup, dropoff]);
+  }, [pickup, dropoff, pickupPlace?.lat, pickupPlace?.lng, dropoffPlace?.lat, dropoffPlace?.lng]);
 
   const onRecommendedDepartureChange = useCallback((datetimeLocal: string | null) => {
     if (datetimeLocal) setPickupAt(datetimeLocal);
   }, []);
+
+  function onPickupPlace(place: SelectedPlace) {
+    setPickup(place.description);
+    setPickupPlace(place);
+  }
+
+  function onDropoffPlace(place: SelectedPlace) {
+    setDropoff(place.description);
+    setDropoffPlace(place);
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -198,14 +229,14 @@ export default function NewTripPage() {
                 label={t("pickup")}
                 placeholder={t("pickupPlaceholder")}
                 required
-                onChangeValue={setPickup}
+                onPlaceChange={onPickupPlace}
               />
               <AddressAutocompleteInput
                 name="dropoffAddress"
                 label={t("dropoff")}
                 placeholder={t("dropoffPlaceholder")}
                 required
-                onChangeValue={setDropoff}
+                onPlaceChange={onDropoffPlace}
               />
 
               {(route || estimating) && (
@@ -222,6 +253,12 @@ export default function NewTripPage() {
                           <div className="label-sm">{t("duration")}</div>
                           <strong>{formatDuration(route.durationSeconds)}</strong>
                         </div>
+                        {estimatedArrivalLabel && (
+                          <div className="summary-item">
+                            <div className="label-sm">{t("eta")}</div>
+                            <strong>{estimatedArrivalLabel}</strong>
+                          </div>
+                        )}
                       </div>
                       <TripRouteMap
                         pickupAddress={pickup}

@@ -95,6 +95,7 @@
     "distance": "Distância",
     "duration": "Duração estimada",
     "mapLabel": "Pré-visualização da rota",
+    "eta": "Chegada estimada",
     "scheduleHintPlanner": "A partida recomendada é calculada pelo planeador — pode ajustá-la.",
     "whenDeparture": "Partida (recolha)",
     "departureSynced": "Sincronizado com o planeador. Pode editar se preferir outra hora."

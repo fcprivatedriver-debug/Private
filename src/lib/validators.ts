@@ -1,26 +1,51 @@
 import { z } from "zod";
 
+/** Treat empty FormData strings as undefined before coercion. */
+const emptyToUndef = (v: unknown) =>
+  v === "" || v === null || v === undefined ? undefined : v;
+
+const optionalNumber = z.preprocess(
+  emptyToUndef,
+  z.coerce.number().optional(),
+);
+
+const optionalPositiveInt = z.preprocess(
+  emptyToUndef,
+  z.coerce.number().int().positive().optional(),
+);
+
+const optionalNonNegInt = z.preprocess(
+  emptyToUndef,
+  z.coerce.number().int().min(0).max(360).optional(),
+);
+
 export const createTripSchema = z.object({
   pickupAddress: z.string().min(3, "Indica a origem"),
   dropoffAddress: z.string().min(3, "Indica o destino"),
   pickupAt: z.string().min(1, "Indica data e hora"),
   passengers: z.coerce.number().int().min(1).max(20),
   luggage: z.coerce.number().int().min(0).max(30),
-  notes: z.string().optional(),
-  flightNumber: z.string().optional(),
-  preferredVehicleClassId: z.string().min(1).optional(),
+  notes: z.preprocess(emptyToUndef, z.string().optional()),
+  flightNumber: z.preprocess(emptyToUndef, z.string().optional()),
+  preferredVehicleClassId: z.preprocess(emptyToUndef, z.string().min(1).optional()),
   publish: z.coerce.boolean().optional(),
-  pickupLat: z.coerce.number().optional(),
-  pickupLng: z.coerce.number().optional(),
-  dropoffLat: z.coerce.number().optional(),
-  dropoffLng: z.coerce.number().optional(),
-  distanceMeters: z.coerce.number().int().positive().optional(),
-  durationSeconds: z.coerce.number().int().positive().optional(),
+  pickupLat: optionalNumber,
+  pickupLng: optionalNumber,
+  dropoffLat: optionalNumber,
+  dropoffLng: optionalNumber,
+  distanceMeters: optionalPositiveInt,
+  durationSeconds: optionalPositiveInt,
   plannerEnabled: z.coerce.boolean().optional(),
-  plannerTripType: z.enum(["AIRPORT", "MEETING", "EVENT", "HOTEL", "CUSTOM"]).optional(),
-  desiredArrivalAt: z.string().optional(),
-  safetyBufferMinutes: z.coerce.number().int().min(0).max(360).optional(),
-  flightScope: z.enum(["DOMESTIC", "INTERNATIONAL"]).optional(),
+  plannerTripType: z.preprocess(
+    emptyToUndef,
+    z.enum(["AIRPORT", "MEETING", "EVENT", "HOTEL", "CUSTOM"]).optional(),
+  ),
+  desiredArrivalAt: z.preprocess(emptyToUndef, z.string().optional()),
+  safetyBufferMinutes: optionalNonNegInt,
+  flightScope: z.preprocess(
+    emptyToUndef,
+    z.enum(["DOMESTIC", "INTERNATIONAL"]).optional(),
+  ),
 });
 
 export const createOfferSchema = z.object({

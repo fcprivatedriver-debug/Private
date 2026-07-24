@@ -95,6 +95,7 @@
     "distance": "Distance",
     "duration": "Estimated duration",
     "mapLabel": "Route preview",
+    "eta": "Estimated arrival",
     "scheduleHintPlanner": "Recommended pickup is calculated by the planner — you can still adjust it.",
     "whenDeparture": "Departure (pickup)",
     "departureSynced": "Synced with the planner. Edit if you prefer a different time."
