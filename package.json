@@ -13,7 +13,8 @@
     "db:demo": "DEMO_MODE=true tsx prisma/seed.ts",
     "pr:proof": "node scripts/pr-visual-proof.mjs",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "stable:unlock": "node scripts/wait-vercel-auth-and-unlock.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
