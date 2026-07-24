@@ -94,6 +94,40 @@
     "estimating": "Calculating route…",
     "distance": "Distance",
     "duration": "Estimated duration",
-    "mapLabel": "Route preview"
+    "mapLabel": "Route preview",
+    "scheduleHintPlanner": "Recommended pickup is calculated by the planner — you can still adjust it.",
+    "whenDeparture": "Departure (pickup)",
+    "departureSynced": "Synced with the planner. Edit if you prefer a different time."
+  },
+  "tripPlanner": {
+    "title": "Plan my trip",
+    "lead": "Tell us when you need to arrive — we calculate the ideal departure.",
+    "enable": "Enable",
+    "enabled": "On",
+    "tripType": "Trip type",
+    "types": {
+      "AIRPORT": "Airport",
+      "MEETING": "Meeting",
+      "EVENT": "Event",
+      "HOTEL": "Hotel",
+      "CUSTOM": "Custom"
+    },
+    "flightScope": "Flight type",
+    "domestic": "Domestic",
+    "international": "International",
+    "airportHint": "We recommend arriving 2 h early (domestic) or 3 h early (international). You can change the buffer.",
+    "arrivalDate": "Desired arrival date",
+    "arrivalTime": "Desired arrival time",
+    "buffer": "Safety buffer",
+    "bufferUnit": "minutes",
+    "resetBuffer": "Reset recommended",
+    "calculating": "Recalculating route…",
+    "needRoute": "Enter origin and destination to build the plan.",
+    "needArrival": "Choose your desired arrival date and time.",
+    "distance": "Distance",
+    "travelTime": "Travel time",
+    "recommendedDeparture": "Recommended departure",
+    "expectedArrival": "Expected arrival",
+    "syncNote": "Departure = desired arrival − {travel} min travel − {buffer} min buffer."
   }
 }

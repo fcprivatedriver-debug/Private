@@ -1554,6 +1554,105 @@ h3,
   margin-bottom: 0.85rem;
 }
 
+.booking-planner-toggle-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.booking-planner-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.booking-planner-switch input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+}
+
+.booking-planner-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.booking-planner-type {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 0.55rem 0.9rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 560;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.booking-planner-type:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+
+.booking-planner-type.is-selected {
+  background: var(--bg-ink);
+  border-color: var(--bg-ink);
+  color: #fff;
+}
+
+.booking-planner-type-hint {
+  opacity: 0.72;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.booking-planner-buffer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.booking-planner-buffer .input {
+  max-width: 7.5rem;
+}
+
+.booking-planner-results {
+  margin-top: 0.35rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  background:
+    linear-gradient(180deg, rgba(31, 90, 150, 0.07), rgba(255, 255, 255, 0.7));
+}
+
+.booking-planner-results .summary-strip {
+  margin: 0;
+}
+
+.booking-planner-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--fg-muted);
+}
+
 .booking-class-fieldset {
   border: 0;
   margin: 0;

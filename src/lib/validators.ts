@@ -16,6 +16,11 @@ export const createTripSchema = z.object({
   dropoffLng: z.coerce.number().optional(),
   distanceMeters: z.coerce.number().int().positive().optional(),
   durationSeconds: z.coerce.number().int().positive().optional(),
+  plannerEnabled: z.coerce.boolean().optional(),
+  plannerTripType: z.enum(["AIRPORT", "MEETING", "EVENT", "HOTEL", "CUSTOM"]).optional(),
+  desiredArrivalAt: z.string().optional(),
+  safetyBufferMinutes: z.coerce.number().int().min(0).max(360).optional(),
+  flightScope: z.enum(["DOMESTIC", "INTERNATIONAL"]).optional(),
 });
 
 export const createOfferSchema = z.object({

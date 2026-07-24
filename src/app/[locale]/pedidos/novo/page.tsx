@@ -1,10 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { createTripAction } from "@/actions/marketplace";
 import { AddressAutocompleteInput } from "@/components/map/AddressAutocompleteInput";
 import { TripRouteMap } from "@/components/map/TripRouteMap";
+import {
+  TripPlannerSection,
+  type TripPlannerValues,
+} from "@/components/trip/TripPlannerSection";
 import { useLocale, useTranslations } from "next-intl";
 import { formatDistance, formatDuration } from "@/lib/maps/route";
 
@@ -26,6 +30,7 @@ type RouteInfo = {
   dropoffLng: number;
   distanceLabel: string;
   durationLabel: string;
+  provider?: string;
 };
 
 function BookingIcon({ name }: { name: "route" | "schedule" | "party" | "details" }) {
@@ -74,6 +79,18 @@ function BookingIcon({ name }: { name: "route" | "schedule" | "party" | "details
   );
 }
 
+function defaultPlannerValues(): TripPlannerValues {
+  return {
+    enabled: false,
+    tripType: "CUSTOM",
+    flightScope: "DOMESTIC",
+    arrivalDate: "",
+    arrivalTime: "",
+    bufferMinutes: 10,
+    bufferTouched: false,
+  };
+}
+
 export default function NewTripPage() {
   const router = useRouter();
   const locale = useLocale();
@@ -86,6 +103,8 @@ export default function NewTripPage() {
   const [route, setRoute] = useState<RouteInfo | null>(null);
   const [estimating, setEstimating] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
+  const [pickupAt, setPickupAt] = useState("");
+  const [planner, setPlanner] = useState<TripPlannerValues>(defaultPlannerValues);
 
   useEffect(() => {
     fetch(`/api/vehicle-classes?locale=${locale}`)
@@ -116,12 +135,17 @@ export default function NewTripPage() {
     return () => clearTimeout(handle);
   }, [pickup, dropoff]);
 
+  const onRecommendedDepartureChange = useCallback((datetimeLocal: string | null) => {
+    if (datetimeLocal) setPickupAt(datetimeLocal);
+  }, []);
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     const formData = new FormData(e.currentTarget);
     formData.set("publish", "true");
+    formData.set("pickupAt", pickupAt);
     const preferred = String(formData.get("preferredVehicleClassId") || "");
     if (!preferred) formData.delete("preferredVehicleClassId");
     if (route) {
@@ -198,10 +222,6 @@ export default function NewTripPage() {
                           <div className="label-sm">{t("duration")}</div>
                           <strong>{formatDuration(route.durationSeconds)}</strong>
                         </div>
-                        <div className="summary-item">
-                          <div className="label-sm">{t("mapLabel")}</div>
-                          <strong>Live</strong>
-                        </div>
                       </div>
                       <TripRouteMap
                         pickupAddress={pickup}
@@ -218,6 +238,21 @@ export default function NewTripPage() {
             </div>
           </section>
 
+          <TripPlannerSection
+            values={planner}
+            onChange={setPlanner}
+            route={
+              route
+                ? {
+                    distanceMeters: route.distanceMeters,
+                    durationSeconds: route.durationSeconds,
+                  }
+                : null
+            }
+            estimating={estimating}
+            onRecommendedDepartureChange={onRecommendedDepartureChange}
+          />
+
           <section className="booking-section">
             <div className="booking-section-head">
               <span className="booking-section-icon">
@@ -225,15 +260,30 @@ export default function NewTripPage() {
               </span>
               <div>
                 <h2>{t("scheduleSection")}</h2>
-                <p>{t("scheduleHint")}</p>
+                <p>
+                  {planner.enabled ? t("scheduleHintPlanner") : t("scheduleHint")}
+                </p>
               </div>
             </div>
             <div className="booking-section-body">
               <div className="field">
                 <label className="label" htmlFor="pickupAt">
-                  {t("when")}
+                  {planner.enabled ? t("whenDeparture") : t("when")}
                 </label>
-                <input className="input" id="pickupAt" name="pickupAt" type="datetime-local" required />
+                <input
+                  className="input"
+                  id="pickupAt"
+                  name="pickupAt"
+                  type="datetime-local"
+                  required
+                  value={pickupAt}
+                  onChange={(e) => setPickupAt(e.target.value)}
+                />
+                {planner.enabled && (
+                  <p className="muted" style={{ fontSize: "0.85rem", margin: "0.4rem 0 0" }}>
+                    {t("departureSynced")}
+                  </p>
+                )}
               </div>
 
               <fieldset className="booking-class-fieldset">
@@ -259,9 +309,7 @@ export default function NewTripPage() {
                       <span className="booking-class-meta">
                         {c.description || `Até ${c.maxPassengers} · ${c.maxLuggage} bags`}
                       </span>
-                      <span className="booking-class-capacity">
-                        ≤ {c.maxPassengers} pax
-                      </span>
+                      <span className="booking-class-capacity">≤ {c.maxPassengers} pax</span>
                     </button>
                   ))}
                 </div>

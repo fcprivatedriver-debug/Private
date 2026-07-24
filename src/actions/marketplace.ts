@@ -187,6 +187,11 @@ export async function createTripAction(formData: FormData) {
       dropoffLng: formData.get("dropoffLng") || undefined,
       distanceMeters: formData.get("distanceMeters") || undefined,
       durationSeconds: formData.get("durationSeconds") || undefined,
+      plannerEnabled: formData.get("plannerEnabled") === "true",
+      plannerTripType: formData.get("plannerTripType") || undefined,
+      desiredArrivalAt: formData.get("desiredArrivalAt") || undefined,
+      safetyBufferMinutes: formData.get("safetyBufferMinutes") || undefined,
+      flightScope: formData.get("flightScope") || undefined,
     });
 
     let coords = {
@@ -231,6 +236,13 @@ export async function createTripAction(formData: FormData) {
       preferredVehicleClassId: parsed.preferredVehicleClassId,
       publish: parsed.publish,
       ...coords,
+      plannerEnabled: parsed.plannerEnabled,
+      plannerTripType: parsed.plannerTripType,
+      desiredArrivalAt: parsed.desiredArrivalAt
+        ? new Date(parsed.desiredArrivalAt)
+        : null,
+      safetyBufferMinutes: parsed.safetyBufferMinutes ?? null,
+      flightScope: parsed.flightScope ?? null,
     });
 
     return { ok: true as const, tripId: trip.id };
