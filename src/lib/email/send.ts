@@ -12,13 +12,14 @@ export type SendEmailInput = {
 };
 
 function appBaseUrl() {
-  return (
+  const raw =
     process.env.NEXTAUTH_URL ||
     process.env.APP_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL?.replace(/^/, "https://") ||
-    process.env.VERCEL_URL?.replace(/^/, "https://") ||
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    process.env.VERCEL_URL ||
+    "http://localhost:3000";
+  const withProtocol = raw.startsWith("http") ? raw : `https://${raw}`;
+  return withProtocol.replace(/\/$/, "");
 }
 
 export function absoluteUrl(path: string) {
