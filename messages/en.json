@@ -20,7 +20,9 @@
     "login": "Log in",
     "start": "Get started",
     "logout": "Log out",
-    "branding": "Homepage Lab"
+    "branding": "Homepage Lab",
+    "demoE2E": "E2E test",
+    "demoEmails": "Demo emails"
   },
   "home": {
     "eyebrow": "Private mobility · Premium",
@@ -67,7 +69,17 @@
     "createAccount": "Create account",
     "creating": "Creating…",
     "hasAccount": "Already have an account?",
-    "loginLink": "Log in"
+    "loginLink": "Log in",
+    "emailNotVerified": "Account pending — confirm your email (ACTIVATE ACCOUNT) before signing in.",
+    "checkEmailTitle": "Check your email",
+    "checkEmailLead": "We sent an activation link to {email}. The account stays pending until you confirm.",
+    "checkEmailSteps": "How to activate:",
+    "checkEmailStep1": "Open the demo mailbox (or your real inbox if Resend is enabled).",
+    "checkEmailStep2": "Click the ACTIVATE ACCOUNT button.",
+    "checkEmailStep3": "Then sign in with your email and password.",
+    "openDemoMailbox": "Open demo mailbox",
+    "resendVerification": "Resend email",
+    "verificationResent": "Verification email resent."
   },
   "how": {
     "title": "How ZRIK works",

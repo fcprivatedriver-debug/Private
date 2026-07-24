@@ -53,13 +53,14 @@ export async function registerAction(formData: FormData) {
     }
 
     const passwordHash = await bcrypt.hash(parsed.password, 10);
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name: parsed.name,
         email: parsed.email.toLowerCase(),
         passwordHash,
         phone: parsed.phone || null,
         role: parsed.role,
+        emailVerified: null,
         ...(parsed.role === "CUSTOMER"
           ? { customerProfile: { create: {} } }
           : {
@@ -70,6 +71,92 @@ export async function registerAction(formData: FormData) {
       },
     });
 
+    const { sendVerificationEmail } = await import("@/lib/email/notifications");
+    await sendVerificationEmail({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      locale: user.locale,
+    });
+
+    return {
+      ok: true as const,
+      needsVerification: true as const,
+      email: user.email,
+    };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function verifyEmailAction(token: string) {
+  try {
+    if (!token?.trim()) {
+      return { ok: false as const, error: "Token em falta" };
+    }
+
+    const record = await prisma.verificationToken.findUnique({
+      where: { token },
+    });
+    if (!record) {
+      return { ok: false as const, error: "Link inválido ou já utilizado" };
+    }
+    if (record.expires < new Date()) {
+      await prisma.verificationToken.deleteMany({ where: { identifier: record.identifier } });
+      return { ok: false as const, error: "Link expirado — peça um novo email" };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: record.identifier.toLowerCase() },
+    });
+    if (!user) {
+      return { ok: false as const, error: "Conta não encontrada" };
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date() },
+      }),
+      prisma.verificationToken.deleteMany({ where: { identifier: record.identifier } }),
+    ]);
+
+    const { sendAccountActivatedEmail } = await import("@/lib/email/notifications");
+    await sendAccountActivatedEmail({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      locale: user.locale,
+    });
+
+    return {
+      ok: true as const,
+      email: user.email,
+      role: user.role,
+    };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function resendVerificationAction(email: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+    if (!user) {
+      return { ok: true as const };
+    }
+    if (user.emailVerified) {
+      return { ok: false as const, error: "Conta já ativada — pode entrar" };
+    }
+    const { sendVerificationEmail } = await import("@/lib/email/notifications");
+    await sendVerificationEmail({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      locale: user.locale,
+    });
     return { ok: true as const };
   } catch (error) {
     return fail(error);

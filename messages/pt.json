@@ -20,7 +20,9 @@
     "login": "Entrar",
     "start": "Começar",
     "logout": "Sair",
-    "branding": "Homepage Lab"
+    "branding": "Homepage Lab",
+    "demoE2E": "Teste E2E",
+    "demoEmails": "Emails demo"
   },
   "home": {
     "eyebrow": "Mobilidade privada · Premium",
@@ -67,7 +69,17 @@
     "createAccount": "Criar conta",
     "creating": "A criar…",
     "hasAccount": "Já tem conta?",
-    "loginLink": "Entrar"
+    "loginLink": "Entrar",
+    "emailNotVerified": "Conta pendente — confirme o email (botão ATIVAR CONTA) antes de entrar.",
+    "checkEmailTitle": "Verifique o email",
+    "checkEmailLead": "Enviámos um link de ativação para {email}. A conta fica pendente até confirmar.",
+    "checkEmailSteps": "Como ativar:",
+    "checkEmailStep1": "Abra a caixa de emails demo (ou o email real se Resend estiver ativo).",
+    "checkEmailStep2": "Clique no botão ATIVAR CONTA.",
+    "checkEmailStep3": "Depois entre com o seu email e palavra-passe.",
+    "openDemoMailbox": "Abrir caixa de emails",
+    "resendVerification": "Reenviar email",
+    "verificationResent": "Email de verificação reenviado."
   },
   "how": {
     "title": "Como a ZRIK funciona",

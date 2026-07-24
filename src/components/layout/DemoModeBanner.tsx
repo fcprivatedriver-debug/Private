@@ -1,4 +1,5 @@
 import { isDemoMode } from "@/lib/demo-mode";
+import { Link } from "@/i18n/navigation";
 
 export async function DemoModeBanner() {
   const enabled = await isDemoMode();
@@ -20,7 +21,14 @@ export async function DemoModeBanner() {
           <strong style={{ fontWeight: 600 }}>ZRIK Demo</strong>
           <span style={{ opacity: 0.85 }}>
             {" "}
-            — sample journeys are ready. Explore as guest, chauffeur, or admin.
+            — Sandbox E2E pronto.{" "}
+            <Link href="/demo-e2e" style={{ textDecoration: "underline", color: "inherit" }}>
+              Guia de teste
+            </Link>
+            {" · "}
+            <Link href="/demo/emails" style={{ textDecoration: "underline", color: "inherit" }}>
+              Emails
+            </Link>
           </span>
         </span>
         <span style={{ opacity: 0.75, fontSize: "0.76rem" }}>

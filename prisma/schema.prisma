@@ -488,6 +488,25 @@ model Notification {
   @@index([userId, readAt])
 }
 
+/// Captured outbound emails for E2E / demo mailbox (always written).
+model EmailLog {
+  id        String   @id @default(cuid())
+  toEmail   String
+  toUserId  String?
+  subject   String
+  template  String
+  htmlBody  String
+  textBody  String?
+  meta      String?
+  /// demo | resend | console
+  channel   String   @default("demo")
+  providerId String?
+  createdAt DateTime @default(now())
+
+  @@index([toEmail, createdAt])
+  @@index([template, createdAt])
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String?

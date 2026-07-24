@@ -401,6 +401,12 @@ export async function adminDecideVerification(input: {
         },
       });
     });
+    const { notifyDriverApproved } = await import("@/lib/email/notifications");
+    try {
+      await notifyDriverApproved({ userId: profile.userId });
+    } catch (err) {
+      console.error("[notify:driver_approved]", err);
+    }
     return { status: "ACTIVE" as const };
   }
 
