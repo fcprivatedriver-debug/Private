@@ -82,6 +82,13 @@ async function captureStills() {
   await gotoShot(page, "/pt/convite/nina-demo-invite-token-seguro", "10f-convite");
   await gotoShot(page, "/pt/receitas", "11-receitas");
   await gotoShot(page, "/pt/despesas", "12-despesas");
+  // Ficha de edição (primeiro movimento da lista)
+  const firstTx = page.locator("a.tx-row").first();
+  if (await firstTx.count()) {
+    await firstTx.click();
+    await page.waitForTimeout(700);
+    await shot(page, "12b-despesa-ficha");
+  }
   await gotoShot(page, "/pt/despesas/nova", "13-despesa-nova");
   await gotoShot(page, "/pt/orcamentos", "14-orcamentos");
   await gotoShot(page, "/pt/poupancas", "14b-poupancas");
@@ -96,11 +103,17 @@ async function captureStills() {
   await gotoShot(page, "/pt/familia", "22-familia");
   await gotoShot(page, "/pt/alertas", "23-alertas");
   await gotoShot(page, "/pt/definicoes", "24-definicoes");
+  await gotoShot(page, "/pt/perfil", "25-perfil-nome");
 
   // Mobile stills
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoShot(page, "/pt/dashboard", "30-mobile-dashboard");
   await gotoShot(page, "/pt/despesas", "31-mobile-despesas");
+  if (await page.locator("a.tx-row").first().count()) {
+    await page.locator("a.tx-row").first().click();
+    await page.waitForTimeout(600);
+    await shot(page, "31b-mobile-despesa-ficha");
+  }
   await gotoShot(page, "/pt/familia", "32-mobile-familia");
   await gotoShot(page, "/pt/poupancas", "33-mobile-poupancas");
   await gotoShot(page, "/pt/objetivos", "34-mobile-objetivos");
@@ -141,6 +154,21 @@ async function captureFlowVideo() {
   await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/despesas`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
+  const tx = page.locator("a.tx-row").first();
+  if (await tx.count()) {
+    await tx.click();
+    await page.waitForTimeout(900);
+    const amount = page.locator('input[name="amount"]').first();
+    if (await amount.count()) {
+      await amount.fill("21,00");
+      await page.getByRole("button", { name: /Guardar alterações/i }).click();
+      await page.waitForTimeout(1200);
+    }
+  }
+  await page.goto(`${BASE}/pt/perfil`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.goto(`${BASE}/pt/familia`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
   await page.goto(`${BASE}/pt/poupancas`, { waitUntil: "networkidle" });
   await page.waitForTimeout(900);
   await page.goto(`${BASE}/pt/poupancas?tab=simulador`, { waitUntil: "networkidle" });
