@@ -28,6 +28,8 @@ export default async function PerfilPage() {
           theme={user.theme}
           biometricsEnabled={user.biometricsEnabled}
           hasPin={Boolean(user.pinHash)}
+          ninaReplyStyle={user.ninaReplyStyle}
+          ninaHumor={user.ninaHumor}
         />
       </Panel>
       <Panel title="Na Conta Familiar">

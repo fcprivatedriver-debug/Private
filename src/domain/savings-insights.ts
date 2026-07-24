@@ -1,6 +1,7 @@
 import { formatEUR } from "@/lib/money";
 import { goalProgress } from "@/domain/finance";
 import { daysBetween, monthsToReach, dateAfterMonths } from "@/domain/investments";
+import { softenGoalRisk, pickCelebration } from "@/lib/ai/personality";
 
 export type GoalInsightInput = {
   id: string;
@@ -47,11 +48,22 @@ export function buildProactiveTips(
       const neededMonthly = Math.ceil(left / monthsLeft);
       const paceMonthly =
         g.currentCents > 0 && daysLeft > 0
-          ? Math.round(g.currentCents / Math.max(1, Math.ceil((Date.now() - (g.deadline.getTime() - daysLeft * 86400000)) / (30.44 * 86400000)) || 1))
+          ? Math.round(
+              g.currentCents /
+                Math.max(
+                  1,
+                  Math.ceil(
+                    (Date.now() - (g.deadline.getTime() - daysLeft * 86400000)) /
+                      (30.44 * 86400000),
+                  ) || 1,
+                ),
+            )
           : Math.round(g.currentCents / 3);
 
-      // Estimate historical pace from how much is saved vs rough 3-month default
-      const estimatedPace = Math.max(paceMonthly, Math.round(g.currentCents / Math.max(1, 6 - monthsLeft)));
+      const estimatedPace = Math.max(
+        paceMonthly,
+        Math.round(g.currentCents / Math.max(1, 6 - monthsLeft)),
+      );
       const projected = estimatedPace * monthsLeft;
 
       if (projected + 5000 < left) {
@@ -61,7 +73,7 @@ export function buildProactiveTips(
           tone: "careful",
           goalId: g.id,
           goalName: g.name,
-          text: `O objetivo “${g.name}” está em risco: com o ritmo atual faltarão aproximadamente ${formatEUR(shortfall)}.`,
+          text: softenGoalRisk(g.name, formatEUR(shortfall)),
         });
         const boost = 50_00;
         const fasterMonths = monthsToReach(left, neededMonthly + boost);
@@ -71,7 +83,7 @@ export function buildProactiveTips(
             tone: "warm",
             goalId: g.id,
             goalName: g.name,
-            text: `Se conseguires poupar mais ${formatEUR(boost)} por mês, atinges “${g.name}” antes da data prevista.`,
+            text: `Se conseguires pôr mais ${formatEUR(boost)} de lado por mês, “${g.name}” chega mais cedo — só se fizer sentido para ti.`,
           });
         }
       } else if (pct >= 40) {
@@ -91,14 +103,18 @@ export function buildProactiveTips(
         tone: "celebrate",
         goalId: g.id,
         goalName: g.name,
-        text: `Este mês ainda há folga. Queres transferir parte do excedente para o objetivo “${g.name}”?`,
+        text: `${pickCelebration()} Este mês ainda há folga. Queres transferir um bocadinho para “${g.name}”?`,
       });
     }
   }
 
   if (budgetLeft >= 3500) {
     const soft = Math.min(budgetLeft, 35_00);
-    const focus = active.sort((a, b) => b.currentCents / Math.max(1, b.targetCents) - a.currentCents / Math.max(1, a.targetCents))[0];
+    const focus = [...active].sort(
+      (a, b) =>
+        b.currentCents / Math.max(1, b.targetCents) -
+        a.currentCents / Math.max(1, a.targetCents),
+    )[0];
     tips.push({
       id: "budget-side",
       tone: "warm",
@@ -110,25 +126,30 @@ export function buildProactiveTips(
     });
   }
 
-  const restaurants = pulse.categoryBreakdown.find((c) => /restaurant|cafe|café|lazer/i.test(c.name));
-  const prevRest = pulse.prevCategoryBreakdown?.find((c) => /restaurant|cafe|café|lazer/i.test(c.name));
+  const restaurants = pulse.categoryBreakdown.find((c) =>
+    /restaurant|cafe|café|lazer/i.test(c.name),
+  );
+  const prevRest = pulse.prevCategoryBreakdown?.find((c) =>
+    /restaurant|cafe|café|lazer/i.test(c.name),
+  );
   if (restaurants && prevRest && restaurants.cents > prevRest.cents * 1.2 && active[0]) {
     tips.push({
       id: "restaurants-risk",
       tone: "careful",
       goalId: active[0].id,
       goalName: active[0].name,
-      text: `O teu objetivo pode estar em risco devido ao aumento das despesas em ${restaurants.name} (${formatEUR(restaurants.cents)} este mês).`,
+      text: `Os gastos em ${restaurants.name} pesaram um pouco mais este mês (${formatEUR(restaurants.cents)}). Vamos tentar equilibrar nas próximas semanas — o objetivo “${active[0].name}” continua no radar.`,
     });
   }
 
-  // Deduplicate by text, keep max 6
   const seen = new Set<string>();
-  return tips.filter((t) => {
-    if (seen.has(t.text)) return false;
-    seen.add(t.text);
-    return true;
-  }).slice(0, 6);
+  return tips
+    .filter((t) => {
+      if (seen.has(t.text)) return false;
+      seen.add(t.text);
+      return true;
+    })
+    .slice(0, 6);
 }
 
 export function simulateMonthlySave(input: {
@@ -138,15 +159,23 @@ export function simulateMonthlySave(input: {
 }): { months: number | null; reachDate: Date | null; text: string } {
   const months = monthsToReach(input.remainingCents, input.monthlyCents);
   if (months == null) {
-    return { months: null, reachDate: null, text: "Indica um valor mensal positivo para eu calcular." };
+    return {
+      months: null,
+      reachDate: null,
+      text: "Indica um valor mensal positivo e eu calculo contigo.",
+    };
   }
   if (months === 0) {
-    return { months: 0, reachDate: input.from ?? new Date(), text: "Já atingiste o valor — parabéns!" };
+    return {
+      months: 0,
+      reachDate: input.from ?? new Date(),
+      text: `${pickCelebration()} Já atingiste o valor.`,
+    };
   }
   const reachDate = dateAfterMonths(input.from ?? new Date(), months);
   return {
     months,
     reachDate,
-    text: `A poupar ${formatEUR(input.monthlyCents)} por mês, atinges o objetivo em cerca de ${months} ${months === 1 ? "mês" : "meses"} (${reachDate.toLocaleDateString("pt-PT")}).`,
+    text: `A poupar ${formatEUR(input.monthlyCents)} por mês, chegas em cerca de ${months} ${months === 1 ? "mês" : "meses"} (${reachDate.toLocaleDateString("pt-PT")}).`,
   };
 }

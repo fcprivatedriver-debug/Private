@@ -11,6 +11,7 @@ import { recognizeReceipt } from "@/lib/ocr";
 import { storeFamilyFile } from "@/lib/storage";
 import { formatEUR } from "@/lib/money";
 import { canEditFinances } from "@/domain/household";
+import { inferHumorKind, lightHumor, pickWarmAck } from "@/lib/ai/personality";
 import type { FinanceScope, PaymentMethod } from "@prisma/client";
 
 function revalidateAll() {
@@ -35,9 +36,18 @@ async function spaceFallbackScope(): Promise<FinanceScope> {
   return space === "family" ? "FAMILY" : "PERSONAL";
 }
 
-function replyForScope(scope: FinanceScope) {
-  if (scope === "FAMILY") return "Registado na Conta Familiar.";
-  return "Registado.";
+function replyForScope(scope: FinanceScope, description?: string) {
+  const base =
+    scope === "FAMILY"
+      ? `${pickWarmAck()} Na Conta Familiar.`
+      : `${pickWarmAck()}`;
+  const joke = lightHumor(
+    inferHumorKind(description || ""),
+    { replyLength: "short", humor: "light", source: "auto" },
+    false,
+  );
+  if (joke && Date.now() % 3 !== 0) return `${base} ${joke}`;
+  return base.endsWith(".") ? base : `${base}.`;
 }
 
 /**
@@ -92,7 +102,7 @@ export async function instantCaptureSpeak(utterance: string) {
     revalidateAll();
     return {
       ok: true as const,
-      reply: replyForScope(scope),
+      reply: replyForScope(scope, intent.description),
       detail: `${formatEUR(intent.amountCents)} · ${cat.name} · ${time}`,
       kind: "income" as const,
       scope,
@@ -174,7 +184,7 @@ export async function instantCaptureSpeak(utterance: string) {
   revalidateAll();
   return {
     ok: true as const,
-    reply: replyForScope(scope),
+    reply: replyForScope(scope, intent.description || intent.storeName),
     detail: `${formatEUR(intent.amountCents)} · ${cat.name}${intent.storeName ? ` · ${intent.storeName}` : ""} · ${time}`,
     kind: "expense" as const,
     scope,
@@ -270,7 +280,7 @@ export async function instantCapturePhoto(formData: FormData) {
   revalidateAll();
   return {
     ok: true as const,
-    reply: replyForScope(scope),
+    reply: replyForScope(scope, ocr.storeName),
     detail: `${formatEUR(ocr.totalCents)} · ${ocr.storeName} · ${cat.name} · foto arquivada`,
     expenseId: expense.id,
     receiptUrl: stored.url,

@@ -1,5 +1,13 @@
 import { formatEUR, currentYearMonth, monthBounds, monthLabel } from "@/lib/money";
 import { goalProgress } from "@/domain/finance";
+import {
+  NATURAL_EXAMPLES,
+  pickCelebration,
+  resolveVoicePrefs,
+  shapeLength,
+  type NinaVoicePrefs,
+  DEFAULT_VOICE,
+} from "@/lib/ai/personality";
 
 export type NinaContext = {
   userName: string;
@@ -24,6 +32,7 @@ export type NinaContext = {
     memberName?: string | null;
   }[];
   monthLabel: string;
+  voice?: NinaVoicePrefs;
 };
 
 export type NinaReply = {
@@ -35,13 +44,10 @@ export type NinaReply = {
 };
 
 const SUGGESTIONS = [
+  ...NATURAL_EXAMPLES,
   "Gastei 85 € no Continente para casa",
-  "Café 2 €",
   "Quanto gastei este mês?",
-  "Quanto posso gastar até ao final do mês?",
   "Onde posso poupar?",
-  "Quanto falta para as férias?",
-  "Sempre que eu disser compras para casa, regista na Conta Familiar",
 ];
 
 function firstName(name: string): string {
@@ -68,11 +74,25 @@ function matchCategory(q: string, cats: NinaContext["categoryBreakdown"]) {
 
 function matchGoal(q: string, goals: NinaContext["goals"]) {
   const n = normalize(q);
-  return goals.find((g) => n.includes(normalize(g.name)))
-    ?? (/(ferias|férias|viagem|algarve)/i.test(q) ? goals.find((g) => /ferias|viagem|algarve/i.test(g.name)) : undefined)
-    ?? (/(carro|auto)/i.test(q) ? goals.find((g) => /carro|auto/i.test(g.name)) : undefined)
-    ?? (/(emergencia|emergência|fundo)/i.test(q) ? goals.find((g) => /emerg|fundo/i.test(g.name)) : undefined)
-    ?? goals[0];
+  return (
+    goals.find((g) => n.includes(normalize(g.name))) ??
+    (/(ferias|férias|viagem|algarve)/i.test(q)
+      ? goals.find((g) => /ferias|viagem|algarve/i.test(g.name))
+      : undefined) ??
+    (/(carro|auto)/i.test(q) ? goals.find((g) => /carro|auto/i.test(g.name)) : undefined) ??
+    (/(emergencia|emergência|fundo)/i.test(q)
+      ? goals.find((g) => /emerg|fundo/i.test(g.name))
+      : undefined) ??
+    goals[0]
+  );
+}
+
+function withVoice(text: string, tone: NinaReply["tone"], ctx: NinaContext, suggestions?: string[]): NinaReply {
+  return {
+    text: shapeLength(text, ctx.voice ?? DEFAULT_VOICE),
+    tone,
+    suggestions,
+  };
 }
 
 export function greeting(ctx: NinaContext): NinaReply {
@@ -80,18 +100,19 @@ export function greeting(ctx: NinaContext): NinaReply {
   const balance = ctx.incomeCents - ctx.expenseCents;
   const familyBit =
     (ctx.memberCount ?? 1) > 1
-      ? `\n\nEstão ${ctx.memberCount} pessoas na conta “${ctx.householdName ?? "partilhada"}”. Tudo o que registarem fica sincronizado para todos.`
+      ? `\n\nEstão ${ctx.memberCount} pessoas na conta “${ctx.householdName ?? "partilhada"}”. Tudo o que registarem fica sincronizado.`
       : "";
   const calm =
     balance >= 0
-      ? `Este mês ainda têm ${formatEUR(balance)} de folga.`
-      : `Este mês as despesas já ultrapassaram as receitas em ${formatEUR(Math.abs(balance))}. Vamos olhar para isso com calma.`;
+      ? `Este mês ainda tens ${formatEUR(balance)} de folga.`
+      : `Este mês as despesas passaram um pouco as receitas (${formatEUR(Math.abs(balance))}). Vamos olhar para isso com calma — juntos.`;
 
-  return {
-    text: `Olá, ${name}. Sou a Nina — estou aqui para a família, sem stress.\n\n${calm}${familyBit}\n\nPodes dizer-me coisas como “gastei 35 € no Continente” e eu trato do resto.`,
-    tone: balance >= 0 ? "warm" : "careful",
-    suggestions: SUGGESTIONS.slice(0, 4),
-  };
+  return withVoice(
+    `Olá, ${name}. Sou a Nina — a tua assistente financeira, sem stress e sem julgamentos.\n\n${calm}${familyBit}\n\nFala comigo como falarias com uma amiga. Por exemplo: “gastei 22 euros na BP” ou “quanto me resta para supermercado?”.`,
+    balance >= 0 ? "warm" : "careful",
+    ctx,
+    SUGGESTIONS.slice(0, 4),
+  );
 }
 
 export function answerNina(question: string, ctx: NinaContext): NinaReply {
@@ -100,6 +121,71 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
   const balance = ctx.incomeCents - ctx.expenseCents;
   const budgetLeft = Math.max(0, (ctx.budgetLimitCents || ctx.incomeCents) - ctx.expenseCents);
   const daily = ctx.daysLeftInMonth > 0 ? Math.floor(budgetLeft / ctx.daysLeftInMonth) : budgetLeft;
+  const stress = budgetLeft <= 0 || balance < 0;
+
+  // Quanto me resta para [categoria]
+  if (/quanto.*(resta|sobra|fica|posso).*(para|no|na)/.test(q) || /resta para|sobra para/.test(q)) {
+    const cat =
+      matchCategory(question, ctx.categoryBreakdown) ||
+      ctx.categoryBreakdown.find((c) => /super|aliment/i.test(c.name));
+    const catSpent = cat?.cents ?? 0;
+    const softBudget = Math.max(0, Math.round(budgetLeft * 0.35));
+    if (/super|continente|compras|aliment/.test(q)) {
+      return withVoice(
+        cat
+          ? `${name}, em supermercado já foram ${formatEUR(catSpent)} este mês.\n\nCom a folga atual, sugiro não passar de cerca de ${formatEUR(softBudget)} nas próximas compras — se fizer sentido para ti.`
+          : `Ainda não vi compras de supermercado este mês. Com a folga de ${formatEUR(budgetLeft)}, tens margem — eu aviso se a coisa apertar.`,
+        "warm",
+        ctx,
+        ["Onde foi o meu dinheiro esta semana?", "Consigo ir jantar fora este fim de semana?"],
+      );
+    }
+    return withVoice(
+      `Olhando para o plano, ainda tens cerca de ${formatEUR(budgetLeft)} até ao fim do mês` +
+        (cat ? ` (em ${cat.name} já gastaste ${formatEUR(catSpent)})` : "") +
+        `.\n\nDiz-me a categoria e eu afino melhor o número.`,
+      "warm",
+      ctx,
+    );
+  }
+
+  // Onde foi o dinheiro esta semana
+  if (/onde foi|para onde foi|onde andou|esta semana|desta semana/.test(q)) {
+    const lines = ctx.categoryBreakdown
+      .slice(0, 5)
+      .map((c, i) => `${i + 1}. ${c.name}: ${formatEUR(c.cents)}`)
+      .join("\n");
+    const top = ctx.categoryBreakdown[0];
+    const humor =
+      !stress && ctx.voice?.humor !== "off" && top && /super|restaurant/i.test(top.name)
+        ? `\n\n${/super/i.test(top.name) ? "Hoje o supermercado ganhou outra vez." : "A mesa também pediu a palavra este mês."}`
+        : "";
+    return withVoice(
+      `${name}, deixa-me mostrar com simplicidade para onde foi o dinheiro em ${ctx.monthLabel}:\n\n${lines || "Ainda sem movimentos recentes."}${humor}\n\nSem culpas — só clareza.`,
+      "warm",
+      ctx,
+      ["Quanto me resta para supermercado?", "Onde posso poupar?"],
+    );
+  }
+
+  // Consigo ir jantar fora?
+  if (/jantar|sair a jantar|restaurante|fim de semana|fds/.test(q) && /(consigo|posso|da|dá|vale)/.test(q)) {
+    const dinnerBudget = Math.min(budgetLeft, daily * 2);
+    if (budgetLeft <= 1500 || dinnerBudget < 2000) {
+      return withVoice(
+        `${name}, este fim de semana o orçamento está um pouco apertado.\n\nNão é um “não” definitivo — talvez um jantar mais simples ou em casa também conte. Se quiseres, encontramos uma opção leve juntos.`,
+        "careful",
+        ctx,
+        ["Quanto posso gastar até ao final do mês?", "Onde posso poupar?"],
+      );
+    }
+    return withVoice(
+      `Sim — com calma. Ainda tens cerca de ${formatEUR(budgetLeft)} no plano.\n\nUm jantar até cerca de ${formatEUR(Math.min(dinnerBudget, 4500))} cabe bem sem estragar o mês. Divirtam-se; eu trato das contas.`,
+      "celebrate",
+      ctx,
+      ["Gastei 35 euros no restaurante", "Quanto me resta para supermercado?"],
+    );
+  }
 
   // Quanto gastei
   if (/(quanto|o que).*(gastei|gaste|despes)/.test(q) || /^despesas?( deste)? mes$/.test(q)) {
@@ -159,7 +245,7 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
         more
           ? `Gastaste ${formatEUR(delta)} a mais. Não é um problema — é informação. Podemos ver juntos o que mudou.`
           : delta < 0
-            ? `Boa notícia: gastaste ${formatEUR(Math.abs(delta))} a menos. Estás no caminho certo.`
+            ? `${pickCelebration()} Gastaste ${formatEUR(Math.abs(delta))} a menos. Estás no caminho certo.`
             : `Os gastos estão muito parecidos com o mês passado — estabilidade também é uma vitória.`
       }`,
       tone: more ? "careful" : "celebrate",
@@ -291,11 +377,12 @@ export function answerNina(question: string, ctx: NinaContext): NinaReply {
   }
 
   // Default
-  return {
-    text: `Estou aqui, ${name}. Podes perguntar-me coisas como:\n\n• Quanto gastei este mês?\n• Quanto posso gastar até ao final do mês?\n• Onde posso poupar?\n• Compara este mês com o anterior\n• Quanto falta para o meu objetivo\n\nFala comigo como falarias com uma amiga que trata das contas por ti.`,
-    tone: "warm",
-    suggestions: SUGGESTIONS.slice(0, 4),
-  };
+  return withVoice(
+    `Estou aqui, ${name}. Fala comigo naturalmente — sem comandos especiais.\n\nPor exemplo:\n• “Gastei 22 euros na BP”\n• “Coloca 50 euros nas férias”\n• “Quanto me resta para supermercado?”\n• “Onde foi o meu dinheiro esta semana?”\n• “Consigo ir jantar fora este fim de semana?”`,
+    "warm",
+    ctx,
+    SUGGESTIONS.slice(0, 4),
+  );
 }
 
 export function buildNinaContextFromRaw(input: {
@@ -319,10 +406,21 @@ export function buildNinaContextFromRaw(input: {
     category: string;
     memberName?: string | null;
   }[];
+  voice?: NinaVoicePrefs;
+  recentQuestion?: string;
+  ninaReplyStyle?: string | null;
+  ninaHumor?: string | null;
 }): NinaContext {
   const { year, month } = currentYearMonth();
   const { end } = monthBounds(year, month);
   const daysLeft = Math.max(0, end.getUTCDate() - new Date().getDate());
+  const voice =
+    input.voice ??
+    resolveVoicePrefs({
+      replyStyle: input.ninaReplyStyle,
+      humor: input.ninaHumor,
+      recentQuestion: input.recentQuestion,
+    });
   return {
     userName: input.userName,
     householdName: input.householdName,
@@ -344,7 +442,8 @@ export function buildNinaContextFromRaw(input: {
     unusual: input.unusual,
     recentExpenses: input.recentExpenses,
     monthLabel: monthLabel(year, month),
+    voice,
   };
 }
 
-export { SUGGESTIONS as NINA_SUGGESTIONS };
+export { SUGGESTIONS as NINA_SUGGESTIONS, resolveVoicePrefs };

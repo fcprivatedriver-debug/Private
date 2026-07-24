@@ -23,12 +23,22 @@ import {
   parseMemoryRuleCommand,
   resolveScope,
 } from "@/lib/ai/learning";
+import {
+  pickCelebration,
+  pickWarmAck,
+} from "@/lib/ai/personality";
 import type { FinanceScope } from "@prisma/client";
 
 async function loadNinaRaw(
   familyId: string,
   userName: string,
-  opts: { householdName?: string; memberId: string; space: "personal" | "family" },
+  opts: {
+    householdName?: string;
+    memberId: string;
+    space: "personal" | "family";
+    userId?: string;
+    recentQuestion?: string;
+  },
 ) {
   const { year, month } = currentYearMonth();
   const { start, end } = monthBounds(year, month);
@@ -41,7 +51,7 @@ async function loadNinaRaw(
       ? { scope: "FAMILY" as const }
       : { scope: "PERSONAL" as const, memberId: opts.memberId };
 
-  const [incomes, expenses, prevExpenses, prevIncomes, budgets, goals, recurring, members] =
+  const [incomes, expenses, prevExpenses, prevIncomes, budgets, goals, recurring, members, user] =
     await Promise.all([
       prisma.income.findMany({ where: { familyId, date: { gte: start, lte: end }, ...scopeWhere } }),
       prisma.expense.findMany({
@@ -60,7 +70,13 @@ async function loadNinaRaw(
         where:
           opts.space === "family"
             ? { familyId, scope: "FAMILY" }
-            : { familyId, OR: [{ scope: "PERSONAL", ownerMemberId: opts.memberId }, { scope: "PERSONAL", ownerMemberId: null }] },
+            : {
+                familyId,
+                OR: [
+                  { scope: "PERSONAL", ownerMemberId: opts.memberId },
+                  { scope: "PERSONAL", ownerMemberId: null },
+                ],
+              },
       }),
       prisma.recurringPayment.findMany({
         where: { familyId, isActive: true },
@@ -68,6 +84,12 @@ async function loadNinaRaw(
         take: 6,
       }),
       prisma.familyMember.findMany({ where: { familyId } }),
+      opts.userId
+        ? prisma.user.findUnique({
+            where: { id: opts.userId },
+            select: { ninaReplyStyle: true, ninaHumor: true },
+          })
+        : Promise.resolve(null),
     ]);
 
   const incomeCents = incomes.reduce((s, i) => s + i.amountCents, 0);
@@ -117,6 +139,9 @@ async function loadNinaRaw(
       category: e.category.name,
       memberName: e.member?.displayName ?? null,
     })),
+    ninaReplyStyle: user?.ninaReplyStyle,
+    ninaHumor: user?.ninaHumor,
+    recentQuestion: opts.recentQuestion,
   });
 }
 
@@ -264,7 +289,7 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
       }
 
       const scope = confirmScope ?? decision.scope ?? "PERSONAL";
-      const { cat, now } = await commitExpense({
+      const { cat } = await commitExpense({
         familyId: family.id,
         membershipId: membership.id,
         userId: session.user.id,
@@ -287,7 +312,7 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
       return {
         ok: true as const,
         reply: {
-          text: `Feito, ${displayName}. Registei ${formatEUR(intent.amountCents)} ${where} · ${cat.name} · ${now.toLocaleDateString("pt-PT")} ${now.toTimeString().slice(0, 5)}.${extra}`,
+          text: `${pickWarmAck()} Registei ${formatEUR(intent.amountCents)} ${where} · ${cat.name}. Os saldos e gráficos já estão a atualizar.${extra}`,
           tone: "warm" as const,
           suggestions: ["Quanto gastei este mês?", "Onde posso poupar?"],
           didMutate: true,
@@ -315,7 +340,7 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
       return {
         ok: true as const,
         reply: {
-          text: `Ótimo. Entrou ${formatEUR(intent.amountCents)} em ${
+          text: `${pickCelebration()} Entrou ${formatEUR(intent.amountCents)} em ${
             scope === "FAMILY" ? "Conta Familiar" : "As Minhas Finanças"
           }.`,
           tone: "celebrate" as const,
@@ -328,12 +353,11 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     if (intent.kind === "save") {
       const transferred = await applySavingsTransfer(family.id, intent.amountCents, intent.goalHint);
       revalidatePath("/", "layout");
-      const target =
-        transferred.ok ? ` em “${transferred.targetName}”` : " na tua poupança";
+      const target = transferred.ok ? ` em “${transferred.targetName}”` : " na tua poupança";
       return {
         ok: true as const,
         reply: {
-          text: `Feito. Coloquei ${formatEUR(intent.amountCents)}${target}. Os saldos já estão atualizados.`,
+          text: `${pickCelebration()} Coloquei ${formatEUR(intent.amountCents)}${target}. Os saldos já estão atualizados.`,
           tone: "celebrate" as const,
           didMutate: true,
           suggestions: ["Quanto falta para as férias?", "Onde posso poupar?"],
@@ -356,6 +380,8 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     householdName: family.name,
     memberId: membership.id,
     space,
+    userId: session.user.id,
+    recentQuestion: question,
   });
   const reply = answerNina(question, ctx);
   await prisma.aiInsight.create({
@@ -385,6 +411,7 @@ export async function getNinaGreeting() {
     householdName: family.name,
     memberId: membership.id,
     space,
+    userId: session.user.id,
   });
   const base = greeting(ctx);
   const spaceLabel = space === "family" ? "Conta Familiar" : "As Minhas Finanças";
@@ -394,10 +421,10 @@ export async function getNinaGreeting() {
       ...base,
       text: `${base.text}\n\nEstás a ver: **${spaceLabel}**.`,
       suggestions: [
-        "Gastei 85 € no Continente para casa",
-        "Café 2 €",
-        "Quanto gastei este mês?",
-        "Onde posso poupar?",
+        "Gastei 22 euros na BP",
+        "Quanto me resta para supermercado?",
+        "Onde foi o meu dinheiro esta semana?",
+        "Consigo ir jantar fora este fim de semana?",
       ],
     },
     ctx,
@@ -478,7 +505,7 @@ export async function getSmartSuggestions() {
   if (!superToday && usuallySuper && new Date().getDay() === 6) {
     suggestions.push({
       title: "Compras do supermercado?",
-      body: "Hoje ainda não registaste as compras habituais. Queres adicioná-las?",
+      body: "Se fores às compras hoje, diz-me depois — ou fotografa o talão. Eu trato do resto.",
       tone: "info",
     });
   }
@@ -489,7 +516,7 @@ export async function getSmartSuggestions() {
     if (pct >= 0.7 && pct < 1) {
       suggestions.push({
         title: `Objetivo “${g.name}” quase lá`,
-        body: "Se continuares assim, podes chegar mais cedo do que pensavas.",
+        body: "Se continuares assim, podes chegar mais cedo do que pensavas. Estou contigo.",
         tone: "celebrate",
       });
     }
@@ -498,8 +525,8 @@ export async function getSmartSuggestions() {
   const unusual = exp.filter((e) => e.amountCents >= 15000);
   if (unusual[0]) {
     suggestions.push({
-      title: "Despesa invulgar",
-      body: `Detetei ${formatEUR(unusual[0].amountCents)} em “${unusual[0].description}”. Queres confirmar se está correta?`,
+      title: "Algo fora do habitual",
+      body: `Notei ${formatEUR(unusual[0].amountCents)} em “${unusual[0].description}”. Queres confirmar se está correta? Sem julgamento — só clareza.`,
       tone: "warning",
     });
   }

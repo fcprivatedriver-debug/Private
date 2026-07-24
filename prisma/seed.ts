@@ -741,8 +741,9 @@ async function main() {
         familyId: family.id,
         userId: filipe.id,
         type: "BUDGET_THRESHOLD",
-        title: "Orçamento de restaurantes a 75%",
-        message: "Já utilizou 75% do orçamento de restaurantes este mês.",
+        title: "Restaurantes a precisar de atenção",
+        message:
+          "Os restaurantes pesaram um pouco mais este mês (cerca de 75% do plano). Vamos tentar equilibrar nas próximas semanas — sem stress.",
         level: "warning",
       },
       {

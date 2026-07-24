@@ -1,2 +1,10 @@
-/** AI modules for Nina live under `finance-insights.ts`. */
+/** AI modules for Nina. */
 export { generateInsights, buildMonthlyReport } from "./finance-insights";
+export {
+  pickCelebration,
+  pickWarmAck,
+  softenBudgetMessage,
+  resolveVoicePrefs,
+  NATURAL_EXAMPLES,
+  NINA_PHILOSOPHY,
+} from "./personality";

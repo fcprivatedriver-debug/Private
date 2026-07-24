@@ -358,6 +358,14 @@ export async function updateProfile(formData: FormData) {
       theme: ["light", "dark", "system"].includes(theme) ? theme : "system",
       biometricsEnabled,
       pinHash: pin.length >= 4 ? await bcrypt.hash(pin, 10) : undefined,
+      ninaReplyStyle: ["auto", "short", "balanced", "detailed"].includes(
+        String(formData.get("ninaReplyStyle") || "auto"),
+      )
+        ? String(formData.get("ninaReplyStyle") || "auto")
+        : "auto",
+      ninaHumor: ["auto", "off", "light"].includes(String(formData.get("ninaHumor") || "auto"))
+        ? String(formData.get("ninaHumor") || "auto")
+        : "auto",
     },
   });
 
