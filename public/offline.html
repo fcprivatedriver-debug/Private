@@ -52,7 +52,26 @@
         Estás offline. A Nina guarda o que já visitaste e volta a sincronizar quando houver
         rede — capturas novas precisam de ligação.
       </p>
-      <button type="button" onclick="location.reload()">Tentar outra vez</button>
+      <button type="button" id="retry">Tentar outra vez</button>
     </div>
+    <script>
+      document.getElementById("retry").addEventListener("click", function () {
+        if (navigator.onLine === false) {
+          alert("Ainda sem rede. Verifica a ligação e tenta de novo.");
+          return;
+        }
+        // Limpa caches do SW e força recarregar a app
+        var go = function () {
+          location.replace("/pt/login");
+        };
+        if ("caches" in window) {
+          caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          }).then(go).catch(go);
+        } else {
+          go();
+        }
+      });
+    </script>
   </body>
 </html>
