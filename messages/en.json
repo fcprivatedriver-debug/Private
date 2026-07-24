@@ -1,7 +1,7 @@
 {
   "meta": {
     "appName": "ZRIK",
-    "tagline": "Choose the best driver. Choose the best price."
+    "tagline": "You choose. We handle the rest."
   },
   "nav": {
     "howItWorks": "How it works",
@@ -25,9 +25,9 @@
   "home": {
     "eyebrow": "Private mobility · Premium",
     "headline": "ZRIK",
-    "copy": "Choose the best driver.\nChoose the best price.",
-    "copyLine1": "Choose the best driver.",
-    "copyLine2": "Choose the best price.",
+    "copy": "You choose.\nWe handle the rest.",
+    "copyLine1": "You choose.",
+    "copyLine2": "We handle the rest.",
     "labHint": "Compare the 3 Hero versions →",
     "labPhotoPending": "Editorial photography · choose in Homepage Lab",
     "ctaRequest": "Get offers",
@@ -106,19 +106,21 @@
     "logoLead": "No 3D icon. A / B / C comparison."
   },
   "homepageLab": {
-    "title": "Homepage Lab — Editorial hero",
-    "lead": "Three campaign proposals: copy on the left, photography on the right. Nothing ships to production until you pick a winner.",
-    "note": "No phones, no mockups, no abstract backgrounds. Experience is the protagonist — Mercedes / Porsche / Polestar / Apple calibre.",
-    "versionsTitle": "1 · Three hero versions",
-    "colorTitle": "2 · Premium blue",
-    "overlayTitle": "3 · White overlay (photo panel only)",
-    "previewTitle": "4 · Featured preview",
+    "title": "Homepage Lab — Slogan & Hero",
+    "lead": "Compare slogans and people-free photography. Nothing locks until you pick a winner.",
+    "note": "No medical copy. No people in the photo. ZRIK concept: publish a trip → receive offers → choose the best.",
+    "sloganTitle": "1 · Slogan",
+    "versionsTitle": "2 · Photography (no people)",
+    "colorTitle": "3 · Premium blue",
+    "overlayTitle": "4 · White overlay (photo only)",
+    "previewTitle": "5 · Preview",
     "selectionTitle": "Current selection (not locked)",
-    "preferred": "Preferred",
+    "preferred": "Product",
+    "favorite": "Favorite",
     "current": "Current",
-    "notLocked": "Version 3 is locked on the production homepage. The Lab remains available for reference.",
+    "notLocked": "Tell us the winning combo to lock on the homepage.",
     "textSide": "Private mobility · Premium",
-    "photoSide": "Editorial photography"
+    "photoSide": "Editorial photography without people"
   },
   "tripForm": {
     "title": "Where shall we take you?",

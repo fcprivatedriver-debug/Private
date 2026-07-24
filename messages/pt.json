@@ -1,7 +1,7 @@
 {
   "meta": {
     "appName": "ZRIK",
-    "tagline": "Escolhe o melhor motorista. Escolhe o melhor preço."
+    "tagline": "Tu escolhes. O resto é connosco."
   },
   "nav": {
     "howItWorks": "Como funciona",
@@ -25,9 +25,9 @@
   "home": {
     "eyebrow": "Mobilidade privada · Premium",
     "headline": "ZRIK",
-    "copy": "Escolhe o melhor motorista.\nEscolhe o melhor preço.",
-    "copyLine1": "Escolhe o melhor motorista.",
-    "copyLine2": "Escolhe o melhor preço.",
+    "copy": "Tu escolhes.\nO resto é connosco.",
+    "copyLine1": "Tu escolhes.",
+    "copyLine2": "O resto é connosco.",
     "labHint": "Comparar as 3 versões do Hero →",
     "labPhotoPending": "Fotografia editorial · escolha no Homepage Lab",
     "ctaRequest": "Receber propostas",
@@ -106,19 +106,21 @@
     "logoLead": "Sem ícone 3D. Comparação A / B / C."
   },
   "homepageLab": {
-    "title": "Homepage Lab — Hero editorial",
-    "lead": "Três propostas de campanha: texto à esquerda, fotografia à direita. Nada é aplicado à produção até escolher a vencedora.",
-    "note": "Sem telemóveis, sem mockups, sem fundo abstracto. A experiência é o protagonista — nível Mercedes / Porsche / Polestar / Apple.",
-    "versionsTitle": "1 · Três versões do Hero",
-    "colorTitle": "2 · Azul premium",
-    "overlayTitle": "3 · Overlay branco (só na fotografia)",
-    "previewTitle": "4 · Pré-visualização em destaque",
+    "title": "Homepage Lab — Slogan & Hero",
+    "lead": "Compare slogans e fotografias sem pessoas. Nenhuma combinação fica bloqueada até escolher a vencedora.",
+    "note": "Sem médicos. Sem pessoas na fotografia. Conceito ZRIK: publicar viagem → receber propostas → escolher a melhor.",
+    "sloganTitle": "1 · Slogan",
+    "versionsTitle": "2 · Fotografia (sem pessoas)",
+    "colorTitle": "3 · Azul premium",
+    "overlayTitle": "4 · Overlay branco (só na foto)",
+    "previewTitle": "5 · Pré-visualização",
     "selectionTitle": "Selecção actual (ainda não bloqueada)",
-    "preferred": "Preferido",
+    "preferred": "Produto",
+    "favorite": "Favorito",
     "current": "Actual",
-    "notLocked": "Versão 3 está bloqueada na homepage de produção. O Lab continua disponível para referência.",
+    "notLocked": "Diz-nos a combinação vencedora para bloquear na homepage.",
     "textSide": "Mobilidade privada · Premium",
-    "photoSide": "Fotografia editorial"
+    "photoSide": "Fotografia editorial sem pessoas"
   },
   "tripForm": {
     "title": "Para onde vamos?",

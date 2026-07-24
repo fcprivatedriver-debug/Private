@@ -3,7 +3,11 @@ import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ZrikWordmark } from "@/components/layout/BrandLogo";
-import { PRODUCTION_HERO, PRODUCTION_OVERLAY } from "@/config/brand";
+import {
+  PRODUCTION_HERO,
+  PRODUCTION_OVERLAY,
+  PRODUCTION_SLOGAN,
+} from "@/config/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +19,7 @@ export default async function HomePage({ params }: Props) {
   const t = await getTranslations("home");
   const session = await auth();
   const role = session?.user?.role;
+  const isPt = locale.startsWith("pt");
 
   const primary =
     role === "CUSTOMER"
@@ -34,6 +39,9 @@ export default async function HomePage({ params }: Props) {
           ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
           : { href: "/como-funciona" as const, label: t("ctaHow") };
 
+  const line1 = isPt ? PRODUCTION_SLOGAN.line1Pt : PRODUCTION_SLOGAN.line1En;
+  const line2 = isPt ? PRODUCTION_SLOGAN.line2Pt : PRODUCTION_SLOGAN.line2En;
+
   return (
     <>
       <section className="hero hero-editorial">
@@ -44,8 +52,8 @@ export default async function HomePage({ params }: Props) {
               <ZrikWordmark as="span" variant="B" />
             </h1>
             <p className="hero-copy fade-up-delay">
-              <span className="hero-copy-line">{t("copyLine1")}</span>
-              <span className="hero-copy-line">{t("copyLine2")}</span>
+              <span className="hero-copy-line">{line1}</span>
+              <span className="hero-copy-line">{line2}</span>
             </p>
             <div className="cta-row fade-up-delay">
               <Link href={primary.href} className="btn btn-primary btn-hero">

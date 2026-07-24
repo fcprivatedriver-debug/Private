@@ -6,24 +6,26 @@ import {
   BRAND_INK,
   HERO_VERSIONS,
   OVERLAY_CANDIDATES,
+  SLOGAN_CANDIDATES,
   type AccentCandidateId,
   type HeroVersionId,
+  type SloganId,
 } from "@/config/brand";
 
 type Labels = {
   title: string;
   lead: string;
   note: string;
+  sloganTitle: string;
   versionsTitle: string;
   colorTitle: string;
   overlayTitle: string;
   previewTitle: string;
   selectionTitle: string;
-  copyLine1: string;
-  copyLine2: string;
   ctaPrimary: string;
   ctaSecondary: string;
   preferred: string;
+  favorite: string;
   notLocked: string;
   textSide: string;
   photoSide: string;
@@ -33,12 +35,16 @@ function EditorialHeroPreview({
   photoSrc,
   accent,
   overlay,
+  line1,
+  line2,
   labels,
   versionLabel,
 }: {
   photoSrc: string;
   accent: string;
   overlay: number;
+  line1: string;
+  line2: string;
   labels: Labels;
   versionLabel: string;
 }) {
@@ -58,8 +64,8 @@ function EditorialHeroPreview({
             <span style={{ color: BRAND_INK }}>RIK</span>
           </h3>
           <p className="lab-hero-copy">
-            <span className="hero-copy-line">{labels.copyLine1}</span>
-            <span className="hero-copy-line">{labels.copyLine2}</span>
+            <span className="hero-copy-line">{line1}</span>
+            <span className="hero-copy-line">{line2}</span>
           </p>
           <div className="lab-hero-ctas">
             <span className="btn btn-primary lab-btn-primary">{labels.ctaPrimary}</span>
@@ -79,13 +85,18 @@ function EditorialHeroPreview({
 
 export function HomepageLab({ locale, labels }: { locale: string; labels: Labels }) {
   const isPt = locale.startsWith("pt");
-  const [versionId, setVersionId] = useState<HeroVersionId>("V3");
+  const [sloganId, setSloganId] = useState<SloganId>("D");
+  const [versionId, setVersionId] = useState<HeroVersionId>("NP2");
   const [colorId, setColorId] = useState<AccentCandidateId>("C1");
   const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O55");
 
+  const slogan = SLOGAN_CANDIDATES.find((s) => s.id === sloganId)!;
   const version = HERO_VERSIONS.find((v) => v.id === versionId)!;
   const color = ACCENT_CANDIDATES.find((c) => c.id === colorId)!;
   const overlay = OVERLAY_CANDIDATES.find((o) => o.id === overlayId)!;
+
+  const line1 = isPt ? slogan.line1Pt : slogan.line1En;
+  const line2 = isPt ? slogan.line2Pt : slogan.line2En;
 
   const featuredStyle = useMemo(
     () =>
@@ -105,6 +116,35 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
       </header>
 
       <div className="lab-controls">
+        <section className="lab-panel">
+          <h2 className="lab-panel-title">{labels.sloganTitle}</h2>
+          <div className="lab-slogan-grid">
+            {SLOGAN_CANDIDATES.map((s) => {
+              const active = s.id === sloganId;
+              const l1 = isPt ? s.line1Pt : s.line1En;
+              const l2 = isPt ? s.line2Pt : s.line2En;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={active ? "lab-slogan is-active" : "lab-slogan"}
+                  onClick={() => setSloganId(s.id)}
+                  aria-pressed={active}
+                >
+                  <span className="lab-slogan-id">
+                    {s.id}
+                    {s.favorite ? (
+                      <span className="branding-default-badge">{labels.favorite}</span>
+                    ) : null}
+                  </span>
+                  <strong>{l1}</strong>
+                  <span className="muted">{l2}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
         <section className="lab-panel">
           <h2 className="lab-panel-title">{labels.versionsTitle}</h2>
           <div className="lab-option-grid lab-option-grid-3">
@@ -193,37 +233,22 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
           photoSrc={version.src}
           accent={color.hex}
           overlay={overlay.value}
+          line1={line1}
+          line2={line2}
           labels={labels}
-          versionLabel={isPt ? version.titlePt : version.title}
+          versionLabel={`${isPt ? version.titlePt : version.title} · Slogan ${slogan.id}`}
         />
-      </section>
-
-      <section className="lab-panel">
-        <h2 className="lab-panel-title">
-          {isPt ? "As 3 versões lado a lado" : "All 3 versions side by side"}
-        </h2>
-        <p className="muted" style={{ margin: "0 0 1rem", maxWidth: "40rem" }}>
-          {isPt
-            ? "Mesma cor e overlay seleccionados — só muda a fotografia e a história."
-            : "Same selected color and overlay — only the photograph and story change."}
-        </p>
-        <div className="lab-versions-stack">
-          {HERO_VERSIONS.map((v) => (
-            <EditorialHeroPreview
-              key={v.id}
-              photoSrc={v.src}
-              accent={color.hex}
-              overlay={overlay.value}
-              labels={labels}
-              versionLabel={isPt ? v.titlePt : v.title}
-            />
-          ))}
-        </div>
       </section>
 
       <aside className="lab-selection">
         <h2 className="lab-panel-title">{labels.selectionTitle}</h2>
         <ul className="lab-selection-list">
+          <li>
+            <span className="muted">Slogan</span>
+            <strong>
+              {slogan.id} — {line1} {line2}
+            </strong>
+          </li>
           <li>
             <span className="muted">Hero</span>
             <strong>{isPt ? version.titlePt : version.title}</strong>

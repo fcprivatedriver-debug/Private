@@ -1964,3 +1964,65 @@ h3,
 .editorial-hero-photo-col::after {
   content: none;
 }
+
+/* Slogan picker */
+.lab-slogan-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .lab-slogan-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1020px) {
+  .lab-slogan-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lab-slogan {
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 0.85rem 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+.lab-slogan:hover {
+  border-color: rgba(17, 17, 17, 0.22);
+}
+
+.lab-slogan.is-active {
+  border-color: rgba(31, 90, 150, 0.55);
+  box-shadow: 0 0 0 3px rgba(31, 90, 150, 0.12);
+}
+
+.lab-slogan-id {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--fg-muted);
+  margin-bottom: 0.15rem;
+}
+
+.lab-slogan strong {
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.lab-slogan .muted {
+  font-size: 0.9rem;
+}
