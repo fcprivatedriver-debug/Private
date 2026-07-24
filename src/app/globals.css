@@ -217,12 +217,6 @@ html.dark .btn-primary { background: #3d6aa3; }
   margin-top: 0.15em;
   opacity: 0.95;
 }
-.hero-promise {
-  margin-top: 1.25rem;
-  font-size: 0.95rem;
-  color: rgba(247, 250, 252, 0.7);
-  max-width: 42ch;
-}
 .mission-whisper {
   margin: 0.35rem 0 0;
   font-style: italic;
