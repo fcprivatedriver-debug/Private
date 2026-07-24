@@ -5,6 +5,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { applyEnsureEnv } from "./ensure-env.mjs";
+import { tryMakeVercelPublic } from "./make-vercel-public.mjs";
 
 applyEnsureEnv({ exitOnError: true });
 
@@ -22,3 +23,6 @@ function run(cmd, args) {
 run("npx", ["prisma", "generate"]);
 run("node", ["scripts/migrate-deploy.mjs"]);
 run("npx", ["next", "build"]);
+
+// Best-effort: disable Vercel Authentication so the preview/prod URL is public
+await tryMakeVercelPublic();

@@ -31,6 +31,29 @@ export function PwaRegister() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
+    const host = window.location.hostname;
+    const ephemeral =
+      host.endsWith(".trycloudflare.com") ||
+      host.endsWith(".loca.lt") ||
+      host.endsWith(".localtunnel.me") ||
+      host.endsWith(".lhr.life") ||
+      host.endsWith(".localhost.run") ||
+      host.endsWith(".serveo.net") ||
+      host.endsWith(".serveousercontent.com") ||
+      host === "localhost" ||
+      host === "127.0.0.1";
+
+    // Ephemeral preview hosts: unregister any SW so Offline traps cannot stick
+    if (ephemeral) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      });
+      if ("caches" in window) {
+        caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      }
+      return;
+    }
+
     let registration: ServiceWorkerRegistration | undefined;
 
     navigator.serviceWorker
@@ -53,16 +76,14 @@ export function PwaRegister() {
         });
       })
       .catch(() => {
-        /* SW opcional em localhost / HTTP */
+        /* SW opcional */
       });
 
-    // Check for updates periodically while app is open
     const id = window.setInterval(() => {
       registration?.update().catch(() => {});
     }, 60_000);
 
     const onControllerChange = () => {
-      // New SW took control — soft reload once
       if (sessionStorage.getItem("nina-sw-reloading")) return;
       sessionStorage.setItem("nina-sw-reloading", "1");
       window.location.reload();
