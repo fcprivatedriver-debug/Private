@@ -238,7 +238,13 @@ export async function getExpensesFiltered(
 
   return prisma.expense.findMany({
     where,
-    include: { category: true, account: true, member: true, subcategory: true },
+    include: {
+      category: true,
+      account: true,
+      member: true,
+      subcategory: true,
+      createdBy: { select: { name: true } },
+    },
     orderBy: { date: "desc" },
     take: 100,
   });

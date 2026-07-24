@@ -6,6 +6,7 @@ import { updateProfile } from "@/actions/household";
 
 export function ProfileForm({
   name,
+  preferredName,
   email,
   theme,
   biometricsEnabled,
@@ -14,6 +15,7 @@ export function ProfileForm({
   ninaHumor = "auto",
 }: {
   name: string;
+  preferredName?: string;
   email: string;
   theme: string;
   biometricsEnabled: boolean;
@@ -24,6 +26,7 @@ export function ProfileForm({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
+  const howToCall = preferredName || name;
 
   return (
     <form
@@ -33,14 +36,26 @@ export function ProfileForm({
         const fd = new FormData(e.currentTarget);
         start(async () => {
           await updateProfile(fd);
-          setMsg("Perfil atualizado. A Nina adapta-se ao teu estilo.");
+          setMsg("Perfil atualizado. A Nina passa a tratar-te assim em toda a app.");
           router.refresh();
         });
       }}
     >
       <label className="field">
-        <span>Nome</span>
-        <input name="name" defaultValue={name} required />
+        <span>Como pretendes que a Nina te trate?</span>
+        <input
+          name="preferredName"
+          defaultValue={howToCall}
+          required
+          placeholder="Ex: Filipe, Maria João, Ana…"
+        />
+      </label>
+      <p className="muted small" style={{ marginTop: "-0.35rem" }}>
+        Este nome aparece no histórico, nas conversas e em toda a Conta Familiar.
+      </p>
+      <label className="field">
+        <span>Nome completo (opcional)</span>
+        <input name="name" defaultValue={name} placeholder="Como no cartão / documentos" />
       </label>
       <label className="field">
         <span>Email</span>

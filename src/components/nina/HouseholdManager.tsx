@@ -30,12 +30,14 @@ export function HouseholdManager({
   myRole,
   members,
   latestInvitePath,
+  allowMembersEditOthers = false,
 }: {
   familyName: string;
   kind: HouseholdKind;
   myRole: FamilyRole;
   members: Member[];
   latestInvitePath?: string | null;
+  allowMembersEditOthers?: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -90,6 +92,20 @@ export function HouseholdManager({
                     ))}
                   </select>
                 </label>
+                <label className="field">
+                  <span>Permitir que os membros editem movimentos uns dos outros</span>
+                  <select
+                    name="allowMembersEditOthers"
+                    defaultValue={allowMembersEditOthers ? "sim" : "nao"}
+                  >
+                    <option value="nao">Não</option>
+                    <option value="sim">Sim</option>
+                  </select>
+                </label>
+                <p className="muted small">
+                  Cada um pode sempre editar e eliminar os seus próprios movimentos. Com «Sim»,
+                  qualquer editor pode corrigir os movimentos dos outros.
+                </p>
                 <p className="muted small">{HOUSEHOLD_KIND_HINTS[kind]}</p>
                 <button className="btn btn-primary" type="submit" disabled={pending}>
                   Guardar
@@ -98,6 +114,10 @@ export function HouseholdManager({
             ) : (
               <p>
                 <strong>{HOUSEHOLD_KIND_LABELS[kind]}</strong> · {familyName}
+                <br />
+                <span className="muted small">
+                  Editar movimentos uns dos outros: {allowMembersEditOthers ? "Sim" : "Não"}
+                </span>
               </p>
             )}
           </div>

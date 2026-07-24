@@ -12,6 +12,7 @@ import {
 } from "@/lib/ai/nina-assistant";
 import { parseMoneyIntent } from "@/lib/ai/parse-intent";
 import { canEditFinances } from "@/domain/household";
+import { logTransactionAudit } from "@/lib/transaction-audit";
 import {
   maybeAutoSaveFromSurplus,
   addMemoryRule,
@@ -167,6 +168,7 @@ async function commitExpense(opts: {
   familyId: string;
   membershipId: string;
   userId: string;
+  actorDisplayName: string;
   amountCents: number;
   storeName?: string;
   categoryHint?: string;
@@ -187,11 +189,12 @@ async function commitExpense(opts: {
     });
     storeId = store.id;
   }
-  await prisma.expense.create({
+  const created = await prisma.expense.create({
     data: {
       familyId: opts.familyId,
       memberId: opts.membershipId,
       createdById: opts.userId,
+      updatedById: opts.userId,
       categoryId: cat.id,
       storeId,
       scope: opts.scope,
@@ -203,6 +206,15 @@ async function commitExpense(opts: {
       paymentMethod: "OTHER",
       notes: "Registado com a Nina",
     },
+  });
+  await logTransactionAudit({
+    familyId: opts.familyId,
+    kind: "EXPENSE",
+    recordId: created.id,
+    action: "CREATE",
+    actorUserId: opts.userId,
+    actorDisplayName: opts.actorDisplayName,
+    summary: `Criou despesa «${created.description}» (Nina)`,
   });
   await learnScopeHabit({
     userId: opts.userId,
@@ -293,6 +305,7 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
         familyId: family.id,
         membershipId: membership.id,
         userId: session.user.id,
+        actorDisplayName: displayName,
         amountCents: intent.amountCents,
         storeName: intent.storeName,
         categoryHint: intent.categoryHint,
@@ -324,17 +337,27 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     if (intent.kind === "income") {
       const scope = confirmScope ?? intent.explicitScope ?? "PERSONAL";
       const cat = await resolveCategoryId(family.id, intent.categoryHint, "INCOME");
-      await prisma.income.create({
+      const createdIncome = await prisma.income.create({
         data: {
           familyId: family.id,
           memberId: membership.id,
           createdById: session.user.id,
+          updatedById: session.user.id,
           categoryId: cat.id,
           scope,
           amountCents: intent.amountCents,
           date: new Date(),
           description: intent.description,
         },
+      });
+      await logTransactionAudit({
+        familyId: family.id,
+        kind: "INCOME",
+        recordId: createdIncome.id,
+        action: "CREATE",
+        actorUserId: session.user.id,
+        actorDisplayName: displayName,
+        summary: `Criou receita «${createdIncome.description}» (Nina)`,
       });
       revalidatePath("/", "layout");
       return {

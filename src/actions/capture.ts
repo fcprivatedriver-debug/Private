@@ -11,6 +11,7 @@ import { recognizeReceipt } from "@/lib/ocr";
 import { storeFamilyFile } from "@/lib/storage";
 import { formatEUR } from "@/lib/money";
 import { canEditFinances } from "@/domain/household";
+import { logTransactionAudit } from "@/lib/transaction-audit";
 import { inferHumorKind, lightHumor, pickWarmAck } from "@/lib/ai/personality";
 import {
   DEFAULT_EXPENSE_CATEGORIES,
@@ -125,11 +126,12 @@ export async function instantCaptureSpeak(utterance: string) {
   if (intent.kind === "income") {
     const cat = await resolveCategoryId(family.id, intent.categoryHint, "INCOME");
     const scope = intent.explicitScope ?? "PERSONAL";
-    await prisma.income.create({
+    const created = await prisma.income.create({
       data: {
         familyId: family.id,
         memberId: membership.id,
         createdById: session.user.id,
+        updatedById: session.user.id,
         categoryId: cat.id,
         scope,
         amountCents: intent.amountCents,
@@ -137,6 +139,15 @@ export async function instantCaptureSpeak(utterance: string) {
         description: intent.description,
         notes: "Captura Instantânea · voz",
       },
+    });
+    await logTransactionAudit({
+      familyId: family.id,
+      kind: "INCOME",
+      recordId: created.id,
+      action: "CREATE",
+      actorUserId: session.user.id,
+      actorDisplayName: membership.displayName,
+      summary: `Criou receita «${created.description}» (voz)`,
     });
     revalidateAll();
     return {
@@ -194,11 +205,12 @@ export async function instantCaptureSpeak(utterance: string) {
 
   const paymentMethod = (intent.paymentHint as PaymentMethod | undefined) ?? "OTHER";
 
-  await prisma.expense.create({
+  const createdExpense = await prisma.expense.create({
     data: {
       familyId: family.id,
       memberId: membership.id,
       createdById: session.user.id,
+      updatedById: session.user.id,
       categoryId: cat.id,
       storeId,
       scope,
@@ -210,6 +222,15 @@ export async function instantCaptureSpeak(utterance: string) {
       paymentMethod,
       notes: "Captura Instantânea · voz",
     },
+  });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "EXPENSE",
+    recordId: createdExpense.id,
+    action: "CREATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Criou despesa «${createdExpense.description}» (voz)`,
   });
 
   await learnScopeHabit({
@@ -280,6 +301,7 @@ export async function instantCapturePhoto(formData: FormData) {
       familyId: family.id,
       memberId: membership.id,
       createdById: session.user.id,
+      updatedById: session.user.id,
       categoryId: cat.id,
       storeId,
       scope,
@@ -306,6 +328,15 @@ export async function instantCapturePhoto(formData: FormData) {
           }
         : undefined,
     },
+  });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "EXPENSE",
+    recordId: expense.id,
+    action: "CREATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Criou despesa «${expense.description}» (fotografia)`,
   });
 
   await learnScopeHabit({

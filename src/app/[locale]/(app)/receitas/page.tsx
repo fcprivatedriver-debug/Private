@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import { formatEUR, currentYearMonth, monthBounds } from "@/lib/money";
 import { incomeScopeWhere, spaceLabel } from "@/lib/scope";
 import { EmptyState, Panel } from "@/components/ui/FinanceUI";
-import { TransactionActions } from "@/components/finance/TransactionActions";
+import { authorLabel } from "@/lib/transaction-audit";
 
 export default async function ReceitasPage() {
   const session = await auth();
@@ -24,10 +24,16 @@ export default async function ReceitasPage() {
       date: { gte: start, lte: end },
       ...incomeScopeWhere(space, membership.id),
     },
-    include: { category: true, member: true, account: true },
+    include: {
+      category: true,
+      member: true,
+      account: true,
+      createdBy: { select: { name: true } },
+    },
     orderBy: { date: "desc" },
   });
   const total = incomes.reduce((s, i) => s + i.amountCents, 0);
+  const showAuthor = membership.family.kind !== "INDIVIDUAL";
 
   return (
     <div className="page-stack">
@@ -50,33 +56,26 @@ export default async function ReceitasPage() {
             body="Adiciona o teu salário, um subsídio ou outra entrada. O dashboard atualiza sozinho."
           />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Tipo</th>
-                  <th>Conta</th>
-                  <th>Valor</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {incomes.map((i) => (
-                  <tr key={i.id}>
-                    <td>{i.date.toLocaleDateString("pt-PT")}</td>
-                    <td>{i.description}</td>
-                    <td>{i.category.name}</td>
-                    <td>{i.account?.name ?? "—"}</td>
-                    <td className="amount-income">+{formatEUR(i.amountCents)}</td>
-                    <td>
-                      <TransactionActions id={i.id} kind="income" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="tx-list">
+            {incomes.map((i) => {
+              const who = authorLabel({
+                memberDisplayName: i.member?.displayName,
+                createdByName: i.createdBy?.name,
+              });
+              return (
+                <Link key={i.id} href={`/pt/receitas/${i.id}`} className="tx-row">
+                  <div className="tx-row-main">
+                    {showAuthor ? <span className="tx-author">{who}</span> : null}
+                    <strong>{i.description}</strong>
+                    <span>
+                      {i.date.toLocaleDateString("pt-PT")} · {i.category.name}
+                      {i.scope === "FAMILY" ? " · Familiar" : " · Pessoal"}
+                    </span>
+                  </div>
+                  <span className="amount-income">+{formatEUR(i.amountCents)}</span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </Panel>

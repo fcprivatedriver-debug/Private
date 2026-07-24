@@ -69,6 +69,7 @@ export function IncomeForm({
     accountId: string | null;
     memberId: string | null;
     notes: string | null;
+    scope?: "PERSONAL" | "FAMILY";
   };
 }) {
   const router = useRouter();
@@ -127,7 +128,13 @@ export function IncomeForm({
           defaultValue={initial?.date ?? new Date().toISOString().slice(0, 10)}
         />
       </Field>
-      <Field label="Conta">
+      <Field label="Conta (Pessoal / Familiar)">
+        <select name="scope" defaultValue={initial?.scope ?? "PERSONAL"}>
+          <option value="PERSONAL">Pessoal</option>
+          <option value="FAMILY">Familiar</option>
+        </select>
+      </Field>
+      <Field label="Conta bancária">
         <select name="accountId" defaultValue={initial?.accountId ?? accounts[0]?.id ?? ""}>
           <option value="">—</option>
           {accounts.map((a) => (
@@ -189,6 +196,7 @@ export function ExpenseForm({
     notes: string | null;
     receiptImageUrl: string | null;
     receiptPdfUrl: string | null;
+    scope?: "PERSONAL" | "FAMILY";
   };
 }) {
   const router = useRouter();
@@ -271,6 +279,12 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
+      <Field label="Conta (Pessoal / Familiar)">
+        <select name="scope" defaultValue={initial?.scope ?? "PERSONAL"}>
+          <option value="PERSONAL">Pessoal</option>
+          <option value="FAMILY">Familiar</option>
+        </select>
+      </Field>
       <Field label="Loja">
         <input
           name="storeName"
@@ -287,7 +301,7 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
-      <Field label="Conta">
+      <Field label="Conta bancária">
         <select name="accountId" defaultValue={initial?.accountId ?? ""}>
           <option value="">—</option>
           {accounts.map((a) => (

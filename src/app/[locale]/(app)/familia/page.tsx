@@ -149,6 +149,7 @@ export default async function FamiliaPage() {
         myRole={membership.role}
         members={members}
         latestInvitePath={latestInvite ? `/pt/convite/${latestInvite.token}` : null}
+        allowMembersEditOthers={membership.family.allowMembersEditOthers}
       />
     </div>
   );

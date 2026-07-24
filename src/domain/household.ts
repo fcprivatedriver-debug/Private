@@ -37,6 +37,19 @@ export function canManageMembers(role: FamilyRole): boolean {
   return role === "OWNER" || role === "ADMIN";
 }
 
+/** Pode editar/eliminar um movimento concreto (próprio, admin, ou permissão familiar). */
+export function canEditTransaction(opts: {
+  role: FamilyRole;
+  userId: string;
+  createdById: string | null | undefined;
+  allowMembersEditOthers: boolean;
+}): boolean {
+  if (!canEditFinances(opts.role)) return false;
+  if (!opts.createdById || opts.createdById === opts.userId) return true;
+  if (opts.role === "OWNER" || opts.role === "ADMIN") return true;
+  return opts.allowMembersEditOthers;
+}
+
 export function makeInviteCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "NINA-";

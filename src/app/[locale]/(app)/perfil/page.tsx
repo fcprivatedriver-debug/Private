@@ -24,6 +24,7 @@ export default async function PerfilPage() {
       <Panel title="Dados pessoais">
         <ProfileForm
           name={user.name}
+          preferredName={membership.displayName}
           email={user.email}
           theme={user.theme}
           biometricsEnabled={user.biometricsEnabled}
@@ -34,7 +35,8 @@ export default async function PerfilPage() {
       </Panel>
       <Panel title="Na Conta Familiar">
         <p style={{ marginTop: 0 }}>
-          <strong>{membership.displayName}</strong> · {membership.role} · {membership.family.name}
+          A Nina trata-te por <strong>{membership.displayName}</strong> · {membership.role} ·{" "}
+          {membership.family.name}
         </p>
         <p className="muted small">
           Fotografia e cor do perfil: {membership.photoUrl ? "definida" : "por definir"} · cor{" "}

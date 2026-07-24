@@ -155,7 +155,7 @@ export async function acceptFamilyInvite(token: string) {
       data: {
         familyId: invite.familyId,
         userId: session.user.id,
-        displayName: (session.user.name || "Membro").split(" ")[0],
+        displayName: session.user.name || "Membro",
         role: "MEMBER",
       },
     });
@@ -189,11 +189,16 @@ export async function updateHouseholdSettings(formData: FormData) {
   }
   const name = String(formData.get("name") || "").trim();
   const kind = String(formData.get("kind") || family.kind) as HouseholdKind;
+  const editOthersRaw = String(formData.get("allowMembersEditOthers") || "").toLowerCase();
+  const allowMembersEditOthers =
+    editOthersRaw === "sim" || editOthersRaw === "yes" || editOthersRaw === "true" || editOthersRaw === "on";
+
   await prisma.family.update({
     where: { id: family.id },
     data: {
       name: name || family.name,
       kind: ["INDIVIDUAL", "COUPLE", "FAMILY", "SHARED"].includes(kind) ? kind : family.kind,
+      allowMembersEditOthers,
     },
   });
   revalidateAll();
@@ -273,10 +278,10 @@ export async function inviteMemberToHousehold(formData: FormData) {
     create: {
       familyId: family.id,
       userId: user.id,
-      displayName: name.split(" ")[0],
+      displayName: name.trim() || "Membro",
       role,
     },
-    update: { displayName: name.split(" ")[0], role },
+    update: { displayName: name.trim() || "Membro", role },
   });
   revalidateAll();
   return { ok: true as const };
@@ -346,7 +351,9 @@ export async function deleteMemoryRule(id: string) {
 
 export async function updateProfile(formData: FormData) {
   const session = await requireSession();
-  const name = String(formData.get("name") || "").trim();
+  const preferredName = String(formData.get("preferredName") || "").trim();
+  const fullName = String(formData.get("name") || "").trim();
+  const howToCall = preferredName || fullName;
   const theme = String(formData.get("theme") || "system");
   const biometricsEnabled = formData.get("biometrics") === "on";
   const pin = String(formData.get("pin") || "").trim();
@@ -354,7 +361,7 @@ export async function updateProfile(formData: FormData) {
   await prisma.user.update({
     where: { id: session.user.id },
     data: {
-      name: name || undefined,
+      name: fullName || howToCall || undefined,
       theme: ["light", "dark", "system"].includes(theme) ? theme : "system",
       biometricsEnabled,
       pinHash: pin.length >= 4 ? await bcrypt.hash(pin, 10) : undefined,
@@ -372,10 +379,10 @@ export async function updateProfile(formData: FormData) {
   const membership = await prisma.familyMember.findFirst({
     where: { userId: session.user.id },
   });
-  if (membership && name) {
+  if (membership && howToCall) {
     await prisma.familyMember.update({
       where: { id: membership.id },
-      data: { displayName: name.split(" ")[0] },
+      data: { displayName: howToCall },
     });
   }
   revalidateAll();

@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db";
 import { formatEUR } from "@/lib/money";
 import { spaceLabel } from "@/lib/scope";
 import { EmptyState, Panel } from "@/components/ui/FinanceUI";
-import { TransactionActions } from "@/components/finance/TransactionActions";
+import { authorLabel } from "@/lib/transaction-audit";
 
 export default async function GastosPage({
   searchParams,
@@ -42,6 +42,7 @@ export default async function GastosPage({
   const accounts = await prisma.financeAccount.findMany({
     where: { familyId: membership.familyId },
   });
+  const showAuthor = membership.family.kind !== "INDIVIDUAL";
 
   return (
     <div className="page-stack">
@@ -49,7 +50,7 @@ export default async function GastosPage({
         <div>
           <h1 className="page-title">Despesas · {spaceLabel(space)}</h1>
           <p className="page-sub">
-            Começa vazia. Adiciona por voz, fotografia ou manualmente — e edita quando quiseres.
+            Toca num movimento para editar ou eliminar. O histórico e os saldos atualizam sozinhos.
           </p>
         </div>
         <div className="btn-row">
@@ -95,36 +96,28 @@ export default async function GastosPage({
             body="Quando gastares, diz à Nina, fotografa o talão ou regista aqui. Nada é criado automaticamente."
           />
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Categoria</th>
-                  <th>Loja</th>
-                  <th>Valor</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((e) => (
-                  <tr key={e.id}>
-                    <td>
+          <div className="tx-list">
+            {expenses.map((e) => {
+              const who = authorLabel({
+                memberDisplayName: e.member?.displayName,
+                createdByName: e.createdBy?.name,
+              });
+              return (
+                <Link key={e.id} href={`/pt/despesas/${e.id}`} className="tx-row">
+                  <div className="tx-row-main">
+                    {showAuthor ? <span className="tx-author">{who}</span> : null}
+                    <strong>{e.description}</strong>
+                    <span>
                       {e.date.toLocaleDateString("pt-PT")}
-                      {e.time ? ` ${e.time}` : ""}
-                    </td>
-                    <td>{e.description}</td>
-                    <td>{e.category.name}</td>
-                    <td>{e.storeName ?? "—"}</td>
-                    <td className="amount-expense">−{formatEUR(e.amountCents)}</td>
-                    <td>
-                      <TransactionActions id={e.id} kind="expense" />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {e.time ? ` ${e.time}` : ""} · {e.category.name}
+                      {e.storeName ? ` · ${e.storeName}` : ""}
+                      {e.scope === "FAMILY" ? " · Familiar" : " · Pessoal"}
+                    </span>
+                  </div>
+                  <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </Panel>

@@ -26,6 +26,9 @@ import {
   DEFAULT_INCOME_CATEGORIES,
 } from "@/domain/categories";
 import { getNinaSpace } from "@/actions/household";
+import { canEditFinances, canEditTransaction } from "@/domain/household";
+import { logTransactionAudit } from "@/lib/transaction-audit";
+import type { FinanceScope } from "@prisma/client";
 
 function revalidateApp() {
   revalidatePath("/", "layout");
@@ -34,6 +37,12 @@ function revalidateApp() {
 async function scopeFromSpace() {
   const space = await getNinaSpace();
   return space === "family" ? ("FAMILY" as const) : ("PERSONAL" as const);
+}
+
+function parseScope(raw: FormDataEntryValue | null, fallback: FinanceScope): FinanceScope {
+  const v = String(raw || "").toUpperCase();
+  if (v === "FAMILY" || v === "PERSONAL") return v;
+  return fallback;
 }
 
 /** Cria categoria só quando o utilizador a usa pela primeira vez. */
@@ -105,7 +114,7 @@ export async function registerFamily(formData: FormData) {
     data: {
       familyId: family.id,
       userId: user.id,
-      displayName: parsed.data.name.split(" ")[0],
+      displayName: parsed.data.name.trim(),
       role: "OWNER",
     },
   });
@@ -134,6 +143,9 @@ export async function registerFamily(formData: FormData) {
 
 export async function createIncome(formData: FormData) {
   const { session, family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para registar receitas." };
+  }
   const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
   const categoryId = await ensureCategory(family.id, "INCOME", categoryRef);
   if (!categoryId) return { ok: false as const, error: "Escolhe o tipo de receita" };
@@ -151,14 +163,15 @@ export async function createIncome(formData: FormData) {
   const amountCents = parseEURInput(parsed.data.amount);
   if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
 
-  const scope = await scopeFromSpace();
-  await prisma.income.create({
+  const scope = parseScope(formData.get("scope"), await scopeFromSpace());
+  const created = await prisma.income.create({
     data: {
       familyId: family.id,
       categoryId,
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
       createdById: session.user.id,
+      updatedById: session.user.id,
       scope,
       amountCents,
       date: new Date(parsed.data.date),
@@ -166,12 +179,24 @@ export async function createIncome(formData: FormData) {
       notes: parsed.data.notes || null,
     },
   });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "INCOME",
+    recordId: created.id,
+    action: "CREATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Criou receita «${created.description}» (${(amountCents / 100).toFixed(2)} €)`,
+  });
   revalidateApp();
   return { ok: true as const };
 }
 
 export async function createExpense(formData: FormData) {
   const { session, family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para registar despesas." };
+  }
   const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
   const categoryId = await ensureCategory(family.id, "EXPENSE", categoryRef);
   if (!categoryId) return { ok: false as const, error: "Escolhe uma categoria" };
@@ -212,8 +237,8 @@ export async function createExpense(formData: FormData) {
     storeId = store.id;
   }
 
-  const scope = await scopeFromSpace();
-  await prisma.expense.create({
+  const scope = parseScope(formData.get("scope"), await scopeFromSpace());
+  const created = await prisma.expense.create({
     data: {
       familyId: family.id,
       categoryId,
@@ -221,6 +246,7 @@ export async function createExpense(formData: FormData) {
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
       createdById: session.user.id,
+      updatedById: session.user.id,
       storeId,
       scope,
       amountCents,
@@ -234,12 +260,21 @@ export async function createExpense(formData: FormData) {
       receiptPdfUrl: parsed.data.receiptPdfUrl || null,
     },
   });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "EXPENSE",
+    recordId: created.id,
+    action: "CREATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Criou despesa «${created.description}» (${(amountCents / 100).toFixed(2)} €)`,
+  });
   revalidateApp();
   return { ok: true as const };
 }
 
 export async function updateIncome(formData: FormData) {
-  const { family, membership } = await requireFamilyContext();
+  const { session, family, membership } = await requireFamilyContext();
   const id = String(formData.get("id") || "");
   if (!id) return { ok: false as const, error: "Receita em falta" };
   const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
@@ -262,16 +297,53 @@ export async function updateIncome(formData: FormData) {
   const existing = await prisma.income.findFirst({ where: { id, familyId: family.id } });
   if (!existing) return { ok: false as const, error: "Receita não encontrada" };
 
+  if (
+    !canEditTransaction({
+      role: membership.role,
+      userId: session.user.id,
+      createdById: existing.createdById,
+      allowMembersEditOthers: family.allowMembersEditOthers,
+    })
+  ) {
+    return { ok: false as const, error: "Não podes editar este movimento." };
+  }
+
+  const scope = parseScope(formData.get("scope"), existing.scope);
   await prisma.income.update({
     where: { id },
     data: {
       categoryId,
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
+      updatedById: session.user.id,
+      scope,
       amountCents,
       date: new Date(parsed.data.date),
       description: parsed.data.description,
       notes: parsed.data.notes || null,
+    },
+  });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "INCOME",
+    recordId: id,
+    action: "UPDATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Alterou receita «${parsed.data.description}» (${(amountCents / 100).toFixed(2)} €)`,
+    payload: {
+      before: {
+        amountCents: existing.amountCents,
+        description: existing.description,
+        scope: existing.scope,
+        date: existing.date.toISOString(),
+      },
+      after: {
+        amountCents,
+        description: parsed.data.description,
+        scope,
+        date: parsed.data.date,
+      },
     },
   });
   revalidateApp();
@@ -279,22 +351,47 @@ export async function updateIncome(formData: FormData) {
 }
 
 export async function deleteIncome(id: string) {
-  const { family } = await requireFamilyContext();
-  await prisma.income.deleteMany({ where: { id, familyId: family.id } });
+  const { session, family, membership } = await requireFamilyContext();
+  const existing = await prisma.income.findFirst({ where: { id, familyId: family.id } });
+  if (!existing) return { ok: false as const, error: "Receita não encontrada" };
+  if (
+    !canEditTransaction({
+      role: membership.role,
+      userId: session.user.id,
+      createdById: existing.createdById,
+      allowMembersEditOthers: family.allowMembersEditOthers,
+    })
+  ) {
+    return { ok: false as const, error: "Não podes eliminar este movimento." };
+  }
+  await prisma.income.delete({ where: { id } });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "INCOME",
+    recordId: id,
+    action: "DELETE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Eliminou receita «${existing.description}»`,
+  });
   revalidateApp();
   return { ok: true as const };
 }
 
 export async function updateExpense(formData: FormData) {
-  const { family, membership } = await requireFamilyContext();
+  const { session, family, membership } = await requireFamilyContext();
   const id = String(formData.get("id") || "");
   if (!id) return { ok: false as const, error: "Despesa em falta" };
+  const categoryRef = String(formData.get("categoryId") || formData.get("categorySlug") || "");
+  const categoryId = await ensureCategory(family.id, "EXPENSE", categoryRef);
+  if (!categoryId) return { ok: false as const, error: "Escolhe uma categoria" };
+
   const parsed = expenseSchema.safeParse({
     amount: formData.get("amount"),
     date: formData.get("date"),
     time: formData.get("time") || null,
     description: formData.get("description"),
-    categoryId: formData.get("categoryId"),
+    categoryId,
     subcategoryId: formData.get("subcategoryId") || null,
     storeName: formData.get("storeName") || null,
     paymentMethod: formData.get("paymentMethod") || "DEBIT_CARD",
@@ -310,6 +407,17 @@ export async function updateExpense(formData: FormData) {
 
   const existing = await prisma.expense.findFirst({ where: { id, familyId: family.id } });
   if (!existing) return { ok: false as const, error: "Despesa não encontrada" };
+
+  if (
+    !canEditTransaction({
+      role: membership.role,
+      userId: session.user.id,
+      createdById: existing.createdById,
+      allowMembersEditOthers: family.allowMembersEditOthers,
+    })
+  ) {
+    return { ok: false as const, error: "Não podes editar este movimento." };
+  }
 
   let storeId: string | null = existing.storeId;
   if (parsed.data.storeName) {
@@ -330,14 +438,17 @@ export async function updateExpense(formData: FormData) {
     storeId = null;
   }
 
+  const scope = parseScope(formData.get("scope"), existing.scope);
   await prisma.expense.update({
     where: { id },
     data: {
-      categoryId: parsed.data.categoryId,
+      categoryId,
       subcategoryId: parsed.data.subcategoryId || null,
       accountId: parsed.data.accountId || null,
       memberId: parsed.data.memberId || membership.id,
+      updatedById: session.user.id,
       storeId,
+      scope,
       amountCents,
       date: new Date(parsed.data.date),
       time: parsed.data.time || null,
@@ -349,13 +460,57 @@ export async function updateExpense(formData: FormData) {
       receiptPdfUrl: parsed.data.receiptPdfUrl || null,
     },
   });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "EXPENSE",
+    recordId: id,
+    action: "UPDATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Alterou despesa «${parsed.data.description}» (${(amountCents / 100).toFixed(2)} €)`,
+    payload: {
+      before: {
+        amountCents: existing.amountCents,
+        description: existing.description,
+        scope: existing.scope,
+        date: existing.date.toISOString(),
+      },
+      after: {
+        amountCents,
+        description: parsed.data.description,
+        scope,
+        date: parsed.data.date,
+      },
+    },
+  });
   revalidateApp();
   return { ok: true as const };
 }
 
 export async function deleteExpense(id: string) {
-  const { family } = await requireFamilyContext();
-  await prisma.expense.deleteMany({ where: { id, familyId: family.id } });
+  const { session, family, membership } = await requireFamilyContext();
+  const existing = await prisma.expense.findFirst({ where: { id, familyId: family.id } });
+  if (!existing) return { ok: false as const, error: "Despesa não encontrada" };
+  if (
+    !canEditTransaction({
+      role: membership.role,
+      userId: session.user.id,
+      createdById: existing.createdById,
+      allowMembersEditOthers: family.allowMembersEditOthers,
+    })
+  ) {
+    return { ok: false as const, error: "Não podes eliminar este movimento." };
+  }
+  await prisma.expense.delete({ where: { id } });
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "EXPENSE",
+    recordId: id,
+    action: "DELETE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Eliminou despesa «${existing.description}»`,
+  });
   revalidateApp();
   return { ok: true as const };
 }
@@ -858,10 +1013,10 @@ export async function addFamilyMember(formData: FormData) {
     create: {
       familyId: family.id,
       userId: user.id,
-      displayName: name.split(" ")[0],
+      displayName: name.trim() || "Membro",
       role: "MEMBER",
     },
-    update: { displayName: name.split(" ")[0] },
+    update: { displayName: name.trim() || "Membro" },
   });
   revalidateApp();
   return { ok: true as const };
