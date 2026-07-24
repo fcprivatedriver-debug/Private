@@ -9,7 +9,7 @@ import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_INCOME_CATEGORIES,
 } from "../src/domain/categories";
-import { DEMO_PASSWORD } from "../src/lib/demo-mode";
+import { DEMO_PASSWORD, isDemoMode } from "../src/lib/demo-mode";
 
 const prisma = new PrismaClient();
 
@@ -61,6 +61,14 @@ async function seedCategories(familyId: string) {
 }
 
 async function main() {
+  if (!isDemoMode() && process.env.ALLOW_DEMO_SEED !== "true") {
+    console.error(
+      "⛔ Seed demo bloqueado. Contas reais nunca recebem dados fictícios.\n" +
+        "   Para carregar a demo: DEMO_MODE=true npm run db:demo",
+    );
+    process.exit(1);
+  }
+
   console.log("🌱 A preparar dados demo Nina…");
 
   await prisma.expenseLineItem.deleteMany();

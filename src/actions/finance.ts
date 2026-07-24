@@ -119,13 +119,14 @@ export async function registerFamily(formData: FormData) {
     },
   });
 
-  // Conta estrutural vazia — SEM categorias, SEM movimentos, SEM objetivos.
+  // Conta estrutural vazia — SEM categorias, SEM movimentos, SEM objetivos, saldo 0.
   // Tudo o resto é criado só quando o utilizador introduz dados.
   await prisma.financeAccount.create({
     data: {
       familyId: family.id,
       name: "Conta principal",
       type: "CHECKING",
+      balanceCents: 0,
     },
   });
 

@@ -9,6 +9,14 @@ function sanitizeDatabaseUrl(url: string): string {
     if (u.hostname.includes("neon.tech") && !u.searchParams.has("sslmode")) {
       u.searchParams.set("sslmode", "require");
     }
+    // On Vercel (shared Neon with Zrik), keep Nina in its own Postgres schema.
+    const forceSchema =
+      process.env.NINA_PG_SCHEMA ||
+      (process.env.VERCEL ? "nina" : null) ||
+      (process.env.FORCE_NINA_SCHEMA === "true" ? "nina" : null);
+    if (forceSchema) {
+      u.searchParams.set("schema", forceSchema);
+    }
     return u.toString();
   } catch {
     return url

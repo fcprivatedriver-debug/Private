@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/ensure-env.mjs && prisma generate && prisma migrate deploy && next build",
+    "build": "node scripts/vercel-build.mjs",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:demo": "tsx prisma/seed.ts",
+    "db:deploy": "node scripts/migrate-deploy.mjs",
+    "db:seed": "DEMO_MODE=true tsx prisma/seed.ts",
+    "db:demo": "DEMO_MODE=true tsx prisma/seed.ts",
     "pr:proof": "node scripts/pr-visual-proof.mjs",
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate"
