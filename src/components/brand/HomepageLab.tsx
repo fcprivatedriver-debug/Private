@@ -31,7 +31,7 @@ type Labels = {
   photoSide: string;
 };
 
-function EditorialHeroPreview({
+function SceneHeroPreview({
   photoSrc,
   accent,
   overlay,
@@ -54,10 +54,13 @@ function EditorialHeroPreview({
   } as CSSProperties;
 
   return (
-    <article className="editorial-hero" style={style}>
+    <article className="scene-hero-preview" style={style}>
       <p className="editorial-hero-label">{versionLabel}</p>
-      <div className="editorial-hero-split">
-        <div className="editorial-hero-copy-col">
+      <div className="scene-hero-frame">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={photoSrc} alt="" className="scene-hero-photo" />
+        <div className="scene-hero-veil" aria-hidden />
+        <div className="scene-hero-content">
           <p className="lab-hero-eyebrow">{labels.textSide}</p>
           <h3 className="lab-hero-brand" aria-label="ZRIK">
             <span style={{ color: "var(--lab-accent)" }}>Z</span>
@@ -72,12 +75,6 @@ function EditorialHeroPreview({
             <span className="btn btn-secondary lab-btn-secondary">{labels.ctaSecondary}</span>
           </div>
         </div>
-
-        <div className="editorial-hero-photo-col" aria-label={labels.photoSide}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photoSrc} alt="" className="editorial-hero-photo" />
-          <div className="editorial-hero-veil" aria-hidden />
-        </div>
       </div>
     </article>
   );
@@ -86,9 +83,9 @@ function EditorialHeroPreview({
 export function HomepageLab({ locale, labels }: { locale: string; labels: Labels }) {
   const isPt = locale.startsWith("pt");
   const [sloganId, setSloganId] = useState<SloganId>("D");
-  const [versionId, setVersionId] = useState<HeroVersionId>("NP2");
+  const [versionId, setVersionId] = useState<HeroVersionId>("FB3");
   const [colorId, setColorId] = useState<AccentCandidateId>("C1");
-  const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O55");
+  const [overlayId, setOverlayId] = useState<(typeof OVERLAY_CANDIDATES)[number]["id"]>("O50");
 
   const slogan = SLOGAN_CANDIDATES.find((s) => s.id === sloganId)!;
   const version = HERO_VERSIONS.find((v) => v.id === versionId)!;
@@ -229,7 +226,7 @@ export function HomepageLab({ locale, labels }: { locale: string; labels: Labels
           <h2 className="lab-panel-title">{labels.previewTitle}</h2>
           <p className="lab-not-locked">{labels.notLocked}</p>
         </div>
-        <EditorialHeroPreview
+        <SceneHeroPreview
           photoSrc={version.src}
           accent={color.hex}
           overlay={overlay.value}

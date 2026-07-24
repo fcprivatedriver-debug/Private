@@ -115,62 +115,64 @@ export const SLOGAN_CANDIDATES = [
 export type SloganId = (typeof SLOGAN_CANDIDATES)[number]["id"];
 
 /**
- * People-free editorial hero photographs (no clients, no drivers in frame).
+ * Full-bleed Cascais Marina campaign photographs.
+ * Photo IS the scene — not a side panel. No people, doors closed.
  */
 export const HERO_VERSIONS = [
   {
-    id: "NP1",
-    src: "/brand/zrik-hero-np1.jpg",
-    title: "NP1 — Graphite stillness",
-    titlePt: "NP1 — Quietude graphite",
-    desc: "Dark Model 3 · empty hotel drop-off · no people · golden hour",
-    descPt: "Model 3 escuro · hotel vazio · sem pessoas · golden hour",
-    mood: "Discreet · atmospheric",
-    moodPt: "Discreta · atmosférica",
+    id: "FB1",
+    src: "/brand/zrik-hero-fb1.jpg",
+    title: "FB1 — Graphite · Cascais",
+    titlePt: "FB1 — Graphite · Cascais",
+    desc: "Dark Model 3 · full car · marina atmosphere · golden hour",
+    descPt: "Model 3 escuro · carro completo · marina · golden hour",
+    mood: "Coastal · discreet",
+    moodPt: "Costeira · discreta",
   },
   {
-    id: "NP2",
-    src: "/brand/zrik-hero-np2.jpg",
-    title: "NP2 — Open door waiting",
-    titlePt: "NP2 — Porta aberta à espera",
-    desc: "Black Model 3 · open empty cabin · experience without people",
-    descPt: "Model 3 preto · habitáculo vazio · experiência sem pessoas",
-    mood: "Inviting · cinematic",
-    moodPt: "Convidativa · cinematográfica",
+    id: "FB2",
+    src: "/brand/zrik-hero-fb2.jpg",
+    title: "FB2 — White · Cascais",
+    titlePt: "FB2 — Branco · Cascais",
+    desc: "White Model 3 · parked · marina backdrop soft · luminous",
+    descPt: "Model 3 branco · estacionado · marina suave · luminoso",
+    mood: "Open · bright",
+    moodPt: "Aberta · luminosa",
   },
   {
-    id: "NP3",
-    src: "/brand/zrik-hero-np3.jpg",
-    title: "NP3 — White arrival",
-    titlePt: "NP3 — Chegada em branco",
-    desc: "White Model 3 · deserted porte-cochère · bright European air",
-    descPt: "Model 3 branco · porte-cochère deserto · luz europeia",
-    mood: "Luminous · pure",
-    moodPt: "Luminosa · pura",
+    id: "FB3",
+    src: "/brand/zrik-hero-fb3.jpg",
+    title: "FB3 — Black · Cascais",
+    titlePt: "FB3 — Preto · Cascais",
+    desc: "Black Model 3 · almost full side · quiet marina · campaign grade",
+    descPt: "Model 3 preto · quase completo · marina quieta · nível campanha",
+    mood: "Cinematic · decisive",
+    moodPt: "Cinematográfica · decisiva",
   },
 ] as const;
 
 export type HeroVersionId = (typeof HERO_VERSIONS)[number]["id"];
 
 export const OVERLAY_CANDIDATES = [
+  { id: "O50", label: "50%", value: 0.5 },
   { id: "O55", label: "55%", value: 0.55 },
   { id: "O60", label: "60%", value: 0.6 },
-  { id: "O65", label: "65%", value: 0.65 },
 ] as const;
 
 export const HERO_PHOTO_CANDIDATES = HERO_VERSIONS;
 export type HeroPhotoId = HeroVersionId;
 
-/** Interim production: people-free NP2 until a new winner is chosen */
-export const LOCKED_HERO_VERSION = HERO_VERSIONS.find((v) => v.id === "NP2")!;
+/** Production scene: FB3 black Cascais (full-bleed). */
+export const LOCKED_HERO_VERSION = HERO_VERSIONS.find((v) => v.id === "FB3")!;
 
-/** Slogan not locked — production uses favorite D for now (still changeable in Lab) */
+/** Slogan favorite D until otherwise locked */
 export const PRODUCTION_SLOGAN = SLOGAN_CANDIDATES.find((s) => s.id === "D")!;
 
 export const PRODUCTION_ACCENT = "#1F5A96";
 export const PRODUCTION_ACCENT_STRONG = "#184a7c";
 export const PRODUCTION_HERO = LOCKED_HERO_VERSION.src;
-export const PRODUCTION_OVERLAY = 0.55;
+/** Light veil — photo remains the atmosphere */
+export const PRODUCTION_OVERLAY = 0.52;
 
 export const PETROL_BLUES = ACCENT_CANDIDATES.map((c) => ({
   id: c.id,

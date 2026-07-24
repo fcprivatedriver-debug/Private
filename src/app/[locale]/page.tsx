@@ -44,38 +44,35 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <section className="hero hero-editorial">
-        <div className="container hero-editorial-split">
-          <div className="hero-editorial-copy">
-            <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
-            <h1 className="hero-brand fade-up">
-              <ZrikWordmark as="span" variant="B" />
-            </h1>
-            <p className="hero-copy fade-up-delay">
-              <span className="hero-copy-line">{line1}</span>
-              <span className="hero-copy-line">{line2}</span>
-            </p>
-            <div className="cta-row fade-up-delay">
-              <Link href={primary.href} className="btn btn-primary btn-hero">
-                {primary.label}
-              </Link>
-              <Link href={secondary.href} className="btn btn-secondary btn-hero-ghost">
-                {secondary.label}
-              </Link>
-            </div>
-          </div>
-          <div className="hero-editorial-photo-slot">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={PRODUCTION_HERO}
-              alt=""
-              className="hero-editorial-photo"
-            />
-            <div
-              className="hero-editorial-veil"
-              style={{ ["--hero-overlay" as string]: String(PRODUCTION_OVERLAY) }}
-              aria-hidden
-            />
+      {/* Photo IS the scene — full-bleed atmosphere, content on top */}
+      <section
+        className="hero hero-scene"
+        style={{ ["--hero-overlay" as string]: String(PRODUCTION_OVERLAY) }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={PRODUCTION_HERO}
+          alt=""
+          className="hero-scene-photo"
+          fetchPriority="high"
+        />
+        <div className="hero-scene-veil" aria-hidden />
+        <div className="container hero-scene-content">
+          <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
+          <h1 className="hero-brand fade-up">
+            <ZrikWordmark as="span" variant="B" />
+          </h1>
+          <p className="hero-copy fade-up-delay">
+            <span className="hero-copy-line">{line1}</span>
+            <span className="hero-copy-line">{line2}</span>
+          </p>
+          <div className="cta-row fade-up-delay">
+            <Link href={primary.href} className="btn btn-primary btn-hero">
+              {primary.label}
+            </Link>
+            <Link href={secondary.href} className="btn btn-secondary btn-hero-ghost">
+              {secondary.label}
+            </Link>
           </div>
         </div>
       </section>
