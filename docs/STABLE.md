@@ -48,6 +48,13 @@ Alias do branch `cursor/nina-stable-c6cd`:
 - **Correção:** após `create`/`update` bem-sucedido, `router.push` + `router.refresh()` (igual a `TransactionActions.tsx`).
 - **Impacto:** listas, Dashboard, gráficos e saldos passam a refletir receitas/despesas novas ou editadas sem hard-reload.
 
+## 5. Ecrã branco / “Application error” na Vercel
+
+- **Causa:** `@prisma/adapter-neon` **ignora** `?schema=nina` no `DATABASE_URL`. Em runtime as queries iam para o schema `public` (Zrik). Registo/login geravam exceção no servidor → página branca / “Application error”.
+- **Ficheiro:** `src/lib/db.ts`
+- **Correção:** passar `{ schema: "nina" }` ao `new PrismaNeon(...)`.
+- **Impacto:** login, registo e toda a app usam o schema Nina isolado.
+
 ## O que já está corrigido sem SSO
 
 - Build Vercel **Ready**
