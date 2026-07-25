@@ -1,19 +1,38 @@
 #!/usr/bin/env node
 /**
- * Ensures the real test account familia@nina.app exists and is EMPTY
- * (no demo incomes/expenses/charts). Never loads ficticious demo data.
+ * Contas de TESTE REAL — sempre vazias (saldo 0, sem movimentos).
  *
- * Full demo data is ONLY created via: DEMO_MODE=true npm run db:demo
- * (uses demo@nina.app — see prisma/seed.ts).
+ * - familia@nina.app  — conta de teste estável
+ * - teste@nina.app    — conta limpa para validar empty state
+ *
+ * Nunca carrega dados fictícios. Demo só via: DEMO_MODE=true npm run db:demo
+ * (conta demo@nina.app — ver prisma/seed.ts).
+ *
+ * Corre em cada build Vercel para eliminar a causa raiz do “ciclo”:
+ * movimentos deixados por seeds antigos ou por testes E2E voltam a aparecer
+ * se não forem limpos nestas contas dedicadas.
  */
 import bcrypt from "bcryptjs";
 import { applyEnsureEnv } from "./ensure-env.mjs";
 
 applyEnsureEnv({ exitOnError: true });
 
-const TEST_EMAIL = "familia@nina.app";
-const TEST_PASSWORD = "nina123";
-const TEST_NAME = "Filipe Casquinha";
+const TEST_ACCOUNTS = [
+  {
+    email: "familia@nina.app",
+    password: "nina123",
+    name: "Filipe Casquinha",
+    displayName: "Filipe",
+    familyName: "Conta de Filipe",
+  },
+  {
+    email: "teste@nina.app",
+    password: "nina123",
+    name: "Conta de Teste",
+    displayName: "Teste",
+    familyName: "Conta Teste Nina",
+  },
+];
 
 /** Wipe all finance content for a family — leave structural empty account. */
 async function emptyFamilyFinance(prisma, familyId) {
@@ -70,122 +89,104 @@ async function emptyFamilyFinance(prisma, familyId) {
   }
 }
 
-async function main() {
-  const { PrismaClient } = await import("@prisma/client");
-  const prisma = new PrismaClient();
-  const passwordHash = await bcrypt.hash(TEST_PASSWORD, 10);
+async function ensureEmptyTestAccount(prisma, account) {
+  const passwordHash = await bcrypt.hash(account.password, 10);
+  let user = await prisma.user.findUnique({ where: { email: account.email } });
 
-  try {
-    let user = await prisma.user.findUnique({ where: { email: TEST_EMAIL } });
-
-    if (!user) {
-      console.log(`[ensure-test] creating empty test account ${TEST_EMAIL}`);
-      user = await prisma.user.create({
-        data: {
-          name: TEST_NAME,
-          email: TEST_EMAIL,
-          passwordHash,
-          theme: "system",
-        },
-      });
-      const family = await prisma.family.create({
-        data: {
-          name: "Conta de Filipe",
-          kind: "INDIVIDUAL",
-          currency: "EUR",
-          timezone: "Europe/Lisbon",
-        },
-      });
-      await prisma.familyMember.create({
-        data: {
-          familyId: family.id,
-          userId: user.id,
-          displayName: "Filipe",
-          role: "OWNER",
-          color: "#1e3a5f",
-        },
-      });
-      await emptyFamilyFinance(prisma, family.id);
-      console.log(`[ensure-test] ${TEST_EMAIL} ready (empty)`);
-      return;
-    }
-
-    // Keep password predictable for the dedicated test account
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash },
+  if (!user) {
+    console.log(`[ensure-test] creating empty test account ${account.email}`);
+    user = await prisma.user.create({
+      data: {
+        name: account.name,
+        email: account.email,
+        passwordHash,
+        theme: "system",
+      },
     });
+    const family = await prisma.family.create({
+      data: {
+        name: account.familyName,
+        kind: "INDIVIDUAL",
+        currency: "EUR",
+        timezone: "Europe/Lisbon",
+      },
+    });
+    await prisma.familyMember.create({
+      data: {
+        familyId: family.id,
+        userId: user.id,
+        displayName: account.displayName,
+        role: "OWNER",
+        color: "#1e3a5f",
+      },
+    });
+    await emptyFamilyFinance(prisma, family.id);
+    console.log(`[ensure-test] ${account.email} ready (empty)`);
+    return;
+  }
 
-    const memberships = await prisma.familyMember.findMany({
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, name: account.name },
+  });
+
+  let memberships = await prisma.familyMember.findMany({
+    where: { userId: user.id, role: "OWNER" },
+    include: { family: true },
+  });
+
+  if (memberships.length === 0) {
+    const family = await prisma.family.create({
+      data: {
+        name: account.familyName,
+        kind: "INDIVIDUAL",
+        currency: "EUR",
+        timezone: "Europe/Lisbon",
+      },
+    });
+    await prisma.familyMember.create({
+      data: {
+        familyId: family.id,
+        userId: user.id,
+        displayName: account.displayName,
+        role: "OWNER",
+        color: "#1e3a5f",
+      },
+    });
+    memberships = await prisma.familyMember.findMany({
       where: { userId: user.id, role: "OWNER" },
       include: { family: true },
     });
+  }
 
-    if (memberships.length === 0) {
-      const family = await prisma.family.create({
-        data: {
-          name: "Conta de Filipe",
-          kind: "INDIVIDUAL",
-          currency: "EUR",
-          timezone: "Europe/Lisbon",
-        },
-      });
-      await prisma.familyMember.create({
-        data: {
-          familyId: family.id,
-          userId: user.id,
-          displayName: "Filipe",
-          role: "OWNER",
-          color: "#1e3a5f",
-        },
-      });
-      await emptyFamilyFinance(prisma, family.id);
-      console.log(`[ensure-test] attached empty family to ${TEST_EMAIL}`);
-      return;
+  for (const m of memberships) {
+    const incomeCount = await prisma.income.count({ where: { familyId: m.familyId } });
+    const expenseCount = await prisma.expense.count({ where: { familyId: m.familyId } });
+    console.log(
+      `[ensure-test] emptying ${account.email} (${incomeCount} incomes, ${expenseCount} expenses)`,
+    );
+    await emptyFamilyFinance(prisma, m.familyId);
+    await prisma.family.update({
+      where: { id: m.familyId },
+      data: {
+        name: account.familyName,
+        kind: "INDIVIDUAL",
+        inviteCode: null,
+      },
+    });
+  }
+
+  console.log(`[ensure-test] ${account.email} is empty and ready`);
+}
+
+async function main() {
+  const { PrismaClient } = await import("@prisma/client");
+  const prisma = new PrismaClient();
+
+  try {
+    for (const account of TEST_ACCOUNTS) {
+      await ensureEmptyTestAccount(prisma, account);
     }
-
-    for (const m of memberships) {
-      const incomeCount = await prisma.income.count({ where: { familyId: m.familyId } });
-      const expenseCount = await prisma.expense.count({ where: { familyId: m.familyId } });
-      // Only strip the old seeded demo household — never wipe real test movements again.
-      const isLegacyDemo =
-        m.family.inviteCode === "NINA-DEMO01" ||
-        m.family.name === "Família Casquinha";
-
-      if (isLegacyDemo) {
-        console.log(
-          `[ensure-test] removing legacy demo seed from ${TEST_EMAIL} (${incomeCount} incomes, ${expenseCount} expenses)`,
-        );
-        await emptyFamilyFinance(prisma, m.familyId);
-        await prisma.family.update({
-          where: { id: m.familyId },
-          data: {
-            name: "Conta de Filipe",
-            kind: "INDIVIDUAL",
-            inviteCode: null,
-          },
-        });
-      } else {
-        const accounts = await prisma.financeAccount.count({
-          where: { familyId: m.familyId },
-        });
-        if (accounts === 0) {
-          await prisma.financeAccount.create({
-            data: {
-              familyId: m.familyId,
-              name: "Conta principal",
-              type: "CHECKING",
-              balanceCents: 0,
-            },
-          });
-        }
-        console.log(
-          `[ensure-test] ${TEST_EMAIL} family ok (${incomeCount} incomes, ${expenseCount} expenses)`,
-        );
-      }
-    }
-
-    console.log(`[ensure-test] ${TEST_EMAIL} is empty and ready`);
   } finally {
     await prisma.$disconnect();
   }

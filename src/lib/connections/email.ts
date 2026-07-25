@@ -60,11 +60,9 @@ const DEMO_INBOX: EmailInvoiceExtraction[] = [
 ];
 
 export async function extractInvoicesFromAuthorizedEmail(
-  providerKey: string,
+  _providerKey: string,
 ): Promise<EmailInvoiceExtraction[]> {
-  // Stub: filtra ligeiramente por provider para demo
-  if (providerKey === "outlook") {
-    return DEMO_INBOX.filter((i) => i.categorySlug !== "outros");
-  }
-  return DEMO_INBOX;
+  // Nunca injectar DEMO_INBOX em contas reais. API real ainda não ligada.
+  void DEMO_INBOX;
+  return [];
 }

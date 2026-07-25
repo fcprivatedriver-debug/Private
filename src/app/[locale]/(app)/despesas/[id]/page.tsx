@@ -120,7 +120,7 @@ export default async function EditarDespesaPage({
             <p className="muted small" style={{ marginTop: 0 }}>
               Remove este movimento. Saldo, dashboard e estatísticas atualizam automaticamente.
             </p>
-            <DeleteTransactionButton id={expense.id} kind="expense" />
+            <DeleteTransactionButton id={expense.id} kind="expense" label="🗑️ Eliminar" />
           </Panel>
         </>
       ) : (

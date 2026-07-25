@@ -114,7 +114,7 @@ export default async function EditarReceitaPage({
             <p className="muted small" style={{ marginTop: 0 }}>
               Remove este movimento. Saldo, dashboard e estatísticas atualizam automaticamente.
             </p>
-            <DeleteTransactionButton id={income.id} kind="income" />
+            <DeleteTransactionButton id={income.id} kind="income" label="🗑️ Eliminar" />
           </Panel>
         </>
       ) : (

@@ -58,9 +58,9 @@ export function TransactionRowActions({
   return (
     <div className="tx-row-actions" onClick={(e) => e.stopPropagation()}>
       <Link href={href} className="btn btn-ghost btn-sm" prefetch={false}>
-        Editar
+        ✏️ Editar
       </Link>
-      <DeleteTransactionButton id={id} kind={kind} label="Eliminar" />
+      <DeleteTransactionButton id={id} kind={kind} label="🗑️ Eliminar" />
     </div>
   );
 }

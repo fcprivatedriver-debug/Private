@@ -26,18 +26,14 @@ export type ImportAdapter = {
   parseFile?: (content: string, fileName: string) => Promise<ImportedExpenseDraft[]>;
 };
 
-function demoDrafts(store: string, categorySlug: string): ImportedExpenseDraft[] {
-  const today = new Date();
-  return [
-    {
-      amountCents: 3245,
-      date: today.toISOString().slice(0, 10),
-      description: `Compra ${store}`,
-      storeName: store,
-      categorySlug,
-      paymentMethod: "DEBIT_CARD",
-    },
-  ];
+/**
+ * Stubs de importação NÃO inventam movimentos.
+ * Antes devolviam despesas fictícias (Continente, EDP, …) que gravavam
+ * na conta do utilizador ao sincronizar — causa de “dados pré-preenchidos”.
+ * Até haver API real, fetchRecent devolve lista vazia.
+ */
+function demoDrafts(_store: string, _categorySlug: string): ImportedExpenseDraft[] {
+  return [];
 }
 
 export const importAdapters: Partial<Record<ImportProvider, ImportAdapter>> = {

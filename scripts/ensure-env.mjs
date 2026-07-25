@@ -7,6 +7,30 @@
  * on the same Neon database without migrate clashes.
  */
 import { pathToFileURL } from "node:url";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+/** Load local .env when not on Vercel (scripts run outside Next.js). */
+function loadLocalEnvFiles() {
+  if (process.env.VERCEL) return;
+  for (const name of [".env", ".env.local", ".env.neon.runtime"]) {
+    const p = resolve(process.cwd(), name);
+    if (!existsSync(p)) continue;
+    for (const line of readFileSync(p, "utf8").split("\n")) {
+      const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+      if (!m) continue;
+      const key = m[1];
+      let val = m[2];
+      if (
+        (val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'"))
+      ) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[key] === undefined) process.env[key] = val;
+    }
+  }
+}
 
 function stripChannelBinding(url) {
   try {
@@ -30,6 +54,8 @@ function withPgSchema(url, schema) {
 }
 
 export function applyEnsureEnv({ exitOnError = true } = {}) {
+  loadLocalEnvFiles();
+
   if (!process.env.DIRECT_URL) {
     process.env.DIRECT_URL =
       process.env.DATABASE_URL_UNPOOLED ||

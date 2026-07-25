@@ -22,7 +22,7 @@ function run(cmd, args) {
 
 run("npx", ["prisma", "generate"]);
 run("node", ["scripts/migrate-deploy.mjs"]);
-// Real test account familia@nina.app — always EMPTY (never demo movements)
+// Contas de teste REAL (familia@ + teste@) — sempre vazias, sem movimentos
 run("node", ["scripts/ensure-test-users.mjs"]);
 run("npx", ["next", "build"]);
 
