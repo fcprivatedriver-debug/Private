@@ -15,7 +15,7 @@ type Props = {
 
 /**
  * Address input with Google Places Autocomplete when configured.
- * Degrades to a plain text field in Phase 0 without an API key.
+ * Falls back to OpenStreetMap Nominatim suggestions without an API key.
  */
 export function AddressAutocompleteInput({
   id,
@@ -38,14 +38,40 @@ export function AddressAutocompleteInput({
   }
 
   useEffect(() => {
-    if (!mapsReady || value.trim().length < 3) {
+    if (value.trim().length < 3) {
       setSuggestions([]);
       return;
     }
     const handle = setTimeout(async () => {
-      const next = await suggestPlaces(value);
-      setSuggestions(next.slice(0, 5));
-    }, 250);
+      if (mapsReady) {
+        const next = await suggestPlaces(value);
+        setSuggestions(next.slice(0, 5));
+        return;
+      }
+      try {
+        const url = new URL("https://nominatim.openstreetmap.org/search");
+        url.searchParams.set("q", value);
+        url.searchParams.set("format", "json");
+        url.searchParams.set("limit", "5");
+        url.searchParams.set("addressdetails", "0");
+        const res = await fetch(url.toString(), {
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) {
+          setSuggestions([]);
+          return;
+        }
+        const data = (await res.json()) as { place_id: number; display_name: string }[];
+        setSuggestions(
+          data.map((d) => ({
+            placeId: String(d.place_id),
+            description: d.display_name,
+          })),
+        );
+      } catch {
+        setSuggestions([]);
+      }
+    }, 300);
     return () => clearTimeout(handle);
   }, [value, mapsReady]);
 
@@ -99,7 +125,7 @@ export function AddressAutocompleteInput({
       )}
       {!mapsReady && (
         <p className="muted" style={{ fontSize: "0.8rem", marginTop: "0.35rem" }}>
-          Google Maps key not set — free-text address mode.
+          Sugestões via OpenStreetMap (defina NEXT_PUBLIC_GOOGLE_MAPS_API_KEY para Google Places).
         </p>
       )}
     </div>

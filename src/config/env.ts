@@ -13,6 +13,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
   CRON_SECRET: z.string().optional(),
   DEMO_MODE: z.string().optional(),
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

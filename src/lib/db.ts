@@ -7,7 +7,19 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefi
  * Neon on Vercel serverless: use the WebSocket driver adapter.
  * Plain Prisma TCP + `channel_binding=require` commonly hangs forever
  * inside Auth.js `authorize`, which leaves the login button on "A entrar...".
+ *
+ * Local PostgreSQL (127.0.0.1 / localhost / docker hostnames) uses the
+ * standard TCP Prisma client — Neon WebSocket adapter cannot talk to it.
  */
+function isNeonHost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host.includes("neon.tech") || host.includes("neon.");
+  } catch {
+    return /neon\.tech|neon\./i.test(url);
+  }
+}
+
 function createPrismaClient(): PrismaClient {
   const raw = process.env.DATABASE_URL;
   if (!raw) {
@@ -15,9 +27,17 @@ function createPrismaClient(): PrismaClient {
   }
 
   const connectionString = sanitizeDatabaseUrl(raw);
-  const adapter = new PrismaNeon({ connectionString });
+
+  if (isNeonHost(connectionString)) {
+    const adapter = new PrismaNeon({ connectionString });
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    });
+  }
+
   return new PrismaClient({
-    adapter,
+    datasources: { db: { url: connectionString } },
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
@@ -27,7 +47,10 @@ export function sanitizeDatabaseUrl(url: string): string {
   try {
     const u = new URL(url);
     u.searchParams.delete("channel_binding");
-    if (!u.searchParams.has("sslmode")) u.searchParams.set("sslmode", "require");
+    // Local Postgres does not need sslmode=require
+    if (isNeonHost(url) && !u.searchParams.has("sslmode")) {
+      u.searchParams.set("sslmode", "require");
+    }
     return u.toString();
   } catch {
     return url
