@@ -1,0 +1,75 @@
+{
+  "all": true,
+  "results": [
+    {
+      "n": "login",
+      "p": true,
+      "d": "https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app/pt/dashboard"
+    },
+    {
+      "n": "2 despesas criadas",
+      "p": true,
+      "d": "count=2"
+    },
+    {
+      "n": "linha Continente clicável",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "abriu ficha",
+      "p": true,
+      "d": "https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app/pt/despesas/cms07m4310007jo04nat7n7fu"
+    },
+    {
+      "n": "botão ✏️ Editar",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "botão 🗑️ Eliminar",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "mostra movimento Continente",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "sem duplicar (ainda 2 despesas)",
+      "p": true,
+      "d": "count=2"
+    },
+    {
+      "n": "valor atualizado 40€",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "ainda existe Continente",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "não ficou 32€ antigo como 2º",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "ficha após edit tem 40",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "dashboard despesas atualizadas",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "dashboard receitas 900",
+      "p": true,
+      "d": ""
+    }
+  ]
+}
