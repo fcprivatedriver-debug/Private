@@ -23,6 +23,7 @@ export function PaymentCheckout({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDemoSecret = Boolean(clientSecret?.includes("_secret_demo"));
 
   async function confirmDemo() {
     setLoading(true);
@@ -55,11 +56,13 @@ export function PaymentCheckout({
           background: "var(--surface-2)",
         }}
       >
-        <div style={{ fontWeight: 600, marginBottom: "0.65rem" }}>Cartão</div>
-        {stripeReady && clientSecret ? (
+        <div style={{ fontWeight: 600, marginBottom: "0.65rem" }}>
+          {stripeReady ? "Pagamento Stripe" : "Cartão"}
+        </div>
+        {stripeReady && clientSecret && !isDemoSecret ? (
           <p className="muted" style={{ margin: 0 }}>
-            Stripe Elements pronto. Client secret recebido — finalize com o formulário Stripe em
-            produção.
+            PaymentIntent ativo. Em produção o formulário Stripe Elements usa este client
+            secret. Confirme abaixo para capturar o pagamento de teste.
           </p>
         ) : (
           <>
@@ -73,6 +76,7 @@ export function PaymentCheckout({
                 name="card"
                 defaultValue="4242 4242 4242 4242"
                 readOnly
+                autoComplete="cc-number"
               />
             </div>
             <div className="grid-2" style={{ gap: "0.65rem" }}>
@@ -90,8 +94,7 @@ export function PaymentCheckout({
               </div>
             </div>
             <p className="muted" style={{ fontSize: "0.82rem", margin: "0.75rem 0 0" }}>
-              Modo demonstração — Stripe Connect ativa-se com{" "}
-              <code>PAYMENTS_ENABLED=true</code> e chaves Stripe.
+              Modo demonstração Stripe — cartão de teste Visa. Sem cobrança real.
             </p>
           </>
         )}
