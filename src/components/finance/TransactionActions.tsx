@@ -37,7 +37,7 @@ export function DeleteTransactionButton({
             alert(res.error);
             return;
           }
-          router.push(kind === "expense" ? "/pt/despesas" : "/pt/receitas");
+          router.push("/pt/transacoes");
           router.refresh();
         });
       }}

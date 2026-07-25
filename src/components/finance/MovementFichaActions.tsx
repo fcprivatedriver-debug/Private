@@ -38,10 +38,11 @@ export function MovementFichaActions({
         <p className="muted small" style={{ marginTop: 0 }}>
           Altera este movimento (não cria um novo) ou elimina-o.
         </p>
-        <div className="btn-row movement-ficha-actions">
+        <div className="btn-row movement-ficha-actions" data-testid="movement-actions">
           <button
             type="button"
             className="btn btn-primary"
+            data-testid="btn-editar"
             onClick={() => setEditing(true)}
             aria-expanded={editing}
           >

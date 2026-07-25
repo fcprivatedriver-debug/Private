@@ -76,6 +76,18 @@ export default async function DashboardPage() {
         />
       </div>
 
+      <div className="btn-row" style={{ marginTop: "0.25rem" }}>
+        <Link href="/pt/transacoes" className="btn btn-primary">
+          Ver transações
+        </Link>
+        <Link href="/pt/receitas/nova" className="btn btn-ghost btn-sm">
+          + Receita
+        </Link>
+        <Link href="/pt/despesas/nova" className="btn btn-ghost btn-sm">
+          + Despesa
+        </Link>
+      </div>
+
       {isEmpty ? (
         <Panel title="Começar com a Nina">
           <EmptyState

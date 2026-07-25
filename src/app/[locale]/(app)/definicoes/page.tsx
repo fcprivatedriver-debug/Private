@@ -38,6 +38,10 @@ export default async function DefinicoesPage() {
               <strong>Captura Instantânea</strong>
               <span className="muted small">Falar, escrever ou fotografar</span>
             </Link>
+            <Link href="/pt/transacoes">
+              <strong>Transações</strong>
+              <span className="muted small">Todas as receitas e despesas — editar ou eliminar</span>
+            </Link>
             <Link href="/pt/lista">
               <strong>Lista de compras</strong>
               <span className="muted small">Partilhada na Conta Familiar</span>

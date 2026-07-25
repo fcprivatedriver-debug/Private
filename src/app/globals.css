@@ -1236,6 +1236,15 @@ a.tx-row:focus-visible {
   color: var(--accent);
   margin-bottom: 0.1rem;
 }
+.tx-kind-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 0.1rem;
+}
 .tx-row-main strong {
   display: block;
   font-size: 0.95rem;
