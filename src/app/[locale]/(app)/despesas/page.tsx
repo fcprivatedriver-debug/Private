@@ -8,7 +8,6 @@ import { prisma } from "@/lib/db";
 import { formatEUR } from "@/lib/money";
 import { spaceLabel } from "@/lib/scope";
 import { EmptyState, Panel } from "@/components/ui/FinanceUI";
-import { TransactionRowActions } from "@/components/finance/TransactionActions";
 import { authorLabel } from "@/lib/transaction-audit";
 
 export default async function GastosPage({
@@ -51,7 +50,7 @@ export default async function GastosPage({
         <div>
           <h1 className="page-title">Despesas · {spaceLabel(space)}</h1>
           <p className="page-sub">
-            Usa Editar ou Eliminar em cada movimento. Saldos e gráficos atualizam sozinhos.
+            Toca num movimento para o abrir, editar ou eliminar — sem criar duplicados.
           </p>
         </div>
         <div className="btn-row">
@@ -104,7 +103,7 @@ export default async function GastosPage({
                 createdByName: e.createdBy?.name,
               });
               return (
-                <div key={e.id} className="tx-row">
+                <Link key={e.id} href={`/pt/despesas/${e.id}`} className="tx-row">
                   <div className="tx-row-main">
                     {showAuthor ? <span className="tx-author">{who}</span> : null}
                     <strong>{e.description}</strong>
@@ -117,9 +116,8 @@ export default async function GastosPage({
                   </div>
                   <div className="tx-row-side">
                     <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
-                    <TransactionRowActions id={e.id} kind="expense" />
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

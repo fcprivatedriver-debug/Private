@@ -5,12 +5,13 @@ import { getActiveFamilyForUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { IncomeForm } from "@/components/finance/Forms";
 import { Panel } from "@/components/ui/FinanceUI";
-import { DeleteTransactionButton } from "@/components/finance/TransactionActions";
 import { TransactionAuditPanel } from "@/components/finance/TransactionAuditPanel";
+import { MovementFichaActions } from "@/components/finance/MovementFichaActions";
+import { MovementSummary } from "@/components/finance/MovementSummary";
 import { canEditTransaction } from "@/domain/household";
 import { authorLabel } from "@/lib/transaction-audit";
 
-export default async function EditarReceitaPage({
+export default async function FichaReceitaPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -25,6 +26,8 @@ export default async function EditarReceitaPage({
     where: { id, familyId: membership.familyId },
     include: {
       member: true,
+      category: true,
+      account: true,
       createdBy: { select: { id: true, name: true } },
       updatedBy: { select: { id: true, name: true } },
     },
@@ -71,13 +74,44 @@ export default async function EditarReceitaPage({
           <h1 className="page-title">Ficha da receita</h1>
           <p className="page-sub">
             {showActors ? `${createdByName} · ` : null}
-            {income.description}
+            Movimento original — editar não cria duplicado.
           </p>
         </div>
         <Link href="/pt/receitas" className="btn btn-ghost">
           Voltar
         </Link>
       </div>
+
+      <Panel title="Movimento">
+        <MovementSummary
+          kind="income"
+          description={income.description}
+          amountCents={income.amountCents}
+          date={income.date}
+          categoryName={income.category.name}
+          scope={income.scope}
+          accountName={income.account?.name}
+        />
+      </Panel>
+
+      <MovementFichaActions id={income.id} kind="income" canEdit={canEdit}>
+        <IncomeForm
+          categories={categories}
+          accounts={accounts}
+          members={members}
+          initial={{
+            id: income.id,
+            amountCents: income.amountCents,
+            date: income.date.toISOString().slice(0, 10),
+            description: income.description,
+            categoryId: income.categoryId,
+            accountId: income.accountId,
+            memberId: income.memberId,
+            notes: income.notes,
+            scope: income.scope,
+          }}
+        />
+      </MovementFichaActions>
 
       <Panel title="Histórico">
         <TransactionAuditPanel
@@ -89,42 +123,6 @@ export default async function EditarReceitaPage({
           showActors={showActors}
         />
       </Panel>
-
-      {canEdit ? (
-        <>
-          <Panel title="Editar">
-            <IncomeForm
-              categories={categories}
-              accounts={accounts}
-              members={members}
-              initial={{
-                id: income.id,
-                amountCents: income.amountCents,
-                date: income.date.toISOString().slice(0, 10),
-                description: income.description,
-                categoryId: income.categoryId,
-                accountId: income.accountId,
-                memberId: income.memberId,
-                notes: income.notes,
-                scope: income.scope,
-              }}
-            />
-          </Panel>
-          <Panel title="Eliminar">
-            <p className="muted small" style={{ marginTop: 0 }}>
-              Remove este movimento. Saldo, dashboard e estatísticas atualizam automaticamente.
-            </p>
-            <DeleteTransactionButton id={income.id} kind="income" label="🗑️ Eliminar" />
-          </Panel>
-        </>
-      ) : (
-        <Panel title="Sem permissão">
-          <p className="muted" style={{ marginTop: 0 }}>
-            Só podes editar os teus movimentos, a menos que a Conta Familiar permita editar uns dos
-            outros.
-          </p>
-        </Panel>
-      )}
     </div>
   );
 }

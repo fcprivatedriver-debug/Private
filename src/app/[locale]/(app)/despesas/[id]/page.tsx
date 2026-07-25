@@ -5,12 +5,13 @@ import { getActiveFamilyForUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { ExpenseForm } from "@/components/finance/Forms";
 import { Panel } from "@/components/ui/FinanceUI";
-import { DeleteTransactionButton } from "@/components/finance/TransactionActions";
 import { TransactionAuditPanel } from "@/components/finance/TransactionAuditPanel";
+import { MovementFichaActions } from "@/components/finance/MovementFichaActions";
+import { MovementSummary } from "@/components/finance/MovementSummary";
 import { canEditTransaction } from "@/domain/household";
 import { authorLabel } from "@/lib/transaction-audit";
 
-export default async function EditarDespesaPage({
+export default async function FichaDespesaPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -25,6 +26,8 @@ export default async function EditarDespesaPage({
     where: { id, familyId: membership.familyId },
     include: {
       member: true,
+      category: true,
+      account: true,
       createdBy: { select: { id: true, name: true } },
       updatedBy: { select: { id: true, name: true } },
     },
@@ -71,13 +74,50 @@ export default async function EditarDespesaPage({
           <h1 className="page-title">Ficha da despesa</h1>
           <p className="page-sub">
             {showActors ? `${createdByName} · ` : null}
-            {expense.description}
+            Movimento original — editar não cria duplicado.
           </p>
         </div>
         <Link href="/pt/despesas" className="btn btn-ghost">
           Voltar
         </Link>
       </div>
+
+      <Panel title="Movimento">
+        <MovementSummary
+          kind="expense"
+          description={expense.description}
+          amountCents={expense.amountCents}
+          date={expense.date}
+          categoryName={expense.category.name}
+          scope={expense.scope}
+          accountName={expense.account?.name}
+        />
+      </Panel>
+
+      <MovementFichaActions id={expense.id} kind="expense" canEdit={canEdit}>
+        <ExpenseForm
+          categories={categories}
+          accounts={accounts}
+          members={members}
+          initial={{
+            id: expense.id,
+            amountCents: expense.amountCents,
+            date: expense.date.toISOString().slice(0, 10),
+            time: expense.time,
+            description: expense.description,
+            categoryId: expense.categoryId,
+            subcategoryId: expense.subcategoryId,
+            storeName: expense.storeName,
+            paymentMethod: expense.paymentMethod,
+            accountId: expense.accountId,
+            memberId: expense.memberId,
+            notes: expense.notes,
+            receiptImageUrl: expense.receiptImageUrl,
+            receiptPdfUrl: expense.receiptPdfUrl,
+            scope: expense.scope,
+          }}
+        />
+      </MovementFichaActions>
 
       <Panel title="Histórico">
         <TransactionAuditPanel
@@ -89,48 +129,6 @@ export default async function EditarDespesaPage({
           showActors={showActors}
         />
       </Panel>
-
-      {canEdit ? (
-        <>
-          <Panel title="Editar">
-            <ExpenseForm
-              categories={categories}
-              accounts={accounts}
-              members={members}
-              initial={{
-                id: expense.id,
-                amountCents: expense.amountCents,
-                date: expense.date.toISOString().slice(0, 10),
-                time: expense.time,
-                description: expense.description,
-                categoryId: expense.categoryId,
-                subcategoryId: expense.subcategoryId,
-                storeName: expense.storeName,
-                paymentMethod: expense.paymentMethod,
-                accountId: expense.accountId,
-                memberId: expense.memberId,
-                notes: expense.notes,
-                receiptImageUrl: expense.receiptImageUrl,
-                receiptPdfUrl: expense.receiptPdfUrl,
-                scope: expense.scope,
-              }}
-            />
-          </Panel>
-          <Panel title="Eliminar">
-            <p className="muted small" style={{ marginTop: 0 }}>
-              Remove este movimento. Saldo, dashboard e estatísticas atualizam automaticamente.
-            </p>
-            <DeleteTransactionButton id={expense.id} kind="expense" label="🗑️ Eliminar" />
-          </Panel>
-        </>
-      ) : (
-        <Panel title="Sem permissão">
-          <p className="muted" style={{ marginTop: 0 }}>
-            Só podes editar os teus movimentos, a menos que a Conta Familiar permita editar uns dos
-            outros.
-          </p>
-        </Panel>
-      )}
     </div>
   );
 }

@@ -11,10 +11,12 @@ export function DeleteTransactionButton({
   id,
   kind,
   label = "Eliminar",
+  className = "btn btn-ghost btn-sm text-expense",
 }: {
   id: string;
   kind: "expense" | "income";
   label?: string;
+  className?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -22,7 +24,7 @@ export function DeleteTransactionButton({
   return (
     <button
       type="button"
-      className="btn btn-ghost btn-sm text-expense"
+      className={className}
       disabled={pending}
       onClick={(e) => {
         e.preventDefault();
