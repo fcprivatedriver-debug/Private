@@ -2,84 +2,69 @@
   "all": true,
   "results": [
     {
-      "name": "login",
-      "pass": true,
-      "detail": ""
+      "n": "login teste@nina.app",
+      "p": true,
+      "d": "https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app/pt/dashboard"
     },
     {
-      "name": "dashboard vazio (0 €)",
-      "pass": true,
-      "detail": ""
+      "n": "saldo 0",
+      "p": true,
+      "d": "Saldo este mês\n\n0,00 €\n\nReceitas\n\n0,00 €\n\nDespesas\n\n0,00 €\n\nPoupanças\n\n0,00 €\n\nComeça"
     },
     {
-      "name": "adicionar receita",
-      "pass": true,
-      "detail": ""
+      "n": "totais 0€",
+      "p": true,
+      "d": "count=4"
     },
     {
-      "name": "Editar/Eliminar nas receitas",
-      "pass": true,
-      "detail": ""
+      "n": "receitas vazias",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "editar receita",
-      "pass": true,
-      "detail": ""
+      "n": "despesas vazias",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "dashboard atualiza após receita",
-      "pass": true,
-      "detail": ""
+      "n": "ícone Editar",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "confirmação eliminar",
-      "pass": true,
-      "detail": "Tem a certeza que pretende eliminar este movimento?"
+      "n": "ícone Eliminar",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "eliminar receita",
-      "pass": true,
-      "detail": ""
+      "n": "receitas ícones",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "adicionar despesa",
-      "pass": true,
-      "detail": ""
+      "n": "após editar",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "Editar/Eliminar nas despesas",
-      "pass": true,
-      "detail": ""
+      "n": "confirm eliminar",
+      "p": true,
+      "d": "Tem a certeza que pretende eliminar este movimento?"
     },
     {
-      "name": "editar despesa",
-      "pass": true,
-      "detail": ""
+      "n": "dashboard atualizou após delete",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "dashboard atualiza após despesa",
-      "pass": true,
-      "detail": ""
+      "n": "login familia@",
+      "p": true,
+      "d": ""
     },
     {
-      "name": "estatísticas/gráficos",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "confirmação eliminar",
-      "pass": true,
-      "detail": "Tem a certeza que pretende eliminar este movimento?"
-    },
-    {
-      "name": "eliminar despesa",
-      "pass": true,
-      "detail": ""
-    },
-    {
-      "name": "dashboard a zero no fim",
-      "pass": true,
-      "detail": ""
+      "n": "familia@ sem seed demo",
+      "p": true,
+      "d": ""
     }
   ]
 }
