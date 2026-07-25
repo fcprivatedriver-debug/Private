@@ -48,6 +48,7 @@ export default async function EditarReceitaPage({
     createdById: income.createdById,
     allowMembersEditOthers: membership.family.allowMembersEditOthers,
   });
+  const showActors = membership.family.kind !== "INDIVIDUAL";
 
   const createdByName = authorLabel({
     memberDisplayName: income.member?.displayName,
@@ -69,7 +70,8 @@ export default async function EditarReceitaPage({
         <div>
           <h1 className="page-title">Ficha da receita</h1>
           <p className="page-sub">
-            {createdByName} · {income.description}
+            {showActors ? `${createdByName} · ` : null}
+            {income.description}
           </p>
         </div>
         <Link href="/pt/receitas" className="btn btn-ghost">
@@ -84,6 +86,7 @@ export default async function EditarReceitaPage({
           updatedBy={updatedByName}
           updatedAt={income.updatedAt}
           audits={audits}
+          showActors={showActors}
         />
       </Panel>
 

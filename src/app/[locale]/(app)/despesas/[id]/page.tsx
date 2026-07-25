@@ -48,6 +48,7 @@ export default async function EditarDespesaPage({
     createdById: expense.createdById,
     allowMembersEditOthers: membership.family.allowMembersEditOthers,
   });
+  const showActors = membership.family.kind !== "INDIVIDUAL";
 
   const createdByName = authorLabel({
     memberDisplayName: expense.member?.displayName,
@@ -69,7 +70,8 @@ export default async function EditarDespesaPage({
         <div>
           <h1 className="page-title">Ficha da despesa</h1>
           <p className="page-sub">
-            {createdByName} · {expense.description}
+            {showActors ? `${createdByName} · ` : null}
+            {expense.description}
           </p>
         </div>
         <Link href="/pt/despesas" className="btn btn-ghost">
@@ -84,6 +86,7 @@ export default async function EditarDespesaPage({
           updatedBy={updatedByName}
           updatedAt={expense.updatedAt}
           audits={audits}
+          showActors={showActors}
         />
       </Panel>
 
