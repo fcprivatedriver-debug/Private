@@ -1,6 +1,8 @@
 /**
  * Demo interno da Nina — nunca mistura dados fictícios com contas normais.
- * Ativar só com DEMO_MODE=true (ex.: ambiente de preview / seed).
+ * Ativar só com DEMO_MODE=true + `npm run db:demo` (conta demo@nina.app).
+ *
+ * familia@nina.app é conta de TESTE REAL e deve permanecer vazia.
  */
 export function isDemoMode(): boolean {
   return (
@@ -9,8 +11,11 @@ export function isDemoMode(): boolean {
   );
 }
 
-/** Emails da conta demo (seed). Contas normais nunca usam estes dados. */
-export const DEMO_EMAILS = ["familia@nina.app", "nina@nina.app"] as const;
+/** Emails da conta demo (seed completo). Nunca usar em contas reais. */
+export const DEMO_EMAILS = ["demo@nina.app", "nina@nina.app"] as const;
+
+/** Conta de testes reais — estrutura vazia, sem movimentos de exemplo. */
+export const TEST_EMAIL = "familia@nina.app";
 
 export const DEMO_PASSWORD = "nina123";
 

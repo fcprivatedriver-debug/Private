@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { formatEUR } from "@/lib/money";
 import { spaceLabel } from "@/lib/scope";
 import { EmptyState, Panel } from "@/components/ui/FinanceUI";
+import { TransactionRowActions } from "@/components/finance/TransactionActions";
 import { authorLabel } from "@/lib/transaction-audit";
 
 export default async function GastosPage({
@@ -50,7 +51,7 @@ export default async function GastosPage({
         <div>
           <h1 className="page-title">Despesas · {spaceLabel(space)}</h1>
           <p className="page-sub">
-            Toca num movimento para editar ou eliminar. O histórico e os saldos atualizam sozinhos.
+            Usa Editar ou Eliminar em cada movimento. Saldos e gráficos atualizam sozinhos.
           </p>
         </div>
         <div className="btn-row">
@@ -103,7 +104,7 @@ export default async function GastosPage({
                 createdByName: e.createdBy?.name,
               });
               return (
-                <Link key={e.id} href={`/pt/despesas/${e.id}`} className="tx-row">
+                <div key={e.id} className="tx-row">
                   <div className="tx-row-main">
                     {showAuthor ? <span className="tx-author">{who}</span> : null}
                     <strong>{e.description}</strong>
@@ -114,8 +115,11 @@ export default async function GastosPage({
                       {e.scope === "FAMILY" ? " · Familiar" : " · Pessoal"}
                     </span>
                   </div>
-                  <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
-                </Link>
+                  <div className="tx-row-side">
+                    <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
+                    <TransactionRowActions id={e.id} kind="expense" />
+                  </div>
+                </div>
               );
             })}
           </div>

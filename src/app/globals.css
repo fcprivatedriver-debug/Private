@@ -1174,16 +1174,37 @@ html.dark .nina-bubble.user .nina-bubble-body {
   border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   text-decoration: none;
   color: inherit;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease;
 }
 .tx-row:last-child { border-bottom: 0; }
-.tx-row:hover,
-.tx-row:focus-visible {
+.tx-row:hover {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
-  outline: none;
 }
-.tx-row:active { transform: scale(0.995); }
-.tx-row-main { min-width: 0; }
+.tx-row-main { min-width: 0; flex: 1; }
+.tx-row-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.tx-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+@media (max-width: 640px) {
+  .tx-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .tx-row-side {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
 .tx-author {
   display: block;
   font-size: 0.78rem;

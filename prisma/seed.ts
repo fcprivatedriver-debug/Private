@@ -98,10 +98,11 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
+  // Demo isolada — NUNCA familia@nina.app (essa é conta de teste real, vazia).
   const filipe = await prisma.user.create({
     data: {
-      name: "Filipe Casquinha",
-      email: "familia@nina.app",
+      name: "Utilizador Demo",
+      email: "demo@nina.app",
       passwordHash,
       theme: "system",
       biometricsEnabled: true,
@@ -815,9 +816,10 @@ async function main() {
   // Atualizar saldo poupança account reference
   void poupanca;
 
-  console.log("✅ Demo Nina pronta");
-  console.log("   Filipe: familia@nina.app / " + DEMO_PASSWORD);
-  console.log("   Nina:   nina@nina.app / " + DEMO_PASSWORD);
+  console.log("✅ Demo Nina pronta (modo Demo separado)");
+  console.log("   Demo:  demo@nina.app / " + DEMO_PASSWORD);
+  console.log("   Nina:  nina@nina.app / " + DEMO_PASSWORD);
+  console.log("   Conta de teste REAL (vazia): familia@nina.app — usar ensure-test-users");
   console.log("   Convite: /pt/convite/nina-demo-invite-token-seguro");
   console.log("   Abre: http://localhost:3000/pt/login");
 }

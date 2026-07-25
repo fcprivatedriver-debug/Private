@@ -90,7 +90,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         </form>
         {demoMode ? (
           <p className="muted small" style={{ marginTop: "1rem" }}>
-            <strong>Modo Demo interno</strong> (dados de exemplo): familia@nina.app · nina123
+            <strong>Modo Demo</strong> (dados de exemplo, conta separada): demo@nina.app · nina123
           </p>
         ) : null}
         <p className="muted small" style={{ marginTop: "1rem" }}>

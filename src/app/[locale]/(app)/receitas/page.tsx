@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { formatEUR, currentYearMonth, monthBounds } from "@/lib/money";
 import { incomeScopeWhere, spaceLabel } from "@/lib/scope";
 import { EmptyState, Panel } from "@/components/ui/FinanceUI";
+import { TransactionRowActions } from "@/components/finance/TransactionActions";
 import { authorLabel } from "@/lib/transaction-audit";
 
 export default async function ReceitasPage() {
@@ -42,6 +43,7 @@ export default async function ReceitasPage() {
           <h1 className="page-title">Receitas · {spaceLabel(space)}</h1>
           <p className="page-sub">
             Total do mês: <span className="text-income">{formatEUR(total)}</span>
+            {" · "}Edita ou elimina cada movimento sem criar duplicados.
           </p>
         </div>
         <Link href="/pt/receitas/nova" className="btn btn-success">
@@ -63,7 +65,7 @@ export default async function ReceitasPage() {
                 createdByName: i.createdBy?.name,
               });
               return (
-                <Link key={i.id} href={`/pt/receitas/${i.id}`} className="tx-row">
+                <div key={i.id} className="tx-row">
                   <div className="tx-row-main">
                     {showAuthor ? <span className="tx-author">{who}</span> : null}
                     <strong>{i.description}</strong>
@@ -72,8 +74,11 @@ export default async function ReceitasPage() {
                       {i.scope === "FAMILY" ? " · Familiar" : " · Pessoal"}
                     </span>
                   </div>
-                  <span className="amount-income">+{formatEUR(i.amountCents)}</span>
-                </Link>
+                  <div className="tx-row-side">
+                    <span className="amount-income">+{formatEUR(i.amountCents)}</span>
+                    <TransactionRowActions id={i.id} kind="income" />
+                  </div>
+                </div>
               );
             })}
           </div>
