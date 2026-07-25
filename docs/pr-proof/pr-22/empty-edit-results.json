@@ -1,0 +1,85 @@
+{
+  "all": true,
+  "results": [
+    {
+      "name": "login",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dashboard vazio (0 €)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "adicionar receita",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Editar/Eliminar nas receitas",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "editar receita",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dashboard atualiza após receita",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "confirmação eliminar",
+      "pass": true,
+      "detail": "Tem a certeza que pretende eliminar este movimento?"
+    },
+    {
+      "name": "eliminar receita",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "adicionar despesa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Editar/Eliminar nas despesas",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "editar despesa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dashboard atualiza após despesa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "estatísticas/gráficos",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "confirmação eliminar",
+      "pass": true,
+      "detail": "Tem a certeza que pretende eliminar este movimento?"
+    },
+    {
+      "name": "eliminar despesa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "dashboard a zero no fim",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}
