@@ -104,6 +104,10 @@ async function captureStills() {
   await gotoShot(page, "/pt/alertas", "23-alertas");
   await gotoShot(page, "/pt/definicoes", "24-definicoes");
   await gotoShot(page, "/pt/perfil", "25-perfil-nome");
+  await gotoShot(page, "/pt/lista", "26-compras");
+  await gotoShot(page, "/pt/mobilidade", "27-mobilidade");
+  await gotoShot(page, "/pt/calendario", "28-calendario");
+  await gotoShot(page, "/pt/transacoes", "29-transacoes");
 
   // Mobile stills
   await page.setViewportSize({ width: 390, height: 844 });
@@ -119,6 +123,8 @@ async function captureStills() {
   await gotoShot(page, "/pt/objetivos", "34-mobile-objetivos");
   await gotoShot(page, "/pt/captura?mode=voice&auto=1", "35-mobile-captura-voz");
   await gotoShot(page, "/pt/definicoes", "36-mobile-install");
+  await gotoShot(page, "/pt/mobilidade", "37-mobile-mobilidade");
+  await gotoShot(page, "/pt/calendario", "38-mobile-calendario");
   await browser.close();
 }
 
@@ -177,6 +183,17 @@ async function captureFlowVideo() {
   await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/estatisticas`, { waitUntil: "networkidle" });
   await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/mobilidade`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/calendario`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/lista`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/dashboard`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1000);
+  // Voice intents via chat suggestions when available
+  await page.getByRole("button", { name: /Onde abasteço/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1200);
   await page.goto(`${BASE}/pt/ia`, { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
 
