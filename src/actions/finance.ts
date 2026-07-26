@@ -81,8 +81,6 @@ async function ensureCategory(
   return created.id;
 }
 
-export { registerFamily } from "@/actions/auth-account";
-
 export async function createIncome(formData: FormData) {
   const { session, family, membership } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
