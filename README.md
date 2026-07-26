@@ -1,16 +1,17 @@
-# ZRIK
+# Nina — Assistente financeira pessoal
 
-Private-chauffeur marketplace — choose the best driver, choose the best price.
+Aplicação moderna para controlar receitas e despesas da família, orçamentos, objetivos de poupança e insights com IA. Feita para Portugal (EUR, retalho, energia, Open Banking).
 
-**Brand:** ZRIK · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** Nina · **Moeda:** EUR · **Idioma:** Português (EN disponível) · **Base de dados:** PostgreSQL
 
 ## Stack
 
 - Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
-- Auth.js (credentials) · Prisma · Neon PostgreSQL
+- Auth.js (credentials + Google opcional) · Prisma · PostgreSQL
 - next-intl (`/pt`, `/en`)
+- Arquitetura modular: OCR, importações, IA, exportação, Open Banking stubs
 
-## Local setup
+## Arranque local
 
 ```bash
 cp .env.example .env
@@ -20,30 +21,54 @@ npm run db:seed
 npm run dev
 ```
 
-### Demo accounts (password: `movio123`)
+### Conta demo
 
-| Email | Role |
-|-------|------|
-| `cliente@movio.app` | Customer |
-| `motorista@movio.app` | Driver (active) |
-| `admin@movio.app` | Admin |
+| Pessoa | Email | Password |
+|--------|-------|----------|
+| Filipe | `familia@nina.app` | `nina123` |
+| Nina | `nina@nina.app` | `nina123` |
 
-Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
+Guia completo para testar no browser: [`docs/LOCAL.md`](docs/LOCAL.md)
 
-## Branding
+## Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina
 
-Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
-Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
+Funcionalidade integrada (não duas secções separadas):
 
-| Variable | Example |
+- Registo extremamente simples e Conta Familiar via convite por **link ou QR Code**
+- Perfis individuais com autenticação própria (PIN, biometria)
+- Separação entre **As Minhas Finanças** e **Conta Familiar**
+- Compreensão automática de despesas pessoais, familiares ou profissionais
+- Aprendizagem contínua a partir das confirmações do utilizador
+- Memória personalizada com regras editáveis
+- Automatização progressiva (cada vez menos perguntas)
+- Sugestões inteligentes e análise de padrões de consumo
+- Filosofia: *quanto mais a Nina é utilizada, menos trabalho o utilizador tem*
+
+Documento completo: [`docs/PRODUCT.md`](docs/PRODUCT.md)
+
+## Ligações da Nina
+
+Automatização personalizada por módulos opcionais (`/pt/ligacoes`): autorizar, pausar ou remover bancos, email, supermercados e outros — nunca obrigatório. Sem ligações, a voz continua a funcionar.
+
+## Captura Instantânea
+
+Funcionalidade principal (`/pt/captura`): falar, escrever ou fotografar para registar em segundos. OCR arquiva a imagem no movimento. O mesmo resultado via Ligações / conversa.
+
+## Outras capacidades
+
+- Dashboard conversacional com a Nina
+- Receitas e despesas com categorias PT
+- OCR de faturas · importações (Continente, Galp, MB Way, CSV, …)
+- Orçamentos, estatísticas, pesquisa, alertas, recorrentes
+- Tema claro / escuro · exportação PDF / Excel / CSV
+
+## Ambiente
+
+| Variável | Exemplo |
 |----------|---------|
-| `DATABASE_URL` | Neon pooled URL |
-| `DIRECT_URL` | Neon unpooled URL |
-| `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZRIK` |
+| `DATABASE_URL` | PostgreSQL |
+| `DIRECT_URL` | PostgreSQL (migrate) |
+| `AUTH_SECRET` | 32+ chars |
+| `NEXT_PUBLIC_APP_NAME` | `Nina` |
 
-See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
-
-## Package
-
-- Package name: **zrik**
+Ver também `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.

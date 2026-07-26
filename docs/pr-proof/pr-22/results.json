@@ -1,0 +1,56 @@
+{
+  "allPass": true,
+  "results": [
+    {
+      "name": "inicia sessão corretamente",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000/pt/dashboard"
+    },
+    {
+      "name": "não aparece Offline",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Dashboard funciona",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "é possível adicionar receitas",
+      "pass": true,
+      "detail": "Teste receita 1784910171693"
+    },
+    {
+      "name": "é possível editar receitas",
+      "pass": true,
+      "detail": "/pt/receitas/cmrz5e8t10001jsvkhmm93iqa"
+    },
+    {
+      "name": "é possível adicionar despesas",
+      "pass": true,
+      "detail": "Teste despesa 1784910171693"
+    },
+    {
+      "name": "é possível editar despesas",
+      "pass": true,
+      "detail": "/pt/despesas/cmrz5ec8q0007jsvkfkahbvyo"
+    },
+    {
+      "name": "gráficos atualizam / presentes",
+      "pass": true,
+      "detail": "charts found"
+    },
+    {
+      "name": "saldos atualizam",
+      "pass": true,
+      "detail": "dashboard refreshed after mutations"
+    },
+    {
+      "name": "página estatísticas carrega",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "base": "http://127.0.0.1:3000"
+}

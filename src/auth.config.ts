@@ -1,10 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import { resolveAuthSecret } from "@/lib/auth-secret";
 
-/**
- * Edge-safe Auth.js config (no Prisma / no Node adapters).
- * Middleware uses this so `req.auth` decodes the same cookies as Node `auth()`.
- */
 export const authConfig = {
   trustHost: true,
   secret: resolveAuthSecret(),
@@ -14,17 +10,7 @@ export const authConfig = {
     signIn: "/pt/login",
   },
   callbacks: {
-    /**
-     * Always allow through here — route protection + redirects live in middleware.ts
-     * so we can log the exact reason for every redirect.
-     */
-    authorized({ auth, request }) {
-      console.info("[auth.authorized]", {
-        pathname: request.nextUrl.pathname,
-        hasAuth: Boolean(auth),
-        role: (auth?.user as { role?: string } | undefined)?.role ?? null,
-        email: auth?.user?.email ?? null,
-      });
+    authorized() {
       return true;
     },
     jwt({ token, user }) {

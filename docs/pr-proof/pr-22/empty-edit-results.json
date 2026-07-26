@@ -1,0 +1,70 @@
+{
+  "all": true,
+  "results": [
+    {
+      "n": "login teste@nina.app",
+      "p": true,
+      "d": "https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app/pt/dashboard"
+    },
+    {
+      "n": "saldo 0",
+      "p": true,
+      "d": "Saldo este mês\n\n0,00 €\n\nReceitas\n\n0,00 €\n\nDespesas\n\n0,00 €\n\nPoupanças\n\n0,00 €\n\nComeça"
+    },
+    {
+      "n": "totais 0€",
+      "p": true,
+      "d": "count=4"
+    },
+    {
+      "n": "receitas vazias",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "despesas vazias",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "ícone Editar",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "ícone Eliminar",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "receitas ícones",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "após editar",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "confirm eliminar",
+      "p": true,
+      "d": "Tem a certeza que pretende eliminar este movimento?"
+    },
+    {
+      "n": "dashboard atualizou após delete",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "login familia@",
+      "p": true,
+      "d": ""
+    },
+    {
+      "n": "familia@ sem seed demo",
+      "p": true,
+      "d": ""
+    }
+  ]
+}

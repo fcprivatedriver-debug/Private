@@ -1,4 +1,4 @@
-# Agent notes — ZRIK
+# Agent notes — Nina
 
 ## PR completion gate (mandatory)
 

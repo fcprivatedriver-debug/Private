@@ -1,72 +1,40 @@
-import { Link } from "@/i18n/navigation";
-import clsx from "clsx";
-
-export type ZrikLogoVariant = "A" | "B" | "C";
-
-/**
- * Default product logo: Option B — Z in petroleum blue,
- * RIK in ink black (#111111).
- */
-export const DEFAULT_ZRIK_VARIANT: ZrikLogoVariant = "B";
-
-/**
- * Typographic ZRIK wordmark — always uppercase.
- * A: all black · B: Z petrol · C: Z+K petrol
- */
-export function ZrikWordmark({
-  variant = DEFAULT_ZRIK_VARIANT,
-  className = "",
-  as: Tag = "span",
-  tone = "default",
-}: {
-  variant?: ZrikLogoVariant;
-  className?: string;
-  as?: "span" | "h1" | "div" | "p";
-  tone?: "default" | "on-dark";
-}) {
-  return (
-    <Tag
-      className={clsx(
-        "zrik-wordmark",
-        `zrik-wordmark-${variant}`,
-        tone === "on-dark" && "zrik-wordmark-on-dark",
-        className,
-      )}
-      aria-label="ZRIK"
-    >
-      {variant === "A" && <span className="zrik-ink">ZRIK</span>}
-      {variant === "B" && (
-        <>
-          <span className="zrik-accent">Z</span>
-          <span className="zrik-ink">RIK</span>
-        </>
-      )}
-      {variant === "C" && (
-        <>
-          <span className="zrik-accent">Z</span>
-          <span className="zrik-ink">RI</span>
-          <span className="zrik-accent">K</span>
-        </>
-      )}
-    </Tag>
-  );
-}
+import Link from "next/link";
 
 export function BrandLogo({
-  href = "/",
+  href = "/pt",
   size = "md",
-  variant = DEFAULT_ZRIK_VARIANT,
-  tone = "default",
+  withWord = true,
 }: {
-  href?: "/" | string;
+  href?: string;
   size?: "sm" | "md" | "lg";
-  variant?: ZrikLogoVariant;
-  tone?: "default" | "on-dark";
+  withWord?: boolean;
 }) {
-  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.2rem";
+  const sizes = {
+    sm: { mark: 30, text: "1.15rem" },
+    md: { mark: 38, text: "1.45rem" },
+    lg: { mark: 56, text: "2rem" },
+  }[size];
+
   return (
-    <Link href={href as "/"} className="logo" style={{ fontSize }} aria-label="ZRIK">
-      <ZrikWordmark variant={variant} tone={tone} />
+    <Link href={href} className="brand-logo" aria-label="Nina — assistente financeira pessoal">
+      <span className="brand-mark" style={{ width: sizes.mark, height: sizes.mark }} aria-hidden>
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="12" fill="currentColor" />
+          <circle cx="20" cy="16" r="6" fill="#fff" fillOpacity="0.95" />
+          <path
+            d="M10 30c1.8-5.2 5.4-8 10-8s8.2 2.8 10 8"
+            stroke="#fff"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      </span>
+      {withWord ? (
+        <span className="brand-word" style={{ fontSize: sizes.text }}>
+          Nina
+        </span>
+      ) : null}
     </Link>
   );
 }

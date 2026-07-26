@@ -1,16 +1,20 @@
-import type { AiVerificationProvider } from "./types";
-import { HeuristicAiVerificationProvider } from "./heuristic-provider";
-
-let provider: AiVerificationProvider | null = null;
-
-/**
- * Returns the active AI verification provider.
- * Phase foundation: heuristic engine (explainable, no external dependency).
- * When OPENAI_API_KEY is present in future, swap to LLM-backed provider.
- */
-export function getAiVerificationProvider(): AiVerificationProvider {
-  if (!provider) {
-    provider = new HeuristicAiVerificationProvider();
-  }
-  return provider;
-}
+/** AI modules for Nina. */
+export { generateInsights, buildMonthlyReport } from "./finance-insights";
+export {
+  pickCelebration,
+  pickWarmAck,
+  softenBudgetMessage,
+  resolveVoicePrefs,
+  NATURAL_EXAMPLES,
+  NINA_PHILOSOPHY,
+  NINA_MISSION_TAGLINE,
+} from "./personality";
+export {
+  NINA_MISSION,
+  NINA_MISSION_LINE,
+  NINA_MISSION_SHORT,
+  NINA_PURPOSE,
+  NINA_CAPABILITIES,
+  NINA_PRINCIPLES,
+  NINA_SIMPLE_RULE,
+} from "./mission";

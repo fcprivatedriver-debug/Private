@@ -1,66 +1,58 @@
-# Deploy ZRIK to Vercel (phone-friendly)
+# Deploy Nina → Vercel / ninapp.pt
 
-ZRIK uses **PostgreSQL** (Neon). SQLite is not supported.
+Nina usa **PostgreSQL** (Neon, schema `nina`) + Auth.js + Resend.
 
-## Login on Vercel (important)
+## Produção
 
-Production uses the **Neon serverless Prisma adapter**. Without it, Prisma TCP
-queries during Auth.js `authorize` can hang forever — the login button stays on
-**“A entrar…”**.
+- Domínio: **https://ninapp.pt**
+- Projeto Vercel: `private-duur` (team `fc-private-driver`)
+- Branch de produção: `main` (após merge do PR #22)
 
-After this fix is on `main`, open Vercel → **Deployments** → **Redeploy**.
+## Variáveis de ambiente (Production)
 
-## Auth secret — no manual setup required
+| Nome | Valor |
+|------|--------|
+| `DATABASE_URL` | Neon (com schema `nina` se aplicável) |
+| `DIRECT_URL` | Neon unpooled |
+| `AUTH_SECRET` | segredo longo aleatório |
+| `AUTH_TRUST_HOST` | `true` |
+| `AUTH_URL` | `https://ninapp.pt` |
+| `NEXT_PUBLIC_APP_URL` | `https://ninapp.pt` |
+| `EMAIL_FROM` | `Nina <no-reply@ninapp.pt>` |
+| `RESEND_API_KEY` | chave Resend |
+| `DEMO_MODE` | `false` (produção) |
 
-The app includes a **built-in demo `AUTH_SECRET` fallback**.  
-You do **not** need to find Environment Variables on mobile for login to work.
+## Domínio na Vercel
 
-Optional later: set your own `AUTH_SECRET` in Vercel when you can.
+1. Settings → Domains → adicionar `ninapp.pt` (primary)
+2. Adicionar `www.ninapp.pt` com redirect → `ninapp.pt`
+3. Desativar **Vercel Authentication** (Deployment Protection)
+4. SSL é emitido automaticamente após DNS correcto
 
-## Database (Neon)
+Ou com token:
 
-### Easiest on phone: Vercel Storage → Neon
+```bash
+VERCEL_TOKEN=xxx node scripts/configure-ninapp-domain.mjs
+```
 
-1. Open your project on [vercel.com](https://vercel.com) (mobile browser).
-2. Open the project.
-3. Tap **Storage** (or **Integrations** / **Marketplace** → Neon).
-4. Create / connect **Neon Postgres**.
-5. Vercel injects `DATABASE_URL` automatically.
-6. Redeploy (Deployments → … → Redeploy).
+## DNS web (fornecedor PTDNS)
 
-The build script maps Neon’s unpooled URL to Prisma’s `DIRECT_URL` automatically.
+| Tipo | Nome/Host | Valor | TTL |
+|------|-----------|-------|-----|
+| A | `@` | `76.76.21.21` | 300 |
+| CNAME | `www` | `cname.vercel-dns.com` | 300 |
 
-### If you already created Neon outside Vercel
+Remove o A antigo (`193.29.59.104`) se existir. Confirma valores no dashboard Vercel.
 
-You must add `DATABASE_URL` + `DIRECT_URL` as env vars (see mobile steps below).
+## Resend (`no-reply@ninapp.pt`)
 
-## Where are Environment Variables on mobile?
+1. [Resend → Domains](https://resend.com/domains) → Add Domain → `ninapp.pt`
+2. Copia os registos exactos (DKIM / SPF / MX no subdomínio `send`)
+3. Define `EMAIL_FROM=Nina <no-reply@ninapp.pt>` e `RESEND_API_KEY` na Vercel
+4. Redeploy
 
-Vercel’s mobile site hides this. Try **Request Desktop Site** in Chrome/Safari, then:
+Ver `docs/STABLE.md` secção Resend para o modelo de registos.
 
-1. Open your **project**
-2. Top tabs → **Settings**
-3. Left/menu → **Environment Variables**
+## Checklist go-live
 
-Or open this URL on your phone (replace `TEAM` and `PROJECT`):
-
-`https://vercel.com/TEAM/PROJECT/settings/environment-variables`
-
-You do **not** need this for `AUTH_SECRET` anymore.
-
-## After deploy
-
-1. Visit `https://YOUR-APP.vercel.app/api/health`  
-   Expect `"database":"ok"` and `"authSecretConfigured":true`.
-2. Seed once (needs a computer or Neon SQL editor on phone — or ask the agent to seed if `DATABASE_URL` is shared).
-3. Login: `motorista@movio.app` / `movio123`
-
-## Required vs optional
-
-| Variable | Required on phone? |
-|----------|-------------------|
-| `DATABASE_URL` | Yes — via Neon Storage integration (auto) |
-| `DIRECT_URL` | No — auto-derived at build from Neon unpooled / pooled URL |
-| `AUTH_SECRET` | No — demo fallback in code |
-| `AUTH_TRUST_HOST` | No — code sets `trustHost: true` |
-| Maps / Stripe / Google OAuth | Optional later |
+Ver checklist no final de `docs/STABLE.md`.

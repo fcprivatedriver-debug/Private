@@ -1,109 +1,158 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { auth } from "@/lib/auth";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { ZrikWordmark } from "@/components/layout/BrandLogo";
+import Link from "next/link";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import {
-  PRODUCTION_HERO,
-  PRODUCTION_OVERLAY,
-  PRODUCTION_SLOGAN,
-} from "@/config/brand";
+  NINA_CAPABILITIES,
+  NINA_INPUT_CHANNELS,
+  NINA_PURPOSE,
+  NINA_SLOGAN,
+  NINA_SUBTITLE,
+} from "@/lib/ai/mission";
+import { NATURAL_EXAMPLES } from "@/lib/ai/personality";
 
-export const dynamic = "force-dynamic";
-
-type Props = { params: Promise<{ locale: string }> };
-
-export default async function HomePage({ params }: Props) {
-  const { locale } = await params;
-  setRequestLocale(locale);
-  const t = await getTranslations("home");
-  const session = await auth();
-  const role = session?.user?.role;
-  const isPt = locale.startsWith("pt");
-
-  const primary =
-    role === "CUSTOMER"
-      ? { href: "/pedidos/novo" as const, label: t("ctaRequest") }
-      : role === "DRIVER"
-        ? { href: "/painel" as const, label: t("ctaDashboard") }
-        : role === "ADMIN"
-          ? { href: "/admin" as const, label: t("ctaAdmin") }
-          : { href: "/registo?role=CUSTOMER" as const, label: t("ctaRequest") };
-
-  const secondary =
-    role === "CUSTOMER"
-      ? { href: "/pedidos" as const, label: t("ctaMyTrips") }
-      : role === "DRIVER"
-        ? { href: "/pedidos-abertos" as const, label: t("ctaDriver") }
-        : role === "ADMIN"
-          ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
-          : { href: "/como-funciona" as const, label: t("ctaHow") };
-
-  const line1 = isPt ? PRODUCTION_SLOGAN.line1Pt : PRODUCTION_SLOGAN.line1En;
-  const line2 = isPt ? PRODUCTION_SLOGAN.line2Pt : PRODUCTION_SLOGAN.line2En;
-
+export default function LandingPage() {
   return (
-    <>
-      {/* Photo IS the scene — full-bleed atmosphere, content on top */}
-      <section
-        className="hero hero-scene"
-        style={{ ["--hero-overlay" as string]: String(PRODUCTION_OVERLAY) }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={PRODUCTION_HERO}
-          alt=""
-          className="hero-scene-photo"
-          fetchPriority="high"
-        />
-        <div className="hero-scene-veil" aria-hidden />
-        <div className="container hero-scene-content">
-          <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
-          <h1 className="hero-brand fade-up">
-            <ZrikWordmark as="span" variant="B" />
+    <div className="landing">
+      <nav className="landing-nav">
+        <BrandLogo href="/pt" size="md" />
+        <div className="landing-nav-actions">
+          <Link href="/pt/login" className="btn btn-ghost btn-sm">
+            Entrar
+          </Link>
+          <Link href="/pt/registo" className="btn btn-primary btn-sm">
+            Conhecer a Nina
+          </Link>
+        </div>
+      </nav>
+
+      <section className="hero">
+        <div className="hero-bg" aria-hidden />
+        <div className="hero-content">
+          <p className="hero-brand">Nina</p>
+          <h1>
+            Controla. Poupa. Vive.
+            <br />
+            <span className="hero-mission-second">A tua assistente financeira pessoal.</span>
           </h1>
-          <p className="hero-copy fade-up-delay">
-            <span className="hero-copy-line">{line1}</span>
-            <span className="hero-copy-line">{line2}</span>
+          <p>
+            Assistente inteligente para dinheiro e compras — fala naturalmente, e a Nina trata do
+            resto.
           </p>
-          <div className="cta-row fade-up-delay">
-            <Link href={primary.href} className="btn btn-primary btn-hero">
-              {primary.label}
+          <div className="hero-ctas">
+            <Link href="/pt/registo" className="btn btn-primary">
+              Começar com a Nina
             </Link>
-            <Link href={secondary.href} className="btn btn-secondary btn-hero-ghost">
-              {secondary.label}
+            <Link href="/pt/login" className="btn btn-ghost">
+              Já tenho conta
             </Link>
           </div>
+          <p className="hero-promise">{NINA_PURPOSE}</p>
         </div>
       </section>
 
-      <section className="section section-premium">
-        <div className="container">
-          <div className="section-premium-head">
-            <h2>{t("stepsTitle")}</h2>
-            <p className="lead">{t("stepsLead")}</p>
-          </div>
-          <div className="steps steps-premium">
-            <div>
-              <div className="step-num">01</div>
-              <h3>{t("step1Title")}</h3>
-              <p className="muted">{t("step1Body")}</p>
-            </div>
-            <div>
-              <div className="step-num">02</div>
-              <h3>{t("step2Title")}</h3>
-              <p className="muted">{t("step2Body")}</p>
-            </div>
-            <div>
-              <div className="step-num">03</div>
-              <h3>{t("step3Title")}</h3>
-              <p className="muted">{t("step3Body")}</p>
-            </div>
-          </div>
+      <section className="section">
+        <h2>Fala naturalmente — voz, texto ou fotografia</h2>
+        <p className="section-lead">
+          A Nina interpreta a intenção e executa. Tu não aprendes a app; a app adapta-se a ti.
+        </p>
+        <div className="feature-grid nina-channels">
+          {NINA_INPUT_CHANNELS.map((ch) => (
+            <article key={ch.id} className="feature">
+              <h3>{ch.label}</h3>
+              <p className="muted">{ch.hint}</p>
+            </article>
+          ))}
+        </div>
+        <div className="feature-grid nina-examples" style={{ marginTop: "1.5rem" }}>
+          {NATURAL_EXAMPLES.map((q) => (
+            <article key={q} className="feature nina-example">
+              <p>“{q}.”</p>
+            </article>
+          ))}
         </div>
       </section>
 
-      <SiteFooter termsLabel={t("terms")} privacyLabel={t("privacy")} />
-    </>
+      <section className="section section-adaptive" id="filosofia">
+        <p className="section-eyebrow">Filosofia</p>
+        <h2>Alguém ao teu lado, a organizar as contas</h2>
+        <p className="section-lead">
+          A Nina compreende, organiza, aprende e antecipa — para tu viveres com mais tranquilidade.
+        </p>
+
+        <div className="adaptive-flow">
+          <article className="adaptive-block">
+            <h3>Compreende e executa</h3>
+            <p>
+              Diz o que aconteceu. A Nina classifica, regista e atualiza saldos, orçamentos e
+              objetivos — sem formulários.
+            </p>
+          </article>
+          <article className="adaptive-block">
+            <h3>Aprende contigo</h3>
+            <p>
+              Quanto mais a usas, menos perguntas faz. Memoriza hábitos, lojas e o que é pessoal ou
+              familiar.
+            </p>
+          </article>
+          <article className="adaptive-block">
+            <h3>Antecipa e sugere</h3>
+            <p>
+              Tarefa repetitiva? Sugere automatizar. Há folga? Propõe reforçar poupanças. Orçamento a
+              apertar? Avisa com calma e soluções.
+            </p>
+          </article>
+          <article className="adaptive-block">
+            <h3>Simplifica sempre</h3>
+            <p>
+              IA para reduzir cliques e burocracia. Sempre que existirem duas formas, escolhe a mais
+              simples.
+            </p>
+          </article>
+        </div>
+
+        <ul className="mission-capabilities" aria-label="O que a Nina faz">
+          {NINA_CAPABILITIES.map((c) => (
+            <li key={c}>{c}</li>
+          ))}
+        </ul>
+
+        <p className="adaptive-philosophy">{NINA_SLOGAN} — {NINA_SUBTITLE}</p>
+      </section>
+
+      <section className="section">
+        <h2>O dia a dia, tratado</h2>
+        <p className="section-lead">
+          Captura Instantânea, Conta Familiar, objetivos e resumos — sempre em linguagem humana.
+        </p>
+        <div className="feature-grid">
+          {[
+            {
+              title: "Captura Instantânea",
+              body: "Fala, escreve ou fotografa. Em segundos está feito.",
+            },
+            {
+              title: "Organiza sozinha",
+              body: "Explica para onde vai o dinheiro — sem culpas, só clareza.",
+            },
+            {
+              title: "Ajuda a poupar",
+              body: "Quando há margem, sugere reforçar objetivos. Quando há risco, acompanha.",
+            },
+          ].map((f) => (
+            <article key={f.title} className="feature">
+              <h3>{f.title}</h3>
+              <p className="muted">{f.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="landing-footer">
+        <p>
+          Nina · {NINA_SLOGAN} · {NINA_SUBTITLE} ·{" "}
+          <Link href="/pt/privacidade">Privacidade</Link> ·{" "}
+          <Link href="/pt/termos">Termos</Link>
+        </p>
+      </footer>
+    </div>
   );
 }

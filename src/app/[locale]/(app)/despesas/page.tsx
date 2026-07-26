@@ -1,0 +1,128 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getActiveFamilyForUser } from "@/lib/session";
+import { getExpensesFiltered } from "@/lib/queries";
+import { getNinaSpace } from "@/actions/household";
+import { prisma } from "@/lib/db";
+import { formatEUR } from "@/lib/money";
+import { spaceLabel } from "@/lib/scope";
+import { EmptyState, Panel } from "@/components/ui/FinanceUI";
+import { authorLabel } from "@/lib/transaction-audit";
+
+export default async function GastosPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/pt/login");
+  const membership = await getActiveFamilyForUser(session.user.id);
+  if (!membership) redirect("/pt/registo");
+
+  const space = await getNinaSpace();
+  const sp = await searchParams;
+  const expenses = await getExpensesFiltered(membership.familyId, {
+    q: sp.q,
+    categoryId: sp.categoryId,
+    store: sp.store,
+    accountId: sp.accountId,
+    paymentMethod: sp.paymentMethod,
+    min: sp.min ? Number(sp.min) : undefined,
+    max: sp.max ? Number(sp.max) : undefined,
+    from: sp.from,
+    to: sp.to,
+    space,
+    memberId: membership.id,
+  });
+  const categories = await prisma.category.findMany({
+    where: { familyId: membership.familyId, kind: "EXPENSE" },
+    orderBy: { name: "asc" },
+  });
+  const accounts = await prisma.financeAccount.findMany({
+    where: { familyId: membership.familyId },
+  });
+  const showAuthor = membership.family.kind !== "INDIVIDUAL";
+
+  return (
+    <div className="page-stack">
+      <div className="page-header-row">
+        <div>
+          <h1 className="page-title">Despesas · {spaceLabel(space)}</h1>
+          <p className="page-sub">
+            Toca num movimento para o abrir, editar ou eliminar — sem criar duplicados.
+          </p>
+        </div>
+        <div className="btn-row">
+          <Link href="/pt/captura" className="btn btn-ghost">
+            Captura
+          </Link>
+          <Link href="/pt/despesas/nova" className="btn btn-primary">
+            + Adicionar despesa
+          </Link>
+        </div>
+      </div>
+
+      {expenses.length > 0 || sp.q || sp.categoryId ? (
+        <form className="filters">
+          <input name="q" placeholder="Pesquisar…" defaultValue={sp.q} />
+          <input name="store" placeholder="Loja" defaultValue={sp.store} />
+          <select name="categoryId" defaultValue={sp.categoryId ?? ""}>
+            <option value="">Categoria</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select name="accountId" defaultValue={sp.accountId ?? ""}>
+            <option value="">Conta</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+          <button className="btn btn-primary btn-sm" type="submit">
+            Filtrar
+          </button>
+        </form>
+      ) : null}
+
+      <Panel title={expenses.length ? `${expenses.length} resultados` : "Despesas"}>
+        {expenses.length === 0 ? (
+          <EmptyState
+            title="Ainda sem despesas"
+            body="Quando gastares, diz à Nina, fotografa o talão ou regista aqui. Nada é criado automaticamente."
+          />
+        ) : (
+          <div className="tx-list">
+            {expenses.map((e) => {
+              const who = authorLabel({
+                memberDisplayName: e.member?.displayName,
+                createdByName: e.createdBy?.name,
+              });
+              return (
+                <Link key={e.id} href={`/pt/despesas/${e.id}`} className="tx-row">
+                  <div className="tx-row-main">
+                    {showAuthor ? <span className="tx-author">{who}</span> : null}
+                    <strong>{e.description}</strong>
+                    <span>
+                      {e.date.toLocaleDateString("pt-PT")}
+                      {e.time ? ` ${e.time}` : ""} · {e.category.name}
+                      {e.storeName ? ` · ${e.storeName}` : ""}
+                      {e.scope === "FAMILY" ? " · Familiar" : " · Pessoal"}
+                    </span>
+                  </div>
+                  <div className="tx-row-side">
+                    <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </Panel>
+    </div>
+  );
+}
