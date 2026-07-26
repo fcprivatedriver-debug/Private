@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import { requireFamilyContext } from "@/lib/session";
 import {
   categoryKeyFromQuery,
-  compareBasket,
   searchProducts,
   type ProductMatch,
 } from "@/lib/products";
@@ -65,6 +64,15 @@ async function rememberPreference(
       useCount: { increment: 1 },
       lastUsedAt: new Date(),
     },
+  });
+  const { learningEngine } = await import("@/lib/engines");
+  await learningEngine.learn({
+    type: "shopping_product",
+    familyId,
+    userId,
+    productName: product.name,
+    brand: product.brand,
+    storeName: product.storeName,
   });
 }
 
@@ -312,37 +320,32 @@ export async function compareShoppingTrip() {
     where: { listId: list.id, isChecked: false },
   });
 
-  if (items.length === 0) {
-    return {
-      ok: true as const,
-      reply:
-        "A tua lista está vazia por agora. Diz-me o que precisas — por exemplo «Nina, adiciona leite Vigor».",
-    };
+  const { shoppingEngine, savingEngine, learningEngine } = await import("@/lib/engines");
+  const result = await shoppingEngine.optimizeBasket(
+    items.map((i) => ({ name: i.name, brand: i.brand, quantity: i.quantity })),
+  );
+
+  if (result.recordImpact && result.recommendation.savingsCents) {
+    await savingEngine.recordFromRecommendation(
+      family.id,
+      session.user.id,
+      result.recommendation,
+      true,
+    );
   }
-
-  const names = items.map((i) => i.name);
-  const comparison = await compareBasket(names);
-  if (!comparison.best) {
-    return {
-      ok: true as const,
-      reply: "Ainda não consegui comparar preços para estes artigos. Tenta mais tarde.",
-    };
+  if (result.recommendation.headline && items.length > 0) {
+    await learningEngine.learn({
+      type: "shopping_store",
+      familyId: family.id,
+      userId: session.user.id,
+      storeName: result.recommendation.headline,
+    });
   }
-
-  const lines = comparison.quotes
-    .filter((q) => q.lines.some((l) => l.found))
-    .map((q) => `${q.storeName}: ${formatEUR(q.totalCents)}`)
-    .join("\n");
-
-  const savings =
-    comparison.savingsCents > 0
-      ? `\n\nHoje compensa ires ao ${comparison.best.storeName}. Poupas aproximadamente ${formatEUR(comparison.savingsCents)}.`
-      : `\n\nOs totais estão próximos — escolhe o que te for mais conveniente.`;
 
   return {
     ok: true as const,
-    reply: `Olhei para a tua lista (${items.length} artigos):\n${lines}${savings}`,
-    comparison,
+    reply: result.recommendation.reply,
+    comparison: result.recommendation.data?.comparison,
   };
 }
 

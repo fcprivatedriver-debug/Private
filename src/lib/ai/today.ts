@@ -5,6 +5,7 @@ import { calendarService } from "@/lib/calendar";
 import { decideMobility } from "@/lib/mobility/decision";
 import { getMobilityPrefs } from "@/lib/learning/preferences";
 import { formatEUR } from "@/lib/money";
+import { savingEngine } from "@/lib/engines/saving-engine";
 
 export type TodayInsight = {
   kind: "meeting" | "expense" | "shopping" | "mobility" | "tip";
@@ -151,6 +152,20 @@ export async function buildTodayBriefing(
         });
       }
     }
+  }
+
+  // Saving Engine whisper (sem novo ecrã)
+  try {
+    const whisper = await savingEngine.todaySavingsWhisper(familyId);
+    if (whisper) {
+      insights.push({
+        kind: "tip",
+        text: whisper,
+        href: "/pt/dashboard",
+      });
+    }
+  } catch {
+    /* ignore */
   }
 
   const spokenSummary = [greeting, "Hoje tens:", ...insights.map((i) => i.text)].join(" ");

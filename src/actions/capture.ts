@@ -123,6 +123,8 @@ export async function instantCaptureSpeak(utterance: string) {
 
   if (
     intent.kind === "today_briefing" ||
+    intent.kind === "savings_query" ||
+    intent.kind === "spend_less" ||
     intent.kind === "mobility" ||
     intent.kind === "calendar_book" ||
     intent.kind === "calendar_confirm" ||
@@ -136,6 +138,26 @@ export async function instantCaptureSpeak(utterance: string) {
         ok: true as const,
         reply: r.reply,
         detail: "Hoje",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+      };
+    }
+    if (intent.kind === "savings_query") {
+      const r = await modules.handleSavingsQuery();
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Poupanças Nina",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+      };
+    }
+    if (intent.kind === "spend_less") {
+      const r = await modules.handleSpendLess();
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Finanças",
         kind: "assistant" as const,
         scope: "PERSONAL" as const,
       };

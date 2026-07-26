@@ -275,8 +275,38 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
         suggestions: [
           "Onde abasteço?",
           "Vou às compras",
-          "Marca cabeleireiro amanhã",
+          "Quanto poupei?",
         ],
+        didMutate: false,
+      },
+      mutated: false,
+    };
+  }
+
+  if (intent?.kind === "savings_query") {
+    const { handleSavingsQuery } = await import("@/actions/assistant-modules");
+    const sav = await handleSavingsQuery();
+    return {
+      ok: true as const,
+      reply: {
+        text: sav.reply,
+        tone: "celebrate" as const,
+        suggestions: ["Vou às compras", "Onde abasteço?", "Como posso gastar menos este mês?"],
+        didMutate: false,
+      },
+      mutated: false,
+    };
+  }
+
+  if (intent?.kind === "spend_less") {
+    const { handleSpendLess } = await import("@/actions/assistant-modules");
+    const tip = await handleSpendLess();
+    return {
+      ok: true as const,
+      reply: {
+        text: tip.reply,
+        tone: "warm" as const,
+        suggestions: ["Vou às compras", "Quanto poupei?", "Onde abasteço?"],
         didMutate: false,
       },
       mutated: false,

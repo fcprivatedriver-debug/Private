@@ -67,6 +67,12 @@ export type ParsedMoneyIntent =
       kind: "today_briefing";
     }
   | {
+      kind: "savings_query";
+    }
+  | {
+      kind: "spend_less";
+    }
+  | {
       kind: "memory_rule";
       raw: string;
     }
@@ -187,6 +193,23 @@ export function parseMoneyIntent(raw: string): ParsedMoneyIntent {
     /^(hoje|briefing|o meu dia)\b/.test(n)
   ) {
     return { kind: "today_briefing" };
+  }
+
+  // Saving Engine
+  if (
+    /(quanto poupei|quanto poupamos|poupanca da nina|poupança da nina|quanto ja poupei|quanto já poupei|graças à nina|gracas a nina)/.test(
+      n,
+    )
+  ) {
+    return { kind: "savings_query" };
+  }
+
+  if (
+    /(como (posso |posso )?gastar menos|reduzir despesas|onde posso poupar|poupar (mais )?este mes|poupar (mais )?este mês)/.test(
+      n,
+    )
+  ) {
+    return { kind: "spend_less" };
   }
 
   // Lembretes — serviço do sistema (nunca duplicar app de reminders)

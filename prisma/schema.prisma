@@ -214,6 +214,7 @@ model User {
   transactionAudits TransactionAuditLog[] @relation("AuditActor")
   alerts        Alert[]
   aiInsights    AiInsight[]
+  ninaImpacts   NinaImpact[]
   memoryRules   NinaMemoryRule[]
   habitStats    NinaHabitStat[]
   invitesCreated FamilyInvite[] @relation("InviteCreator")
@@ -283,6 +284,7 @@ model Family {
   alerts             Alert[]
   importJobs         ImportJob[]
   aiInsights         AiInsight[]
+  ninaImpacts        NinaImpact[]
   stores             Store[]
   invites            FamilyInvite[]
   memoryRules        NinaMemoryRule[]
@@ -844,4 +846,30 @@ model AiInsight {
   user   User?  @relation(fields: [userId], references: [id])
 
   @@index([familyId, createdAt])
+}
+
+/// Poupança / impacto gerado pelas recomendações da Nina (Saving Engine ledger).
+model NinaImpact {
+  id           String   @id @default(cuid())
+  familyId     String
+  userId       String?
+  /// shopping | fuel | ev | finance | organization | time
+  category     String
+  /// Engine de origem: shopping | fuel | ev | finance | intelligence
+  sourceEngine String
+  amountCents  Int      @default(0)
+  timeMinutes  Int      @default(0)
+  title        String
+  body         String?  @db.Text
+  dataJson     String?  @db.Text
+  /// true quando a recomendação foi seguida (ou aceite implicitamente)
+  followed     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([familyId, createdAt])
+  @@index([familyId, category, createdAt])
+  @@index([familyId, sourceEngine])
 }

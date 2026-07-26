@@ -21,17 +21,18 @@ export const NINA_MISSION_LINE = "Controla. Poupa. Vive.";
 export const NINA_MISSION_SHORT = "Controla. Poupa. Vive.";
 
 export const NINA_PURPOSE =
-  "Retirar preocupação ao utilizador relativamente ao dinheiro e às compras — acompanhá-lo diariamente com compreensão, organização e antecipação.";
+  "Ajudar a pessoa a poupar dinheiro, poupar tempo, simplificar a vida e tomar melhores decisões — em cada conversa.";
 
 /** Capacidades que a Nina deve sempre cumprir. */
 export const NINA_CAPABILITIES = [
-  "compreender",
-  "organizar",
+  "analisar",
+  "comparar",
+  "recomendar",
+  "explicar",
   "aprender",
-  "antecipar necessidades",
-  "sugerir melhorias",
-  "simplificar tarefas",
-  "ajudar nas compras",
+  "poupar dinheiro",
+  "poupar tempo",
+  "simplificar",
 ] as const;
 
 /** Canais naturais de entrada — voz em primeiro lugar. */

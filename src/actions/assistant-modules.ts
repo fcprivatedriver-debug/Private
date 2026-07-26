@@ -1,54 +1,83 @@
 "use server";
 
 import { requireFamilyContext } from "@/lib/session";
-import { decideMobility } from "@/lib/mobility/decision";
 import { calendarService } from "@/lib/calendar";
 import { reminderService } from "@/lib/reminders";
 import { navigationService, type NavApp } from "@/lib/navigation";
-import {
-  getMobilityPrefs,
-  learnFromMobilityDecision,
-  saveMobilityPrefs,
-} from "@/lib/learning/preferences";
+import { saveMobilityPrefs } from "@/lib/learning/preferences";
 import { buildTodayBriefing } from "@/lib/ai/today";
+import { runIntelligence, savingEngine, learningEngine } from "@/lib/engines";
+import { prisma } from "@/lib/db";
 
+/**
+ * Mobilidade via Intelligence Layer (Fuel Engine / EV Engine).
+ * Sem alteração de UX — mesma action, respostas mais inteligentes.
+ */
 export async function handleMobilityIntent(opts: {
   mode: "fuel" | "ev" | "auto";
   utterance: string;
   batteryPercent?: number;
   budgetEuros?: number;
 }) {
-  const { session, family } = await requireFamilyContext();
-  const prefs = await getMobilityPrefs(family.id, session.user.id);
-  const decision = await decideMobility({
-    kind: opts.mode,
-    utterance: opts.utterance,
-    batteryPercent: opts.batteryPercent ?? prefs.typicalBatteryPct ?? undefined,
-    budgetEuros: opts.budgetEuros,
-    preferredFuelBrands: prefs.fuelBrand ? [prefs.fuelBrand] : undefined,
-    preferredEvNetworks: prefs.evNetwork ? [prefs.evNetwork] : undefined,
+  const { session, membership, family } = await requireFamilyContext();
+  const utterance =
+    opts.utterance ||
+    (opts.mode === "ev"
+      ? `tenho ${opts.batteryPercent ?? 30}% de bateria`
+      : opts.budgetEuros != null
+        ? `onde compensa colocar ${opts.budgetEuros}€`
+        : "onde abasteço");
+
+  const outcome = await runIntelligence({
+    familyId: family.id,
+    userId: session.user.id,
+    memberId: membership.id,
+    utterance,
   });
 
-  await learnFromMobilityDecision(family.id, session.user.id, {
-    kind: decision.kind,
-    brandOrNetwork:
-      decision.kind === "ev"
-        ? prefs.evNetwork ?? undefined
-        : prefs.fuelBrand ?? undefined,
-    batteryPct: opts.batteryPercent,
-  });
+  if (!outcome.passthrough && (outcome.engine === "fuel" || outcome.engine === "ev")) {
+    if (outcome.recordImpact && outcome.engineResult) {
+      await savingEngine.recordFromRecommendation(
+        family.id,
+        session.user.id,
+        outcome.engineResult.recommendation,
+        true,
+      );
+    }
+    return {
+      ok: true as const,
+      reply: outcome.reply,
+      deepLink: outcome.deepLink,
+    };
+  }
 
-  if (opts.batteryPercent != null) {
-    await saveMobilityPrefs(family.id, session.user.id, {
-      typicalBatteryPct: opts.batteryPercent,
-      fuelType: decision.kind === "ev" ? "electric" : prefs.fuelType,
-    });
+  // Fallback se o intent não foi classificado como mobility
+  const forced =
+    opts.mode === "ev"
+      ? await runIntelligence({
+          familyId: family.id,
+          userId: session.user.id,
+          utterance: `tenho ${opts.batteryPercent ?? 30}% de bateria`,
+        })
+      : await runIntelligence({
+          familyId: family.id,
+          userId: session.user.id,
+          utterance: "onde abasteço",
+        });
+
+  if (forced.engineResult) {
+    await savingEngine.recordFromRecommendation(
+      family.id,
+      session.user.id,
+      forced.engineResult.recommendation,
+      true,
+    );
   }
 
   return {
     ok: true as const,
-    reply: decision.reply,
-    deepLink: decision.deepLink,
+    reply: forced.reply || "Queres combustível ou carregamento elétrico?",
+    deepLink: forced.deepLink,
   };
 }
 
@@ -57,7 +86,13 @@ export async function handleCalendarBook(opts: {
   dayHint?: "today" | "tomorrow";
   preferredHour?: number;
 }) {
-  await requireFamilyContext();
+  const { session, family } = await requireFamilyContext();
+  await learningEngine.learn({
+    type: "habit_hour",
+    familyId: family.id,
+    userId: session.user.id,
+    key: "calendar",
+  });
   const res = await calendarService.suggestAndPrepare({
     title: opts.title,
     dayHint: opts.dayHint ?? "tomorrow",
@@ -113,10 +148,9 @@ export async function handleReminder(opts: { title: string; when: Date }) {
 
 export async function handleNavigate(destination: string) {
   const { session, family } = await requireFamilyContext();
-  const prefs = await getMobilityPrefs(family.id, session.user.id);
-  const app = (prefs.navigationApp as NavApp | null) ?? "google_maps";
+  const prefs = await learningEngine.getMobilityPrefs(family.id, session.user.id);
+  const app = prefs.navigationApp ?? "google_maps";
 
-  // Destinos inteligentes
   const destLower = destination.toLowerCase();
   if (/reuniao|reunião|compromisso|evento/.test(destLower)) {
     const provider = calendarService.getProvider();
@@ -141,11 +175,18 @@ export async function handleNavigate(destination: string) {
   }
 
   if (/posto|abastec|barato|combustivel|combustível/.test(destLower)) {
-    const mobility = await handleMobilityIntent({
+    return handleMobilityIntent({
       mode: "fuel",
       utterance: "leva-me ao posto mais barato",
     });
-    return mobility;
+  }
+
+  if (/carregar|carregador|supercharger|bateria/.test(destLower)) {
+    return handleMobilityIntent({
+      mode: "ev",
+      utterance: "onde devo carregar",
+      batteryPercent: prefs.typicalBatteryPct ?? 30,
+    });
   }
 
   const open = navigationService.open({ label: destination, address: destination }, app);
@@ -169,5 +210,40 @@ export async function handleTodayBriefing() {
 export async function setPreferredNavApp(app: NavApp) {
   const { session, family } = await requireFamilyContext();
   await saveMobilityPrefs(family.id, session.user.id, { navigationApp: app });
+  await learningEngine.learn({
+    type: "navigation_app",
+    familyId: family.id,
+    userId: session.user.id,
+    app,
+  });
   return { ok: true as const };
+}
+
+/** Saving Engine — «quanto poupei?» */
+export async function handleSavingsQuery() {
+  const { family } = await requireFamilyContext();
+  const { reply } = await savingEngine.savingsSummaryReply(family.id);
+  return { ok: true as const, reply };
+}
+
+/** Finance Engine tip — «como gastar menos?» */
+export async function handleSpendLess() {
+  const { membership, family } = await requireFamilyContext();
+  const advice = await savingEngine.spendLessAdvice(family.id, membership.id);
+  return { ok: true as const, reply: advice.recommendation.reply };
+}
+
+/** Helper: carrega itens da lista activa para o Shopping Engine */
+export async function loadOpenShoppingItems() {
+  const { session, family } = await requireFamilyContext();
+  const list = await prisma.shoppingList.findFirst({
+    where: { familyId: family.id },
+    orderBy: { updatedAt: "desc" },
+    include: { items: { where: { isChecked: false } } },
+  });
+  return (list?.items ?? []).map((i) => ({
+    name: i.name,
+    brand: i.brand,
+    quantity: i.quantity,
+  }));
 }
