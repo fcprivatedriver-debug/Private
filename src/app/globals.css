@@ -3,32 +3,32 @@
 /* Nina — azul-marinho, branco, cinzento claro; verde receitas; vermelho despesas */
 
 :root {
-  --navy: #1e3a5f;
-  --navy-deep: #12263f;
-  --navy-soft: #2a4a73;
-  --navy-mist: rgba(30, 58, 95, 0.08);
+  --navy: #234a78;
+  --navy-deep: #1a3658;
+  --navy-soft: #2f5a8a;
+  --navy-mist: #eaf2fb;
 
-  --bg: #f3f5f8;
+  --bg: #f8fafc;
   --bg-elevated: #ffffff;
-  --bg-soft: #e8edf3;
-  --fg: #12263f;
-  --fg-muted: #5b6b7c;
+  --bg-soft: #eaf2fb;
+  --fg: #1f2937;
+  --fg-muted: #6b7280;
 
-  --income: #0f7a4a;
-  --income-soft: rgba(15, 122, 74, 0.12);
-  --expense: #b42318;
-  --expense-soft: rgba(180, 35, 24, 0.1);
+  --income: #7bbf8e;
+  --income-soft: rgba(123, 191, 142, 0.18);
+  --expense: #d96b6b;
+  --expense-soft: rgba(217, 107, 107, 0.14);
   --warn: #9a6700;
 
-  --line: rgba(18, 38, 63, 0.1);
-  --line-strong: rgba(18, 38, 63, 0.18);
+  --line: rgba(31, 41, 55, 0.08);
+  --line-strong: rgba(31, 41, 55, 0.14);
 
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 18px;
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 22px;
 
-  --shadow-soft: 0 1px 0 rgba(18, 38, 63, 0.04);
-  --shadow-lift: 0 12px 36px rgba(18, 38, 63, 0.08);
+  --shadow-soft: 0 1px 2px rgba(35, 74, 120, 0.04);
+  --shadow-lift: 0 8px 28px rgba(35, 74, 120, 0.08);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 0.35s;
@@ -39,6 +39,8 @@
 
   --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-body: "Manrope", "Segoe UI", sans-serif;
+
+  --accent: var(--navy);
 }
 
 html[data-theme="dark"],
@@ -55,8 +57,8 @@ html.dark {
   --line: rgba(232, 238, 246, 0.1);
   --line-strong: rgba(232, 238, 246, 0.18);
   --shadow-lift: 0 12px 36px rgba(0, 0, 0, 0.35);
-  --income: #34d399;
-  --expense: #f87171;
+  --income: #7bbf8e;
+  --expense: #e08a8a;
 }
 
 @theme inline {
@@ -478,7 +480,7 @@ html.dark .btn-primary { background: #3d6aa3; }
   padding: 1rem 1.1rem 0.25rem;
 }
 .panel-head h2 { font-size: 1.05rem; }
-.panel-body { padding: 0.85rem 1.1rem 1.15rem; }
+.panel-body { padding: 1.1rem 1.25rem 1.35rem; }
 
 .progress-wrap { margin: 0.65rem 0; }
 .progress-meta {
@@ -1236,14 +1238,12 @@ a.tx-row:focus-visible {
   color: var(--accent);
   margin-bottom: 0.1rem;
 }
-.tx-kind-label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  margin-bottom: 0.1rem;
+.lista-advanced {
+  margin: 0.25rem 0;
+}
+.lista-advanced summary {
+  cursor: pointer;
+  user-select: none;
 }
 .tx-row-main strong {
   display: block;
@@ -1533,23 +1533,24 @@ a.tx-row:focus-visible {
   position: relative;
   display: grid;
   place-items: center;
-  width: min(100%, 280px);
-  margin: 0.5rem auto 1rem;
+  width: min(100%, 320px);
+  margin: 0.75rem auto 1.25rem;
   aspect-ratio: 1;
-  max-height: 220px;
+  max-height: 280px;
   border: none;
   border-radius: 50%;
-  background: #1e3a5f;
+  background: var(--navy);
   color: #fff;
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 600;
   cursor: pointer;
   overflow: hidden;
+  box-shadow: var(--shadow-lift);
   animation: rise 0.45s var(--ease) both;
 }
 .captura-mic.is-listening {
-  background: #0f7a4a;
+  background: var(--income);
 }
 .captura-mic-pulse {
   position: absolute;

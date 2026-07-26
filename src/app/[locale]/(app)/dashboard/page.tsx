@@ -17,7 +17,8 @@ import { NinaChat } from "@/components/nina/NinaChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
 import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
 import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
-import { NINA_MISSION_LINE } from "@/lib/ai/mission";
+import { NINA_MISSION_LINE, NINA_SLOGAN } from "@/lib/ai/mission";
+import { homeGreeting } from "@/lib/ai/home-greeting";
 import { isDemoEmail } from "@/lib/demo-mode";
 
 export default async function DashboardPage() {
@@ -39,6 +40,28 @@ export default async function DashboardPage() {
     (data.goals?.length ?? 0) === 0;
   const demo = isDemoEmail(session.user.email);
 
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = today.getMonth();
+  const d = today.getDate();
+  const expenseTodayCents = data.recentExpenses
+    .filter((e) => {
+      const ed = (e as { date?: Date }).date;
+      if (!ed) return false;
+      const dt = ed instanceof Date ? ed : new Date(ed);
+      return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
+    })
+    .reduce((s, e) => s + e.amountCents, 0);
+
+  const greeting = homeGreeting({
+    displayName: name,
+    incomeCents: data.totals.incomeCents,
+    expenseCents: data.totals.expenseCents,
+    balanceCents: data.totals.balanceCents,
+    expenseTodayCents: isEmpty ? 0 : expenseTodayCents,
+    isEmpty,
+  });
+
   return (
     <div className="nina-home page-stack">
       <header className="nina-home-intro">
@@ -48,16 +71,14 @@ export default async function DashboardPage() {
               {label} · {HOUSEHOLD_KIND_LABELS[membership.family.kind]}
               {demo ? " · Demo" : ""}
             </p>
-            <h1 className="page-title">Olá, {name}. Eu trato disto por ti.</h1>
+            <h1 className="page-title">{greeting.title}</h1>
             <p className="page-sub">
-              {isEmpty
-                ? "A tua conta está vazia — como deve ser. Diz-me o primeiro movimento quando quiseres."
-                : space === "family"
-                  ? "Receitas partilhadas, despesas da casa e objetivos da família — sincronizados."
-                  : "Só as tuas receitas, despesas e objetivos pessoais."}
+              {greeting.subtitle}
               {` · ${data.monthLabel}`}
             </p>
-            <p className="mission-whisper muted small">{NINA_MISSION_LINE}</p>
+            <p className="mission-whisper muted small">
+              {NINA_SLOGAN} — {NINA_MISSION_LINE === NINA_SLOGAN ? "A tua assistente financeira pessoal." : NINA_MISSION_LINE}
+            </p>
           </div>
           {space === "family" ? <HouseholdLiveSync /> : null}
         </div>
@@ -77,14 +98,14 @@ export default async function DashboardPage() {
       </div>
 
       <div className="btn-row" style={{ marginTop: "0.25rem" }}>
-        <Link href="/pt/transacoes" className="btn btn-primary">
+        <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
+          🎤 Falar com a Nina
+        </Link>
+        <Link href="/pt/transacoes" className="btn btn-ghost">
           Ver transações
         </Link>
-        <Link href="/pt/receitas/nova" className="btn btn-ghost btn-sm">
-          + Receita
-        </Link>
-        <Link href="/pt/despesas/nova" className="btn btn-ghost btn-sm">
-          + Despesa
+        <Link href="/pt/lista" className="btn btn-ghost btn-sm">
+          Lista de compras
         </Link>
       </div>
 
@@ -92,14 +113,14 @@ export default async function DashboardPage() {
         <Panel title="Começar com a Nina">
           <EmptyState
             title="Tudo a zeros"
-            body="Nenhuma receita, despesa ou objetivo. Adiciona o primeiro movimento — ou fala comigo."
+            body="Ainda não registaste nenhuma despesa. Diz-me quanto gastaste — ou o que precisas nas compras."
           />
           <div className="btn-row" style={{ marginTop: "1rem", justifyContent: "center" }}>
-            <Link href="/pt/receitas/nova" className="btn btn-success">
-              Adicionar receita
+            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
+              🎤 Falar com a Nina
             </Link>
-            <Link href="/pt/despesas/nova" className="btn btn-primary">
-              Adicionar despesa
+            <Link href="/pt/lista" className="btn btn-ghost">
+              Lista de compras
             </Link>
             <Link href="/pt/guia" className="btn btn-ghost">
               Ver Guia

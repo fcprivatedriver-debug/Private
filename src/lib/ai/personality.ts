@@ -40,7 +40,7 @@ const WARM_ACKS = [
   "Feito.",
   "Já está.",
   "Tratei disto.",
-  "Registei.",
+  "Perfeito 😊",
   "Percebi — e já ficou.",
   "Ok, anotei.",
 ];
@@ -220,9 +220,9 @@ export const NINA_PHILOSOPHY = NINA_SIMPLE_RULE;
 export const NINA_MISSION_TAGLINE = NINA_MISSION_LINE;
 
 export const NATURAL_EXAMPLES = [
-  "Gastei 22 euros na BP",
-  "Coloca 50 euros nas férias",
-  "Quanto me resta para supermercado?",
-  "Onde foi o meu dinheiro esta semana?",
-  "Consigo ir jantar fora este fim de semana?",
+  "Gastei 24 euros na BP",
+  "Adiciona manteiga Milhafre",
+  "Adiciona leite Vigor",
+  "Vou às compras",
+  "Quanto gastei este mês?",
 ];

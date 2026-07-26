@@ -19,6 +19,7 @@ import {
 } from "@/domain/categories";
 import { slugify } from "@/lib/utils";
 import type { FinanceScope, PaymentMethod } from "@prisma/client";
+import { addShoppingItemNatural, compareShoppingTrip } from "@/actions/shopping";
 
 function revalidateAll() {
   revalidatePath("/", "layout");
@@ -107,7 +108,7 @@ export async function instantCaptureSpeak(utterance: string) {
   if (!intent) {
     return {
       ok: false as const,
-      error: "Não percebi o valor. Ex.: «Supermercado, 35 euros.»",
+      error: "Não percebi. Experimenta «gastei 24 euros na BP» ou «adiciona leite Vigor».",
     };
   }
   if (intent.kind === "need_amount") {
@@ -117,6 +118,30 @@ export async function instantCaptureSpeak(utterance: string) {
     return {
       ok: false as const,
       error: "Para regras de memória, usa Conversar ou Memória.",
+    };
+  }
+
+  if (intent.kind === "shopping_trip") {
+    const trip = await compareShoppingTrip();
+    return {
+      ok: true as const,
+      reply: trip.reply,
+      detail: "Lista de compras",
+      kind: "shopping" as const,
+      scope: "PERSONAL" as const,
+    };
+  }
+
+  if (intent.kind === "shopping_add") {
+    const added = await addShoppingItemNatural(intent.productQuery);
+    if (!added.ok) return { ok: false as const, error: added.error };
+    return {
+      ok: true as const,
+      reply: added.reply,
+      detail: "Lista de compras",
+      kind: "shopping" as const,
+      scope: "PERSONAL" as const,
+      choices: "choices" in added ? added.choices : undefined,
     };
   }
 

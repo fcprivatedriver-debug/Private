@@ -260,7 +260,7 @@ export function InstantCapture({
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder='Ex: "BP 20 euros"'
+              placeholder='Ex: "gastei 24 euros na BP" ou "adiciona leite Vigor"'
               aria-label="Texto para registar"
               disabled={pending}
               autoFocus

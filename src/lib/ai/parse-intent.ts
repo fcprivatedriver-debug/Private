@@ -26,6 +26,15 @@ export type ParsedMoneyIntent =
       explicitScope?: FinanceScope | null;
     }
   | {
+      kind: "shopping_add";
+      /** Texto do produto (ex.: «seis litros de leite Vigor meio gordo») */
+      productQuery: string;
+      quantityHint?: string;
+    }
+  | {
+      kind: "shopping_trip";
+    }
+  | {
       kind: "memory_rule";
       raw: string;
     }
@@ -105,6 +114,36 @@ export function parseMoneyIntent(raw: string): ParsedMoneyIntent {
 
   if (/sempre que/.test(n) && /(regista|coloca|mete|considera)/.test(n)) {
     return { kind: "memory_rule", raw };
+  }
+
+  // Compras — sem valor monetário
+  if (
+    /(vou\s+as\s+compras|vou\s+às\s+compras|ir\s+as\s+compras|ir\s+às\s+compras|comparar\s+supermercado|onde\s+compens)/.test(
+      n,
+    )
+  ) {
+    return { kind: "shopping_trip" };
+  }
+
+  const addMatch = n.match(
+    /(?:nina[, ]*)?(?:adiciona|mete|poe|põe|coloca|mete\s+na\s+lista|lista)\s+(.+)/i,
+  );
+  if (
+    addMatch ||
+    (/(adiciona|mete|poe|põe)/.test(n) &&
+      /(leite|manteiga|cafe|café|banana|pao|pão|ovos|fruta|agua|água)/.test(n))
+  ) {
+    let productQuery = (addMatch?.[1] || n.replace(/nina[, ]*/g, "").replace(/^(adiciona|mete|poe|põe|coloca)\s+/, "")).trim();
+    productQuery = productQuery
+      .replace(/\b(a|na|na lista|lista de compras|por favor)\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (productQuery.length >= 2) {
+      const qty =
+        productQuery.match(/^(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\s+/i)?.[1] ||
+        undefined;
+      return { kind: "shopping_add", productQuery, quantityHint: qty };
+    }
   }
 
   const euros = extractAmountEuros(raw);

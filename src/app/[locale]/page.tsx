@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import {
-  NINA_MISSION,
   NINA_CAPABILITIES,
   NINA_INPUT_CHANNELS,
   NINA_PURPOSE,
+  NINA_SLOGAN,
+  NINA_SUBTITLE,
 } from "@/lib/ai/mission";
 import { NATURAL_EXAMPLES } from "@/lib/ai/personality";
 
 export default function LandingPage() {
-  const [missionLive, missionAccounts] = NINA_MISSION.split("\n");
-
   return (
     <div className="landing">
       <nav className="landing-nav">
@@ -30,13 +29,13 @@ export default function LandingPage() {
         <div className="hero-content">
           <p className="hero-brand">Nina</p>
           <h1>
-            {missionLive}
+            Controla. Poupa. Vive.
             <br />
-            <span className="hero-mission-second">{missionAccounts}</span>
+            <span className="hero-mission-second">A tua assistente financeira pessoal.</span>
           </h1>
           <p>
-            Assistente financeira inteligente que te acompanha todos os dias — para o dinheiro deixar
-            de ser uma preocupação.
+            Assistente inteligente para dinheiro e compras — fala naturalmente, e a Nina trata do
+            resto.
           </p>
           <div className="hero-ctas">
             <Link href="/pt/registo" className="btn btn-primary">
@@ -116,7 +115,7 @@ export default function LandingPage() {
           ))}
         </ul>
 
-        <p className="adaptive-philosophy">{NINA_MISSION.replace("\n", " ")}</p>
+        <p className="adaptive-philosophy">{NINA_SLOGAN} — {NINA_SUBTITLE}</p>
       </section>
 
       <section className="section">
@@ -149,7 +148,7 @@ export default function LandingPage() {
 
       <footer className="landing-footer">
         <p>
-          Nina · {missionLive} {missionAccounts} ·{" "}
+          Nina · {NINA_SLOGAN} · {NINA_SUBTITLE} ·{" "}
           <Link href="/pt/privacidade">Privacidade</Link> ·{" "}
           <Link href="/pt/termos">Termos</Link>
         </p>

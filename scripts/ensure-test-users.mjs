@@ -54,6 +54,7 @@ async function emptyFamilyFinance(prisma, familyId) {
   await prisma.ninaHabitStat.deleteMany({ where: { familyId } });
   await prisma.ninaMemoryRule.deleteMany({ where: { familyId } });
   await prisma.transactionAuditLog.deleteMany({ where: { familyId } });
+  await prisma.productPreference.deleteMany({ where: { familyId } });
   await prisma.shoppingListItem.deleteMany({ where: { familyId } });
   await prisma.category.deleteMany({ where: { familyId } });
   await prisma.store.deleteMany({ where: { familyId } });

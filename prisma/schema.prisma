@@ -220,6 +220,7 @@ model User {
   connections   NinaConnection[]
   shoppingItems ShoppingListItem[]
   shoppingLists ShoppingList[] @relation("ShoppingListCreator")
+  productPreferences ProductPreference[]
 }
 
 model AuthAccount {
@@ -289,6 +290,7 @@ model Family {
   connections        NinaConnection[]
   shoppingLists      ShoppingList[]
   shoppingItems      ShoppingListItem[]
+  productPreferences ProductPreference[]
   transactionAudits  TransactionAuditLog[]
 }
 
@@ -388,20 +390,27 @@ model ShoppingList {
   @@index([familyId])
 }
 
-/// Artigo numa lista de compras partilhada
+/// Artigo numa lista de compras partilhada (enriquecido pelo Product Service)
 model ShoppingListItem {
-  id           String   @id @default(cuid())
-  familyId     String
-  listId       String
-  createdById  String?
-  name         String
-  quantity     String   @default("1")
-  categorySlug String?
-  notes        String?
-  isChecked    Boolean  @default(false)
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(cuid())
+  familyId        String
+  listId          String
+  createdById     String?
+  name            String
+  brand           String?
+  weight          String?
+  quantity        String   @default("1")
+  categorySlug    String?
+  notes           String?
+  priceCents      Int?
+  imageUrl        String?
+  storeName       String?
+  productUrl      String?
+  externalProductId String?
+  isChecked       Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   family    Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
   list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
@@ -409,6 +418,30 @@ model ShoppingListItem {
 
   @@index([familyId, isChecked])
   @@index([listId, isChecked])
+}
+
+/// Preferências de produtos (ex.: manteiga → Milhafre)
+model ProductPreference {
+  id           String   @id @default(cuid())
+  familyId     String
+  userId       String
+  categoryKey  String
+  preferredName String
+  brand        String?
+  storeName    String?
+  productUrl   String?
+  imageUrl     String?
+  priceCents   Int?
+  useCount     Int      @default(1)
+  lastUsedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, userId, categoryKey])
+  @@index([familyId, userId])
 }
 
 /// Ligação opcional a um serviço externo — só ativa com autorização explícita.

@@ -264,7 +264,61 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     };
   }
 
-  if (intent && intent.kind !== "memory_rule" && canEditFinances(membership.role)) {
+  if (intent?.kind === "shopping_trip") {
+    const { compareShoppingTrip } = await import("@/actions/shopping");
+    const trip = await compareShoppingTrip();
+    return {
+      ok: true as const,
+      reply: {
+        text: trip.reply,
+        tone: "warm" as const,
+        suggestions: ["Adiciona leite Vigor", "Adiciona manteiga Milhafre", "Quanto gastei este mês?"],
+        didMutate: false,
+      },
+      mutated: false,
+    };
+  }
+
+  if (intent?.kind === "shopping_add" && canEditFinances(membership.role)) {
+    const { addShoppingItemNatural } = await import("@/actions/shopping");
+    const added = await addShoppingItemNatural(intent.productQuery);
+    if (!added.ok) {
+      return {
+        ok: true as const,
+        reply: { text: added.error, tone: "careful" as const },
+        mutated: false,
+      };
+    }
+    if (added.status === "choices" && "choices" in added) {
+      return {
+        ok: true as const,
+        reply: {
+          text: added.reply,
+          tone: "warm" as const,
+          suggestions: added.choices.slice(0, 4).map((c) => c.label),
+          didMutate: false,
+        },
+        mutated: false,
+        shoppingChoices: added.choices,
+      };
+    }
+    return {
+      ok: true as const,
+      reply: {
+        text: added.reply,
+        tone: "celebrate" as const,
+        suggestions: ["Adiciona café Delta", "Vou às compras", "Quanto gastei este mês?"],
+        didMutate: true,
+      },
+      mutated: true,
+    };
+  }
+
+  if (
+    intent &&
+    (intent.kind === "expense" || intent.kind === "income" || intent.kind === "save") &&
+    canEditFinances(membership.role)
+  ) {
     if (intent.kind === "expense") {
       const decision = await resolveScope({
         userId: session.user.id,

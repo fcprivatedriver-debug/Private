@@ -49,7 +49,8 @@ export default async function ListaPage({
     <div className="page-stack">
       <h1 className="page-title">Lista de compras</h1>
       <p className="page-sub">
-        Cria várias listas, edita, elimina e partilha com a família. Marca o que já está no carrinho.
+        Diz à Nina o que precisas — «adiciona leite Vigor». Quando fores às compras, ela compara
+        supermercados por ti.
       </p>
       <Panel title={`${openCount} por comprar`}>
         {lists.length === 0 ? (
@@ -60,7 +61,19 @@ export default async function ListaPage({
               id: l.id,
               name: l.name,
               isShared: l.isShared,
-              items: l.items,
+              items: l.items.map((i) => ({
+                id: i.id,
+                name: i.name,
+                quantity: i.quantity,
+                categorySlug: i.categorySlug,
+                isChecked: i.isChecked,
+                brand: i.brand,
+                weight: i.weight,
+                priceCents: i.priceCents,
+                imageUrl: i.imageUrl,
+                storeName: i.storeName,
+                productUrl: i.productUrl,
+              })),
             }))}
             activeListId={activeListId}
           />
