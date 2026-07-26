@@ -12,7 +12,6 @@ import {
   goalSchema,
   recurringSchema,
   categorySchema,
-  registerSchema,
 } from "@/lib/validators";
 import bcrypt from "bcryptjs";
 import { recognizeReceipt } from "@/lib/ocr";

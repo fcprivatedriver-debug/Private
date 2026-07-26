@@ -41,6 +41,52 @@ Alias do branch `cursor/nina-stable-c6cd`:
 
 `https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app`
 
+## Domínio de produção — ninapp.pt
+
+O agente **não tem** `VERCEL_TOKEN` neste ambiente; a API Vercel não pode ser chamada sozinha.
+
+### 1) Adicionar o domínio na Vercel (dono)
+
+1. Abre [Vercel → private-duur → Domains](https://vercel.com/fc-private-driver/private-duur/settings/domains)
+2. Adiciona `ninapp.pt` (produção / primary)
+3. Adiciona `www.ninapp.pt` e configura redirect → `ninapp.pt`
+4. Desativa **Vercel Authentication** em [Deployment Protection](https://vercel.com/fc-private-driver/private-duur/settings/deployment-protection)
+
+Ou com token:
+
+```bash
+VERCEL_TOKEN=xxx node scripts/configure-ninapp-domain.mjs
+```
+
+### 2) Registos DNS no fornecedor (PTDNS / ns1.ptdns.com)
+
+Confirma sempre os valores exactos no ecrã Domains da Vercel após adicionar o domínio. Em geral:
+
+| Tipo  | Nome / Host | Valor                 | TTL        |
+|-------|-------------|-----------------------|------------|
+| **A** | `@` (raiz)  | `76.76.21.21`         | 300 / Auto |
+| **CNAME** | `www`   | `cname.vercel-dns.com` | 300 / Auto |
+
+- Remove o **A** actual de `ninapp.pt` (hoje aponta para `193.29.59.104`).
+- Se a Vercel pedir um **TXT** de verificação (domínio já usado noutro projeto), cria-o exactamente como mostrado.
+- Alguns planos mostram um CNAME de projeto (ex. `….vercel-dns-0.com`) em vez de `cname.vercel-dns.com` — usa o valor do dashboard.
+
+### 3) Variáveis de ambiente (Production)
+
+```
+AUTH_URL=https://ninapp.pt
+```
+
+(e `NEXT_PUBLIC_APP_URL=https://ninapp.pt` se a app a usar). Depois **Redeploy** do deployment de produção.
+
+### 4) Verificar
+
+```bash
+dig +short ninapp.pt A        # deve ser 76.76.21.21
+dig +short www.ninapp.pt CNAME
+curl -sI https://ninapp.pt | head
+```
+
 ## 4. Dashboard / saldos / gráficos desatualizados após criar ou editar
 
 - **Causa:** `IncomeForm` e `ExpenseForm` faziam `router.push(...)` sem `router.refresh()` após sucesso. O delete já refresca; os outros formulários também. O RSC cache do Next.js mantinha listas, saldos e gráficos antigos.
