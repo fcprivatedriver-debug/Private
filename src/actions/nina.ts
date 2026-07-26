@@ -264,6 +264,133 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     };
   }
 
+  if (intent?.kind === "today_briefing") {
+    const { handleTodayBriefing } = await import("@/actions/assistant-modules");
+    const today = await handleTodayBriefing();
+    return {
+      ok: true as const,
+      reply: {
+        text: today.reply,
+        tone: "warm" as const,
+        suggestions: [
+          "Onde abasteço?",
+          "Vou às compras",
+          "Marca cabeleireiro amanhã",
+        ],
+        didMutate: false,
+      },
+      mutated: false,
+    };
+  }
+
+  if (intent?.kind === "mobility") {
+    const { handleMobilityIntent } = await import("@/actions/assistant-modules");
+    const mob = await handleMobilityIntent({
+      mode: intent.mode,
+      utterance: intent.utterance,
+      batteryPercent: intent.batteryPercent,
+      budgetEuros: intent.budgetEuros,
+    });
+    return {
+      ok: true as const,
+      reply: {
+        text: mob.reply,
+        tone: "warm" as const,
+        suggestions: [
+          "Leva-me ao posto mais barato",
+          "Tenho 30% de bateria",
+          "O que importa hoje?",
+        ],
+        didMutate: false,
+      },
+      mutated: false,
+      deepLink: mob.deepLink,
+    };
+  }
+
+  if (intent?.kind === "calendar_book") {
+    const { handleCalendarBook } = await import("@/actions/assistant-modules");
+    const cal = await handleCalendarBook({
+      title: intent.title,
+      dayHint: intent.dayHint,
+      preferredHour: intent.preferredHour,
+    });
+    return {
+      ok: true as const,
+      reply: {
+        text: cal.reply,
+        tone: "warm" as const,
+        suggestions: cal.suggestions?.length
+          ? cal.suggestions
+          : ["Marca para as 15", "Lembra-me amanhã de confirmar"],
+        didMutate: false,
+      },
+      mutated: false,
+      deepLink: cal.deepLink,
+    };
+  }
+
+  if (intent?.kind === "calendar_confirm") {
+    const { handleCalendarConfirm } = await import("@/actions/assistant-modules");
+    const cal = await handleCalendarConfirm({
+      hour: intent.hour,
+      minute: intent.minute,
+      title: intent.title,
+      dayHint: intent.dayHint,
+    });
+    return {
+      ok: true as const,
+      reply: {
+        text: cal.reply,
+        tone: "celebrate" as const,
+        suggestions: [
+          "Lembra-me uma hora antes",
+          "Leva-me para a reunião",
+          "O que importa hoje?",
+        ],
+        didMutate: false,
+      },
+      mutated: false,
+      deepLink: cal.deepLink,
+    };
+  }
+
+  if (intent?.kind === "reminder") {
+    const { handleReminder } = await import("@/actions/assistant-modules");
+    const rem = await handleReminder({ title: intent.title, when: intent.when });
+    return {
+      ok: true as const,
+      reply: {
+        text: rem.reply,
+        tone: "celebrate" as const,
+        suggestions: [
+          "Lembra-me daqui a duas horas",
+          "Marca cabeleireiro amanhã",
+          "O que importa hoje?",
+        ],
+        didMutate: false,
+      },
+      mutated: false,
+      deepLink: rem.deepLink,
+    };
+  }
+
+  if (intent?.kind === "navigate") {
+    const { handleNavigate } = await import("@/actions/assistant-modules");
+    const nav = await handleNavigate(intent.destination);
+    return {
+      ok: true as const,
+      reply: {
+        text: nav.reply,
+        tone: "warm" as const,
+        suggestions: ["Onde abasteço?", "O que importa hoje?"],
+        didMutate: false,
+      },
+      mutated: false,
+      deepLink: nav.deepLink,
+    };
+  }
+
   if (intent?.kind === "shopping_trip") {
     const { compareShoppingTrip } = await import("@/actions/shopping");
     const trip = await compareShoppingTrip();

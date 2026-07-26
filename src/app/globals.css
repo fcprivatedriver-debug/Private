@@ -899,6 +899,47 @@ html.dark .btn-primary { background: #3d6aa3; }
   color: var(--fg-muted);
   font-weight: 600;
 }
+
+.today-panel .panel-body {
+  padding-top: 0.5rem;
+}
+.today-insight-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.today-insight {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: var(--surface-soft, #f1f5f9);
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--fg);
+}
+.today-insight a {
+  color: inherit;
+  text-decoration: none;
+}
+.today-insight a:hover {
+  text-decoration: underline;
+}
+.today-insight.kind-meeting {
+  background: color-mix(in srgb, var(--navy, #234a78) 8%, white);
+}
+.today-insight.kind-shopping {
+  background: color-mix(in srgb, var(--income, #7bbf8e) 14%, white);
+}
+.today-insight.kind-mobility {
+  background: color-mix(in srgb, #f0b429 12%, white);
+}
+.today-insight.kind-expense {
+  background: color-mix(in srgb, var(--expense, #d96b6b) 8%, white);
+}
+
 .nina-home-grid {
   display: grid;
   grid-template-columns: 1.35fr 1fr;

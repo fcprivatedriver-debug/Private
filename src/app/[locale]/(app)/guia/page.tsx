@@ -36,6 +36,18 @@ const SECTIONS = [
     cta: "Abrir Lista",
   },
   {
+    title: "Mobilidade inteligente",
+    body: "Combustível ou elétrico — a Nina recomenda o melhor posto e abre a navegação. Diz «onde abasteço?» ou «tenho 30% de bateria».",
+    href: "/pt/mobilidade",
+    cta: "Abrir Mobilidade",
+  },
+  {
+    title: "Calendário e lembretes",
+    body: "Sem calendário privado. A Nina marca no Google/Apple/Outlook e usa lembretes do sistema.",
+    href: "/pt/calendario",
+    cta: "Abrir Calendário",
+  },
+  {
     title: "Como funciona a Conta Familiar",
     body: "Convida quem partilha a casa. Cada pessoa tem perfil próprio; a Nina organiza o que é de todos.",
     href: "/pt/familia",

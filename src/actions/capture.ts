@@ -121,6 +121,97 @@ export async function instantCaptureSpeak(utterance: string) {
     };
   }
 
+  if (
+    intent.kind === "today_briefing" ||
+    intent.kind === "mobility" ||
+    intent.kind === "calendar_book" ||
+    intent.kind === "calendar_confirm" ||
+    intent.kind === "reminder" ||
+    intent.kind === "navigate"
+  ) {
+    const modules = await import("@/actions/assistant-modules");
+    if (intent.kind === "today_briefing") {
+      const r = await modules.handleTodayBriefing();
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Hoje",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+      };
+    }
+    if (intent.kind === "mobility") {
+      const r = await modules.handleMobilityIntent({
+        mode: intent.mode,
+        utterance: intent.utterance,
+        batteryPercent: intent.batteryPercent,
+        budgetEuros: intent.budgetEuros,
+      });
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Mobilidade",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        deepLink: r.deepLink,
+      };
+    }
+    if (intent.kind === "calendar_book") {
+      const r = await modules.handleCalendarBook({
+        title: intent.title,
+        dayHint: intent.dayHint,
+        preferredHour: intent.preferredHour,
+      });
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Calendário",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        deepLink: r.deepLink,
+      };
+    }
+    if (intent.kind === "calendar_confirm") {
+      const r = await modules.handleCalendarConfirm({
+        hour: intent.hour,
+        minute: intent.minute,
+        title: intent.title,
+        dayHint: intent.dayHint,
+      });
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Calendário",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        deepLink: r.deepLink,
+      };
+    }
+    if (intent.kind === "reminder") {
+      const r = await modules.handleReminder({
+        title: intent.title,
+        when: intent.when,
+      });
+      return {
+        ok: true as const,
+        reply: r.reply,
+        detail: "Lembrete",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        deepLink: r.deepLink,
+      };
+    }
+    const r = await modules.handleNavigate(intent.destination);
+    return {
+      ok: true as const,
+      reply: r.reply,
+      detail: "Navegação",
+      kind: "assistant" as const,
+      scope: "PERSONAL" as const,
+      deepLink: r.deepLink,
+    };
+  }
+
   if (intent.kind === "shopping_trip") {
     const trip = await compareShoppingTrip();
     return {

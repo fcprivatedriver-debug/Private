@@ -17,8 +17,8 @@ import { NinaChat } from "@/components/nina/NinaChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
 import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
 import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
-import { NINA_MISSION_LINE, NINA_SLOGAN } from "@/lib/ai/mission";
-import { homeGreeting } from "@/lib/ai/home-greeting";
+import { NINA_SLOGAN, NINA_SUBTITLE } from "@/lib/ai/mission";
+import { buildTodayBriefing } from "@/lib/ai/today";
 import { isDemoEmail } from "@/lib/demo-mode";
 
 export default async function DashboardPage() {
@@ -40,27 +40,7 @@ export default async function DashboardPage() {
     (data.goals?.length ?? 0) === 0;
   const demo = isDemoEmail(session.user.email);
 
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = today.getMonth();
-  const d = today.getDate();
-  const expenseTodayCents = data.recentExpenses
-    .filter((e) => {
-      const ed = (e as { date?: Date }).date;
-      if (!ed) return false;
-      const dt = ed instanceof Date ? ed : new Date(ed);
-      return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
-    })
-    .reduce((s, e) => s + e.amountCents, 0);
-
-  const greeting = homeGreeting({
-    displayName: name,
-    incomeCents: data.totals.incomeCents,
-    expenseCents: data.totals.expenseCents,
-    balanceCents: data.totals.balanceCents,
-    expenseTodayCents: isEmpty ? 0 : expenseTodayCents,
-    isEmpty,
-  });
+  const today = await buildTodayBriefing(membership.familyId, session.user.id);
 
   return (
     <div className="nina-home page-stack">
@@ -71,43 +51,60 @@ export default async function DashboardPage() {
               {label} · {HOUSEHOLD_KIND_LABELS[membership.family.kind]}
               {demo ? " · Demo" : ""}
             </p>
-            <h1 className="page-title">{greeting.title}</h1>
-            <p className="page-sub">
-              {greeting.subtitle}
-              {` · ${data.monthLabel}`}
-            </p>
+            <h1 className="page-title">
+              {today.greeting.replace(/\.$/, "")}, {name.split(" ")[0]}
+            </h1>
+            <p className="page-sub">{today.headline}</p>
             <p className="mission-whisper muted small">
-              {NINA_SLOGAN} — {NINA_MISSION_LINE === NINA_SLOGAN ? "A tua assistente financeira pessoal." : NINA_MISSION_LINE}
+              {NINA_SLOGAN} — {NINA_SUBTITLE}
             </p>
           </div>
           {space === "family" ? <HouseholdLiveSync /> : null}
         </div>
       </header>
 
+      <Panel title={today.headline} className="today-panel">
+        <ul className="today-insight-list">
+          {today.insights.map((insight, i) => (
+            <li key={i} className={`today-insight kind-${insight.kind}`}>
+              {insight.href ? (
+                <Link href={insight.href}>{insight.text}</Link>
+              ) : (
+                <span>{insight.text}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="btn-row" style={{ marginTop: "1rem" }}>
+          <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
+            🎤 Falar com a Nina
+          </Link>
+          <Link href="/pt/mobilidade" className="btn btn-ghost btn-sm">
+            Mobilidade
+          </Link>
+          <Link href="/pt/calendario" className="btn btn-ghost btn-sm">
+            Calendário
+          </Link>
+          <Link href="/pt/lista" className="btn btn-ghost btn-sm">
+            Compras
+          </Link>
+        </div>
+      </Panel>
+
       {!isEmpty ? <SmartSuggestions /> : null}
 
-      <div className="stats-grid nina-glance">
-        <StatCard label="Saldo este mês" valueCents={data.totals.balanceCents} tone="neutral" />
-        <StatCard label="Receitas" valueCents={data.totals.incomeCents} tone="income" />
-        <StatCard label="Despesas" valueCents={data.totals.expenseCents} tone="expense" />
-        <StatCard
-          label="Poupanças"
-          valueCents={data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents}
-          tone="savings"
-        />
-      </div>
-
-      <div className="btn-row" style={{ marginTop: "0.25rem" }}>
-        <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
-          🎤 Falar com a Nina
-        </Link>
-        <Link href="/pt/transacoes" className="btn btn-ghost">
-          Ver transações
-        </Link>
-        <Link href="/pt/lista" className="btn btn-ghost btn-sm">
-          Lista de compras
-        </Link>
-      </div>
+      {!isEmpty ? (
+        <div className="stats-grid nina-glance">
+          <StatCard label="Saldo este mês" valueCents={data.totals.balanceCents} tone="neutral" />
+          <StatCard label="Receitas" valueCents={data.totals.incomeCents} tone="income" />
+          <StatCard label="Despesas" valueCents={data.totals.expenseCents} tone="expense" />
+          <StatCard
+            label="Poupanças"
+            valueCents={data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents}
+            tone="savings"
+          />
+        </div>
+      ) : null}
 
       {isEmpty ? (
         <Panel title="Começar com a Nina">
@@ -146,7 +143,7 @@ export default async function DashboardPage() {
                   className="muted small"
                   style={{ display: "inline-block", marginTop: "0.75rem" }}
                 >
-                  Ver resumo completo
+                  Ver resumo completo · {data.monthLabel}
                 </Link>
               </>
             )}

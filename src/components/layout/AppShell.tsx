@@ -13,11 +13,13 @@ import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 /** Navegação simples — captura e conversa no centro. */
 const NAV = [
   { href: "/pt/captura", label: "Captura" },
-  { href: "/pt/dashboard", label: "Conversar" },
+  { href: "/pt/dashboard", label: "Hoje" },
   { href: "/pt/transacoes", label: "Transações" },
   { href: "/pt/receitas", label: "Receitas" },
   { href: "/pt/despesas", label: "Despesas" },
   { href: "/pt/lista", label: "Compras" },
+  { href: "/pt/mobilidade", label: "Mobilidade" },
+  { href: "/pt/calendario", label: "Calendário" },
   { href: "/pt/poupancas", label: "Poupanças" },
   { href: "/pt/objetivos", label: "Objetivos" },
   { href: "/pt/guia", label: "Guia" },
@@ -33,7 +35,7 @@ const NAV = [
 ];
 
 const MOBILE = [
-  { href: "/pt/dashboard", label: "Nina" },
+  { href: "/pt/dashboard", label: "Hoje" },
   { href: "/pt/transacoes", label: "Transações" },
   { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura" },
   { href: "/pt/lista", label: "Compras" },

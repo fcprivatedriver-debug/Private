@@ -9,10 +9,10 @@
 export const NINA_SLOGAN = "Controla. Poupa. Vive.";
 
 /** Subtítulo oficial. */
-export const NINA_SUBTITLE = "A tua assistente financeira pessoal.";
+export const NINA_SUBTITLE = "Assistente inteligente — controla, poupa e ganha tempo.";
 
 /** Missão oficial (duas linhas) — mantém o espírito humano. */
-export const NINA_MISSION = "Controla. Poupa. Vive.\nA tua assistente financeira pessoal.";
+export const NINA_MISSION = "Controla. Poupa. Vive.\nAssistente inteligente — controla, poupa e ganha tempo.";
 
 /** Uma linha para meta, sidebar e rodapés. */
 export const NINA_MISSION_LINE = "Controla. Poupa. Vive.";

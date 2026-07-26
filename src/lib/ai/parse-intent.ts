@@ -35,6 +35,38 @@ export type ParsedMoneyIntent =
       kind: "shopping_trip";
     }
   | {
+      kind: "mobility";
+      mode: "fuel" | "ev" | "auto";
+      utterance: string;
+      batteryPercent?: number;
+      budgetEuros?: number;
+    }
+  | {
+      kind: "calendar_book";
+      title: string;
+      dayHint?: "today" | "tomorrow";
+      preferredHour?: number;
+    }
+  | {
+      kind: "calendar_confirm";
+      hour: number;
+      minute?: number;
+      title?: string;
+      dayHint?: "today" | "tomorrow";
+    }
+  | {
+      kind: "reminder";
+      title: string;
+      when: Date;
+    }
+  | {
+      kind: "navigate";
+      destination: string;
+    }
+  | {
+      kind: "today_briefing";
+    }
+  | {
       kind: "memory_rule";
       raw: string;
     }
@@ -109,11 +141,155 @@ function detectPayment(n: string): string | undefined {
   return undefined;
 }
 
+function parseReminderWhen(n: string): Date | null {
+  const now = new Date();
+  const wordHours: Record<string, number> = {
+    uma: 1,
+    duas: 2,
+    tres: 3,
+    três: 3,
+    quatro: 4,
+  };
+  const inHours =
+    n.match(/daqui a (\d+)\s*(hora|horas|h)\b/) ||
+    n.match(/daqui a (uma|duas|tres|três|quatro)\s*(hora|horas|h)\b/);
+  if (inHours) {
+    const raw = inHours[1];
+    const hrs = /^\d+$/.test(raw) ? Number(raw) : wordHours[raw] ?? 1;
+    return new Date(now.getTime() + hrs * 3600_000);
+  }
+  const inMins = n.match(/daqui a (\d+)\s*(minuto|minutos|min)\b/);
+  if (inMins) {
+    return new Date(now.getTime() + Number(inMins[1]) * 60_000);
+  }
+  const hm = n.match(/(?:as|às)\s+(\d{1,2})(?::(\d{2}))?/);
+  const hour = hm ? Number(hm[1]) : 9;
+  const minute = hm?.[2] ? Number(hm[2]) : 0;
+  const d = new Date(now);
+  if (/amanha|amanhã/.test(n)) d.setDate(d.getDate() + 1);
+  d.setHours(hour, minute, 0, 0);
+  if (d.getTime() <= now.getTime() && !/amanha|amanhã/.test(n)) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
 export function parseMoneyIntent(raw: string): ParsedMoneyIntent {
   const n = normalize(raw);
 
   if (/sempre que/.test(n) && /(regista|coloca|mete|considera)/.test(n)) {
     return { kind: "memory_rule", raw };
+  }
+
+  // Today briefing
+  if (
+    /(o que importa hoje|o que tenho hoje|resumo de hoje|bom dia nina|hoje tens)/.test(n) ||
+    /^(hoje|briefing|o meu dia)\b/.test(n)
+  ) {
+    return { kind: "today_briefing" };
+  }
+
+  // Lembretes — serviço do sistema (nunca duplicar app de reminders)
+  if (/\blembr[ae]-?me\b|\blembrat[e]\b|\blembrete\b/.test(n)) {
+    const when = parseReminderWhen(n);
+    let title = n
+      .replace(/nina[, ]*/g, "")
+      .replace(/\blembr[ae]-?me\b|\blembrat[e]\b|\blembrete\b/g, " ")
+      .replace(
+        /\b(hoje|amanha|amanhã|daqui a (?:\d+|uma|duas|tres|três|quatro)\s*(?:hora|horas|h|minuto|minutos|min)|(?:as|às)\s*\d{1,2}(?::\d{2})?)\b/g,
+        " ",
+      )
+      .replace(/\b(para|de|do|da)\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!title || title.length < 2) title = "Lembrete";
+    return { kind: "reminder", title, when: when ?? new Date(Date.now() + 3600_000) };
+  }
+
+  // Calendário — confirmar hora
+  const confirmHour = n.match(
+    /(?:marca(?:r)?|agenda(?:r)?|poe|põe|mete)\s+(?:para\s+)?(?:as|às)\s+(\d{1,2})(?::(\d{2}))?/,
+  );
+  if (confirmHour && !/cabeleireiro|medico|médico|reuniao|reunião|dentista/.test(n.split("as")[0] || "")) {
+    // "marca para as 15" sem título novo
+    if (/marca(?:r)?\s+para\s+(?:as|às)/.test(n) || /agenda(?:r)?\s+para\s+(?:as|às)/.test(n)) {
+      return {
+        kind: "calendar_confirm",
+        hour: Number(confirmHour[1]),
+        minute: confirmHour[2] ? Number(confirmHour[2]) : 0,
+        dayHint: /hoje/.test(n) ? "today" : "tomorrow",
+      };
+    }
+  }
+
+  // Calendário — marcar compromisso
+  if (
+    /(preciso de marcar|marca(?:r)?|agenda(?:r)?)\s+/.test(n) &&
+    !/lembra/.test(n)
+  ) {
+    let title = n
+      .replace(/nina[, ]*/g, "")
+      .replace(/(preciso de marcar|marcar|marca|agendar|agenda)\s+/g, " ")
+      .replace(/\b(amanha|amanhã|hoje|por favor)\b/g, " ")
+      .replace(/\b(as|às)\s+\d{1,2}(?::\d{2})?\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!title) title = "Compromisso";
+    const hourMatch = n.match(/(?:as|às)\s+(\d{1,2})/);
+    // Se já tem hora explícita com título → confirm directo
+    if (hourMatch && /(marca(?:r)?|agenda(?:r)?).{0,40}(as|às)\s+\d/.test(n) && title.length >= 2) {
+      const day = new Date();
+      if (/amanha|amanhã/.test(n)) day.setDate(day.getDate() + 1);
+      return {
+        kind: "calendar_confirm",
+        hour: Number(hourMatch[1]),
+        title,
+        dayHint: /hoje/.test(n) ? "today" : "tomorrow",
+      };
+    }
+    return {
+      kind: "calendar_book",
+      title,
+      dayHint: /hoje/.test(n) ? "today" : "tomorrow",
+      preferredHour: hourMatch ? Number(hourMatch[1]) : undefined,
+    };
+  }
+
+  // Navegação
+  if (/\bleva-?me\b|\bnavega\b|\bcaminho para\b|\bleva para\b/.test(n)) {
+    let destination = n
+      .replace(/nina[, ]*/g, "")
+      .replace(/\b(leva-?me|navega|caminho para|leva para|para a|para o|ao|à|a)\b/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!destination) destination = "reunião";
+    return { kind: "navigate", destination };
+  }
+
+  // Mobilidade — combustível / EV (antes de compras "onde compensa")
+  if (
+    /(onde abastec|onde (devo |posso )?abastec|posto mais barato|onde compensa colocar|colocar \d+\s*€|gasolina|diesel|gasoleo)/.test(
+      n,
+    ) ||
+    /(onde (devo |posso )?carregar|tenho \d+\s*%|bateria|carregar ate|carregar até|supercharger|posto de carregamento)/.test(
+      n,
+    )
+  ) {
+    const battery =
+      n.match(/(\d+)\s*%/)?.[1] || n.match(/(\d+)\s*(?:de\s+)?bateria/)?.[1];
+    const budget = n.match(/(\d+(?:[.,]\d+)?)\s*€/)?.[1];
+    const mode: "fuel" | "ev" | "auto" = /bateria|carregar|supercharger|eletrico|eléctrico/.test(n)
+      ? "ev"
+      : /abastec|gasolina|diesel|gasoleo|posto|colocar/.test(n)
+        ? "fuel"
+        : "auto";
+    return {
+      kind: "mobility",
+      mode,
+      utterance: raw.trim(),
+      batteryPercent: battery ? Number(battery) : undefined,
+      budgetEuros: budget ? Number(budget.replace(",", ".")) : undefined,
+    };
   }
 
   // Compras — sem valor monetário
@@ -125,15 +301,23 @@ export function parseMoneyIntent(raw: string): ParsedMoneyIntent {
     return { kind: "shopping_trip" };
   }
 
+  const needMatch = n.match(
+    /(?:nina[, ]*)?(?:preciso de|preciso|falta(?:-me)?|compra)\s+(.+)/i,
+  );
   const addMatch = n.match(
     /(?:nina[, ]*)?(?:adiciona|mete|poe|põe|coloca|mete\s+na\s+lista|lista)\s+(.+)/i,
   );
   if (
     addMatch ||
-    (/(adiciona|mete|poe|põe)/.test(n) &&
+    needMatch ||
+    (/(adiciona|mete|poe|põe|preciso)/.test(n) &&
       /(leite|manteiga|cafe|café|banana|pao|pão|ovos|fruta|agua|água)/.test(n))
   ) {
-    let productQuery = (addMatch?.[1] || n.replace(/nina[, ]*/g, "").replace(/^(adiciona|mete|poe|põe|coloca)\s+/, "")).trim();
+    let productQuery = (
+      addMatch?.[1] ||
+      needMatch?.[1] ||
+      n.replace(/nina[, ]*/g, "").replace(/^(adiciona|mete|poe|põe|coloca|preciso de|preciso|compra)\s+/, "")
+    ).trim();
     productQuery = productQuery
       .replace(/\b(a|na|na lista|lista de compras|por favor)\b/g, " ")
       .replace(/\s+/g, " ")

@@ -76,6 +76,9 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
             pendingScope: nextPending ?? undefined,
           },
         ]);
+        if ("deepLink" in res && res.deepLink && typeof window !== "undefined") {
+          window.open(res.deepLink, "_blank", "noopener,noreferrer");
+        }
         if (res.mutated) router.refresh();
       }
     });

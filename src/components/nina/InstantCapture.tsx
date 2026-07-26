@@ -13,11 +13,12 @@ type CaptureResult = {
 };
 
 const VOICE_EXAMPLES = [
-  "BP 20 euros",
-  "Continente 58 euros",
-  "McDonald's 18 euros",
-  "Supermercado, 35 euros",
-  "Recebi o salário, 1850 euros",
+  "Gastei 24 euros na BP",
+  "Adiciona leite Mimosa",
+  "Onde abasteço?",
+  "Tenho 30% de bateria",
+  "Marca cabeleireiro amanhã",
+  "Lembra-me daqui a duas horas",
 ];
 
 type SpeechRecognitionLike = {
@@ -87,6 +88,9 @@ export function InstantCapture({
         if (res.ok) {
           setResult({ reply: res.reply, detail: res.detail });
           setText("");
+          if ("deepLink" in res && res.deepLink) {
+            window.open(res.deepLink, "_blank", "noopener,noreferrer");
+          }
           router.refresh();
         } else {
           setError(res.error);
