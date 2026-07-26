@@ -1812,3 +1812,75 @@ body {
     font-size: 16px; /* evita zoom iOS */
   }
 }
+
+/* ——— V4.1 MVP polish: temas + personalizar ——— */
+html[data-theme="blue"] {
+  --navy: #234a78;
+  --navy-deep: #1a3658;
+  --bg: #eaf2fb;
+  --bg-elevated: #ffffff;
+  --bg-soft: #d6e6f7;
+}
+html[data-theme="green"] {
+  --navy: #1f6b4a;
+  --navy-deep: #154833;
+  --navy-mist: #e8f6ef;
+  --bg: #f3faf6;
+  --bg-soft: #e8f6ef;
+}
+html[data-theme="purple"] {
+  --navy: #5b4a7a;
+  --navy-deep: #3d3254;
+  --navy-mist: #f3eef8;
+  --bg: #faf8fc;
+  --bg-soft: #f3eef8;
+}
+
+.sidebar-family,
+.topbar-family {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+.topbar-brand-mobile {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.avatar-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+.avatar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  cursor: pointer;
+}
+.avatar-option.active {
+  border-color: var(--navy);
+  box-shadow: var(--shadow-soft);
+}
+.nina-avatar-bubble {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  background: var(--navy-mist);
+  color: var(--navy-deep);
+}
+.avatar-classic { background: #eaf2fb; }
+.avatar-modern { background: #e8f0ff; border-radius: 14px; }
+.avatar-minimal { background: #f1f5f9; }
+.avatar-feminine { background: #fce7f3; }
+.avatar-masculine { background: #e2e8f0; }

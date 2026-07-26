@@ -7,6 +7,7 @@ import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { safePostLoginPath } from "@/lib/auth-routes";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { checkEmailVerified } from "@/actions/auth-account";
 
 function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const params = useSearchParams();
@@ -15,6 +16,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
 
   function go(role?: string | null) {
     setLeaving(true);
@@ -30,15 +32,24 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setUnverifiedEmail(null);
     const form = new FormData(e.currentTarget);
+    const email = String(form.get("email"));
     try {
+      const check = await checkEmailVerified(email);
+      if (!check.ok && check.reason === "EMAIL_NOT_VERIFIED") {
+        setUnverifiedEmail(email);
+        setError("Confirma o teu email antes de entrar. Enviámos-te um link de activação.");
+        setLoading(false);
+        return;
+      }
       const res = await signIn("credentials", {
-        email: String(form.get("email")),
+        email,
         password: String(form.get("password")),
         redirect: false,
       });
       if (res?.error) {
-        setError("Email ou password incorretos. Tenta outra vez com calma.");
+        setError("Email ou palavra-passe incorrectos. Tenta outra vez com calma.");
         setLoading(false);
         return;
       }
@@ -67,15 +78,22 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
       <div className="auth-card">
         <BrandLogo href="/pt" />
         <h1>Olá outra vez</h1>
-        <p className="lead">Entra para continuares com a Nina. Contas novas começam sempre vazias.</p>
+        <p className="lead">Entra para continuares com a Nina.</p>
         {error ? <p className="form-error">{error}</p> : null}
+        {unverifiedEmail ? (
+          <p className="muted small">
+            <Link href={`/pt/verificar-email?email=${encodeURIComponent(unverifiedEmail)}`}>
+              Reenviar email de confirmação
+            </Link>
+          </p>
+        ) : null}
         <form onSubmit={onSubmit} className="form-grid">
           <label className="field">
             <span>Email</span>
             <input name="email" type="email" required autoComplete="email" placeholder="o.teu@email.com" />
           </label>
           <label className="field">
-            <span>Password</span>
+            <span>Palavra-passe</span>
             <input
               name="password"
               type="password"
@@ -90,11 +108,13 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         </form>
         {demoMode ? (
           <p className="muted small" style={{ marginTop: "1rem" }}>
-            <strong>Modo Demo</strong> (dados de exemplo, conta separada): demo@nina.app · nina123
+            <strong>Modo Demo</strong>: demo@nina.app · nina123
           </p>
         ) : null}
         <p className="muted small" style={{ marginTop: "1rem" }}>
-          Conta nova? <Link href="/pt/registo">Criar conta vazia</Link>
+          <Link href="/pt/recuperar">Recuperar palavra-passe</Link>
+          {" · "}
+          <Link href="/pt/registo">Criar conta</Link>
         </p>
       </div>
     </div>

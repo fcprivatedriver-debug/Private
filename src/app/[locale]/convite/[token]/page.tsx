@@ -54,9 +54,11 @@ export default async function ConvitePage({
             token={token}
             familyName={invite.family.name}
             loggedIn={Boolean(session?.user)}
+            inviteEmail={invite.email}
+            inviteeName={invite.inviteeName}
           />
         )}
-        {!session?.user ? (
+        {!session?.user && !invite.email ? (
           <p className="muted small" style={{ marginTop: "1rem" }}>
             Ainda não tens conta?{" "}
             <Link href={`/pt/registo?callbackUrl=${encodeURIComponent(`/pt/convite/${token}`)}`}>

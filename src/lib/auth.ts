@@ -51,6 +51,8 @@ const providers = [
       const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
       if (!valid) return null;
 
+      if (!user.emailVerified) return null;
+
       const membership = await prisma.familyMember.findFirst({
         where: { userId: user.id },
         select: { role: true },

@@ -194,12 +194,18 @@ model User {
   passwordHash  String?
   pinHash       String?
   biometricsEnabled Boolean @default(false)
-  theme         String    @default("system") // light | dark | system
+  theme         String    @default("system") // light | dark | system | blue | green | purple
   locale        String    @default("pt")
   /// Estilo de resposta da Nina: auto | short | balanced | detailed
   ninaReplyStyle String   @default("auto")
   /// Humor: auto | off | light
   ninaHumor     String    @default("auto")
+  /// Tom de comunicação: formal | casual | motivational | empathetic
+  ninaTone      String    @default("empathetic")
+  /// Avatar Nina: classic | modern | minimal | feminine | masculine
+  ninaAvatar    String    @default("classic")
+  /// URI da voz nativa (speechSynthesis) escolhida pelo utilizador
+  ninaVoice     String?
   automationLevel AutomationLevel @default(VOICE)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -324,6 +330,9 @@ model FamilyInvite {
   token        String    @unique
   createdById  String
   label        String?
+  /// Convite por email (opcional — link/QR continua a funcionar)
+  email        String?
+  inviteeName  String?
   expiresAt    DateTime
   acceptedAt   DateTime?
   acceptedById String?
@@ -334,6 +343,7 @@ model FamilyInvite {
 
   @@index([familyId])
   @@index([token])
+  @@index([email])
 }
 
 model NinaMemoryRule {

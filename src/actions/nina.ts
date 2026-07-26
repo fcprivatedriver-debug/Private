@@ -88,7 +88,7 @@ async function loadNinaRaw(
       opts.userId
         ? prisma.user.findUnique({
             where: { id: opts.userId },
-            select: { ninaReplyStyle: true, ninaHumor: true },
+            select: { ninaReplyStyle: true, ninaHumor: true, ninaTone: true },
           })
         : Promise.resolve(null),
     ]);
@@ -142,6 +142,7 @@ async function loadNinaRaw(
     })),
     ninaReplyStyle: user?.ninaReplyStyle,
     ninaHumor: user?.ninaHumor,
+    ninaTone: user?.ninaTone,
     recentQuestion: opts.recentQuestion,
   });
 }

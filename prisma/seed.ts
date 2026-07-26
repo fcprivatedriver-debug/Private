@@ -107,6 +107,7 @@ async function main() {
       theme: "system",
       biometricsEnabled: true,
       automationLevel: "VOICE_EMAIL",
+      emailVerified: new Date(),
     },
   });
 
@@ -118,6 +119,7 @@ async function main() {
       theme: "light",
       biometricsEnabled: true,
       automationLevel: "VOICE",
+      emailVerified: new Date(),
     },
   });
 

@@ -141,6 +141,21 @@ export const categorySchema = z.object({
 export const registerSchema = z.object({
   name: z.string().min(2).max(80),
   email: z.string().email(),
-  password: z.string().min(6),
-  familyName: z.string().min(2).max(80).optional(),
+  password: z
+    .string()
+    .min(8, "Mínimo 8 caracteres")
+    .regex(/[A-Z]/, "Precisa de uma maiúscula")
+    .regex(/[0-9]/, "Precisa de um número")
+    .regex(/[^A-Za-z0-9]/, "Precisa de um símbolo"),
+  familyName: z.string().min(1).max(80).optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z
+    .string()
+    .min(8)
+    .regex(/[A-Z]/)
+    .regex(/[0-9]/)
+    .regex(/[^A-Za-z0-9]/),
 });

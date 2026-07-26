@@ -8,9 +8,9 @@ import {
   type ReactNode,
 } from "react";
 
-type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark" | "system" | "blue" | "green" | "purple";
 
-function resolveTheme(theme: Theme): "light" | "dark" {
+function resolveTheme(theme: Theme): string {
   if (theme === "system") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }

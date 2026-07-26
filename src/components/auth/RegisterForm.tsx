@@ -2,25 +2,35 @@
 
 import { FormEvent, useState, useTransition } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
-import { registerFamily } from "@/actions/finance";
+import { useRouter } from "next/navigation";
+import { registerFamily } from "@/actions/auth-account";
+import { PASSWORD_HINT } from "@/lib/auth/password-rules";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const email = String(fd.get("email"));
-    const password = String(fd.get("password"));
     start(async () => {
       const res = await registerFamily(fd);
       if (!res.ok) {
         setError(res.error);
         return;
       }
+      if (res.needsVerification) {
+        const q = new URLSearchParams({ email: res.email });
+        if (res.previewUrl) q.set("preview", res.previewUrl);
+        router.push(`/pt/verificar-email?${q.toString()}`);
+        return;
+      }
+      // Contas de teste (@nina.app) — entram de imediato
+      const email = String(fd.get("email"));
+      const password = String(fd.get("password"));
+      const { signIn } = await import("next-auth/react");
       await signIn("credentials", {
         email,
         password,
@@ -35,7 +45,7 @@ export function RegisterForm() {
         <BrandLogo href="/pt" />
         <h1>Conhecer a Nina</h1>
         <p className="lead">
-          Em minutos tens uma assistente financeira pessoal — simpática, clara e sempre disponível.
+          Em menos de 3 minutos: conta, família e a tua assistente pessoal.
         </p>
         {error ? <p className="form-error">{error}</p> : null}
         <form onSubmit={onSubmit} className="form-grid">
@@ -44,19 +54,31 @@ export function RegisterForm() {
             <input name="name" required autoComplete="name" />
           </label>
           <label className="field">
-            <span>Nome da família (opcional)</span>
-            <input name="familyName" placeholder="Família Silva" />
+            <span>Como pretendes chamar à tua família?</span>
+            <input
+              name="familyName"
+              defaultValue="Família"
+              placeholder="Família Silva, Nós, Casa…"
+              required
+            />
           </label>
           <label className="field">
             <span>Email</span>
             <input name="email" type="email" required autoComplete="email" />
           </label>
           <label className="field">
-            <span>Password</span>
-            <input name="password" type="password" required minLength={6} autoComplete="new-password" />
+            <span>Palavra-passe</span>
+            <input
+              name="password"
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+            <span className="muted small">{PASSWORD_HINT}</span>
           </label>
           <button className="btn btn-primary" type="submit" disabled={pending}>
-            {pending ? "A preparar…" : "Começar com a Nina"}
+            {pending ? "A preparar…" : "Criar conta"}
           </button>
         </form>
         <p className="muted small" style={{ marginTop: "1rem" }}>

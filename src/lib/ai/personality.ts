@@ -12,18 +12,42 @@ export type NinaTone = "warm" | "celebrate" | "careful" | "neutral" | "playful";
 export type ReplyLength = "short" | "balanced" | "detailed";
 export type HumorLevel = "off" | "light";
 
+export type NinaCommTone = "formal" | "casual" | "motivational" | "empathetic";
+
 export type NinaVoicePrefs = {
   replyLength: ReplyLength;
   humor: HumorLevel;
   /** Preferência explícita do utilizador; "auto" aprende com o uso */
   source: "auto" | "user";
+  tone?: NinaCommTone;
 };
 
 export const DEFAULT_VOICE: NinaVoicePrefs = {
   replyLength: "balanced",
   humor: "light",
   source: "auto",
+  tone: "empathetic",
 };
+
+/** Ajusta só o tom — não muda o conteúdo útil. */
+export function applyCommTone(text: string, tone: NinaCommTone = "empathetic"): string {
+  if (tone === "formal") {
+    return text
+      .replace(/😊/g, "")
+      .replace(/\bPerfeito\b/g, "Confirmado")
+      .replace(/\bJá está\b/g, "Concluído")
+      .replace(/\bBoa!\b/g, "Excelente.");
+  }
+  if (tone === "casual") {
+    return text;
+  }
+  if (tone === "motivational") {
+    if (/poupa|objetivo|meta/i.test(text) && !/continua|parabéns|excelente/i.test(text)) {
+      return `${text}\n\nEstás no caminho certo — um passo de cada vez.`;
+    }
+  }
+  return text;
+}
 
 const CELEBRATIONS = [
   "Parabéns!",
@@ -150,16 +174,20 @@ export function softenGoalRisk(goalName: string, shortfallLabel: string): string
 
 /** Encurta ou mantém texto conforme preferência de comprimento. */
 export function shapeLength(text: string, prefs: NinaVoicePrefs): string {
-  if (prefs.replyLength !== "short") return text;
-  const parts = text.split(/\n\n+/).filter(Boolean);
-  if (parts.length <= 1) return text;
-  // Keep first paragraph + last actionable line if present
-  const first = parts[0];
-  const last = parts[parts.length - 1];
-  if (last !== first && /(queres|posso|vamos|se quiseres)/i.test(last)) {
-    return `${first}\n\n${last}`;
+  let out = text;
+  if (prefs.replyLength === "short") {
+    const parts = text.split(/\n\n+/).filter(Boolean);
+    if (parts.length > 1) {
+      const first = parts[0];
+      const last = parts[parts.length - 1];
+      if (last !== first && /(queres|posso|vamos|se quiseres)/i.test(last)) {
+        out = `${first}\n\n${last}`;
+      } else {
+        out = first;
+      }
+    }
   }
-  return first;
+  return applyCommTone(out, prefs.tone ?? "empathetic");
 }
 
 export function composeReply(opts: {
@@ -183,10 +211,12 @@ export function learnReplyLengthFromQuestion(question: string, current: ReplyLen
 export function resolveVoicePrefs(input: {
   replyStyle?: string | null;
   humor?: string | null;
+  tone?: string | null;
   recentQuestion?: string | null;
 }): NinaVoicePrefs {
   const styleRaw = (input.replyStyle || "auto").toLowerCase();
   const humorRaw = (input.humor || "auto").toLowerCase();
+  const toneRaw = (input.tone || "empathetic").toLowerCase();
 
   let replyLength: ReplyLength = "balanced";
   let source: NinaVoicePrefs["source"] = "auto";
@@ -204,14 +234,24 @@ export function resolveVoicePrefs(input: {
     humor = humorRaw;
     source = "user";
   } else if (humorRaw === "auto" && input.recentQuestion) {
-    // Sem sinais claros → light; perguntas muito formais → off
     const formal = /(por favor|gostaria|poderia|relatorio|relatório|analise|análise)/i.test(
       input.recentQuestion,
     );
     humor = formal ? "off" : "light";
   }
 
-  return { replyLength, humor, source };
+  const tone: NinaCommTone = ["formal", "casual", "motivational", "empathetic"].includes(toneRaw)
+    ? (toneRaw as NinaCommTone)
+    : "empathetic";
+
+  if (tone === "formal") {
+    humor = "off";
+    if (replyLength === "short") replyLength = "balanced";
+  }
+  if (tone === "casual" && humor === "off" && humorRaw === "auto") humor = "light";
+  if (tone === "motivational" && replyLength === "detailed") replyLength = "balanced";
+
+  return { replyLength, humor, source, tone };
 }
 
 /** @deprecated Prefer NINA_MISSION_LINE / NINA_SIMPLE_RULE from mission.ts */

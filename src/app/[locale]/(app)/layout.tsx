@@ -22,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <AppShell
       userName={session.user.name || membership.displayName}
+      familyName={membership.family.name}
       unreadAlerts={unread}
       space={space}
     >

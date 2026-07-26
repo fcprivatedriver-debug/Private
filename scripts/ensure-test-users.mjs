@@ -102,6 +102,7 @@ async function ensureEmptyTestAccount(prisma, account) {
         email: account.email,
         passwordHash,
         theme: "system",
+        emailVerified: new Date(),
       },
     });
     const family = await prisma.family.create({
@@ -128,7 +129,7 @@ async function ensureEmptyTestAccount(prisma, account) {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash, name: account.name },
+    data: { passwordHash, name: account.name, emailVerified: new Date() },
   });
 
   let memberships = await prisma.familyMember.findMany({

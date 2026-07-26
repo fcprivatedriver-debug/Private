@@ -425,6 +425,7 @@ export function buildNinaContextFromRaw(input: {
   recentQuestion?: string;
   ninaReplyStyle?: string | null;
   ninaHumor?: string | null;
+  ninaTone?: string | null;
 }): NinaContext {
   const { year, month } = currentYearMonth();
   const { end } = monthBounds(year, month);
@@ -434,6 +435,7 @@ export function buildNinaContextFromRaw(input: {
     resolveVoicePrefs({
       replyStyle: input.ninaReplyStyle,
       humor: input.ninaHumor,
+      tone: input.ninaTone,
       recentQuestion: input.recentQuestion,
     });
   return {

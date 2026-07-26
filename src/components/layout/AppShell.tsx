@@ -22,6 +22,7 @@ const NAV = [
   { href: "/pt/calendario", label: "Calendário" },
   { href: "/pt/poupancas", label: "Poupanças" },
   { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/personalizar", label: "Personalizar a Nina" },
   { href: "/pt/guia", label: "Guia" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
@@ -45,11 +46,13 @@ const MOBILE = [
 export function AppShell({
   children,
   userName,
+  familyName,
   unreadAlerts = 0,
   space = "personal",
 }: {
   children: React.ReactNode;
   userName: string;
+  familyName?: string;
   unreadAlerts?: number;
   space?: NinaSpace;
 }) {
@@ -62,6 +65,7 @@ export function AppShell({
         <div className="sidebar-top">
           <BrandLogo href="/pt/dashboard" size="sm" />
           <p className="sidebar-tag">{NINA_MISSION_SHORT}</p>
+          {familyName ? <p className="sidebar-family">{familyName}</p> : null}
         </div>
         <div className="sidebar-space">
           <SpaceSwitcher space={space} />
@@ -86,14 +90,14 @@ export function AppShell({
         <div className="sidebar-foot">
           <p className="muted small">Olá, {userName.split(" ")[0]}</p>
           <div className="theme-toggle" role="group" aria-label="Tema">
-            {(["light", "dark", "system"] as const).map((t) => (
+            {(["light", "dark", "blue", "system"] as const).map((t) => (
               <button
                 key={t}
                 type="button"
                 className={cn("theme-btn", theme === t && "active")}
                 onClick={() => setTheme(t)}
               >
-                {t === "light" ? "Claro" : t === "dark" ? "Escuro" : "Auto"}
+                {t === "light" ? "Claro" : t === "dark" ? "Escuro" : t === "blue" ? "Azul" : "Auto"}
               </button>
             ))}
           </div>
@@ -104,6 +108,7 @@ export function AppShell({
         <header className="app-topbar">
           <div className="topbar-brand-mobile">
             <BrandLogo href="/pt/dashboard" size="sm" />
+            {familyName ? <span className="topbar-family">{familyName}</span> : null}
           </div>
           <div className="topbar-space-mobile">
             <SpaceSwitcher space={space} />

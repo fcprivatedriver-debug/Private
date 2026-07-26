@@ -8,7 +8,6 @@ import { requireFamilyContext, requireSession } from "@/lib/session";
 import { canManageMembers, makeInviteCode } from "@/domain/household";
 import type { FinanceScope, HouseholdKind } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { DEMO_PASSWORD } from "@/lib/demo-mode";
 
 function revalidateAll() {
   revalidatePath("/", "layout");
@@ -255,36 +254,112 @@ export async function updateMemberRole(
   return { ok: true as const };
 }
 
-export async function inviteMemberToHousehold(formData: FormData) {
-  const { membership, family } = await requireFamilyContext();
+export async function inviteMemberByEmail(formData: FormData) {
+  const { session, membership, family } = await requireFamilyContext();
   if (!canManageMembers(membership.role)) {
     return { ok: false as const, error: "Sem permissão para convidar." };
   }
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim().toLowerCase();
-  const roleRaw = String(formData.get("role") || "MEMBER");
-  const role = roleRaw === "ADMIN" || roleRaw === "VIEWER" ? roleRaw : "MEMBER";
-  const password = String(formData.get("password") || DEMO_PASSWORD);
   if (!name || !email) return { ok: false as const, error: "Nome e email necessários." };
 
-  let user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    user = await prisma.user.create({
-      data: { name, email, passwordHash: await bcrypt.hash(password, 10) },
+  if (family.kind === "INDIVIDUAL") {
+    await prisma.family.update({
+      where: { id: family.id },
+      data: { kind: "FAMILY", inviteCode: family.inviteCode || makeInviteCode() },
     });
   }
-  await prisma.familyMember.upsert({
-    where: { familyId_userId: { familyId: family.id, userId: user.id } },
-    create: {
+
+  const token = randomBytes(24).toString("hex");
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 14);
+  const invite = await prisma.familyInvite.create({
+    data: {
       familyId: family.id,
-      userId: user.id,
-      displayName: name.trim() || "Membro",
-      role,
+      token,
+      createdById: session.user.id,
+      email,
+      inviteeName: name,
+      label: name,
+      expiresAt,
     },
-    update: { displayName: name.trim() || "Membro", role },
   });
+
+  const { appBaseUrl, sendAppEmail } = await import("@/lib/auth/security");
+  const invitePath = `/pt/convite/${invite.token}`;
+  const url = `${appBaseUrl()}${invitePath}`;
+  const mail = await sendAppEmail({
+    to: email,
+    subject: `Convite para ${family.name} — Nina`,
+    text: `Olá ${name},\n\nFoste convidado(a) para a família «${family.name}» na Nina.\n\nAceita aqui (só precisas de criar a tua palavra-passe):\n${url}\n\n— Nina`,
+  });
+
   revalidateAll();
-  return { ok: true as const };
+  return {
+    ok: true as const,
+    invitePath,
+    previewUrl: mail.ok && !mail.delivered ? url : undefined,
+  };
+}
+
+/** Aceitar convite criando só a palavra-passe (membro novo). */
+export async function acceptInviteSetPassword(formData: FormData) {
+  const token = String(formData.get("token") || "");
+  const password = String(formData.get("password") || "");
+  const { validatePassword } = await import("@/lib/auth/password-rules");
+  const pwd = validatePassword(password);
+  if (!pwd.ok) return { ok: false as const, error: pwd.error };
+
+  const invite = await prisma.familyInvite.findUnique({
+    where: { token },
+    include: { family: true },
+  });
+  if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) {
+    return { ok: false as const, error: "Convite inválido ou expirado." };
+  }
+
+  const email = (invite.email || "").toLowerCase();
+  const displayName = invite.inviteeName || "Membro";
+  if (!email) {
+    return { ok: false as const, error: "Este convite não tem email. Usa o registo normal." };
+  }
+
+  let user = await prisma.user.findUnique({ where: { email } });
+  const passwordHash = await bcrypt.hash(password, 10);
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        name: displayName,
+        email,
+        passwordHash,
+        emailVerified: new Date(),
+      },
+    });
+  } else {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, emailVerified: new Date() },
+    });
+  }
+
+  await prisma.familyMember.upsert({
+    where: { familyId_userId: { familyId: invite.familyId, userId: user.id } },
+    create: {
+      familyId: invite.familyId,
+      userId: user.id,
+      displayName,
+      role: "MEMBER",
+    },
+    update: { displayName, role: "MEMBER" },
+  });
+
+  await prisma.familyInvite.update({
+    where: { id: invite.id },
+    data: { acceptedAt: new Date(), acceptedById: user.id },
+  });
+
+  revalidateAll();
+  return { ok: true as const, email, familyName: invite.family.name };
 }
 
 import { applySavingsTransfer } from "@/lib/savings-transfer";
@@ -349,6 +424,32 @@ export async function deleteMemoryRule(id: string) {
   return { ok: true as const };
 }
 
+export async function updateNinaPersonalization(formData: FormData) {
+  const session = await requireSession();
+  const theme = String(formData.get("theme") || "system");
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: {
+      theme: ["light", "dark", "system", "blue", "green", "purple"].includes(theme)
+        ? theme
+        : "system",
+      ninaTone: ["formal", "casual", "motivational", "empathetic"].includes(
+        String(formData.get("ninaTone") || "empathetic"),
+      )
+        ? String(formData.get("ninaTone") || "empathetic")
+        : "empathetic",
+      ninaAvatar: ["classic", "modern", "minimal", "feminine", "masculine"].includes(
+        String(formData.get("ninaAvatar") || "classic"),
+      )
+        ? String(formData.get("ninaAvatar") || "classic")
+        : "classic",
+      ninaVoice: String(formData.get("ninaVoice") || "").trim() || null,
+    },
+  });
+  revalidateAll();
+  return { ok: true as const };
+}
+
 export async function updateProfile(formData: FormData) {
   const session = await requireSession();
   const preferredName = String(formData.get("preferredName") || "").trim();
@@ -362,7 +463,9 @@ export async function updateProfile(formData: FormData) {
     where: { id: session.user.id },
     data: {
       name: fullName || howToCall || undefined,
-      theme: ["light", "dark", "system"].includes(theme) ? theme : "system",
+      theme: ["light", "dark", "system", "blue", "green", "purple"].includes(theme)
+        ? theme
+        : "system",
       biometricsEnabled,
       pinHash: pin.length >= 4 ? await bcrypt.hash(pin, 10) : undefined,
       ninaReplyStyle: ["auto", "short", "balanced", "detailed"].includes(
@@ -373,6 +476,17 @@ export async function updateProfile(formData: FormData) {
       ninaHumor: ["auto", "off", "light"].includes(String(formData.get("ninaHumor") || "auto"))
         ? String(formData.get("ninaHumor") || "auto")
         : "auto",
+      ninaTone: ["formal", "casual", "motivational", "empathetic"].includes(
+        String(formData.get("ninaTone") || "empathetic"),
+      )
+        ? String(formData.get("ninaTone") || "empathetic")
+        : "empathetic",
+      ninaAvatar: ["classic", "modern", "minimal", "feminine", "masculine"].includes(
+        String(formData.get("ninaAvatar") || "classic"),
+      )
+        ? String(formData.get("ninaAvatar") || "classic")
+        : "classic",
+      ninaVoice: String(formData.get("ninaVoice") || "").trim() || null,
     },
   });
 
