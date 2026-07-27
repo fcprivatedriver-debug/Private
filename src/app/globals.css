@@ -2,15 +2,15 @@
 
 /* ——— Mel design tokens ——— */
 :root {
-  --bg: #f4f7f6;
+  --bg: #eef5f4;
   --bg-elevated: #ffffff;
-  --bg-soft: #e8f1f0;
+  --bg-soft: #e2eeec;
   --bg-ink: #14212b;
   --bg-ink-soft: #1c2c38;
 
   --fg: #14212b;
   --fg-muted: #5a6b75;
-  --fg-on-ink: #f7f3ea;
+  --fg-on-ink: #f4faf9;
 
   --brand: #14212b;
   --brand-strong: #0b141a;
@@ -20,8 +20,8 @@
   --teal: #0f766e;
   --teal-soft: #14b8a6;
   --honey: #c9892e;
-  --mist: #e8f1f0;
-  --dawn: #f7f3ea;
+  --mist: #e2eeec;
+  --dawn: #eef5f4;
 
   --line: rgba(20, 33, 43, 0.1);
   --line-strong: rgba(20, 33, 43, 0.18);
@@ -112,9 +112,10 @@ select {
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(120% 80% at 10% -10%, rgba(20, 184, 166, 0.22), transparent 55%),
-    radial-gradient(90% 70% at 100% 0%, rgba(201, 137, 46, 0.2), transparent 50%),
-    linear-gradient(165deg, #eef5f4 0%, #f7f3ea 48%, #e8f1f0 100%);
+    radial-gradient(120% 80% at 8% -8%, rgba(20, 184, 166, 0.28), transparent 52%),
+    radial-gradient(90% 70% at 100% 8%, rgba(15, 118, 110, 0.18), transparent 48%),
+    radial-gradient(70% 50% at 70% 100%, rgba(201, 137, 46, 0.12), transparent 55%),
+    linear-gradient(165deg, #e8f4f2 0%, #eef5f4 55%, #e2eeec 100%);
 }
 
 .mel-atmosphere::before {
@@ -361,14 +362,34 @@ select {
   min-height: 100dvh;
   display: grid;
   align-items: end;
-  padding: 6rem 0 4rem;
+  padding: 7rem 0 5rem;
+  position: relative;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 18% auto;
+  width: min(46vw, 520px);
+  height: min(46vw, 520px);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.55), transparent 55%),
+    radial-gradient(circle at 60% 60%, rgba(201, 137, 46, 0.35), rgba(15, 118, 110, 0.28));
+  filter: blur(2px);
+  animation: mel-glow 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .hero-copy {
+  position: relative;
+  z-index: 1;
   max-width: 38rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  padding-bottom: 2rem;
 }
 
 .hero-brand {
@@ -405,8 +426,10 @@ select {
 .feature-strip {
   display: grid;
   gap: 1.5rem;
-  padding: 4rem 0 5rem;
+  padding: 5rem 0 5rem;
   grid-template-columns: 1fr;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 @media (min-width: 720px) {
