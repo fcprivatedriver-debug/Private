@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /**
- * Local/Vercel build entry: load .env, ensure DIRECT_URL, migrate, next build.
+ * Local/Vercel build entry: load .env, force Mel schema, migrate, next build.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+const MEL_SCHEMA = "mel";
 
 function loadDotEnv() {
   const envPath = resolve(process.cwd(), ".env");
@@ -36,6 +38,20 @@ function stripChannelBinding(url) {
   }
 }
 
+function withMelSchema(url) {
+  try {
+    const u = new URL(url);
+    u.searchParams.delete("channel_binding");
+    u.searchParams.set("schema", MEL_SCHEMA);
+    if (u.hostname.includes("neon.tech") && !u.searchParams.has("sslmode")) {
+      u.searchParams.set("sslmode", "require");
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 loadDotEnv();
 
 if (!process.env.DIRECT_URL) {
@@ -49,14 +65,20 @@ if (!process.env.DIRECT_URL) {
 if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
   process.env.AUTH_SECRET =
     "mel-demo-auth-secret-do-not-use-in-real-prod-32b";
+  console.log("[build] AUTH_SECRET fallback de demo (define AUTH_SECRET no Vercel).");
 }
 
 if (process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = stripChannelBinding(process.env.DATABASE_URL);
+  process.env.DATABASE_URL = withMelSchema(
+    stripChannelBinding(process.env.DATABASE_URL),
+  );
 }
 if (process.env.DIRECT_URL) {
-  process.env.DIRECT_URL = stripChannelBinding(process.env.DIRECT_URL);
+  process.env.DIRECT_URL = withMelSchema(
+    stripChannelBinding(process.env.DIRECT_URL),
+  );
 }
+process.env.MEL_PG_SCHEMA = MEL_SCHEMA;
 
 if (!process.env.DATABASE_URL || !process.env.DIRECT_URL) {
   console.error("[build] DATABASE_URL / DIRECT_URL em falta.");

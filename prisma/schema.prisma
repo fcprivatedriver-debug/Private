@@ -1,11 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["mel"]
 }
 
 // ——— Auth (Auth.js) ———
@@ -41,6 +42,8 @@ model User {
   captures       VoiceCapture[]
   reports        WeeklyReport[]
   conversations  MelMessage[]
+
+  @@schema("mel")
 }
 
 model AuthAccount {
@@ -59,6 +62,8 @@ model AuthAccount {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+
+  @@schema("mel")
 }
 
 model Session {
@@ -67,6 +72,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("mel")
 }
 
 model VerificationToken {
@@ -75,6 +82,8 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+
+  @@schema("mel")
 }
 
 // ——— Modularidade ———
@@ -86,6 +95,8 @@ enum ModuleId {
   REPORTS
   HABITS
   REMINDERS
+
+  @@schema("mel")
 }
 
 model UserModule {
@@ -101,6 +112,8 @@ model UserModule {
 
   @@unique([userId, moduleId])
   @@index([userId])
+
+  @@schema("mel")
 }
 
 // ——— Tarefas ———
@@ -110,6 +123,8 @@ enum TaskStatus {
   IN_PROGRESS
   DONE
   CANCELLED
+
+  @@schema("mel")
 }
 
 enum TaskPriority {
@@ -117,6 +132,8 @@ enum TaskPriority {
   MEDIUM
   HIGH
   URGENT
+
+  @@schema("mel")
 }
 
 model Task {
@@ -137,6 +154,8 @@ model Task {
 
   @@index([userId, status])
   @@index([userId, dueAt])
+
+  @@schema("mel")
 }
 
 // ——— Calendário ———
@@ -159,6 +178,8 @@ model CalendarEvent {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, startsAt])
+
+  @@schema("mel")
 }
 
 // ——— Hábitos (estrutura pronta) ———
@@ -167,6 +188,8 @@ enum HabitFrequency {
   DAILY
   WEEKLY
   CUSTOM
+
+  @@schema("mel")
 }
 
 model Habit {
@@ -185,6 +208,8 @@ model Habit {
   logs HabitLog[]
 
   @@index([userId, active])
+
+  @@schema("mel")
 }
 
 model HabitLog {
@@ -196,6 +221,8 @@ model HabitLog {
   habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
 
   @@index([habitId, doneAt])
+
+  @@schema("mel")
 }
 
 // ——— Lembretes (estrutura pronta) ———
@@ -205,6 +232,8 @@ enum ReminderStatus {
   SENT
   DISMISSED
   CANCELLED
+
+  @@schema("mel")
 }
 
 model Reminder {
@@ -224,6 +253,8 @@ model Reminder {
 
   @@index([userId, remindAt])
   @@index([userId, status])
+
+  @@schema("mel")
 }
 
 // ——— Captura por voz ———
@@ -235,6 +266,8 @@ enum CaptureIntent {
   HABIT
   NOTE
   UNKNOWN
+
+  @@schema("mel")
 }
 
 model VoiceCapture {
@@ -250,6 +283,8 @@ model VoiceCapture {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+
+  @@schema("mel")
 }
 
 // ——— Relatórios semanais ———
@@ -268,6 +303,8 @@ model WeeklyReport {
 
   @@unique([userId, weekStart])
   @@index([userId, weekStart])
+
+  @@schema("mel")
 }
 
 // ——— Conversação com a Mel ———
@@ -276,6 +313,8 @@ enum MessageRole {
   USER
   ASSISTANT
   SYSTEM
+
+  @@schema("mel")
 }
 
 model MelMessage {
@@ -289,4 +328,6 @@ model MelMessage {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+
+  @@schema("mel")
 }

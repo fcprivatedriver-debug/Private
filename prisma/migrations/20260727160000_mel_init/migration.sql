@@ -1,13 +1,15 @@
--- Mel init: assistente pessoal inteligente
-CREATE TYPE "ModuleId" AS ENUM ('TASKS', 'CALENDAR', 'VOICE', 'REPORTS', 'HABITS', 'REMINDERS');
-CREATE TYPE "TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE', 'CANCELLED');
-CREATE TYPE "TaskPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
-CREATE TYPE "HabitFrequency" AS ENUM ('DAILY', 'WEEKLY', 'CUSTOM');
-CREATE TYPE "ReminderStatus" AS ENUM ('SCHEDULED', 'SENT', 'DISMISSED', 'CANCELLED');
-CREATE TYPE "CaptureIntent" AS ENUM ('TASK', 'EVENT', 'REMINDER', 'HABIT', 'NOTE', 'UNKNOWN');
-CREATE TYPE "MessageRole" AS ENUM ('USER', 'ASSISTANT', 'SYSTEM');
+-- Mel init: schema isolado na Neon partilhada (ZRIK continua em public)
+CREATE SCHEMA IF NOT EXISTS "mel";
 
-CREATE TABLE "User" (
+CREATE TYPE "mel"."ModuleId" AS ENUM ('TASKS', 'CALENDAR', 'VOICE', 'REPORTS', 'HABITS', 'REMINDERS');
+CREATE TYPE "mel"."TaskStatus" AS ENUM ('TODO', 'IN_PROGRESS', 'DONE', 'CANCELLED');
+CREATE TYPE "mel"."TaskPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+CREATE TYPE "mel"."HabitFrequency" AS ENUM ('DAILY', 'WEEKLY', 'CUSTOM');
+CREATE TYPE "mel"."ReminderStatus" AS ENUM ('SCHEDULED', 'SENT', 'DISMISSED', 'CANCELLED');
+CREATE TYPE "mel"."CaptureIntent" AS ENUM ('TASK', 'EVENT', 'REMINDER', 'HABIT', 'NOTE', 'UNKNOWN');
+CREATE TYPE "mel"."MessageRole" AS ENUM ('USER', 'ASSISTANT', 'SYSTEM');
+
+CREATE TABLE "mel"."User" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -26,9 +28,9 @@ CREATE TABLE "User" (
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX "User_email_key" ON "mel"."User"("email");
 
-CREATE TABLE "AuthAccount" (
+CREATE TABLE "mel"."AuthAccount" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -44,9 +46,9 @@ CREATE TABLE "AuthAccount" (
     CONSTRAINT "AuthAccount_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "AuthAccount_provider_providerAccountId_key" ON "AuthAccount"("provider", "providerAccountId");
+CREATE UNIQUE INDEX "AuthAccount_provider_providerAccountId_key" ON "mel"."AuthAccount"("provider", "providerAccountId");
 
-CREATE TABLE "Session" (
+CREATE TABLE "mel"."Session" (
     "id" TEXT NOT NULL,
     "sessionToken" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -54,21 +56,21 @@ CREATE TABLE "Session" (
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
+CREATE UNIQUE INDEX "Session_sessionToken_key" ON "mel"."Session"("sessionToken");
 
-CREATE TABLE "VerificationToken" (
+CREATE TABLE "mel"."VerificationToken" (
     "identifier" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL
 );
 
-CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token");
-CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
+CREATE UNIQUE INDEX "VerificationToken_token_key" ON "mel"."VerificationToken"("token");
+CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "mel"."VerificationToken"("identifier", "token");
 
-CREATE TABLE "UserModule" (
+CREATE TABLE "mel"."UserModule" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "moduleId" "ModuleId" NOT NULL,
+    "moduleId" "mel"."ModuleId" NOT NULL,
     "enabled" BOOLEAN NOT NULL DEFAULT true,
     "settings" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -76,16 +78,16 @@ CREATE TABLE "UserModule" (
     CONSTRAINT "UserModule_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "UserModule_userId_moduleId_key" ON "UserModule"("userId", "moduleId");
-CREATE INDEX "UserModule_userId_idx" ON "UserModule"("userId");
+CREATE UNIQUE INDEX "UserModule_userId_moduleId_key" ON "mel"."UserModule"("userId", "moduleId");
+CREATE INDEX "UserModule_userId_idx" ON "mel"."UserModule"("userId");
 
-CREATE TABLE "Task" (
+CREATE TABLE "mel"."Task" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "notes" TEXT,
-    "status" "TaskStatus" NOT NULL DEFAULT 'TODO',
-    "priority" "TaskPriority" NOT NULL DEFAULT 'MEDIUM',
+    "status" "mel"."TaskStatus" NOT NULL DEFAULT 'TODO',
+    "priority" "mel"."TaskPriority" NOT NULL DEFAULT 'MEDIUM',
     "dueAt" TIMESTAMP(3),
     "completedAt" TIMESTAMP(3),
     "source" TEXT NOT NULL DEFAULT 'manual',
@@ -95,10 +97,10 @@ CREATE TABLE "Task" (
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "Task_userId_status_idx" ON "Task"("userId", "status");
-CREATE INDEX "Task_userId_dueAt_idx" ON "Task"("userId", "dueAt");
+CREATE INDEX "Task_userId_status_idx" ON "mel"."Task"("userId", "status");
+CREATE INDEX "Task_userId_dueAt_idx" ON "mel"."Task"("userId", "dueAt");
 
-CREATE TABLE "CalendarEvent" (
+CREATE TABLE "mel"."CalendarEvent" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
@@ -115,14 +117,14 @@ CREATE TABLE "CalendarEvent" (
     CONSTRAINT "CalendarEvent_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "CalendarEvent_userId_startsAt_idx" ON "CalendarEvent"("userId", "startsAt");
+CREATE INDEX "CalendarEvent_userId_startsAt_idx" ON "mel"."CalendarEvent"("userId", "startsAt");
 
-CREATE TABLE "Habit" (
+CREATE TABLE "mel"."Habit" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "frequency" "HabitFrequency" NOT NULL DEFAULT 'DAILY',
+    "frequency" "mel"."HabitFrequency" NOT NULL DEFAULT 'DAILY',
     "targetPerWeek" INTEGER,
     "color" TEXT,
     "active" BOOLEAN NOT NULL DEFAULT true,
@@ -131,9 +133,9 @@ CREATE TABLE "Habit" (
     CONSTRAINT "Habit_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "Habit_userId_active_idx" ON "Habit"("userId", "active");
+CREATE INDEX "Habit_userId_active_idx" ON "mel"."Habit"("userId", "active");
 
-CREATE TABLE "HabitLog" (
+CREATE TABLE "mel"."HabitLog" (
     "id" TEXT NOT NULL,
     "habitId" TEXT NOT NULL,
     "doneAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -141,15 +143,15 @@ CREATE TABLE "HabitLog" (
     CONSTRAINT "HabitLog_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "HabitLog_habitId_doneAt_idx" ON "HabitLog"("habitId", "doneAt");
+CREATE INDEX "HabitLog_habitId_doneAt_idx" ON "mel"."HabitLog"("habitId", "doneAt");
 
-CREATE TABLE "Reminder" (
+CREATE TABLE "mel"."Reminder" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "body" TEXT,
     "remindAt" TIMESTAMP(3) NOT NULL,
-    "status" "ReminderStatus" NOT NULL DEFAULT 'SCHEDULED',
+    "status" "mel"."ReminderStatus" NOT NULL DEFAULT 'SCHEDULED',
     "source" TEXT NOT NULL DEFAULT 'manual',
     "relatedTaskId" TEXT,
     "relatedEventId" TEXT,
@@ -158,14 +160,14 @@ CREATE TABLE "Reminder" (
     CONSTRAINT "Reminder_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "Reminder_userId_remindAt_idx" ON "Reminder"("userId", "remindAt");
-CREATE INDEX "Reminder_userId_status_idx" ON "Reminder"("userId", "status");
+CREATE INDEX "Reminder_userId_remindAt_idx" ON "mel"."Reminder"("userId", "remindAt");
+CREATE INDEX "Reminder_userId_status_idx" ON "mel"."Reminder"("userId", "status");
 
-CREATE TABLE "VoiceCapture" (
+CREATE TABLE "mel"."VoiceCapture" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "transcript" TEXT NOT NULL,
-    "intent" "CaptureIntent" NOT NULL DEFAULT 'UNKNOWN',
+    "intent" "mel"."CaptureIntent" NOT NULL DEFAULT 'UNKNOWN',
     "confidence" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "resultJson" JSONB,
     "createdEntity" TEXT,
@@ -173,9 +175,9 @@ CREATE TABLE "VoiceCapture" (
     CONSTRAINT "VoiceCapture_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "VoiceCapture_userId_createdAt_idx" ON "VoiceCapture"("userId", "createdAt");
+CREATE INDEX "VoiceCapture_userId_createdAt_idx" ON "mel"."VoiceCapture"("userId", "createdAt");
 
-CREATE TABLE "WeeklyReport" (
+CREATE TABLE "mel"."WeeklyReport" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "weekStart" TIMESTAMP(3) NOT NULL,
@@ -187,29 +189,29 @@ CREATE TABLE "WeeklyReport" (
     CONSTRAINT "WeeklyReport_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "WeeklyReport_userId_weekStart_key" ON "WeeklyReport"("userId", "weekStart");
-CREATE INDEX "WeeklyReport_userId_weekStart_idx" ON "WeeklyReport"("userId", "weekStart");
+CREATE UNIQUE INDEX "WeeklyReport_userId_weekStart_key" ON "mel"."WeeklyReport"("userId", "weekStart");
+CREATE INDEX "WeeklyReport_userId_weekStart_idx" ON "mel"."WeeklyReport"("userId", "weekStart");
 
-CREATE TABLE "MelMessage" (
+CREATE TABLE "mel"."MelMessage" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "role" "MessageRole" NOT NULL,
+    "role" "mel"."MessageRole" NOT NULL,
     "content" TEXT NOT NULL,
     "meta" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "MelMessage_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "MelMessage_userId_createdAt_idx" ON "MelMessage"("userId", "createdAt");
+CREATE INDEX "MelMessage_userId_createdAt_idx" ON "mel"."MelMessage"("userId", "createdAt");
 
-ALTER TABLE "AuthAccount" ADD CONSTRAINT "AuthAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "UserModule" ADD CONSTRAINT "UserModule_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Task" ADD CONSTRAINT "Task_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "CalendarEvent" ADD CONSTRAINT "CalendarEvent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Habit" ADD CONSTRAINT "Habit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "HabitLog" ADD CONSTRAINT "HabitLog_habitId_fkey" FOREIGN KEY ("habitId") REFERENCES "Habit"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Reminder" ADD CONSTRAINT "Reminder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "VoiceCapture" ADD CONSTRAINT "VoiceCapture_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "WeeklyReport" ADD CONSTRAINT "WeeklyReport_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "MelMessage" ADD CONSTRAINT "MelMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."AuthAccount" ADD CONSTRAINT "AuthAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."UserModule" ADD CONSTRAINT "UserModule_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."Task" ADD CONSTRAINT "Task_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."CalendarEvent" ADD CONSTRAINT "CalendarEvent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."Habit" ADD CONSTRAINT "Habit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."HabitLog" ADD CONSTRAINT "HabitLog_habitId_fkey" FOREIGN KEY ("habitId") REFERENCES "mel"."Habit"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."Reminder" ADD CONSTRAINT "Reminder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."VoiceCapture" ADD CONSTRAINT "VoiceCapture_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."WeeklyReport" ADD CONSTRAINT "WeeklyReport_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "mel"."MelMessage" ADD CONSTRAINT "MelMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "mel"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

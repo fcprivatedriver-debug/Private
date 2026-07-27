@@ -2,13 +2,9 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
-/** Em Neon partilhado, a Mel vive no schema `mel` para não colidir com outros produtos. */
-export function resolveMelSchema(): string | null {
-  return (
-    process.env.MEL_PG_SCHEMA ||
-    (process.env.VERCEL ? "mel" : null) ||
-    (process.env.FORCE_MEL_SCHEMA === "true" ? "mel" : null)
-  );
+/** Em Neon partilhada, a Mel vive sempre no schema `mel` (ZRIK = public). */
+export function resolveMelSchema(): string {
+  return process.env.MEL_PG_SCHEMA || "mel";
 }
 
 export function sanitizeDatabaseUrl(url: string): string {
@@ -18,10 +14,7 @@ export function sanitizeDatabaseUrl(url: string): string {
     if (u.hostname.includes("neon.tech") && !u.searchParams.has("sslmode")) {
       u.searchParams.set("sslmode", "require");
     }
-    const forceSchema = resolveMelSchema();
-    if (forceSchema) {
-      u.searchParams.set("schema", forceSchema);
-    }
+    u.searchParams.set("schema", resolveMelSchema());
     return u.toString();
   } catch {
     return url
@@ -42,14 +35,12 @@ function createPrismaClient(): PrismaClient {
   }
 
   const connectionString = sanitizeDatabaseUrl(raw);
+  const schema = resolveMelSchema();
 
   if (isNeonUrl(connectionString)) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaNeon } = require("@prisma/adapter-neon") as typeof import("@prisma/adapter-neon");
-    const schema = resolveMelSchema();
-    const adapter = schema
-      ? new PrismaNeon({ connectionString }, { schema })
-      : new PrismaNeon({ connectionString });
+    const adapter = new PrismaNeon({ connectionString }, { schema });
     return new PrismaClient({
       adapter,
       log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
