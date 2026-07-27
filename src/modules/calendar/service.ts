@@ -6,7 +6,9 @@ import {
   startOfWeek,
   endOfWeek,
   addDays,
+  addMinutes,
 } from "date-fns";
+import { registerCapability } from "@/core/capabilities";
 
 export type CreateEventInput = {
   userId: string;
@@ -18,7 +20,22 @@ export type CreateEventInput = {
   allDay?: boolean;
   source?: string;
   color?: string;
+  externalId?: string;
 };
+
+export type UpdateEventInput = Partial<{
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+  color: string | null;
+}>;
+
+export function taskExternalId(taskId: string): string {
+  return `task:${taskId}`;
+}
 
 export async function listEvents(
   userId: string,
@@ -57,7 +74,23 @@ export async function createEvent(input: CreateEventInput): Promise<CalendarEven
       allDay: input.allDay ?? false,
       source: input.source ?? "manual",
       color: input.color ?? null,
+      externalId: input.externalId ?? null,
     },
+  });
+}
+
+export async function updateEvent(
+  userId: string,
+  eventId: string,
+  data: UpdateEventInput,
+): Promise<CalendarEvent | null> {
+  const existing = await prisma.calendarEvent.findFirst({
+    where: { id: eventId, userId },
+  });
+  if (!existing) return null;
+  return prisma.calendarEvent.update({
+    where: { id: eventId },
+    data,
   });
 }
 
@@ -68,6 +101,15 @@ export async function deleteEvent(userId: string, eventId: string): Promise<bool
   if (!existing) return false;
   await prisma.calendarEvent.delete({ where: { id: eventId } });
   return true;
+}
+
+export async function findEventByExternalId(
+  userId: string,
+  externalId: string,
+): Promise<CalendarEvent | null> {
+  return prisma.calendarEvent.findFirst({
+    where: { userId, externalId },
+  });
 }
 
 /** Sugere um slot amanhã à hora indicada (ou 10:00). */
@@ -89,12 +131,47 @@ export function suggestSlot(opts: {
   return { startsAt, endsAt };
 }
 
+export function slotFromDueAt(dueAt: Date): { startsAt: Date; endsAt: Date; allDay: boolean } {
+  const startsAt = new Date(dueAt);
+  const looksAllDay =
+    startsAt.getHours() === 23 && startsAt.getMinutes() >= 50;
+  if (looksAllDay) {
+    const dayStart = startOfDay(startsAt);
+    return {
+      startsAt: dayStart,
+      endsAt: endOfDay(startsAt),
+      allDay: true,
+    };
+  }
+  return {
+    startsAt,
+    endsAt: addMinutes(startsAt, 30),
+    allDay: false,
+  };
+}
+
+export function registerCalendarCapabilities(): void {
+  registerCapability("calendar.create", async (input) => createEvent(input));
+  registerCapability("calendar.update", async ({ userId, eventId, data }) =>
+    updateEvent(userId, eventId, data),
+  );
+  registerCapability("calendar.delete", async ({ userId, eventId }) =>
+    deleteEvent(userId, eventId),
+  );
+  registerCapability("calendar.findByExternalId", async ({ userId, externalId }) =>
+    findEventByExternalId(userId, externalId),
+  );
+}
+
 export const calendarModule = {
   meta: { id: "CALENDAR" as const, label: "Calendário" },
   listEvents,
   listToday,
   listWeek,
   createEvent,
+  updateEvent,
   deleteEvent,
+  findEventByExternalId,
   suggestSlot,
+  registerCalendarCapabilities,
 };

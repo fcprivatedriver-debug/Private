@@ -823,3 +823,75 @@ select {
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+
+/* ——— Speak overlay (Falar directo) ——— */
+.speak-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: end center;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.speak-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 33, 43, 0.45);
+}
+
+.speak-overlay-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  max-height: min(85dvh, 640px);
+  overflow: auto;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-lg) var(--radius-lg);
+  padding: 1.1rem 1.2rem 1.4rem;
+  box-shadow: var(--shadow-float);
+}
+
+.speak-overlay-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.tab-speak {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-speak .tab-speak-btn,
+.tab-speak .btn {
+  padding: 0.45rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+.task-hit {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.task-hit:hover strong {
+  color: var(--accent-strong);
+}
+
+.task-row {
+  align-items: center;
+}
+
+.task-editor {
+  border-color: rgba(201, 137, 46, 0.35);
+}

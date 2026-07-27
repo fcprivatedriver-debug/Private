@@ -1,7 +1,24 @@
-import type { CaptureIntent } from "@prisma/client";
+import type { CaptureIntent, TaskPriority } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { createTask } from "@/modules/tasks/service";
-import { createEvent, suggestSlot } from "@/modules/calendar/service";
+import { invokeCapability, registerCapability, type DetectedIntent } from "@/core/capabilities";
+
+function suggestSlot(opts: {
+  dayHint?: "today" | "tomorrow";
+  hour?: number;
+  durationMinutes?: number;
+}): { startsAt: Date; endsAt: Date } {
+  const day = new Date();
+  if (opts.dayHint === "tomorrow" || !opts.dayHint) {
+    day.setDate(day.getDate() + 1);
+  }
+  const hour = opts.hour ?? 10;
+  const duration = opts.durationMinutes ?? 60;
+  const startsAt = new Date(day);
+  startsAt.setHours(hour, 0, 0, 0);
+  const endsAt = new Date(startsAt);
+  endsAt.setMinutes(endsAt.getMinutes() + duration);
+  return { startsAt, endsAt };
+}
 
 export type ParsedIntent = {
   intent: CaptureIntent;
@@ -9,7 +26,7 @@ export type ParsedIntent = {
   title: string;
   dayHint?: "today" | "tomorrow";
   hour?: number;
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  priority?: TaskPriority;
   note?: string;
 };
 
@@ -28,6 +45,12 @@ const EVENT_PATTERNS = [
 const REMINDER_PATTERNS = [
   /^(?:lembra[- ]?me|aviso|lembrar)\s+(?:de\s+)?(.+)$/i,
 ];
+
+const QUERY_TODAY =
+  /(?:quais|que|o que).*(?:tarefas?|fazer|pendente).*(?:hoje)|(?:tarefas?|fazer).*(?:hoje).*(?:prioridade)?|(?:hoje).*(?:tarefas?|fazer|prioridade)|o que tenho (?:para )?fazer(?: hoje)?/i;
+
+const QUERY_TOP =
+  /(?:prioridade mais alta|mais (?:urgente|importante)|qual (?:é )?a (?:minha )?prioridade)/i;
 
 function extractHour(text: string): number | undefined {
   const m = text.match(/(?:às|as|a)\s+(\d{1,2})(?:[:h](\d{2}))?/i);
@@ -51,10 +74,6 @@ function cleanTitle(raw: string): string {
     .replace(/^["«]|["»]$/g, "");
 }
 
-/**
- * Parser heurístico em português — sem dependência de LLM externo.
- * Extensível: trocar por um provider de IA sem alterar a UI.
- */
 export function parseVoiceIntent(utterance: string): ParsedIntent | null {
   const text = utterance.trim();
   if (!text) return null;
@@ -66,11 +85,10 @@ export function parseVoiceIntent(utterance: string): ParsedIntent | null {
     const m = text.match(re);
     if (m) {
       const rest = cleanTitle(m[1] || text);
-      const title = rest || "Evento";
       return {
         intent: "EVENT",
         confidence: 0.8,
-        title,
+        title: rest || "Evento",
         dayHint: dayHint ?? "tomorrow",
         hour,
       };
@@ -95,7 +113,7 @@ export function parseVoiceIntent(utterance: string): ParsedIntent | null {
     if (m) {
       const title = cleanTitle(m[1]);
       if (!title) continue;
-      const priority = /\burgente\b/i.test(text)
+      const priority: TaskPriority = /\burgente\b/i.test(text)
         ? "URGENT"
         : /\bimportante\b/i.test(text)
           ? "HIGH"
@@ -104,7 +122,6 @@ export function parseVoiceIntent(utterance: string): ParsedIntent | null {
     }
   }
 
-  // Fallback: frase curta → tarefa
   if (text.length <= 120 && !/[?]/.test(text)) {
     return {
       intent: "TASK",
@@ -119,7 +136,50 @@ export function parseVoiceIntent(utterance: string): ParsedIntent | null {
     intent: "UNKNOWN",
     confidence: 0.2,
     title: text,
-    note: "Não percebi bem. Experimenta «cria tarefa comprar pão» ou «marca reunião amanhã às 15».",
+    note: "Não percebi bem. Experimenta «cria tarefa comprar pão» ou «quais as tarefas para hoje».",
+  };
+}
+
+/** Capability voice.detectIntent */
+export async function detectIntent(utterance: string): Promise<DetectedIntent> {
+  const text = utterance.trim();
+  if (!text) {
+    return {
+      kind: "capture",
+      intent: "UNKNOWN",
+      title: "",
+      confidence: 0,
+      note: "Diz-me o que queres.",
+    };
+  }
+
+  if (QUERY_TOP.test(text)) {
+    return { kind: "query_top_priority" };
+  }
+  if (QUERY_TODAY.test(text) || /tarefas? (?:de |para )?hoje/i.test(text)) {
+    return { kind: "query_today_tasks" };
+  }
+
+  const parsed = parseVoiceIntent(text);
+  if (!parsed) {
+    return {
+      kind: "capture",
+      intent: "UNKNOWN",
+      title: "",
+      confidence: 0,
+      note: "Diz-me o que queres registar.",
+    };
+  }
+
+  return {
+    kind: "capture",
+    intent: parsed.intent as "TASK" | "EVENT" | "REMINDER" | "UNKNOWN",
+    title: parsed.title,
+    dayHint: parsed.dayHint,
+    hour: parsed.hour,
+    priority: parsed.priority,
+    note: parsed.note,
+    confidence: parsed.confidence,
   };
 }
 
@@ -131,45 +191,41 @@ export type CaptureResult = {
   entityType?: "task" | "event" | "reminder";
 };
 
-export async function processVoiceCapture(
+export async function processDetectedCapture(
   userId: string,
   utterance: string,
+  detected: DetectedIntent,
 ): Promise<CaptureResult> {
-  const parsed = parseVoiceIntent(utterance);
-  if (!parsed) {
-    return {
-      ok: false,
-      reply: "Diz-me o que queres registar.",
-      intent: "UNKNOWN",
-    };
+  if (detected.kind !== "capture") {
+    return { ok: false, reply: "Intenção inválida para captura.", intent: "UNKNOWN" };
   }
 
-  if (parsed.intent === "UNKNOWN") {
+  if (detected.intent === "UNKNOWN") {
     await prisma.voiceCapture.create({
       data: {
         userId,
         transcript: utterance,
         intent: "UNKNOWN",
-        confidence: parsed.confidence,
-        resultJson: parsed,
+        confidence: detected.confidence,
+        resultJson: detected,
       },
     });
     return {
       ok: false,
-      reply: parsed.note || "Não percebi. Podes reformular?",
+      reply: detected.note || "Não percebi. Podes reformular?",
       intent: "UNKNOWN",
     };
   }
 
-  if (parsed.intent === "EVENT") {
+  if (detected.intent === "EVENT") {
     const slot = suggestSlot({
-      dayHint: parsed.dayHint,
-      hour: parsed.hour,
+      dayHint: detected.dayHint,
+      hour: detected.hour,
       durationMinutes: 60,
     });
-    const event = await createEvent({
+    const event = await invokeCapability("calendar.create", {
       userId,
-      title: parsed.title,
+      title: detected.title,
       startsAt: slot.startsAt,
       endsAt: slot.endsAt,
       source: "voice",
@@ -179,8 +235,8 @@ export async function processVoiceCapture(
         userId,
         transcript: utterance,
         intent: "EVENT",
-        confidence: parsed.confidence,
-        resultJson: parsed,
+        confidence: detected.confidence,
+        resultJson: detected,
         createdEntity: `event:${event.id}`,
       },
     });
@@ -200,17 +256,16 @@ export async function processVoiceCapture(
     };
   }
 
-  if (parsed.intent === "REMINDER") {
-    // Estrutura pronta: cria lembrete na BD; UI completa vem depois
+  if (detected.intent === "REMINDER") {
     const when = suggestSlot({
-      dayHint: parsed.dayHint ?? "today",
-      hour: parsed.hour ?? new Date().getHours() + 1,
+      dayHint: detected.dayHint ?? "today",
+      hour: detected.hour ?? new Date().getHours() + 1,
       durationMinutes: 0,
     }).startsAt;
     const reminder = await prisma.reminder.create({
       data: {
         userId,
-        title: parsed.title,
+        title: detected.title,
         remindAt: when,
         source: "voice",
       },
@@ -220,35 +275,34 @@ export async function processVoiceCapture(
         userId,
         transcript: utterance,
         intent: "REMINDER",
-        confidence: parsed.confidence,
-        resultJson: parsed,
+        confidence: detected.confidence,
+        resultJson: detected,
         createdEntity: `reminder:${reminder.id}`,
       },
     });
     return {
       ok: true,
-      reply: `Lembrete guardado: «${reminder.title}». O módulo de avisos activos chega em breve.`,
+      reply: `Lembrete guardado: «${reminder.title}».`,
       intent: "REMINDER",
       entityId: reminder.id,
       entityType: "reminder",
     };
   }
 
-  // TASK (default)
   let dueAt: Date | null = null;
-  if (parsed.dayHint === "today") {
+  if (detected.dayHint === "today") {
     dueAt = new Date();
     dueAt.setHours(23, 59, 0, 0);
-  } else if (parsed.dayHint === "tomorrow") {
+  } else if (detected.dayHint === "tomorrow") {
     dueAt = new Date();
     dueAt.setDate(dueAt.getDate() + 1);
     dueAt.setHours(23, 59, 0, 0);
   }
 
-  const task = await createTask({
+  const task = await invokeCapability("tasks.create", {
     userId,
-    title: parsed.title,
-    priority: parsed.priority,
+    title: detected.title,
+    priority: detected.priority,
     dueAt,
     source: "voice",
   });
@@ -258,8 +312,8 @@ export async function processVoiceCapture(
       userId,
       transcript: utterance,
       intent: "TASK",
-      confidence: parsed.confidence,
-      resultJson: parsed,
+      confidence: detected.confidence,
+      resultJson: detected,
       createdEntity: `task:${task.id}`,
     },
   });
@@ -273,8 +327,31 @@ export async function processVoiceCapture(
   };
 }
 
+/** Compat: captura completa via router-friendly path */
+export async function processVoiceCapture(
+  userId: string,
+  utterance: string,
+): Promise<CaptureResult> {
+  const { routeUtterance } = await import("@/core/router");
+  const routed = await routeUtterance(userId, utterance);
+  return {
+    ok: routed.ok,
+    reply: routed.reply,
+    intent: routed.intent === "capture" ? "TASK" : "NOTE",
+  };
+}
+
+export function registerVoiceCapabilities(): void {
+  registerCapability("voice.detectIntent", async ({ utterance }) =>
+    detectIntent(utterance),
+  );
+}
+
 export const voiceModule = {
   meta: { id: "VOICE" as const, label: "Captura" },
   parseVoiceIntent,
+  detectIntent,
   processVoiceCapture,
+  processDetectedCapture,
+  registerVoiceCapabilities,
 };

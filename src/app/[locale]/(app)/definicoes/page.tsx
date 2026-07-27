@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/session";
 import { BiometricsSettings } from "@/components/mel/BiometricsSettings";
+import { VoicePrefsPanel } from "@/components/mel/VoicePrefsPanel";
 import { MEL_MODULES } from "@/modules/registry";
 
 export default async function SettingsPage() {
@@ -9,7 +10,7 @@ export default async function SettingsPage() {
     <div className="stack anim-rise">
       <div>
         <h1 className="page-title">Definições</h1>
-        <p className="page-lead">Conta, biometria e módulos.</p>
+        <p className="page-lead">Conta, voz, agenda e biometria.</p>
       </div>
 
       <div className="panel">
@@ -19,6 +20,11 @@ export default async function SettingsPage() {
           <br />
           <span className="muted">{user.email}</span>
         </p>
+      </div>
+
+      <div className="panel">
+        <h2>Voz e agenda</h2>
+        <VoicePrefsPanel />
       </div>
 
       <div className="panel">

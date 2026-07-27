@@ -6,12 +6,13 @@ export default async function CapturePage({
   searchParams: Promise<{ auto?: string }>;
 }) {
   const params = await searchParams;
-  const autoStart = params.auto === "1";
+  void params;
+  const autoStart = true;
 
   return (
     <div className="anim-rise">
       <h1 className="page-title">Captura</h1>
-      <p className="page-lead">Fala ou escreve — a Mel organiza por ti.</p>
+      <p className="page-lead">Fala ou escreve — a Mel organiza e responde por voz.</p>
       <div className="panel">
         <VoiceCapture autoStart={autoStart} />
       </div>

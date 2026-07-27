@@ -3,6 +3,7 @@ import { listTasks } from "@/modules/tasks/service";
 import { listToday } from "@/modules/calendar/service";
 import { recentMessages } from "@/lib/ai/mel-assistant";
 import { MelChat } from "@/components/mel/MelChat";
+import { SpeakButton } from "@/components/mel/SpeakButton";
 import Link from "next/link";
 
 export default async function TodayPage() {
@@ -38,9 +39,9 @@ export default async function TodayPage() {
         </div>
         <div className="panel metric">
           <span className="muted small">Atalho</span>
-          <Link href="/pt/captura" className="btn btn-primary btn-sm" style={{ marginTop: "0.35rem" }}>
-            Falar
-          </Link>
+          <div style={{ marginTop: "0.35rem" }}>
+            <SpeakButton compact label="Falar" />
+          </div>
         </div>
       </div>
 
@@ -55,11 +56,14 @@ export default async function TodayPage() {
                 <div>
                   <strong>{e.title}</strong>
                   <p className="muted small" style={{ margin: "0.2rem 0 0" }}>
-                    {e.startsAt.toLocaleTimeString("pt-PT", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {e.allDay
+                      ? "Todo o dia"
+                      : e.startsAt.toLocaleTimeString("pt-PT", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                     {e.location ? ` · ${e.location}` : ""}
+                    {e.source === "task-sync" ? " · tarefa" : ""}
                   </p>
                 </div>
               </li>

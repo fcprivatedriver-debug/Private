@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { SpeakButton } from "@/components/mel/SpeakButton";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -13,14 +14,6 @@ const NAV = [
   { href: "/pt/calendario", label: "Calendário" },
   { href: "/pt/relatorios", label: "Relatórios" },
   { href: "/pt/definicoes", label: "Definições" },
-];
-
-const MOBILE = [
-  { href: "/pt/hoje", label: "Hoje" },
-  { href: "/pt/tarefas", label: "Tarefas" },
-  { href: "/pt/captura", label: "Falar", speak: true },
-  { href: "/pt/calendario", label: "Agenda" },
-  { href: "/pt/relatorios", label: "Resumo" },
 ];
 
 export function AppShell({
@@ -64,30 +57,44 @@ export function AppShell({
             <BrandLogo href="/pt/hoje" size="sm" />
           </div>
           <div className="topbar-actions">
-            <Link href="/pt/captura" className="btn btn-primary btn-sm">
-              Falar
-            </Link>
+            <SpeakButton compact label="Falar" />
           </div>
         </header>
         {children}
       </div>
 
       <nav className="mobile-tabbar" aria-label="Navegação móvel">
-        {MOBILE.map((item) => {
-          const active = pathname?.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn("tab-link", active && "active", item.speak && "speak")}
-            >
-              <span aria-hidden style={{ fontSize: "0.85rem" }}>
-                {item.speak ? "●" : "○"}
-              </span>
-              {item.label}
-            </Link>
-          );
-        })}
+        <Link
+          href="/pt/hoje"
+          className={cn("tab-link", pathname?.startsWith("/pt/hoje") && "active")}
+        >
+          <span aria-hidden>○</span>
+          Hoje
+        </Link>
+        <Link
+          href="/pt/tarefas"
+          className={cn("tab-link", pathname?.startsWith("/pt/tarefas") && "active")}
+        >
+          <span aria-hidden>○</span>
+          Tarefas
+        </Link>
+        <div className="tab-speak">
+          <SpeakButton compact label="Falar" className="tab-speak-btn" />
+        </div>
+        <Link
+          href="/pt/calendario"
+          className={cn("tab-link", pathname?.startsWith("/pt/calendario") && "active")}
+        >
+          <span aria-hidden>○</span>
+          Agenda
+        </Link>
+        <Link
+          href="/pt/relatorios"
+          className={cn("tab-link", pathname?.startsWith("/pt/relatorios") && "active")}
+        >
+          <span aria-hidden>○</span>
+          Resumo
+        </Link>
       </nav>
     </div>
   );

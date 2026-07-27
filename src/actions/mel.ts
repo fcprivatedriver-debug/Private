@@ -7,15 +7,14 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { DEFAULT_MODULE_IDS } from "@/modules/registry";
 import type { TaskPriority, TaskStatus } from "@prisma/client";
-import {
-  createTask,
-  updateTask,
-  deleteTask,
-} from "@/modules/tasks/service";
-import { createEvent, deleteEvent } from "@/modules/calendar/service";
-import { processVoiceCapture } from "@/modules/voice/service";
+import { ensureMelCore } from "@/core/bootstrap";
+import { invokeCapability } from "@/core/capabilities";
+import { routeUtterance } from "@/core/router";
+import { setCalendarSyncPrefs } from "@/modules/calendar/sync";
 import { getOrCreateCurrentReport } from "@/modules/reports/service";
-import { melReply, saveExchange } from "@/lib/ai/mel-assistant";
+import { saveExchange } from "@/lib/ai/mel-assistant";
+
+ensureMelCore();
 
 function revalidateApp() {
   revalidatePath("/", "layout");
@@ -100,16 +99,19 @@ export async function createTaskAction(input: {
   notes?: string;
   priority?: TaskPriority;
   dueAt?: string | null;
+  tags?: string[];
 }) {
+  ensureMelCore();
   const { user } = await requireUser();
   const title = input.title.trim();
   if (!title) return { ok: false as const, error: "Indica um título." };
-  const task = await createTask({
+  const task = await invokeCapability("tasks.create", {
     userId: user.id,
     title,
     notes: input.notes,
     priority: input.priority,
     dueAt: input.dueAt ? new Date(input.dueAt) : null,
+    tags: input.tags,
   });
   revalidateApp();
   return { ok: true as const, task };
@@ -123,12 +125,22 @@ export async function updateTaskAction(
     status?: TaskStatus;
     priority?: TaskPriority;
     dueAt?: string | null;
+    tags?: string[];
   },
+  opts?: { removeCalendarOnTaskDone?: boolean },
 ) {
+  ensureMelCore();
+  if (typeof opts?.removeCalendarOnTaskDone === "boolean") {
+    setCalendarSyncPrefs({ removeOnTaskDone: opts.removeCalendarOnTaskDone });
+  }
   const { user } = await requireUser();
-  const updated = await updateTask(user.id, taskId, {
-    ...data,
-    dueAt: data.dueAt === undefined ? undefined : data.dueAt ? new Date(data.dueAt) : null,
+  const updated = await invokeCapability("tasks.update", {
+    userId: user.id,
+    taskId,
+    data: {
+      ...data,
+      dueAt: data.dueAt === undefined ? undefined : data.dueAt ? new Date(data.dueAt) : null,
+    },
   });
   if (!updated) return { ok: false as const, error: "Tarefa não encontrada." };
   revalidateApp();
@@ -136,8 +148,9 @@ export async function updateTaskAction(
 }
 
 export async function deleteTaskAction(taskId: string) {
+  ensureMelCore();
   const { user } = await requireUser();
-  const ok = await deleteTask(user.id, taskId);
+  const ok = await invokeCapability("tasks.delete", { userId: user.id, taskId });
   revalidateApp();
   return { ok };
 }
@@ -150,6 +163,7 @@ export async function createEventAction(input: {
   endsAt: string;
   allDay?: boolean;
 }) {
+  ensureMelCore();
   const { user } = await requireUser();
   const title = input.title.trim();
   if (!title) return { ok: false as const, error: "Indica um título." };
@@ -158,11 +172,10 @@ export async function createEventAction(input: {
   if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
     return { ok: false as const, error: "Datas inválidas." };
   }
-  const event = await createEvent({
+  const event = await invokeCapability("calendar.create", {
     userId: user.id,
     title,
     description: input.description,
-    location: input.location,
     startsAt,
     endsAt,
     allDay: input.allDay,
@@ -172,25 +185,36 @@ export async function createEventAction(input: {
 }
 
 export async function deleteEventAction(eventId: string) {
+  ensureMelCore();
   const { user } = await requireUser();
-  const ok = await deleteEvent(user.id, eventId);
+  const ok = await invokeCapability("calendar.delete", {
+    userId: user.id,
+    eventId,
+  });
   revalidateApp();
   return { ok };
 }
 
 export async function captureAction(utterance: string) {
+  ensureMelCore();
   const { user } = await requireUser();
-  const result = await processVoiceCapture(user.id, utterance);
+  const result = await routeUtterance(user.id, utterance);
   revalidateApp();
-  return result;
+  return {
+    ok: result.ok,
+    reply: result.reply,
+    intent: result.intent,
+  };
 }
 
 export async function chatAction(message: string) {
+  ensureMelCore();
   const { user } = await requireUser();
-  const reply = await melReply(user.id, message);
-  await saveExchange(user.id, message, reply);
+  const result = await routeUtterance(user.id, message);
+  // Se o router não capturou (só perguntas/criação), fallback já está no router
+  await saveExchange(user.id, message, result.reply);
   revalidateApp();
-  return { ok: true as const, reply };
+  return { ok: true as const, reply: result.reply };
 }
 
 export async function refreshWeeklyReportAction() {
