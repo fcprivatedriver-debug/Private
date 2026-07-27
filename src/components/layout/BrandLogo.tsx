@@ -1,72 +1,26 @@
-import { Link } from "@/i18n/navigation";
-import clsx from "clsx";
-
-export type ZrikLogoVariant = "A" | "B" | "C";
-
-/**
- * Default product logo: Option B — Z in petroleum blue,
- * RIK in ink black (#111111).
- */
-export const DEFAULT_ZRIK_VARIANT: ZrikLogoVariant = "B";
-
-/**
- * Typographic ZRIK wordmark — always uppercase.
- * A: all black · B: Z petrol · C: Z+K petrol
- */
-export function ZrikWordmark({
-  variant = DEFAULT_ZRIK_VARIANT,
-  className = "",
-  as: Tag = "span",
-  tone = "default",
-}: {
-  variant?: ZrikLogoVariant;
-  className?: string;
-  as?: "span" | "h1" | "div" | "p";
-  tone?: "default" | "on-dark";
-}) {
-  return (
-    <Tag
-      className={clsx(
-        "zrik-wordmark",
-        `zrik-wordmark-${variant}`,
-        tone === "on-dark" && "zrik-wordmark-on-dark",
-        className,
-      )}
-      aria-label="ZRIK"
-    >
-      {variant === "A" && <span className="zrik-ink">ZRIK</span>}
-      {variant === "B" && (
-        <>
-          <span className="zrik-accent">Z</span>
-          <span className="zrik-ink">RIK</span>
-        </>
-      )}
-      {variant === "C" && (
-        <>
-          <span className="zrik-accent">Z</span>
-          <span className="zrik-ink">RI</span>
-          <span className="zrik-accent">K</span>
-        </>
-      )}
-    </Tag>
-  );
-}
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function BrandLogo({
-  href = "/",
+  href = "/pt",
   size = "md",
-  variant = DEFAULT_ZRIK_VARIANT,
-  tone = "default",
+  className,
 }: {
-  href?: "/" | string;
+  href?: string;
   size?: "sm" | "md" | "lg";
-  variant?: ZrikLogoVariant;
-  tone?: "default" | "on-dark";
+  className?: string;
 }) {
-  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.2rem";
   return (
-    <Link href={href as "/"} className="logo" style={{ fontSize }} aria-label="ZRIK">
-      <ZrikWordmark variant={variant} tone={tone} />
+    <Link href={href} className={cn("brand-logo", className)} aria-label="Mel">
+      <span className="brand-mark" aria-hidden>
+        M
+      </span>
+      <span
+        className="brand-word"
+        style={{ fontSize: size === "lg" ? "1.7rem" : size === "sm" ? "1.15rem" : undefined }}
+      >
+        Mel
+      </span>
     </Link>
   );
 }

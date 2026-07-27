@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
-import { Sora, Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 
-const display = Sora({
+const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600", "700"],
 });
 
-const body = Plus_Jakarta_Sans({
+const body = Manrope({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
