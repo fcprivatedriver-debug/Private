@@ -3,7 +3,14 @@
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
 import { captureAction } from "@/actions/mel";
 import { readMelPrefs } from "@/lib/mel-prefs";
-import { speakText, stopSpeaking, warmTtsVoices, isTtsSupported } from "@/modules/voice/speak-client";
+import {
+  speakSequence,
+  speakText,
+  stopSpeaking,
+  warmTtsVoices,
+  isTtsSupported,
+  unlockTts,
+} from "@/modules/voice/speak-client";
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -65,9 +72,12 @@ export function VoiceCapture({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, speechAvailable]);
 
-  function speakReply(message: string) {
+  function speakReply(message: string, parts?: string[]) {
     const prefs = readMelPrefs();
-    const result = speakText(message, { muted: prefs.speakMuted });
+    const result =
+      parts && parts.length > 1
+        ? speakSequence(parts, { muted: prefs.speakMuted })
+        : speakText(message, { muted: prefs.speakMuted });
     if (!result.supported) {
       setTtsWarning(result.error || "TTS indisponível — resposta só em texto.");
     } else {
@@ -79,11 +89,12 @@ export function VoiceCapture({
     const value = utterance.trim();
     if (!value || submittedRef.current) return;
     submittedRef.current = true;
+    unlockTts();
     startTransition(async () => {
       const result = await captureAction(value);
       setReply(result.reply);
       setOk(result.ok);
-      speakReply(result.reply);
+      speakReply(result.reply, result.speakParts);
       if (result.ok) {
         setText("");
         latestTextRef.current = "";
@@ -95,6 +106,7 @@ export function VoiceCapture({
   }
 
   function startListening() {
+    unlockTts();
     const Ctor = getSpeechRecognition();
     if (!Ctor) {
       setReply("O teu browser não suporta reconhecimento de voz. Escreve abaixo.");

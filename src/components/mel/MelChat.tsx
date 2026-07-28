@@ -4,8 +4,10 @@ import { FormEvent, useEffect, useState, useTransition } from "react";
 import { chatAction } from "@/actions/mel";
 import { readMelPrefs, writeMelPrefs } from "@/lib/mel-prefs";
 import {
+  speakSequence,
   speakText,
   stopSpeaking,
+  unlockTts,
   warmTtsVoices,
   isTtsSupported,
 } from "@/modules/voice/speak-client";
@@ -25,14 +27,18 @@ export function MelChat({ initial }: { initial: Msg[] }) {
   }, []);
 
   function toggleMute() {
+    unlockTts();
     const next = writeMelPrefs({ speakMuted: !muted });
     setMuted(next.speakMuted);
     if (next.speakMuted) stopSpeaking();
   }
 
-  function speakReply(reply: string) {
+  function speakReply(reply: string, parts?: string[]) {
     const prefs = readMelPrefs();
-    const result = speakText(reply, { muted: prefs.speakMuted });
+    const result =
+      parts && parts.length > 1
+        ? speakSequence(parts, { muted: prefs.speakMuted })
+        : speakText(reply, { muted: prefs.speakMuted });
     if (!result.supported) {
       setTtsWarning(result.error || "TTS indisponível.");
     } else {
@@ -44,13 +50,14 @@ export function MelChat({ initial }: { initial: Msg[] }) {
     e.preventDefault();
     const value = text.trim();
     if (!value) return;
+    unlockTts();
     setMessages((prev) => [...prev, { role: "USER", content: value }]);
     setText("");
     startTransition(async () => {
       const res = await chatAction(value);
       if (res.ok) {
         setMessages((prev) => [...prev, { role: "ASSISTANT", content: res.reply }]);
-        speakReply(res.reply);
+        speakReply(res.reply, res.speakParts);
       }
     });
   }
@@ -92,7 +99,7 @@ export function MelChat({ initial }: { initial: Msg[] }) {
             id="chat"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Quais as tarefas para hoje?"
+            placeholder="O que tenho hoje por prioridade?"
           />
         </div>
         <button className="btn btn-secondary" type="submit" disabled={pending || !text.trim()}>

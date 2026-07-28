@@ -1,9 +1,9 @@
 /**
  * Bootstrap do core Mel — regista capabilities e sync calendário.
- * Importar uma vez no arranque de server actions / assistente.
  */
 import { registerTasksCapabilities } from "@/modules/tasks/service";
 import { registerCalendarCapabilities } from "@/modules/calendar/service";
+import { registerAgendaCapabilities } from "@/modules/calendar/agenda";
 import { registerVoiceCapabilities } from "@/modules/voice/service";
 import { registerCalendarTaskSync } from "@/modules/calendar/sync";
 
@@ -13,6 +13,7 @@ export function ensureMelCore(): void {
   if (booted) return;
   registerTasksCapabilities();
   registerCalendarCapabilities();
+  registerAgendaCapabilities();
   registerVoiceCapabilities();
   registerCalendarTaskSync();
   booted = true;

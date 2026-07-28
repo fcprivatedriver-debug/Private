@@ -4,6 +4,11 @@ import { FormEvent, useMemo, useState, useTransition } from "react";
 import { createTaskAction, updateTaskAction, deleteTaskAction } from "@/actions/mel";
 import type { Task, TaskPriority, TaskStatus } from "@prisma/client";
 import { readMelPrefs } from "@/lib/mel-prefs";
+import {
+  notifyTaskForToday,
+  scheduleTaskReminder,
+  showToast,
+} from "@/modules/notifications/client";
 
 const PRIORITY_LABEL: Record<TaskPriority, string> = {
   LOW: "Baixa",
@@ -67,6 +72,22 @@ export function TaskList({ initial }: { initial: Task[] }) {
         setTasks((prev) => [res.task!, ...prev]);
         setTitle("");
         setDueAt("");
+        if (res.task.dueAt) {
+          const due = new Date(res.task.dueAt);
+          if (res.notifyToday) {
+            notifyTaskForToday(res.task.title, due);
+          }
+          const prefs = readMelPrefs();
+          if (prefs.pushRemindersEnabled) {
+            void scheduleTaskReminder({
+              taskId: res.task.id,
+              title: res.task.title,
+              dueAt: due,
+            });
+          }
+        } else {
+          showToast({ title: "Tarefa criada", body: res.task.title, kind: "success" });
+        }
       }
     });
   }
@@ -120,6 +141,22 @@ export function TaskList({ initial }: { initial: Task[] }) {
         setEditingId(null);
         setDraft(null);
         setBaseline(null);
+        if (res.task.dueAt) {
+          const due = new Date(res.task.dueAt);
+          const now = new Date();
+          const sameDay =
+            due.getFullYear() === now.getFullYear() &&
+            due.getMonth() === now.getMonth() &&
+            due.getDate() === now.getDate();
+          if (sameDay) notifyTaskForToday(res.task.title, due);
+          if (prefs.pushRemindersEnabled) {
+            void scheduleTaskReminder({
+              taskId: res.task.id,
+              title: res.task.title,
+              dueAt: due,
+            });
+          }
+        }
       }
     });
   }

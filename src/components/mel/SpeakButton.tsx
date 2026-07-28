@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { VoiceCapture } from "@/components/mel/VoiceCapture";
 import { cn } from "@/lib/utils";
+import { unlockTts } from "@/modules/voice/speak-client";
 
 /**
  * Botão «Falar» — abre captura no sítio e inicia o microfone de imediato.
@@ -35,7 +36,10 @@ export function SpeakButton({
       <button
         type="button"
         className={cn(compact ? "btn btn-primary btn-sm" : "btn btn-primary", className)}
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          unlockTts();
+          setOpen(true);
+        }}
         aria-haspopup="dialog"
         aria-expanded={open}
       >

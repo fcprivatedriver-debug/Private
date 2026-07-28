@@ -47,10 +47,13 @@ const REMINDER_PATTERNS = [
 ];
 
 const QUERY_TODAY =
-  /(?:quais|que|o que).*(?:tarefas?|fazer|pendente).*(?:hoje)|(?:tarefas?|fazer).*(?:hoje).*(?:prioridade)?|(?:hoje).*(?:tarefas?|fazer|prioridade)|o que tenho (?:para )?fazer(?: hoje)?/i;
+  /(?:quais|que|o que).*(?:tarefas?|fazer|pendente).*(?:hoje)|(?:tarefas?|fazer).*(?:hoje).*(?:prioridade)?|(?:hoje).*(?:tarefas?|fazer|prioridade)|o que tenho (?:para )?fazer(?: hoje)?|o que tenho hoje/i;
 
 const QUERY_TOP =
   /(?:prioridade mais alta|mais (?:urgente|importante)|qual (?:é )?a (?:minha )?prioridade)/i;
+
+const QUERY_BY_PRIORITY =
+  /(?:hoje).*(?:por prioridade)|(?:por prioridade).*(?:hoje)|tarefas? (?:de |para )?hoje por prioridade/i;
 
 function extractHour(text: string): number | undefined {
   const m = text.match(/(?:às|as|a)\s+(\d{1,2})(?:[:h](\d{2}))?/i);
@@ -153,10 +156,14 @@ export async function detectIntent(utterance: string): Promise<DetectedIntent> {
     };
   }
 
-  if (QUERY_TOP.test(text)) {
+  if (QUERY_TOP.test(text) && !QUERY_BY_PRIORITY.test(text)) {
     return { kind: "query_top_priority" };
   }
-  if (QUERY_TODAY.test(text) || /tarefas? (?:de |para )?hoje/i.test(text)) {
+  if (
+    QUERY_BY_PRIORITY.test(text) ||
+    QUERY_TODAY.test(text) ||
+    /tarefas? (?:de |para )?hoje/i.test(text)
+  ) {
     return { kind: "query_today_tasks" };
   }
 
@@ -290,13 +297,19 @@ export async function processDetectedCapture(
   }
 
   let dueAt: Date | null = null;
-  if (detected.dayHint === "today") {
+  if (detected.dayHint === "today" || detected.dayHint === "tomorrow") {
     dueAt = new Date();
-    dueAt.setHours(23, 59, 0, 0);
-  } else if (detected.dayHint === "tomorrow") {
+    if (detected.dayHint === "tomorrow") {
+      dueAt.setDate(dueAt.getDate() + 1);
+    }
+    if (typeof detected.hour === "number") {
+      dueAt.setHours(detected.hour, 0, 0, 0);
+    } else {
+      dueAt.setHours(23, 59, 0, 0);
+    }
+  } else if (typeof detected.hour === "number") {
     dueAt = new Date();
-    dueAt.setDate(dueAt.getDate() + 1);
-    dueAt.setHours(23, 59, 0, 0);
+    dueAt.setHours(detected.hour, 0, 0, 0);
   }
 
   const task = await invokeCapability("tasks.create", {

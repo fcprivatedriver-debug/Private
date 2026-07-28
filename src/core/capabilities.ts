@@ -5,8 +5,9 @@ import type { Task, TaskPriority, TaskStatus, CalendarEvent } from "@prisma/clie
 
 export type TaskListFilter = {
   status?: TaskStatus | TaskStatus[];
-  dueAtDay?: "today";
+  dueAtDay?: "today" | "open";
   sortBy?: "priority" | "dueAt";
+  tag?: string;
   limit?: number;
 };
 
@@ -74,6 +75,7 @@ export type CapabilityMap = {
       startsAt: Date;
       endsAt: Date;
       allDay: boolean;
+      color: string | null;
     }>;
   }) => Promise<CalendarEvent | null>;
   "calendar.delete": (input: {
@@ -84,7 +86,24 @@ export type CapabilityMap = {
     userId: string;
     externalId: string;
   }) => Promise<CalendarEvent | null>;
+  "calendar.listRange": (input: {
+    userId: string;
+    from: Date;
+    to: Date;
+  }) => Promise<CalendarEvent[]>;
+  "calendar.monthSummary": (input: {
+    userId: string;
+    month: Date;
+  }) => Promise<MonthDaySummary[]>;
   "voice.detectIntent": (input: { utterance: string }) => Promise<DetectedIntent>;
+};
+
+export type MonthDaySummary = {
+  /** yyyy-MM-dd */
+  day: string;
+  count: number;
+  /** HIGH | MEDIUM | LOW — prioridade máxima do dia (para dot) */
+  topPriority: "HIGH" | "MEDIUM" | "LOW";
 };
 
 type CapName = keyof CapabilityMap;

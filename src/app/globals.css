@@ -895,3 +895,244 @@ select {
 .task-editor {
   border-color: rgba(201, 137, 46, 0.35);
 }
+
+/* ——— Agenda ——— */
+.agenda-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+
+.segmented .seg {
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.segmented .seg.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.agenda-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.agenda-hour-row {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(20, 33, 43, 0.06);
+}
+
+.agenda-hour-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.agenda-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  text-align: left;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.agenda-chip.compact {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.agenda-chip.done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.agenda-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+@media (max-width: 900px) {
+  .agenda-week-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.agenda-week-col {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.45rem;
+  min-height: 6rem;
+}
+
+.agenda-week-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.agenda-month-head,
+.agenda-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.agenda-month-head {
+  margin-bottom: 0.35rem;
+  text-align: center;
+}
+
+.agenda-month-cell {
+  min-height: 3.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: var(--bg);
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.agenda-month-cell.outside {
+  opacity: 0.4;
+}
+
+.agenda-month-cell.today {
+  outline: 2px solid var(--accent);
+}
+
+.agenda-month-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.agenda-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.agenda-dot.dot-high {
+  background: #dc2626;
+}
+.agenda-dot.dot-med {
+  background: #d97706;
+}
+.agenda-dot.dot-low {
+  background: #94a3b8;
+}
+
+.badge.tiny {
+  font-size: 0.65rem;
+  padding: 0.05rem 0.3rem;
+}
+
+/* ——— Ouvir / toasts ——— */
+.listen-panel {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.listen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.listen-btn {
+  flex: 1 1 10rem;
+}
+
+.today-count-banner {
+  margin: 0.35rem 0 0;
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+.toast-host {
+  position: fixed;
+  top: calc(0.75rem + env(safe-area-inset-top));
+  right: 0.75rem;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: min(22rem, calc(100vw - 1.5rem));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  box-shadow: var(--shadow-float);
+  animation: toast-in 0.25s ease;
+}
+
+.toast p {
+  margin: 0.2rem 0 0;
+}
+
+.toast-success {
+  border-left: 4px solid #0f766e;
+}
+.toast-info {
+  border-left: 4px solid var(--accent);
+}
+.toast-warn {
+  border-left: 4px solid #d97706;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

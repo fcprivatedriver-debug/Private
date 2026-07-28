@@ -5,15 +5,20 @@
 export type MelClientPrefs = {
   /** Silenciar TTS da Mel */
   speakMuted: boolean;
-  /** Ao concluir tarefa, remover evento do calendário (default true) */
+  /**
+   * Ao concluir tarefa: true = remover da agenda; false = marcar concluído (default).
+   */
   removeCalendarOnTaskDone: boolean;
+  /** Lembretes Web Notification 15 min antes (requer permissão). */
+  pushRemindersEnabled: boolean;
 };
 
 const KEY = "mel.prefs.v1";
 
 const defaults: MelClientPrefs = {
   speakMuted: false,
-  removeCalendarOnTaskDone: true,
+  removeCalendarOnTaskDone: false,
+  pushRemindersEnabled: false,
 };
 
 export function readMelPrefs(): MelClientPrefs {

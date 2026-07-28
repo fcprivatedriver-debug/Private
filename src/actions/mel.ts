@@ -113,8 +113,17 @@ export async function createTaskAction(input: {
     dueAt: input.dueAt ? new Date(input.dueAt) : null,
     tags: input.tags,
   });
+  const due = task.dueAt ? new Date(task.dueAt) : null;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
   revalidateApp();
-  return { ok: true as const, task };
+  return {
+    ok: true as const,
+    task,
+    notifyToday: Boolean(due && due >= start && due <= end),
+  };
 }
 
 export async function updateTaskAction(
@@ -195,6 +204,34 @@ export async function deleteEventAction(eventId: string) {
   return { ok };
 }
 
+export async function updateEventAction(
+  eventId: string,
+  data: {
+    title?: string;
+    description?: string | null;
+    startsAt?: string;
+    endsAt?: string;
+    allDay?: boolean;
+  },
+) {
+  ensureMelCore();
+  const { user } = await requireUser();
+  const updated = await invokeCapability("calendar.update", {
+    userId: user.id,
+    eventId,
+    data: {
+      title: data.title,
+      description: data.description,
+      allDay: data.allDay,
+      startsAt: data.startsAt ? new Date(data.startsAt) : undefined,
+      endsAt: data.endsAt ? new Date(data.endsAt) : undefined,
+    },
+  });
+  if (!updated) return { ok: false as const, error: "Evento não encontrado." };
+  revalidateApp();
+  return { ok: true as const, event: updated };
+}
+
 export async function captureAction(utterance: string) {
   ensureMelCore();
   const { user } = await requireUser();
@@ -203,6 +240,7 @@ export async function captureAction(utterance: string) {
   return {
     ok: result.ok,
     reply: result.reply,
+    speakParts: result.speakParts,
     intent: result.intent,
   };
 }
@@ -211,10 +249,52 @@ export async function chatAction(message: string) {
   ensureMelCore();
   const { user } = await requireUser();
   const result = await routeUtterance(user.id, message);
-  // Se o router não capturou (só perguntas/criação), fallback já está no router
   await saveExchange(user.id, message, result.reply);
   revalidateApp();
-  return { ok: true as const, reply: result.reply };
+  return {
+    ok: true as const,
+    reply: result.reply,
+    speakParts: result.speakParts,
+  };
+}
+
+export async function dayBriefingAction() {
+  ensureMelCore();
+  const { user } = await requireUser();
+  const { getDayItems } = await import("@/modules/calendar/agenda");
+  const {
+    formatDayBriefingParts,
+  } = await import("@/modules/voice/briefing");
+  const items = await getDayItems(user.id, new Date());
+  const open = items.filter((i) => !i.done);
+  const highOnly = open.filter(
+    (i) => i.priority === "HIGH" || i.priority === "URGENT",
+  );
+  return {
+    ok: true as const,
+    count: open.length,
+    parts: formatDayBriefingParts(open),
+    highOnlyParts: formatDayBriefingParts(highOnly.length ? highOnly : open),
+  };
+}
+
+export async function pendingBriefingAction(tag?: string) {
+  ensureMelCore();
+  const { user } = await requireUser();
+  const tasks = await invokeCapability("tasks.list", {
+    userId: user.id,
+    filter: {
+      status: ["TODO", "IN_PROGRESS"],
+      sortBy: "dueAt",
+      tag: tag || undefined,
+      limit: 50,
+    },
+  });
+  const { formatPendingParts } = await import("@/modules/voice/briefing");
+  return {
+    ok: true as const,
+    parts: formatPendingParts(tasks, tag),
+  };
 }
 
 export async function refreshWeeklyReportAction() {

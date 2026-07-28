@@ -63,6 +63,14 @@ export async function listTasksFiltered(
       ...(filter?.dueAtDay === "today"
         ? { dueAt: { gte: startOfDay(now), lte: endOfDay(now) } }
         : {}),
+      ...(filter?.dueAtDay === "open"
+        ? {
+            OR: [{ dueAt: { gte: startOfDay(now) } }, { dueAt: null }],
+          }
+        : {}),
+      ...(filter?.tag
+        ? { tags: { has: filter.tag } }
+        : {}),
     },
     take: filter?.limit ?? 100,
   });

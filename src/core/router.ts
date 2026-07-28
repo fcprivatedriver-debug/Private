@@ -2,48 +2,18 @@
  * Router de intenções — detectIntent → capability certa.
  */
 import { invokeCapability, type DetectedIntent } from "@/core/capabilities";
-import type { Task } from "@prisma/client";
-
-const PRIORITY_RANK: Record<string, number> = {
-  URGENT: 0,
-  HIGH: 1,
-  MEDIUM: 2,
-  LOW: 3,
-};
-
-export function formatTodayTasksReply(tasks: Task[]): string {
-  if (!tasks.length) {
-    return "Hoje não tens tarefas com prazo. Bom sinal — ou queres criar alguma?";
-  }
-  const sorted = [...tasks].sort(
-    (a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9),
-  );
-  const n = sorted.length;
-  const top = sorted[0]!;
-  const lines = sorted
-    .map((t, i) => `${i + 1}. ${t.title} (${labelPriority(t.priority)})`)
-    .join("\n");
-  return `Hoje tens ${n} tarefa${n === 1 ? "" : "s"}. A prioridade mais alta é «${top.title}».\n${lines}`;
-}
-
-function labelPriority(p: string): string {
-  switch (p) {
-    case "URGENT":
-      return "urgente";
-    case "HIGH":
-      return "alta";
-    case "LOW":
-      return "baixa";
-    default:
-      return "média";
-  }
-}
+import {
+  formatTodayByPriorityParts,
+  formatTodayByPriorityText,
+  formatTopPriority,
+} from "@/modules/voice/briefing";
 
 export type RouteResult = {
   ok: boolean;
   reply: string;
+  /** Blocos para TTS com pausas (prioridade). */
+  speakParts?: string[];
   intent: DetectedIntent["kind"] | "capture";
-  spokeHint?: string;
 };
 
 /**
@@ -65,33 +35,29 @@ export async function routeUtterance(
       },
     });
     if (detected.kind === "query_top_priority") {
-      if (!tasks.length) {
-        return {
-          ok: true,
-          reply: "Não tens tarefas para hoje — não há prioridade máxima a destacar.",
-          intent: detected.kind,
-        };
-      }
-      const top = tasks[0]!;
+      const reply = formatTopPriority(tasks);
       return {
         ok: true,
-        reply: `A tua prioridade mais alta para hoje é «${top.title}» (${labelPriority(top.priority)}).`,
+        reply,
+        speakParts: [reply],
         intent: detected.kind,
       };
     }
+    const parts = formatTodayByPriorityParts(tasks);
     return {
       ok: true,
-      reply: formatTodayTasksReply(tasks),
+      reply: formatTodayByPriorityText(tasks),
+      speakParts: parts,
       intent: detected.kind,
     };
   }
 
-  // Captura (criar tarefa/evento/lembrete) — delegada ao processador de voz
   const { processDetectedCapture } = await import("@/modules/voice/service");
   const capture = await processDetectedCapture(userId, utterance, detected);
   return {
     ok: capture.ok,
     reply: capture.reply,
+    speakParts: [capture.reply],
     intent: "capture",
   };
 }

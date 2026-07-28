@@ -11,7 +11,7 @@ const NAV = [
   { href: "/pt/hoje", label: "Hoje" },
   { href: "/pt/captura", label: "Captura" },
   { href: "/pt/tarefas", label: "Tarefas" },
-  { href: "/pt/calendario", label: "Calendário" },
+  { href: "/pt/agenda", label: "Agenda" },
   { href: "/pt/relatorios", label: "Relatórios" },
   { href: "/pt/definicoes", label: "Definições" },
 ];
@@ -82,8 +82,13 @@ export function AppShell({
           <SpeakButton compact label="Falar" className="tab-speak-btn" />
         </div>
         <Link
-          href="/pt/calendario"
-          className={cn("tab-link", pathname?.startsWith("/pt/calendario") && "active")}
+          href="/pt/agenda"
+          className={cn(
+            "tab-link",
+            (pathname?.startsWith("/pt/agenda") ||
+              pathname?.startsWith("/pt/calendario")) &&
+              "active",
+          )}
         >
           <span aria-hidden>○</span>
           Agenda

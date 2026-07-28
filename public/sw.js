@@ -1,7 +1,10 @@
-/* Mel service worker — network-first */
-const CACHE_VERSION = "mel-v1";
+/* Mel service worker — network-first + lembretes locais */
+const CACHE_VERSION = "mel-v2";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const OFFLINE_URL = "/offline.html";
+
+/** @type {Map<string, ReturnType<typeof setTimeout>>} */
+const reminderTimers = new Map();
 
 function isEphemeralHost(hostname) {
   return (
@@ -50,6 +53,42 @@ self.addEventListener("fetch", (event) => {
         const cached = await cache.match(request);
         return cached || cache.match(OFFLINE_URL);
       }
+    })(),
+  );
+});
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.type !== "SCHEDULE_REMINDER") return;
+  const { id, title, body, fireAt } = data;
+  const prev = reminderTimers.get(id);
+  if (prev) clearTimeout(prev);
+  const delay = Math.max(0, Number(fireAt) - Date.now());
+  const timer = setTimeout(() => {
+    reminderTimers.delete(id);
+    self.registration
+      .showNotification(title || "Mel", {
+        body: body || "",
+        tag: id,
+        renotify: true,
+      })
+      .catch(() => {});
+  }, delay);
+  reminderTimers.set(id, timer);
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of all) {
+        if ("focus" in client) {
+          await client.focus();
+          return;
+        }
+      }
+      await self.clients.openWindow("/pt/hoje");
     })(),
   );
 });

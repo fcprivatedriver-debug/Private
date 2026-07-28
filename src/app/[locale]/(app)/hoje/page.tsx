@@ -4,17 +4,27 @@ import { listToday } from "@/modules/calendar/service";
 import { recentMessages } from "@/lib/ai/mel-assistant";
 import { MelChat } from "@/components/mel/MelChat";
 import { SpeakButton } from "@/components/mel/SpeakButton";
+import { ListenDayButtons } from "@/components/mel/ListenDayButtons";
+import { TodayCountBanner } from "@/components/mel/TodayCountBanner";
 import Link from "next/link";
+import { startOfDay } from "date-fns";
 
 export default async function TodayPage() {
   const { user } = await requireUser();
   const [tasks, events, messages] = await Promise.all([
-    listTasks(user.id, { limit: 6 }),
+    listTasks(user.id, { limit: 100 }),
     listToday(user.id),
     recentMessages(user.id, 8),
   ]);
 
   const open = tasks.filter((t) => t.status !== "DONE" && t.status !== "CANCELLED");
+  const start = startOfDay(new Date());
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
+  const todayOpen = open.filter(
+    (t) => t.dueAt && t.dueAt >= start && t.dueAt <= end,
+  );
+  const overdue = open.filter((t) => t.dueAt && t.dueAt < start);
   const firstName = user.name.split(" ")[0] || user.name;
 
   return (
@@ -22,7 +32,13 @@ export default async function TodayPage() {
       <div>
         <h1 className="page-title">Olá, {firstName}</h1>
         <p className="page-lead">Aqui está o teu dia com a Mel.</p>
+        <TodayCountBanner
+          todayCount={todayOpen.length}
+          overdueCount={overdue.length}
+        />
       </div>
+
+      <ListenDayButtons />
 
       <div className="metrics-grid">
         <div className="panel metric">
@@ -46,7 +62,12 @@ export default async function TodayPage() {
       </div>
 
       <div className="panel">
-        <h2>Agenda de hoje</h2>
+        <div className="toggle-row">
+          <h2 style={{ margin: 0 }}>Agenda de hoje</h2>
+          <Link href="/pt/agenda?mode=day" className="btn btn-ghost btn-sm">
+            Ver agenda
+          </Link>
+        </div>
         {events.length === 0 ? (
           <p className="muted">Sem compromissos — dia livre.</p>
         ) : (
@@ -54,7 +75,16 @@ export default async function TodayPage() {
             {events.map((e) => (
               <li key={e.id} className="list-row">
                 <div>
-                  <strong>{e.title}</strong>
+                  <strong
+                    style={{
+                      textDecoration: e.description?.includes("status=DONE")
+                        ? "line-through"
+                        : undefined,
+                      opacity: e.description?.includes("status=DONE") ? 0.65 : 1,
+                    }}
+                  >
+                    {e.title}
+                  </strong>
                   <p className="muted small" style={{ margin: "0.2rem 0 0" }}>
                     {e.allDay
                       ? "Todo o dia"
