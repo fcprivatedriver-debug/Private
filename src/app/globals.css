@@ -1136,3 +1136,19 @@ select {
     transform: translateY(0);
   }
 }
+
+.organize-panel {
+  border-color: rgba(15, 118, 110, 0.28);
+}
+
+.organize-summary {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}

@@ -297,6 +297,71 @@ export async function pendingBriefingAction(tag?: string) {
   };
 }
 
+export async function proposeOrganizeDayAction(opts?: {
+  prefer?: "morning" | "afternoon";
+  dayStartHour?: number;
+}) {
+  ensureMelCore();
+  const { user } = await requireUser();
+  const now = new Date();
+  const tasks = await invokeCapability("tasks.list", {
+    userId: user.id,
+    filter: {
+      dueAtDay: "today",
+      status: ["TODO", "IN_PROGRESS"],
+      sortBy: "priority",
+      limit: 50,
+    },
+  });
+  // Incluir também tarefas abertas sem dueAt (candidatas a agendar hoje)
+  const openAll = await invokeCapability("tasks.list", {
+    userId: user.id,
+    filter: {
+      status: ["TODO", "IN_PROGRESS"],
+      sortBy: "priority",
+      limit: 50,
+    },
+  });
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+  for (const t of openAll) {
+    if (!t.dueAt && !byId.has(t.id)) byId.set(t.id, t);
+  }
+  const merged = Array.from(byId.values());
+
+  const events = await invokeCapability("calendar.listRange", {
+    userId: user.id,
+    from: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0),
+    to: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999),
+  });
+
+  const { buildDayPlan } = await import("@/modules/tasks/organize-day");
+  const proposal = buildDayPlan(now, merged, events, {
+    prefer: opts?.prefer,
+    dayStartHour: opts?.dayStartHour,
+  });
+  return { ok: true as const, proposal };
+}
+
+export async function applyOrganizeDayAction(
+  slots: import("@/modules/tasks/organize-day").DayPlanSlot[],
+) {
+  ensureMelCore();
+  const { user } = await requireUser();
+  const { planToTaskUpdates } = await import("@/modules/tasks/organize-day");
+  const updates = planToTaskUpdates(slots);
+  let updated = 0;
+  for (const u of updates) {
+    const task = await invokeCapability("tasks.update", {
+      userId: user.id,
+      taskId: u.taskId,
+      data: { dueAt: u.dueAt },
+    });
+    if (task) updated += 1;
+  }
+  revalidateApp();
+  return { ok: true as const, updated };
+}
+
 export async function refreshWeeklyReportAction() {
   const { user } = await requireUser();
   const report = await getOrCreateCurrentReport(user.id);

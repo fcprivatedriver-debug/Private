@@ -5,6 +5,7 @@ import { recentMessages } from "@/lib/ai/mel-assistant";
 import { MelChat } from "@/components/mel/MelChat";
 import { SpeakButton } from "@/components/mel/SpeakButton";
 import { ListenDayButtons } from "@/components/mel/ListenDayButtons";
+import { OrganizeDayPanel } from "@/components/mel/OrganizeDayPanel";
 import { TodayCountBanner } from "@/components/mel/TodayCountBanner";
 import Link from "next/link";
 import { startOfDay } from "date-fns";
@@ -39,6 +40,8 @@ export default async function TodayPage() {
       </div>
 
       <ListenDayButtons />
+
+      <OrganizeDayPanel />
 
       <div className="metrics-grid">
         <div className="panel metric">
