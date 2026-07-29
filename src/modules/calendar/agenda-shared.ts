@@ -10,7 +10,6 @@ import {
   eachDayOfInterval,
   addDays,
 } from "date-fns";
-
 import type { MonthDaySummary } from "@/core/capabilities";
 
 export type { MonthDaySummary };
@@ -36,6 +35,8 @@ export type AgendaItemDTO = {
   title: string;
   startsAt: string;
   endsAt: string;
+  /** Rótulo de hora calculado no servidor (evita hydration TZ). */
+  startsAtLabel: string;
   allDay: boolean;
   source: string;
   color: string | null;
@@ -45,15 +46,30 @@ export type AgendaItemDTO = {
   kind: "event" | "task";
 };
 
+/** Parse yyyy-MM-dd em data local (evita shift UTC → hydration mismatch). */
+export function parseDayIso(iso: string): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!m) return new Date(NaN);
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  return new Date(y, mo - 1, d, 12, 0, 0, 0);
+}
+
 export function toAgendaDTO(item: AgendaItem): AgendaItemDTO {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const startsAtLabel = item.allDay
+    ? "Todo o dia"
+    : `${pad(item.startsAt.getHours())}:${pad(item.startsAt.getMinutes())}`;
   return {
     ...item,
     startsAt: item.startsAt.toISOString(),
     endsAt: item.endsAt.toISOString(),
+    startsAtLabel,
   };
 }
 
-export function hydrateAgendaItem(dto: AgendaItemDTO): AgendaItem {
+export function hydrateAgendaItem(dto: AgendaItemDTO): AgendaItem & { startsAtLabel: string } {
   return {
     ...dto,
     startsAt: new Date(dto.startsAt),

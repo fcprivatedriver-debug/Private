@@ -4,22 +4,20 @@
  * Vista de Agenda DIA / SEMANA / MÊS — UI no módulo calendar.
  * Importa apenas agenda-shared (sem Prisma).
  */
-import { FormEvent, useMemo, useState, useTransition } from "react";
+import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import {
   format,
   isSameDay,
   isSameMonth,
-  parseISO,
   startOfMonth,
 } from "date-fns";
 import { pt } from "date-fns/locale";
 import {
   hourSlots,
   hydrateAgendaItem,
-  itemsForHour,
   monthGrid,
+  parseDayIso,
   shiftDay,
-  type AgendaItem,
   type AgendaItemDTO,
   type AgendaMode,
   type MonthDaySummary,
@@ -28,9 +26,18 @@ import { updateEventAction, updateTaskAction } from "@/actions/mel";
 import { readMelPrefs } from "@/lib/mel-prefs";
 import { registerUiView } from "@/core/ui-registry";
 
+type AgendaItemView = ReturnType<typeof hydrateAgendaItem>;
+
 function toLocalInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function itemsForHourView(items: AgendaItemView[], hour: number): AgendaItemView[] {
+  return items.filter((i) => {
+    if (i.allDay) return hour === 0;
+    return i.startsAt.getHours() === hour;
+  });
 }
 
 type Props = {
@@ -62,13 +69,18 @@ export function AgendaBoard({
   );
   const [mode, setMode] = useState<AgendaMode>(initialMode);
   const [anchorIso, setAnchorIso] = useState(initialDayIso);
-  const [editing, setEditing] = useState<AgendaItem | null>(null);
+  const [editing, setEditing] = useState<AgendaItemView | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftWhen, setDraftWhen] = useState("");
   const [pending, startTransition] = useTransition();
 
-  const anchor = useMemo(() => parseISO(anchorIso), [anchorIso]);
-  const month = useMemo(() => startOfMonth(parseISO(monthIso)), [monthIso]);
+  const anchor = useMemo(() => parseDayIso(anchorIso), [anchorIso]);
+  const month = useMemo(() => startOfMonth(parseDayIso(monthIso)), [monthIso]);
+  const [today, setToday] = useState<Date | null>(null);
+  useEffect(() => {
+    const n = new Date();
+    setToday(new Date(n.getFullYear(), n.getMonth(), n.getDate()));
+  }, []);
   const summaryMap = useMemo(() => {
     const m = new Map<string, MonthDaySummary>();
     for (const s of monthSummaries) m.set(s.day, s);
@@ -77,7 +89,7 @@ export function AgendaBoard({
 
   const grid = useMemo(() => monthGrid(month), [month]);
 
-  function openItem(item: AgendaItem) {
+  function openItem(item: AgendaItemView) {
     setEditing(item);
     setDraftTitle(item.title);
     setDraftWhen(toLocalInput(new Date(item.startsAt)));
@@ -178,7 +190,7 @@ export function AgendaBoard({
             <p className="muted">Nada agendado neste dia.</p>
           ) : (
             hourSlots().map((h) => {
-              const slots = itemsForHour(dayItems, h);
+              const slots = itemsForHourView(dayItems, h);
               if (slots.length === 0) return null;
               const label = `${String(h).padStart(2, "0")}:00`;
               return (
@@ -195,9 +207,7 @@ export function AgendaBoard({
                       >
                         <strong>{item.title}</strong>
                         <span className="muted small">
-                          {item.allDay
-                            ? "Todo o dia"
-                            : format(new Date(item.startsAt), "HH:mm")}
+                          {item.startsAtLabel}
                           {item.kind === "task" ? " · tarefa" : ""}
                         </span>
                       </button>
@@ -231,9 +241,7 @@ export function AgendaBoard({
                           style={{ borderLeftColor: item.color || "var(--accent)" }}
                           onClick={() => openItem(item)}
                         >
-                          <span className="small">
-                            {item.allDay ? "Dia" : format(new Date(item.startsAt), "HH:mm")}
-                          </span>{" "}
+                          <span className="small">{item.startsAtLabel}</span>{" "}
                           {item.title}
                         </button>
                       </li>
@@ -264,7 +272,7 @@ export function AgendaBoard({
               const key = format(d, "yyyy-MM-dd");
               const sum = summaryMap.get(key);
               const inMonth = isSameMonth(d, month);
-              const isToday = isSameDay(d, new Date());
+              const isToday = today ? isSameDay(d, today) : false;
               const dot =
                 sum && sum.count > 0
                   ? sum.topPriority === "HIGH"

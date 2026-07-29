@@ -6,8 +6,9 @@ import {
   toAgendaDTO,
   type AgendaMode,
 } from "@/modules/calendar/agenda";
+import { parseDayIso } from "@/modules/calendar/agenda-shared";
 import { AgendaBoard } from "@/modules/calendar/AgendaBoard";
-import { format, parseISO, startOfMonth } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { ensureMelCore } from "@/core/bootstrap";
 
 export default async function AgendaPage({
@@ -21,7 +22,7 @@ export default async function AgendaPage({
   const mode = (["day", "week", "month"].includes(sp.mode || "")
     ? sp.mode
     : "day") as AgendaMode;
-  const rawDay = sp.day ? parseISO(sp.day) : new Date();
+  const rawDay = sp.day ? parseDayIso(sp.day) : new Date();
   const day = Number.isNaN(rawDay.getTime()) ? new Date() : rawDay;
 
   const [dayItems, weekCols, monthSummaries] = await Promise.all([
