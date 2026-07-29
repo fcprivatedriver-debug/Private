@@ -2,8 +2,7 @@
 
 /**
  * Vista de Agenda DIA / SEMANA / MÊS — UI no módulo calendar.
- * Semana: grelha 7 colunas com lista agregada por dia (não timeline hora×coluna)
- * para performance e legibilidade em mobile.
+ * Importa apenas agenda-shared (sem Prisma).
  */
 import { FormEvent, useMemo, useState, useTransition } from "react";
 import {
@@ -14,15 +13,17 @@ import {
   startOfMonth,
 } from "date-fns";
 import { pt } from "date-fns/locale";
-import type { AgendaItemDTO, AgendaMode } from "@/modules/calendar/agenda";
 import {
   hourSlots,
+  hydrateAgendaItem,
   itemsForHour,
   monthGrid,
   shiftDay,
   type AgendaItem,
-} from "@/modules/calendar/agenda";
-import type { MonthDaySummary } from "@/core/capabilities";
+  type AgendaItemDTO,
+  type AgendaMode,
+  type MonthDaySummary,
+} from "@/modules/calendar/agenda-shared";
 import { updateEventAction, updateTaskAction } from "@/actions/mel";
 import { readMelPrefs } from "@/lib/mel-prefs";
 import { registerUiView } from "@/core/ui-registry";
@@ -30,14 +31,6 @@ import { registerUiView } from "@/core/ui-registry";
 function toLocalInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function hydrate(dto: AgendaItemDTO): AgendaItem {
-  return {
-    ...dto,
-    startsAt: new Date(dto.startsAt),
-    endsAt: new Date(dto.endsAt),
-  };
 }
 
 type Props = {
@@ -57,13 +50,13 @@ export function AgendaBoard({
   monthSummaries,
   monthIso,
 }: Props) {
-  const dayItems = useMemo(() => dayDtos.map(hydrate), [dayDtos]);
+  const dayItems = useMemo(() => dayDtos.map(hydrateAgendaItem), [dayDtos]);
   const weekColumns = useMemo(
     () =>
       weekDtos.map((c) => ({
         dayIso: c.dayIso,
         label: c.label,
-        items: c.items.map(hydrate),
+        items: c.items.map(hydrateAgendaItem),
       })),
     [weekDtos],
   );
@@ -123,7 +116,10 @@ export function AgendaBoard({
   }
 
   function nav(delta: number) {
-    const next = shiftDay(anchor, mode === "month" ? delta * 30 : mode === "week" ? delta * 7 : delta);
+    const next = shiftDay(
+      anchor,
+      mode === "month" ? delta * 30 : mode === "week" ? delta * 7 : delta,
+    );
     const q = new URLSearchParams(window.location.search);
     q.set("mode", mode);
     q.set("day", format(next, "yyyy-MM-dd"));
@@ -284,7 +280,6 @@ export function AgendaBoard({
                   className={`agenda-month-cell${!inMonth ? " outside" : ""}${isToday ? " today" : ""}`}
                   onClick={() => {
                     setAnchorIso(key);
-                    setModeNav("day");
                     const q = new URLSearchParams();
                     q.set("mode", "day");
                     q.set("day", key);

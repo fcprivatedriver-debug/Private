@@ -3,7 +3,7 @@
  * Usado pelo router e pelos botões «Ouvir…».
  */
 import type { Task } from "@prisma/client";
-import type { AgendaItem } from "@/modules/calendar/agenda";
+import type { AgendaItem } from "@/modules/calendar/agenda-shared";
 
 const PRIORITY_RANK: Record<string, number> = {
   URGENT: 0,

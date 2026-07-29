@@ -1,6 +1,9 @@
 /**
- * Agregações da agenda — lógica no módulo calendar (não nas app routes).
+ * Agregações da agenda (servidor) — NÃO importar em client components.
+ * Usa agenda-shared para tipos/helpers puros.
  */
+import "server-only";
+
 import type { CalendarEvent } from "@prisma/client";
 import {
   startOfDay,
@@ -11,7 +14,6 @@ import {
   endOfMonth,
   eachDayOfInterval,
   format,
-  addDays,
 } from "date-fns";
 import { pt } from "date-fns/locale";
 import { listEvents } from "@/modules/calendar/service";
@@ -20,46 +22,25 @@ import {
   parseTaskEventMeta,
   priorityColor,
 } from "@/modules/calendar/markers";
-import type { MonthDaySummary } from "@/core/capabilities";
 import { registerCapability } from "@/core/capabilities";
+import {
+  sortAgendaItems,
+  type AgendaItem,
+  type AgendaItemDTO,
+  type AgendaMode,
+  type MonthDaySummary,
+} from "@/modules/calendar/agenda-shared";
 
-export type AgendaMode = "day" | "week" | "month";
-
-export type AgendaItem = {
-  id: string;
-  title: string;
-  startsAt: Date;
-  endsAt: Date;
-  allDay: boolean;
-  source: string;
-  color: string | null;
-  done: boolean;
-  taskId: string | null;
-  priority: "HIGH" | "MEDIUM" | "LOW" | "URGENT" | null;
-  kind: "event" | "task";
-};
-
-export type AgendaItemDTO = {
-  id: string;
-  title: string;
-  startsAt: string;
-  endsAt: string;
-  allDay: boolean;
-  source: string;
-  color: string | null;
-  done: boolean;
-  taskId: string | null;
-  priority: "HIGH" | "MEDIUM" | "LOW" | "URGENT" | null;
-  kind: "event" | "task";
-};
-
-export function toAgendaDTO(item: AgendaItem): AgendaItemDTO {
-  return {
-    ...item,
-    startsAt: item.startsAt.toISOString(),
-    endsAt: item.endsAt.toISOString(),
-  };
-}
+export type { AgendaItem, AgendaItemDTO, AgendaMode, MonthDaySummary };
+export {
+  toAgendaDTO,
+  sortAgendaItems,
+  monthGrid,
+  hourSlots,
+  itemsForHour,
+  shiftDay,
+  hydrateAgendaItem,
+} from "@/modules/calendar/agenda-shared";
 
 function toAgendaItem(e: CalendarEvent): AgendaItem {
   const meta = parseTaskEventMeta(e.description);
@@ -77,16 +58,6 @@ function toAgendaItem(e: CalendarEvent): AgendaItem {
     priority,
     kind: e.source === "task-sync" || meta ? "task" : "event",
   };
-}
-
-export function sortAgendaItems(items: AgendaItem[]): AgendaItem[] {
-  const rank: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-  return [...items].sort((a, b) => {
-    const ta = a.allDay ? 0 : a.startsAt.getTime();
-    const tb = b.allDay ? 0 : b.startsAt.getTime();
-    if (ta !== tb) return ta - tb;
-    return (rank[a.priority || "MEDIUM"] ?? 9) - (rank[b.priority || "MEDIUM"] ?? 9);
-  });
 }
 
 export async function getDayItems(userId: string, day: Date): Promise<AgendaItem[]> {
@@ -121,7 +92,10 @@ export async function getWeekItems(
 /**
  * Resumo mensal agregado (sem N items por célula) — um dot + contagem.
  */
-export async function getMonthSummary(userId: string, month: Date): Promise<MonthDaySummary[]> {
+export async function getMonthSummary(
+  userId: string,
+  month: Date,
+): Promise<MonthDaySummary[]> {
   const from = startOfMonth(month);
   const to = endOfMonth(month);
   const events = await listEvents(userId, { from, to });
@@ -156,28 +130,6 @@ export async function getMonthSummary(userId: string, month: Date): Promise<Mont
       topPriority: hit?.top ?? "MEDIUM",
     };
   });
-}
-
-/** Grelha mês 5–6×7 incluindo dias fora do mês (padding Seg–Dom). */
-export function monthGrid(month: Date): Date[] {
-  const start = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
-  const end = endOfWeek(endOfMonth(month), { weekStartsOn: 1 });
-  return eachDayOfInterval({ start, end });
-}
-
-export function hourSlots(): number[] {
-  return Array.from({ length: 24 }, (_, i) => i);
-}
-
-export function itemsForHour(items: AgendaItem[], hour: number): AgendaItem[] {
-  return items.filter((i) => {
-    if (i.allDay) return hour === 0;
-    return i.startsAt.getHours() === hour;
-  });
-}
-
-export function shiftDay(day: Date, delta: number): Date {
-  return addDays(day, delta);
 }
 
 export function registerAgendaCapabilities(): void {
