@@ -1,4 +1,4 @@
-# Agent notes — ZRIK
+# Agent notes — Mel
 
 ## PR completion gate (mandatory)
 

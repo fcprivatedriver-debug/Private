@@ -1,24 +1,13 @@
-import { Link } from "@/i18n/navigation";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 
-export function SiteFooter({
-  termsLabel,
-  privacyLabel,
-}: {
-  termsLabel: string;
-  privacyLabel: string;
-}) {
+export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <div className="container site-footer-inner">
+      <div className="container" style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
         <BrandLogo size="sm" />
-        <div className="site-footer-links">
-          <Link href="/termos">{termsLabel}</Link>
-          <span aria-hidden className="site-footer-sep">
-            ·
-          </span>
-          <Link href="/privacidade">{privacyLabel}</Link>
-        </div>
+        <p className="muted small" style={{ margin: 0 }}>
+          Mel · Assistente pessoal · Portugal
+        </p>
       </div>
     </footer>
   );

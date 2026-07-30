@@ -1,24 +1,22 @@
 import { auth } from "@/lib/auth";
-import type { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { prisma } from "@/lib/db";
 
 export async function requireSession() {
   const session = await auth();
-  if (!session?.user) {
-    const locale = await getLocale().catch(() => "pt");
-    redirect(`/${locale}/login`);
+  if (!session?.user?.id) {
+    redirect("/pt/login");
   }
   return session;
 }
 
-export async function requireRole(...roles: Role[]) {
+export async function requireUser() {
   const session = await requireSession();
-  if (!roles.includes(session.user.role)) {
-    const locale = await getLocale().catch(() => "pt");
-    redirect(`/${locale}`);
-  }
-  return session;
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+  });
+  if (!user) redirect("/pt/login");
+  return { session, user };
 }
 
 export async function getOptionalSession() {

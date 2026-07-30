@@ -1,15 +1,20 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "@/i18n/navigation";
-import { getLocale } from "next-intl/server";
-import { dashboardPathForRole } from "@/lib/auth-routes";
+import { getTranslations } from "next-intl/server";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export default async function LoginPage() {
-  const session = await auth();
-  if (session?.user) {
-    const locale = await getLocale();
-    redirect({ href: dashboardPathForRole(session.user.role), locale });
-  }
+  const t = await getTranslations("auth");
 
-  return <LoginForm />;
+  return (
+    <div className="mel-atmosphere auth-shell">
+      <div style={{ position: "absolute", top: 0, insetInline: 0 }}>
+        <SiteHeader />
+      </div>
+      <div className="auth-panel anim-rise">
+        <h1>{t("loginTitle")}</h1>
+        <p className="muted">{t("loginSubtitle")}</p>
+        <LoginForm />
+      </div>
+    </div>
+  );
 }

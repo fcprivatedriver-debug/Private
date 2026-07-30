@@ -6,16 +6,17 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
-    <div className="locale-switch">
+    <div className="header-nav" style={{ gap: "0.35rem" }}>
       {routing.locales.map((l) => (
         <LocaleLink
           key={l}
           href="/"
           locale={l}
           hrefLang={l}
+          className="btn btn-ghost btn-sm"
           aria-current={l === locale ? "true" : undefined}
         >
-          {l}
+          {l.toUpperCase()}
         </LocaleLink>
       ))}
     </div>
@@ -24,64 +25,37 @@ function LocaleSwitcher({ locale }: { locale: string }) {
 
 export async function SiteHeader() {
   const session = await auth();
-  const role = session?.user?.role;
   const locale = await getLocale();
   const t = await getTranslations("nav");
 
   return (
     <header className="site-header">
-      <div className="container site-header-inner">
-        <BrandLogo />
-        <nav className="nav-links">
-          {!session && (
-            <>
-              <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
-              <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
-              <LocaleLink href="/homepage-lab">{t("branding")}</LocaleLink>
-            </>
-          )}
-          {role === "CUSTOMER" && (
-            <>
-              <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>
-              <LocaleLink href="/pedidos/novo">{t("newTrip")}</LocaleLink>
-            </>
-          )}
-          {role === "DRIVER" && (
-            <>
-              <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
-              <LocaleLink href="/pedidos-abertos">{t("openRequests")}</LocaleLink>
-              <LocaleLink href="/propostas">{t("myOffers")}</LocaleLink>
-              <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
-              <LocaleLink href="/veiculo">{t("vehicle")}</LocaleLink>
-            </>
-          )}
-          {role === "ADMIN" && (
-            <>
-              <LocaleLink href="/admin">{t("admin")}</LocaleLink>
-              <LocaleLink href="/admin/verificacoes">{t("verifications")}</LocaleLink>
-              <LocaleLink href="/admin/vehicle-classes">{t("vehicleClasses")}</LocaleLink>
-            </>
-          )}
+      <div className="header-inner">
+        <BrandLogo href={session ? `/${locale}/hoje` : `/${locale}`} />
+        <nav className="header-nav" aria-label="Conta">
           <LocaleSwitcher locale={locale} />
           {!session ? (
             <>
-              <LocaleLink href="/login">{t("login")}</LocaleLink>
+              <LocaleLink href="/login" className="btn btn-ghost btn-sm">
+                {t("login")}
+              </LocaleLink>
               <LocaleLink href="/registo" className="btn btn-primary btn-sm">
-                {t("start")}
+                {t("register")}
               </LocaleLink>
             </>
           ) : (
             <>
-              <span className="muted" style={{ fontSize: "0.88rem" }}>
-                {session.user.name?.split(" ")[0]}
-              </span>
+              <LocaleLink href="/hoje" className="btn btn-ghost btn-sm">
+                {t("today")}
+              </LocaleLink>
+              <span className="muted small">{session.user.name?.split(" ")[0]}</span>
               <form
                 action={async () => {
                   "use server";
                   await signOut({ redirectTo: `/${locale}` });
                 }}
               >
-                <button type="submit" className="btn btn-secondary btn-sm">
+                <button type="submit" className="btn btn-ghost btn-sm">
                   {t("logout")}
                 </button>
               </form>

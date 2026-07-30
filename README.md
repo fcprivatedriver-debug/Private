@@ -1,16 +1,17 @@
-# ZRIK
+# Mel — Assistente Pessoal Inteligente
 
-Private-chauffeur marketplace — choose the best driver, choose the best price.
+Organiza a vida por voz e texto: tarefas, calendário, hábitos, lembretes e relatórios semanais.
 
-**Brand:** ZRIK · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** Mel · **Idioma:** Português (Portugal) · **Plataformas:** Web + PWA (Android / iPhone)
 
 ## Stack
 
 - Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
-- Auth.js (credentials) · Prisma · Neon PostgreSQL
+- Auth.js (e-mail + palavra-passe) · Prisma · PostgreSQL
 - next-intl (`/pt`, `/en`)
+- Arquitectura modular (`src/modules/*`)
 
-## Local setup
+## Arranque local
 
 ```bash
 cp .env.example .env
@@ -20,30 +21,31 @@ npm run db:seed
 npm run dev
 ```
 
-### Demo accounts (password: `movio123`)
+### Contas demo (palavra-passe: `mel123`)
 
-| Email | Role |
-|-------|------|
-| `cliente@movio.app` | Customer |
-| `motorista@movio.app` | Driver (active) |
-| `admin@movio.app` | Admin |
+| Pessoa | Email |
+|--------|-------|
+| Filipe | `filipe@mel.app` |
+| Mel    | `mel@mel.app` |
 
-Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
+## MVP
 
-## Branding
+1. **Autenticação** — e-mail / palavra-passe + opção biométrica após o 1.º login
+2. **Tarefas** — criar, concluir, prioridades
+3. **Calendário** — eventos da semana
+4. **Captura por voz** — Web Speech + texto → tarefa / evento / lembrete
+5. **Relatórios semanais** — métricas e destaques
 
-Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
-Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
+Hábitos e lembretes activos estão preparados no schema e no registo de módulos.
 
-| Variable | Example |
+## Ambiente
+
+| Variável | Exemplo |
 |----------|---------|
-| `DATABASE_URL` | Neon pooled URL |
-| `DIRECT_URL` | Neon unpooled URL |
-| `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZRIK` |
+| `DATABASE_URL` | PostgreSQL |
+| `DIRECT_URL` | PostgreSQL (migrate) |
+| `AUTH_SECRET` | 32+ chars |
+| `NEXT_PUBLIC_APP_NAME` | `Mel` |
+| `MEL_PG_SCHEMA` | `mel` (Neon partilhado) |
 
-See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
-
-## Package
-
-- Package name: **zrik**
+Ver `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.

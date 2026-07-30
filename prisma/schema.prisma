@@ -1,150 +1,69 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["mel"]
 }
 
-enum Role {
-  CUSTOMER
-  DRIVER
-  ADMIN
-}
-
-enum DriverStatus {
-  PENDING_VERIFICATION
-  ACTIVE
-  SUSPENDED
-  REJECTED
-}
-
-enum OnboardingStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  SUBMITTED
-  UNDER_REVIEW
-  NEEDS_INFO
-  APPROVED
-  REJECTED
-}
-
-enum DriverDocumentType {
-  IDENTITY
-  DRIVING_LICENSE
-  VEHICLE_REGISTRATION
-  INSURANCE
-  PROFILE_PHOTO
-  OTHER
-}
-
-enum DriverDocumentStatus {
-  UPLOADED
-  AI_PROCESSING
-  AI_PASSED
-  AI_FLAGGED
-  APPROVED
-  REJECTED
-}
-
-enum VerificationDecision {
-  APPROVE
-  REJECT
-  REQUEST_INFO
-  ESCALATE
-}
-
-enum TripStatus {
-  DRAFT
-  OPEN
-  OFFER_ACCEPTED
-  CONFIRMED
-  DRIVER_EN_ROUTE
-  DRIVER_ARRIVED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  EXPIRED
-}
-
-enum OfferStatus {
-  PENDING
-  WITHDRAWN
-  REJECTED
-  ACCEPTED
-  EXPIRED
-}
-
-enum BookingStatus {
-  PENDING_PAYMENT
-  PAID
-  REFUNDED
-  CANCELLED
-  COMPLETED
-}
-
-enum PaymentProvider {
-  STRIPE
-  MANUAL
-  NONE
-}
-
-enum PaymentStatus {
-  REQUIRES_PAYMENT
-  AUTHORIZED
-  CAPTURED
-  FAILED
-  REFUNDED
-}
+// ——— Auth (Auth.js) ———
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  passwordHash  String?
-  name          String
-  phone         String?
-  role          Role      @default(CUSTOMER)
-  locale        String    @default("pt")
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  emailVerified      DateTime?
+  image              String?
+  passwordHash       String?
+  /// PIN local para desbloqueio rápido (clientes nativos / PWA)
+  pinHash            String?
+  /// Preferência: após o 1.º login, permitir Face ID / Touch ID / WebAuthn
+  biometricsEnabled  Boolean   @default(false)
+  /// Credencial WebAuthn / biometric credential id (opcional)
+  biometricCredentialId String?
+  theme              String    @default("system") // light | dark | system
+  locale             String    @default("pt")
+  timezone           String    @default("Europe/Lisbon")
+  /// Tom da Mel: warm | concise | motivational
+  melTone            String    @default("warm")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  customerProfile  CustomerProfile?
-  driverProfile    DriverProfile?
-  tripRequests     TripRequest[]    @relation("CustomerTrips")
-  offers           Offer[]
-  bookingsAsCustomer Booking[]      @relation("CustomerBookings")
-  bookingsAsDriver   Booking[]      @relation("DriverBookings")
-  reviewsFrom      Review[]         @relation("ReviewsFrom")
-  reviewsTo        Review[]         @relation("ReviewsTo")
-  notifications    Notification[]
-  auditLogs        AuditLog[]
+  accounts       AuthAccount[]
+  sessions       Session[]
+  modules        UserModule[]
+  tasks          Task[]
+  events         CalendarEvent[]
+  habits         Habit[]
+  reminders      Reminder[]
+  captures       VoiceCapture[]
+  reports        WeeklyReport[]
+  conversations  MelMessage[]
 
-  @@index([role])
+  @@schema("mel")
 }
 
-model Account {
+model AuthAccount {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.Text
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+
+  @@schema("mel")
 }
 
 model Session {
@@ -153,6 +72,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("mel")
 }
 
 model VerificationToken {
@@ -161,343 +82,252 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+
+  @@schema("mel")
 }
 
-model CustomerProfile {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  defaultCurrency String  @default("EUR")
-  ratingAvg       Float?
-  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+// ——— Modularidade ———
+
+enum ModuleId {
+  TASKS
+  CALENDAR
+  VOICE
+  REPORTS
+  HABITS
+  REMINDERS
+
+  @@schema("mel")
 }
 
-model DriverProfile {
-  id                     String           @id @default(cuid())
-  userId                 String           @unique
-  status                 DriverStatus     @default(PENDING_VERIFICATION)
-  onboardingStatus       OnboardingStatus @default(NOT_STARTED)
-  /// Wizard step: profile | vehicle | documents | review | done
-  onboardingStep         String           @default("profile")
-  /// 0–100 profile + docs completeness
-  completenessScore      Int              @default(0)
-  photoUrl               String?
-  bio                    String?
-  /// JSON string array of BCP-47 language codes, e.g. ["pt","en","es"]
-  languagesSpoken        String           @default("[\"pt\"]")
-  yearsOfExperience      Int              @default(0)
-  ratingAvg              Float?
-  ratingCount            Int              @default(0)
-  completedTripsCount    Int              @default(0)
-  /// 0–100 percentage of offers responded to
-  responseRate           Float?
-  /// Average minutes to first offer on a trip request
-  avgResponseTimeMinutes Float?
-  /// Legacy JSON metadata (kept for compatibility)
-  documents              String           @default("[]")
-  /// Latest AI risk score 0–100 (higher = riskier)
-  aiRiskScore            Float?
-  /// Latest AI confidence 0–100
-  aiConfidence           Float?
-  /// JSON summary from last AI run
-  aiSummary              String?
-  adminNotes             String?
-  rejectionReason        String?
-  infoRequestMessage     String?
-  submittedAt            DateTime?
-  verifiedAt             DateTime?
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
-
-  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles           Vehicle[]
-  verificationDocs   DriverDocument[]
-  verificationReviews VerificationReview[]
-
-  @@index([status])
-  @@index([onboardingStatus])
-}
-
-model DriverDocument {
-  id               String               @id @default(cuid())
-  driverProfileId  String
-  type             DriverDocumentType
-  status           DriverDocumentStatus @default(UPLOADED)
-  fileName         String
-  mimeType         String
-  sizeBytes        Int
-  /// Relative storage path under uploads/
-  storageKey       String
-  /// Optional public-ish URL path served by API
-  url              String?
-  /// JSON AI extraction / signals
-  aiAnalysis       String?
-  aiScore          Float?
-  aiFlags          String               @default("[]")
-  reviewerNotes    String?
-  reviewedAt       DateTime?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-
-  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
-
-  @@index([driverProfileId, type])
-  @@index([status])
-}
-
-model VerificationReview {
-  id              String               @id @default(cuid())
-  driverProfileId String
-  /// AI | ADMIN | SYSTEM
-  source          String
-  decision        VerificationDecision?
-  /// 0–100 risk
-  riskScore       Float?
-  confidence      Float?
-  /// Human-readable recommendation
-  recommendation  String?
-  /// JSON detailed findings
-  findings        String               @default("[]")
-  notes           String?
-  actorUserId     String?
-  createdAt       DateTime             @default(now())
-
-  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
-
-  @@index([driverProfileId, createdAt])
-}
-
-/// Singleton-style platform configuration (id = "default")
-model PlatformSettings {
-  id                        String   @id @default("default")
-  defaultCurrency           String   @default("EUR")
-  /// Default marketplace commission percent (e.g. 15.0)
-  defaultCommissionPercent  Float    @default(15)
-  /// JSON array of ISO currencies enabled on the platform
-  supportedCurrencies       String   @default("[\"EUR\"]")
-  /// When true, UI shows Demo Mode banner and seed accounts apply
-  demoMode                  Boolean  @default(false)
-  updatedAt                 DateTime @updatedAt
-}
-
-/// Future commission overrides (country, vehicle class, etc.)
-model CommissionRule {
-  id             String   @id @default(cuid())
-  name           String
-  percent        Float
-  /// Optional ISO country code
-  countryCode    String?
-  vehicleClassId String?
-  currency       String?
-  active         Boolean  @default(true)
-  priority       Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  vehicleClass VehicleClass? @relation(fields: [vehicleClassId], references: [id], onDelete: SetNull)
-
-  @@index([active, priority])
-  @@index([vehicleClassId])
-}
-
-/// Database-driven vehicle classification (replaces hardcoded enums)
-model VehicleClass {
-  id            String   @id @default(cuid())
-  /// Stable machine code, e.g. SEDAN, EXECUTIVE
-  code          String   @unique
-  namePt        String
-  nameEn        String
-  descriptionPt String?
-  descriptionEn String?
-  minPassengers Int      @default(1)
-  maxPassengers Int
-  maxLuggage    Int      @default(2)
-  /// Optional UI/icon key for clients
-  iconKey       String?
-  sortOrder     Int      @default(0)
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  vehicles        Vehicle[]
-  tripRequests    TripRequest[]
-  commissionRules CommissionRule[]
-
-  @@index([active, sortOrder])
-}
-
-model Vehicle {
-  id              String   @id @default(cuid())
-  driverId        String
-  vehicleClassId  String
-  make            String
-  model           String
-  year            Int
-  color           String
-  plate           String
-  seats           Int
-  luggageCapacity Int      @default(2)
-  photoUrls       String   @default("[]")
-  /// Aggregate vehicle rating from completed trip reviews
-  ratingAvg       Float?
-  ratingCount     Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  vehicleClass VehicleClass  @relation(fields: [vehicleClassId], references: [id])
-  offers       Offer[]
-
-  @@index([driverId])
-  @@index([vehicleClassId])
-}
-
-model TripRequest {
-  id                      String     @id @default(cuid())
-  customerId              String
-  pickupAddress           String
-  pickupLat               Float?
-  pickupLng               Float?
-  dropoffAddress          String
-  dropoffLat              Float?
-  dropoffLng              Float?
-  pickupAt                DateTime
-  passengers              Int        @default(1)
-  luggage                 Int        @default(1)
-  notes                   String?
-  flightNumber            String?
-  status                  TripStatus @default(DRAFT)
-  preferredVehicleClassId String?
-  currency                String     @default("EUR")
-  /// Route distance in meters (estimated)
-  distanceMeters          Int?
-  /// Route duration in seconds (estimated)
-  durationSeconds         Int?
-  expiresAt               DateTime?
-  acceptedOfferId         String?    @unique
-  createdAt               DateTime   @default(now())
-  updatedAt               DateTime   @updatedAt
-
-  customer              User          @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
-  preferredVehicleClass VehicleClass? @relation(fields: [preferredVehicleClassId], references: [id], onDelete: SetNull)
-  offers                Offer[]
-  booking               Booking?
-  acceptedOffer         Offer?        @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
-
-  @@index([status, pickupAt])
-  @@index([customerId])
-  @@index([preferredVehicleClassId])
-}
-
-model Offer {
-  id              String      @id @default(cuid())
-  tripRequestId   String
-  driverId        String
-  vehicleId       String?
-  priceAmount     Int
-  currency        String      @default("EUR")
-  message         String?
-  includesTolls   Boolean     @default(true)
-  includesWaiting Boolean     @default(false)
-  /// Driver ETA to pickup in minutes (optional)
-  estimatedArrivalMinutes Int?
-  validUntil      DateTime?
-  status          OfferStatus @default(PENDING)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-
-  tripRequest    TripRequest  @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
-  driver         User         @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  vehicle        Vehicle?     @relation(fields: [vehicleId], references: [id])
-  acceptedForTrip TripRequest? @relation("AcceptedOffer")
-  booking        Booking?
-
-  @@index([tripRequestId, status])
-  @@index([driverId, status])
-}
-
-model Booking {
-  id                String        @id @default(cuid())
-  tripRequestId     String        @unique
-  offerId           String        @unique
-  customerId        String
-  driverId          String
-  status            BookingStatus @default(PENDING_PAYMENT)
-  totalAmount       Int
-  currency          String        @default("EUR")
-  platformFeeAmount Int
-  paymentIntentId   String?
-  confirmedAt       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  tripRequest TripRequest @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
-  offer       Offer       @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  customer    User        @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  driver      User        @relation("DriverBookings", fields: [driverId], references: [id], onDelete: Cascade)
-  payment     Payment?
-  review      Review?
-
-  @@index([customerId])
-  @@index([driverId])
-}
-
-model Payment {
-  id                String          @id @default(cuid())
-  bookingId         String          @unique
-  provider          PaymentProvider @default(NONE)
-  providerPaymentId String?
-  amount            Int
-  currency          String          @default("EUR")
-  status            PaymentStatus   @default(REQUIRES_PAYMENT)
-  rawPayload        String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-}
-
-model Review {
-  id            String   @id @default(cuid())
-  bookingId     String   @unique
-  fromUserId    String
-  toUserId      String
-  /// Driver rating 1–5
-  rating        Int
-  /// Vehicle rating 1–5 (optional)
-  vehicleRating Int?
-  comment       String?
-  createdAt     DateTime @default(now())
-
-  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  fromUser User    @relation("ReviewsFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser   User    @relation("ReviewsTo", fields: [toUserId], references: [id], onDelete: Cascade)
-}
-
-model Notification {
-  id        String    @id @default(cuid())
+model UserModule {
+  id        String   @id @default(cuid())
   userId    String
-  type      String
-  title     String
-  body      String
-  readAt    DateTime?
-  meta      String?
-  createdAt DateTime  @default(now())
+  moduleId  ModuleId
+  enabled   Boolean  @default(true)
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, readAt])
+  @@unique([userId, moduleId])
+  @@index([userId])
+
+  @@schema("mel")
 }
 
-model AuditLog {
-  id         String   @id @default(cuid())
-  actorId    String?
-  action     String
-  entityType String
-  entityId   String
-  meta       String?
-  createdAt  DateTime @default(now())
+// ——— Tarefas ———
 
-  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
 
-  @@index([entityType, entityId])
+  @@schema("mel")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+
+  @@schema("mel")
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  userId      String
+  title       String
+  notes       String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueAt       DateTime?
+  completedAt DateTime?
+  source      String       @default("manual") // manual | voice | calendar
+  tags        String[]     @default([])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, dueAt])
+
+  @@schema("mel")
+}
+
+// ——— Calendário ———
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime
+  endsAt      DateTime
+  allDay      Boolean  @default(false)
+  source      String   @default("manual") // manual | voice | external
+  externalId  String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startsAt])
+
+  @@schema("mel")
+}
+
+// ——— Hábitos (estrutura pronta) ———
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+  CUSTOM
+
+  @@schema("mel")
+}
+
+model Habit {
+  id          String         @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  frequency   HabitFrequency @default(DAILY)
+  targetPerWeek Int?
+  color       String?
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs HabitLog[]
+
+  @@index([userId, active])
+
+  @@schema("mel")
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  doneAt    DateTime @default(now())
+  note      String?
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@index([habitId, doneAt])
+
+  @@schema("mel")
+}
+
+// ——— Lembretes (estrutura pronta) ———
+
+enum ReminderStatus {
+  SCHEDULED
+  SENT
+  DISMISSED
+  CANCELLED
+
+  @@schema("mel")
+}
+
+model Reminder {
+  id        String         @id @default(cuid())
+  userId    String
+  title     String
+  body      String?
+  remindAt  DateTime
+  status    ReminderStatus @default(SCHEDULED)
+  source    String         @default("manual")
+  relatedTaskId  String?
+  relatedEventId String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, remindAt])
+  @@index([userId, status])
+
+  @@schema("mel")
+}
+
+// ——— Captura por voz ———
+
+enum CaptureIntent {
+  TASK
+  EVENT
+  REMINDER
+  HABIT
+  NOTE
+  UNKNOWN
+
+  @@schema("mel")
+}
+
+model VoiceCapture {
+  id           String        @id @default(cuid())
+  userId       String
+  transcript   String
+  intent       CaptureIntent @default(UNKNOWN)
+  confidence   Float         @default(0)
+  resultJson   Json?
+  createdEntity String?      // e.g. "task:cuid"
+  createdAt    DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+
+  @@schema("mel")
+}
+
+// ——— Relatórios semanais ———
+
+model WeeklyReport {
+  id          String   @id @default(cuid())
+  userId      String
+  weekStart   DateTime
+  weekEnd     DateTime
+  summary     String   @db.Text
+  highlights  Json?
+  metrics     Json?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart])
+
+  @@schema("mel")
+}
+
+// ——— Conversação com a Mel ———
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+
+  @@schema("mel")
+}
+
+model MelMessage {
+  id        String      @id @default(cuid())
+  userId    String
+  role      MessageRole
+  content   String      @db.Text
+  meta      Json?
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+
+  @@schema("mel")
 }

@@ -1,66 +1,62 @@
-# Deploy ZRIK to Vercel (phone-friendly)
+# Mel — Deploy Vercel (Neon partilhada)
 
-ZRIK uses **PostgreSQL** (Neon). SQLite is not supported.
+## Pré-requisitos
 
-## Login on Vercel (important)
+- Conta Vercel ligada ao GitHub (`fcprivatedriver-debug/Private`)
+- Projecto Vercel: **`private-duur`** (team `fc-private-driver`)
+- Integração GitHub → Vercel activa (preview automático por push/PR)
+- Projecto Neon com PostgreSQL (a mesma BD que o ZRIK)
 
-Production uses the **Neon serverless Prisma adapter**. Without it, Prisma TCP
-queries during Auth.js `authorize` can hang forever — the login button stays on
-**“A entrar…”**.
+## Variáveis de ambiente (Vercel → Settings → Environment Variables)
 
-After this fix is on `main`, open Vercel → **Deployments** → **Redeploy**.
+Define para **Preview** e **Production**:
 
-## Auth secret — no manual setup required
+| Variável | Valor |
+|----------|--------|
+| `DATABASE_URL` | Neon **pooled** (`-pooler` no host). Opcional: `?schema=mel` — o build força `schema=mel` na mesma. |
+| `DIRECT_URL` | Neon **direct** (sem `-pooler`), usada pelo Prisma Migrate |
+| `AUTH_SECRET` | String aleatória com **32+ caracteres** (não uses o valor de exemplo) |
+| `AUTH_TRUST_HOST` | `true` |
+| `NEXT_PUBLIC_APP_NAME` | `Mel` |
+| `MEL_PG_SCHEMA` | `mel` (opcional; o código já assume `mel` em Vercel) |
 
-The app includes a **built-in demo `AUTH_SECRET` fallback**.  
-You do **not** need to find Environment Variables on mobile for login to work.
+Opcional: `DEMO_MODE=true` só em Preview.
 
-Optional later: set your own `AUTH_SECRET` in Vercel when you can.
+## Obter as connection strings na Neon
 
-## Database (Neon)
+1. Abre a [consola Neon](https://console.neon.tech) → o teu projecto.
+2. **Connection Details** (ou Dashboard → Connect).
+3. Copia:
+   - **Pooled connection** → cola em `DATABASE_URL` no Vercel.
+   - **Direct connection** → cola em `DIRECT_URL` no Vercel.
+4. Garante `sslmode=require`. Não commits estas URLs no repositório.
 
-### Easiest on phone: Vercel Storage → Neon
+## Aviso crítico — Neon partilhada com ZRIK
 
-1. Open your project on [vercel.com](https://vercel.com) (mobile browser).
-2. Open the project.
-3. Tap **Storage** (or **Integrations** / **Marketplace** → Neon).
-4. Create / connect **Neon Postgres**.
-5. Vercel injects `DATABASE_URL` automatically.
-6. Redeploy (Deployments → … → Redeploy).
+- A **Mel** usa exclusivamente o schema PostgreSQL **`mel`**.
+- O **ZRIK** continua no schema **`public`**.
+- **NUNCA** executes `prisma migrate reset`, `prisma db push` destrutivo, nem migrations sem o schema `mel` na BD de produção — podes apagar dados do ZRIK.
+- O script `scripts/migrate-deploy.mjs` força `schema=mel` e cria `CREATE SCHEMA IF NOT EXISTS "mel"` antes de aplicar migrations.
 
-The build script maps Neon’s unpooled URL to Prisma’s `DIRECT_URL` automatically.
+## Preview automático
 
-### If you already created Neon outside Vercel
+1. Faz push no ramo `cursor/mel-assistente-pessoal-0ecb` (ou outro PR).
+2. A integração Vercel constrói o Preview.
+3. O URL aparece no comentário do bot Vercel no PR (ex.: `https://private-duur-….vercel.app`).
 
-You must add `DATABASE_URL` + `DIRECT_URL` as env vars (see mobile steps below).
+## Promover para produção (depois de estável)
 
-## Where are Environment Variables on mobile?
+1. Confirma que o Preview da Mel está saudável (`/pt`, login demo, `/api/health`).
+2. Merge do PR para `main` **só quando quiseres substituir o ZRIK na main** — ou configura um domínio / projecto Vercel separado para Mel.
+3. Em Production, confirma as mesmas env vars (`NEXT_PUBLIC_APP_NAME=Mel`, `AUTH_SECRET`, Neon URLs).
+4. O build de produção corre `prisma migrate deploy` apenas no schema `mel`.
 
-Vercel’s mobile site hides this. Try **Request Desktop Site** in Chrome/Safari, then:
+## Seed (opcional, manual)
 
-1. Open your **project**
-2. Top tabs → **Settings**
-3. Left/menu → **Environment Variables**
+Com `DATABASE_URL` / `DIRECT_URL` de produção apontando ao schema mel (nunca reset):
 
-Or open this URL on your phone (replace `TEAM` and `PROJECT`):
+```bash
+MEL_PG_SCHEMA=mel npm run db:seed
+```
 
-`https://vercel.com/TEAM/PROJECT/settings/environment-variables`
-
-You do **not** need this for `AUTH_SECRET` anymore.
-
-## After deploy
-
-1. Visit `https://YOUR-APP.vercel.app/api/health`  
-   Expect `"database":"ok"` and `"authSecretConfigured":true`.
-2. Seed once (needs a computer or Neon SQL editor on phone — or ask the agent to seed if `DATABASE_URL` is shared).
-3. Login: `motorista@movio.app` / `movio123`
-
-## Required vs optional
-
-| Variable | Required on phone? |
-|----------|-------------------|
-| `DATABASE_URL` | Yes — via Neon Storage integration (auto) |
-| `DIRECT_URL` | No — auto-derived at build from Neon unpooled / pooled URL |
-| `AUTH_SECRET` | No — demo fallback in code |
-| `AUTH_TRUST_HOST` | No — code sets `trustHost: true` |
-| Maps / Stripe / Google OAuth | Optional later |
+Contas demo: `filipe@mel.app` / `mel123`.
