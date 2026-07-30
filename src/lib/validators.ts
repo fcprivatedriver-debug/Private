@@ -35,12 +35,32 @@ export const reviewSchema = z.object({
   comment: z.string().max(1000).optional(),
 });
 
+const phoneSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v && v.length > 0 ? v : undefined))
+  .refine(
+    (v) => v === undefined || /^[+0-9()\s.-]{6,20}$/.test(v),
+    "Número de telefone inválido.",
+  );
+
 export const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  phone: z.string().optional(),
-  role: z.enum(["CUSTOMER", "DRIVER"]),
+  name: z
+    .string({ required_error: "Indica o nome." })
+    .trim()
+    .min(2, "O nome deve ter pelo menos 2 caracteres."),
+  email: z
+    .string({ required_error: "Indica o email." })
+    .trim()
+    .email("Email inválido."),
+  password: z
+    .string({ required_error: "Indica a password." })
+    .min(6, "Password inválida. Usa pelo menos 6 caracteres."),
+  phone: phoneSchema,
+  role: z.enum(["CUSTOMER", "DRIVER"], {
+    errorMap: () => ({ message: "Tipo de conta inválido." }),
+  }),
 });
 
 export const vehicleSchema = z.object({

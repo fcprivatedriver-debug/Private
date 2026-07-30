@@ -17,6 +17,8 @@ function RegisterFormInner() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  /** Skip auto-redirect while we intentionally navigate after a successful register. */
+  const [skipAuthRedirect, setSkipAuthRedirect] = useState(false);
 
   function go(dest: string) {
     setLeaving(true);
@@ -24,46 +26,57 @@ function RegisterFormInner() {
   }
 
   useEffect(() => {
+    if (skipAuthRedirect) return;
     if (status === "authenticated" && session?.user) {
       go(dashboardPathForRole(session.user.role));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session?.user?.role]);
+  }, [status, session?.user?.role, skipAuthRedirect]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
     try {
       const result = await registerAction(formData);
       if (!result.ok) {
-        setError(result.error);
+        setError(result.error || "Erro interno.");
+        setLoading(false);
         return;
       }
+
+      setSkipAuthRedirect(true);
       const login = await signIn("credentials", {
         email: String(formData.get("email")),
         password: String(formData.get("password")),
         redirect: false,
       });
+
       if (login?.error) {
-        window.location.assign(`/${locale}/login`);
+        setLoading(false);
+        setError("Conta criada, mas o início de sessão falhou. Tenta entrar manualmente.");
         return;
       }
+
       const role = String(formData.get("role"));
       go(role === "DRIVER" ? "/onboarding" : "/pedidos/novo");
-    } catch {
-      setError("Não foi possível registar. Tente de novo.");
+    } catch (err) {
+      console.error("[registo]", err);
+      setError("Erro de ligação ao servidor.");
       setLoading(false);
+      setSkipAuthRedirect(false);
     }
   }
 
-  if (status === "authenticated" || leaving || loading) {
+  if ((status === "authenticated" && !skipAuthRedirect) || leaving) {
     return (
       <section className="auth-shell fade-up">
         <div className="container" style={{ maxWidth: 480 }}>
           <h1 className="page-title">{t("registerTitle")}</h1>
-          <p className="page-lead">{loading ? "…" : "A redirecionar…"}</p>
+          <p className="page-lead">A redirecionar…</p>
         </div>
       </section>
     );
@@ -74,13 +87,17 @@ function RegisterFormInner() {
       <div className="container" style={{ maxWidth: 480 }}>
         <h1 className="page-title">{t("registerTitle")}</h1>
         <p className="page-lead">{t("registerLead")}</p>
-        {error && <div className="alert alert-error">{error}</div>}
-        <form onSubmit={onSubmit} className="panel">
+        {error && (
+          <div className="alert alert-error" role="alert">
+            {error}
+          </div>
+        )}
+        <form onSubmit={onSubmit} className="panel" noValidate>
           <div className="field">
             <label className="label" htmlFor="role">
               {t("accountType")}
             </label>
-            <select className="select" id="role" name="role" defaultValue={defaultRole}>
+            <select className="select" id="role" name="role" defaultValue={defaultRole} required>
               <option value="CUSTOMER">{t("customer")}</option>
               <option value="DRIVER">{t("driver")}</option>
             </select>
@@ -89,7 +106,7 @@ function RegisterFormInner() {
             <label className="label" htmlFor="name">
               {t("name")}
             </label>
-            <input className="input" id="name" name="name" required autoComplete="name" />
+            <input className="input" id="name" name="name" required minLength={2} autoComplete="name" />
           </div>
           <div className="field">
             <label className="label" htmlFor="email">
@@ -101,7 +118,15 @@ function RegisterFormInner() {
             <label className="label" htmlFor="phone">
               {t("phone")}
             </label>
-            <input className="input" id="phone" name="phone" autoComplete="tel" />
+            <input
+              className="input"
+              id="phone"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+351…"
+            />
           </div>
           <div className="field">
             <label className="label" htmlFor="password">
