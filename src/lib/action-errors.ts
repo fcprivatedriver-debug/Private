@@ -1,5 +1,4 @@
 import { ZodError } from "zod";
-import { Prisma } from "@prisma/client";
 
 export type ActionFailure = {
   ok: false;
@@ -16,6 +15,19 @@ function isDomainError(error: unknown): error is Error & { code: string } {
   );
 }
 
+function prismaCode(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === "string" ? code : null;
+}
+
+function errorName(error: unknown): string {
+  if (error && typeof error === "object" && "name" in error) {
+    return String((error as { name?: unknown }).name || "");
+  }
+  return error instanceof Error ? error.constructor.name : "";
+}
+
 /** Map unknown errors to specific, user-facing Portuguese messages. */
 export function toActionFailure(error: unknown): ActionFailure {
   if (isDomainError(error)) {
@@ -28,25 +40,23 @@ export function toActionFailure(error: unknown): ActionFailure {
     return { ok: false, error: message, code: "VALIDATION" };
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === "P2002") {
-      return { ok: false, error: "Email já registado.", code: "EMAIL_TAKEN" };
-    }
-    if (error.code === "P2003") {
-      return { ok: false, error: "Dados incompletos para criar o perfil.", code: "FK" };
-    }
-    console.error("[prisma known]", error.code, error.message);
-    return { ok: false, error: "Erro interno ao gravar na base de dados.", code: error.code };
+  const code = prismaCode(error);
+  const name = errorName(error);
+
+  if (code === "P2002") {
+    return { ok: false, error: "Email já registado.", code: "EMAIL_TAKEN" };
+  }
+  if (code === "P2003") {
+    return { ok: false, error: "Dados incompletos para criar o perfil.", code: "FK" };
+  }
+  if (code?.startsWith("P") && name.includes("Prisma")) {
+    console.error("[prisma known]", code, error);
+    return { ok: false, error: "Erro interno ao gravar na base de dados.", code };
   }
 
-  if (error instanceof Prisma.PrismaClientInitializationError) {
-    console.error("[prisma init]", error.message);
+  if (name.includes("PrismaClientInitializationError") || name.includes("PrismaClientRustPanicError")) {
+    console.error("[prisma init]", error);
     return { ok: false, error: "Erro de ligação ao servidor de dados.", code: "DB_INIT" };
-  }
-
-  if (error instanceof Prisma.PrismaClientRustPanicError) {
-    console.error("[prisma panic]", error.message);
-    return { ok: false, error: "Erro interno.", code: "DB_PANIC" };
   }
 
   if (error instanceof Error) {
