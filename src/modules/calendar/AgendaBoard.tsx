@@ -36,7 +36,7 @@ function toLocalInput(d: Date): string {
 function itemsForHourView(items: AgendaItemView[], hour: number): AgendaItemView[] {
   return items.filter((i) => {
     if (i.allDay) return hour === 0;
-    return i.startsAt.getHours() === hour;
+    return i.startsAtHour === hour;
   });
 }
 

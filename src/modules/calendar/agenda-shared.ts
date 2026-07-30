@@ -11,7 +11,7 @@ import {
   addDays,
 } from "date-fns";
 import type { MonthDaySummary } from "@/core/capabilities";
-import { formatZonedTime, isUntimedDueAt } from "@/lib/zoned-date";
+import { formatZonedTime, isUntimedDueAt, zonedParts } from "@/lib/zoned-date";
 
 export type { MonthDaySummary };
 
@@ -38,6 +38,8 @@ export type AgendaItemDTO = {
   endsAt: string;
   /** Rótulo de hora calculado no servidor (evita hydration TZ). */
   startsAtLabel: string;
+  /** Hora civil Europe/Lisbon (0–23) para agrupar na vista dia. */
+  startsAtHour: number;
   allDay: boolean;
   source: string;
   color: string | null;
@@ -58,20 +60,22 @@ export function parseDayIso(iso: string): Date {
 }
 
 export function toAgendaDTO(item: AgendaItem): AgendaItemDTO {
-  const startsAtLabel =
-    item.allDay || isUntimedDueAt(item.startsAt)
-      ? "Todo o dia"
-      : formatZonedTime(item.startsAt);
+  const allDay = item.allDay || isUntimedDueAt(item.startsAt);
+  const startsAtLabel = allDay ? "Todo o dia" : formatZonedTime(item.startsAt);
   return {
     ...item,
-    allDay: item.allDay || isUntimedDueAt(item.startsAt),
+    allDay,
     startsAt: item.startsAt.toISOString(),
     endsAt: item.endsAt.toISOString(),
     startsAtLabel,
+    startsAtHour: allDay ? 0 : zonedParts(item.startsAt).hour,
   };
 }
 
-export function hydrateAgendaItem(dto: AgendaItemDTO): AgendaItem & { startsAtLabel: string } {
+export function hydrateAgendaItem(dto: AgendaItemDTO): AgendaItem & {
+  startsAtLabel: string;
+  startsAtHour: number;
+} {
   return {
     ...dto,
     startsAt: new Date(dto.startsAt),
@@ -103,7 +107,7 @@ export function hourSlots(): number[] {
 export function itemsForHour(items: AgendaItem[], hour: number): AgendaItem[] {
   return items.filter((i) => {
     if (i.allDay) return hour === 0;
-    return i.startsAt.getHours() === hour;
+    return zonedParts(i.startsAt).hour === hour;
   });
 }
 
