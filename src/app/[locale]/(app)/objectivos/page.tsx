@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/session";
-import { listHabits, loggedToday } from "@/modules/habits/service";
+import { listHabits, loggedToday, logsThisWeek } from "@/modules/habits/service";
 import { ObjectivesPanel } from "@/components/mel/ObjectivesPanel";
 
 export default async function ObjectivesPage() {
@@ -18,6 +18,7 @@ export default async function ObjectivesPage() {
         initial={habits.map((h) => ({
           ...h,
           doneToday: loggedToday(h),
+          weekCount: logsThisWeek(h),
         }))}
       />
     </div>

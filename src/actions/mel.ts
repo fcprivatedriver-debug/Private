@@ -286,6 +286,8 @@ export async function chatAction(message: string) {
 export async function dayBriefingAction() {
   ensureMelCore();
   const { user } = await requireUser();
+  const { ensureTasksSyncedToCalendar } = await import("@/modules/calendar/sync");
+  await ensureTasksSyncedToCalendar(user.id);
   const { getDayItems } = await import("@/modules/calendar/agenda");
   const { todayIso } = await import("@/lib/zoned-date");
   const {
@@ -441,6 +443,14 @@ export async function logHabitAction(habitId: string) {
   if (!log) return { ok: false as const, error: "Objectivo não encontrado." };
   revalidateApp();
   return { ok: true as const, log };
+}
+
+export async function unlogHabitAction(habitId: string) {
+  const { user } = await requireUser();
+  const { unlogHabitToday } = await import("@/modules/habits/service");
+  const ok = await unlogHabitToday(habitId, user.id);
+  revalidateApp();
+  return { ok };
 }
 
 export async function refreshWeeklyReportAction() {

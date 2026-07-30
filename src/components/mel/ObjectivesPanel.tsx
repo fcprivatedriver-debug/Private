@@ -7,9 +7,14 @@ import {
   updateHabitAction,
   deleteHabitAction,
   logHabitAction,
+  unlogHabitAction,
 } from "@/actions/mel";
 
-type HabitRow = Habit & { logs: HabitLog[]; doneToday: boolean };
+type HabitRow = Habit & {
+  logs: HabitLog[];
+  doneToday: boolean;
+  weekCount: number;
+};
 
 const FREQ: Record<HabitFrequency, string> = {
   DAILY: "Diário",
@@ -25,6 +30,7 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [editFreq, setEditFreq] = useState<HabitFrequency>("DAILY");
   const [pending, startTransition] = useTransition();
 
   function onCreate(e: FormEvent) {
@@ -35,14 +41,16 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
         title,
         description: description || undefined,
         frequency,
+        targetPerWeek: frequency === "DAILY" ? 7 : frequency === "WEEKLY" ? 1 : undefined,
       });
       if (res.ok && res.habit) {
         setHabits((prev) => [
-          { ...res.habit!, logs: [], doneToday: false },
+          { ...res.habit!, logs: [], doneToday: false, weekCount: 0 },
           ...prev,
         ]);
         setTitle("");
         setDescription("");
+        setFrequency("DAILY");
       }
     });
   }
@@ -51,6 +59,7 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
     setEditingId(h.id);
     setEditTitle(h.title);
     setEditDesc(h.description || "");
+    setEditFreq(h.frequency);
   }
 
   function saveEdit(e: FormEvent) {
@@ -60,12 +69,21 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
       const res = await updateHabitAction(editingId, {
         title: editTitle,
         description: editDesc || null,
+        frequency: editFreq,
+        targetPerWeek:
+          editFreq === "DAILY" ? 7 : editFreq === "WEEKLY" ? 1 : null,
       });
       if (res.ok && res.habit) {
         setHabits((prev) =>
           prev.map((h) =>
             h.id === editingId
-              ? { ...h, title: res.habit!.title, description: res.habit!.description }
+              ? {
+                  ...h,
+                  title: res.habit!.title,
+                  description: res.habit!.description,
+                  frequency: res.habit!.frequency,
+                  targetPerWeek: res.habit!.targetPerWeek,
+                }
               : h,
           ),
         );
@@ -75,12 +93,32 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
   }
 
   function toggleDone(h: HabitRow) {
-    if (h.doneToday) return;
     startTransition(async () => {
+      if (h.doneToday) {
+        const res = await unlogHabitAction(h.id);
+        if (res.ok) {
+          setHabits((prev) =>
+            prev.map((x) =>
+              x.id === h.id
+                ? {
+                    ...x,
+                    doneToday: false,
+                    weekCount: Math.max(0, x.weekCount - 1),
+                  }
+                : x,
+            ),
+          );
+        }
+        return;
+      }
       const res = await logHabitAction(h.id);
       if (res.ok) {
         setHabits((prev) =>
-          prev.map((x) => (x.id === h.id ? { ...x, doneToday: true } : x)),
+          prev.map((x) =>
+            x.id === h.id
+              ? { ...x, doneToday: true, weekCount: x.weekCount + 1 }
+              : x,
+          ),
         );
       }
     });
@@ -153,6 +191,17 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
                       onChange={(e) => setEditDesc(e.target.value)}
                       placeholder="Nota"
                     />
+                    <select
+                      value={editFreq}
+                      onChange={(e) => setEditFreq(e.target.value as HabitFrequency)}
+                      aria-label="Frequência"
+                    >
+                      {Object.entries(FREQ).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
                     <div className="inline-actions">
                       <button className="btn btn-primary btn-sm" type="submit" disabled={pending}>
                         Gravar
@@ -184,6 +233,9 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
                       <p className="muted small" style={{ margin: "0.2rem 0 0" }}>
                         {FREQ[h.frequency]}
                         {h.description ? ` · ${h.description}` : ""}
+                        {h.targetPerWeek
+                          ? ` · ${h.weekCount}/${h.targetPerWeek} esta semana`
+                          : ` · ${h.weekCount} esta semana`}
                         {h.doneToday ? " · feito hoje" : ""}
                       </p>
                     </button>
@@ -191,10 +243,10 @@ export function ObjectivesPanel({ initial }: { initial: HabitRow[] }) {
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm"
-                        disabled={pending || h.doneToday}
+                        disabled={pending}
                         onClick={() => toggleDone(h)}
                       >
-                        {h.doneToday ? "Feito" : "Marcar hoje"}
+                        {h.doneToday ? "Desmarcar" : "Marcar hoje"}
                       </button>
                       <button
                         type="button"

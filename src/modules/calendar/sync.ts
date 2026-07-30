@@ -4,6 +4,7 @@
  */
 import { onMelEvent } from "@/core/events";
 import { invokeCapability } from "@/core/capabilities";
+import { prisma } from "@/lib/db";
 import { slotFromDueAt, taskExternalId } from "@/modules/calendar/service";
 import {
   buildTaskEventDescription,
@@ -19,7 +20,7 @@ export type CalendarSyncPrefs = {
 
 const defaultPrefs: CalendarSyncPrefs = { removeOnTaskDone: false };
 
-async function upsertTaskEvent(
+export async function upsertTaskEvent(
   payload: {
     userId: string;
     taskId: string;
@@ -38,27 +39,67 @@ async function upsertTaskEvent(
     });
     const priority = payload.priority || "MEDIUM";
 
-    if (payload.status === "DONE" || payload.status === "CANCELLED") {
-      if (!existing) return;
-      if (prefs.removeOnTaskDone) {
+    if (payload.status === "CANCELLED") {
+      if (existing) {
+        await invokeCapability("calendar.delete", {
+          userId: payload.userId,
+          eventId: existing.id,
+        });
+      }
+      return;
+    }
+
+    if (payload.status === "DONE") {
+      if (existing && prefs.removeOnTaskDone) {
         await invokeCapability("calendar.delete", {
           userId: payload.userId,
           eventId: existing.id,
         });
         return;
       }
-      await invokeCapability("calendar.update", {
+
+      if (!payload.dueAt) {
+        if (existing) {
+          await invokeCapability("calendar.delete", {
+            userId: payload.userId,
+            eventId: existing.id,
+          });
+        }
+        return;
+      }
+
+      const due = new Date(payload.dueAt);
+      const slot = slotFromDueAt(due);
+      const description = buildTaskEventDescription({
+        taskId: payload.taskId,
+        priority,
+        status: "DONE",
+      });
+      if (existing) {
+        await invokeCapability("calendar.update", {
+          userId: payload.userId,
+          eventId: existing.id,
+          data: {
+            title: payload.title,
+            startsAt: slot.startsAt,
+            endsAt: slot.endsAt,
+            allDay: slot.allDay,
+            description,
+            color: doneColor(),
+          },
+        });
+        return;
+      }
+      await invokeCapability("calendar.create", {
         userId: payload.userId,
-        eventId: existing.id,
-        data: {
-          title: payload.title,
-          description: buildTaskEventDescription({
-            taskId: payload.taskId,
-            priority,
-            status: "DONE",
-          }),
-          color: doneColor(),
-        },
+        title: payload.title,
+        description,
+        startsAt: slot.startsAt,
+        endsAt: slot.endsAt,
+        allDay: slot.allDay,
+        source: "task-sync",
+        externalId,
+        color: doneColor(),
       });
       return;
     }
@@ -112,6 +153,49 @@ async function upsertTaskEvent(
   } catch (err) {
     console.error("[mel] sync tarefa→calendário falhou", err);
   }
+}
+
+/**
+ * Reconcilia todas as tarefas do utilizador com eventos `task-sync`.
+ * Corrige seed/legado e falhas silenciosas do event bus.
+ */
+export async function ensureTasksSyncedToCalendar(userId: string): Promise<number> {
+  const tasks = await prisma.task.findMany({ where: { userId } });
+  const synced = await prisma.calendarEvent.findMany({
+    where: {
+      userId,
+      OR: [{ source: "task-sync" }, { externalId: { startsWith: "task:" } }],
+    },
+    select: { id: true, externalId: true },
+  });
+
+  let touched = 0;
+  for (const task of tasks) {
+    await upsertTaskEvent({
+      userId,
+      taskId: task.id,
+      title: task.title,
+      dueAt: task.dueAt?.toISOString() ?? null,
+      priority: task.priority,
+      status: task.status,
+    });
+    touched += 1;
+  }
+
+  const living = new Set(tasks.map((t) => taskExternalId(t.id)));
+  for (const ev of synced) {
+    if (!ev.externalId || living.has(ev.externalId)) continue;
+    try {
+      await invokeCapability("calendar.delete", {
+        userId,
+        eventId: ev.id,
+      });
+    } catch (err) {
+      console.error("[mel] limpeza órfão calendário falhou", err);
+    }
+  }
+
+  return touched;
 }
 
 let registered = false;

@@ -1,6 +1,8 @@
 import { requireUser } from "@/lib/session";
 import { listTasks } from "@/modules/tasks/service";
 import { listToday } from "@/modules/calendar/service";
+import { ensureMelCore } from "@/core/bootstrap";
+import { ensureTasksSyncedToCalendar } from "@/modules/calendar/sync";
 import { recentMessages } from "@/lib/ai/mel-assistant";
 import { MelChat } from "@/components/mel/MelChat";
 import { SpeakButton } from "@/components/mel/SpeakButton";
@@ -16,7 +18,9 @@ import {
 } from "@/lib/zoned-date";
 
 export default async function TodayPage() {
+  ensureMelCore();
   const { user } = await requireUser();
+  await ensureTasksSyncedToCalendar(user.id);
   const [tasks, events, messages] = await Promise.all([
     listTasks(user.id, { limit: 100 }),
     listToday(user.id),

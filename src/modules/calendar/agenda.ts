@@ -3,14 +3,15 @@
  */
 import "server-only";
 
-import type { CalendarEvent } from "@prisma/client";
-import { listEvents } from "@/modules/calendar/service";
+import type { CalendarEvent, Task } from "@prisma/client";
+import { listEvents, slotFromDueAt } from "@/modules/calendar/service";
 import {
   isTaskEventDone,
   parseTaskEventMeta,
   priorityColor,
 } from "@/modules/calendar/markers";
 import { registerCapability } from "@/core/capabilities";
+import { prisma } from "@/lib/db";
 import {
   sortAgendaItems,
   type AgendaItem,
@@ -58,13 +59,64 @@ function toAgendaItem(e: CalendarEvent): AgendaItem {
   };
 }
 
+/** Fallback: tarefa com data sem evento sync ainda aparece na agenda. */
+function taskToAgendaItem(task: Task): AgendaItem {
+  const due = task.dueAt!;
+  const slot = slotFromDueAt(due);
+  const done = task.status === "DONE";
+  return {
+    id: `task-fallback:${task.id}`,
+    title: task.title,
+    startsAt: slot.startsAt,
+    endsAt: slot.endsAt,
+    allDay: slot.allDay,
+    source: "task-sync",
+    color: done ? "#94A3B8" : priorityColor(task.priority),
+    done,
+    taskId: task.id,
+    priority: task.priority,
+    kind: "task",
+  };
+}
+
+async function datedTasksInRange(
+  userId: string,
+  from: Date,
+  to: Date,
+): Promise<Task[]> {
+  return prisma.task.findMany({
+    where: {
+      userId,
+      dueAt: { not: null, gte: from, lte: to },
+      status: { not: "CANCELLED" },
+    },
+  });
+}
+
+function mergeEventsAndTasks(
+  events: CalendarEvent[],
+  tasks: Task[],
+): AgendaItem[] {
+  const fromEvents = events.map(toAgendaItem);
+  const linked = new Set(
+    fromEvents.map((i) => i.taskId).filter((id): id is string => Boolean(id)),
+  );
+  const orphans = tasks
+    .filter((t) => t.dueAt && !linked.has(t.id))
+    .map(taskToAgendaItem);
+  return sortAgendaItems([...fromEvents, ...orphans]);
+}
+
 export async function getDayItems(
   userId: string,
   dayIso: string,
 ): Promise<AgendaItem[]> {
   const { from, to } = boundsForDayIso(dayIso);
-  const events = await listEvents(userId, { from, to });
-  return sortAgendaItems(events.map(toAgendaItem));
+  const [events, tasks] = await Promise.all([
+    listEvents(userId, { from, to }),
+    datedTasksInRange(userId, from, to),
+  ]);
+  return mergeEventsAndTasks(events, tasks);
 }
 
 export async function getWeekItems(
@@ -81,8 +133,11 @@ export async function getWeekItems(
   const sundayIso = shiftDayIso(mondayIso, 6);
   const { from } = boundsForDayIso(mondayIso);
   const { to } = boundsForDayIso(sundayIso);
-  const events = await listEvents(userId, { from, to });
-  const items = events.map(toAgendaItem);
+  const [events, tasks] = await Promise.all([
+    listEvents(userId, { from, to }),
+    datedTasksInRange(userId, from, to),
+  ]);
+  const items = mergeEventsAndTasks(events, tasks);
 
   return Array.from({ length: 7 }, (_, i) => {
     const iso = shiftDayIso(mondayIso, i);
@@ -113,19 +168,22 @@ export async function getMonthSummary(
   const lastIso = `${monthIso.slice(0, 7)}-${String(lastDay).padStart(2, "0")}`;
   const { from } = boundsForDayIso(firstIso);
   const { to } = boundsForDayIso(lastIso);
-  const events = await listEvents(userId, { from, to });
+  const [events, tasks] = await Promise.all([
+    listEvents(userId, { from, to }),
+    datedTasksInRange(userId, from, to),
+  ]);
+  const items = mergeEventsAndTasks(events, tasks);
   const map = new Map<string, { count: number; top: "HIGH" | "MEDIUM" | "LOW" }>();
   const rank = (pr: string) => (pr === "URGENT" || pr === "HIGH" ? 0 : pr === "LOW" ? 2 : 1);
 
-  for (const e of events) {
-    if (isTaskEventDone(e.description)) continue;
-    const key = formatDayIso(e.startsAt);
-    const meta = parseTaskEventMeta(e.description);
+  for (const it of items) {
+    if (it.done) continue;
+    const key = formatDayIso(it.startsAt);
     let pr: "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
-    if (meta?.priority === "URGENT" || meta?.priority === "HIGH") pr = "HIGH";
-    else if (meta?.priority === "LOW") pr = "LOW";
-    else if (e.color === "#DC2626") pr = "HIGH";
-    else if (e.color === "#94A3B8") pr = "LOW";
+    if (it.priority === "URGENT" || it.priority === "HIGH") pr = "HIGH";
+    else if (it.priority === "LOW") pr = "LOW";
+    else if (it.color === "#DC2626") pr = "HIGH";
+    else if (it.color === "#94A3B8") pr = "LOW";
 
     const cur = map.get(key);
     if (!cur) map.set(key, { count: 1, top: pr });

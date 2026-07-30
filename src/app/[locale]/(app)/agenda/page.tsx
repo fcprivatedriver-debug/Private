@@ -8,6 +8,7 @@ import {
 } from "@/modules/calendar/agenda";
 import { AgendaBoard } from "@/modules/calendar/AgendaBoard";
 import { ensureMelCore } from "@/core/bootstrap";
+import { ensureTasksSyncedToCalendar } from "@/modules/calendar/sync";
 import { formatDayIso, todayIso } from "@/lib/zoned-date";
 
 export default async function AgendaPage({
@@ -24,6 +25,9 @@ export default async function AgendaPage({
   const dayIso =
     sp.day && /^\d{4}-\d{2}-\d{2}$/.test(sp.day) ? sp.day : todayIso();
   const monthIso = `${dayIso.slice(0, 7)}-01`;
+
+  // Garante eventos task-sync para tarefas com data (seed/legado/falhas).
+  await ensureTasksSyncedToCalendar(user.id);
 
   const [dayItems, weekCols, monthSummaries] = await Promise.all([
     getDayItems(user.id, dayIso),

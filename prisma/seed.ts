@@ -24,7 +24,7 @@ async function upsertDemoUser(email: string, name: string) {
           { moduleId: "CALENDAR", enabled: true },
           { moduleId: "VOICE", enabled: true },
           { moduleId: "REPORTS", enabled: true },
-          { moduleId: "HABITS", enabled: false },
+          { moduleId: "HABITS", enabled: true },
           { moduleId: "REMINDERS", enabled: false },
         ],
       },
@@ -34,6 +34,13 @@ async function upsertDemoUser(email: string, name: string) {
       passwordHash,
     },
   });
+
+  await prisma.userModule.upsert({
+    where: { userId_moduleId: { userId: user.id, moduleId: "HABITS" } },
+    create: { userId: user.id, moduleId: "HABITS", enabled: true },
+    update: { enabled: true },
+  });
+
   return user;
 }
 
@@ -92,6 +99,35 @@ async function seedContent(userId: string) {
     ],
   });
 
+  // Eventos manuais + sync tarefas→calendário (Agenda não fica vazia).
+  const priorityColor = (p: string) =>
+    p === "URGENT" || p === "HIGH"
+      ? "#DC2626"
+      : p === "LOW"
+        ? "#94A3B8"
+        : "#D97706";
+
+  const datedTasks = await prisma.task.findMany({
+    where: { userId, dueAt: { not: null }, status: { not: "CANCELLED" } },
+  });
+
+  const taskSyncEvents = datedTasks.map((t) => {
+    const startsAt = t.dueAt!;
+    const endsAt = new Date(startsAt.getTime() + 30 * 60 * 1000);
+    const done = t.status === "DONE";
+    return {
+      userId,
+      title: t.title,
+      description: `mel-task|taskId=${t.id}|priority=${t.priority}|status=${done ? "DONE" : "OPEN"}`,
+      startsAt,
+      endsAt,
+      allDay: false,
+      source: "task-sync",
+      externalId: `task:${t.id}`,
+      color: done ? "#94A3B8" : priorityColor(t.priority),
+    };
+  });
+
   await prisma.calendarEvent.createMany({
     data: [
       {
@@ -120,17 +156,36 @@ async function seedContent(userId: string) {
         source: "manual",
         color: "#0F766E",
       },
+      ...taskSyncEvents,
     ],
   });
 
-  await prisma.habit.create({
-    data: {
-      userId,
-      title: "Beber água",
-      frequency: "DAILY",
-      targetPerWeek: 7,
-      color: "#0EA5E9",
-    },
+  await prisma.habit.createMany({
+    data: [
+      {
+        userId,
+        title: "Beber água",
+        frequency: "DAILY",
+        targetPerWeek: 7,
+        color: "#0EA5E9",
+      },
+      {
+        userId,
+        title: "Caminhar 20 min",
+        description: "Ao ar livre ou passadeira",
+        frequency: "DAILY",
+        targetPerWeek: 5,
+        color: "#0F766E",
+      },
+      {
+        userId,
+        title: "Revisão semanal",
+        description: "Olhar tarefas e priorizar",
+        frequency: "WEEKLY",
+        targetPerWeek: 1,
+        color: "#D97706",
+      },
+    ],
   });
 
   await prisma.reminder.create({
@@ -168,7 +223,7 @@ async function seedContent(userId: string) {
         tasksCreated: 4,
         tasksDone: 1,
         tasksOpen: 3,
-        eventsCount: 3,
+        eventsCount: 3 + datedTasks.length,
         voiceCaptures: 1,
         completionRate: 25,
       },
