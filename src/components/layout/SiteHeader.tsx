@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { signOut } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 
 export async function SiteHeader() {
   const session = await auth();
@@ -9,9 +9,7 @@ export async function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container site-header-inner">
-        <Link href="/" className="logo">
-          Mov<span>io</span>
-        </Link>
+        <BrandLogo href="/" size="md" />
         <nav className="nav-links">
           <Link href="/como-funciona">Como funciona</Link>
           <Link href="/para-motoristas">Motoristas</Link>

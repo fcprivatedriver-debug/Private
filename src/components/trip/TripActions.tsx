@@ -75,7 +75,7 @@ export function TripActions({
             Reserva
           </h3>
           <p>
-            Total {formatMoney(booking.totalAmount, booking.currency)} · taxa Movio{" "}
+            Total {formatMoney(booking.totalAmount, booking.currency)} · taxa ZRIK{" "}
             {formatMoney(booking.platformFeeAmount, booking.currency)}
           </p>
           <p className="muted">

@@ -256,7 +256,7 @@ export async function acceptOffer(tripId: string, offerId: string, customerId: s
         userId: offer.driverId,
         type: "OFFER_ACCEPTED",
         title: "Proposta aceite",
-        body: "O cliente aceitou a tua proposta na Movio.",
+        body: "O cliente aceitou a tua proposta na ZRIK.",
         meta: JSON.stringify({ tripId, offerId, bookingId: booking.id }),
       },
     });
@@ -398,7 +398,7 @@ export async function createReview(input: {
         userId: booking.driverId,
         type: "REVIEW_RECEIVED",
         title: "Nova avaliação",
-        body: `Recebeste ${input.rating}★ na Movio.`,
+        body: `Recebeste ${input.rating}★ na ZRIK.`,
         meta: JSON.stringify({ bookingId: booking.id, rating: input.rating }),
       },
     });

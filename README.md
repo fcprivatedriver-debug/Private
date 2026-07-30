@@ -1,6 +1,8 @@
-# Movio
+# ZRIK
 
-Marketplace de motoristas privados — os clientes publicam pedidos de viagem, os motoristas enviam propostas, o cliente escolhe a melhor.
+Marketplace de chauffeurs privados — os clientes publicam pedidos de viagem, os motoristas enviam propostas, o cliente escolhe a melhor.
+
+**Tu escolhes. O resto é connosco.**
 
 ## Stack
 
@@ -39,8 +41,15 @@ Abre [http://localhost:3000](http://localhost:3000).
 ## Defaults de produto
 
 - Moeda: EUR
-- Comissão Movio: 15%
+- Comissão ZRIK: 15%
 - Contactos revelados após aceite da proposta
 - Role única por conta no MVP
 - UI em português
 - `PAYMENTS_ENABLED=false` (confirmação demo sem Stripe)
+
+## Identidade
+
+- Nome: **ZRIK**
+- Accent: Azure Prestige `#1F5A96`
+- Tipografia: Sora (display) + Plus Jakarta Sans (body)
+- Slogan: Tu escolhes. O resto é connosco.

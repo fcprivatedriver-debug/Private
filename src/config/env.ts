@@ -8,7 +8,7 @@ const envSchema = z.object({
   AUTH_GOOGLE_SECRET: z.string().optional(),
   PAYMENTS_ENABLED: z.string().default("false"),
   PLATFORM_FEE_PERCENT: z.coerce.number().default(15),
-  NEXT_PUBLIC_APP_NAME: z.string().default("Movio"),
+  NEXT_PUBLIC_APP_NAME: z.string().default("ZRIK"),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

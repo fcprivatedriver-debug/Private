@@ -51,7 +51,7 @@ function LoginForm() {
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 480 }}>
         <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.5rem" }}>
-          Entrar na Movio
+          Entrar na ZRIK
         </h1>
         <p className="muted" style={{ marginBottom: "1.5rem" }}>
           Demo: cliente@movio.app / motorista@movio.app / admin@movio.app — password{" "}

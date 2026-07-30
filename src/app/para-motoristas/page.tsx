@@ -5,7 +5,7 @@ export default function ParaMotoristasPage() {
     <section className="section fade-up">
       <div className="container">
         <h1 className="font-display" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
-          Conduz com a Movio
+          Conduz com a ZRIK
         </h1>
         <p className="lead">
           Vê pedidos abertos na tua zona, envia propostas com o teu preço e cresce com

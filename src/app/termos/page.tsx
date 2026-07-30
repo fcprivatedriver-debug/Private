@@ -5,10 +5,10 @@ export default function TermosPage() {
         <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
           Termos de utilização
         </h1>
-        <p className="muted">Versão preliminar · Movio</p>
+        <p className="muted">Versão preliminar · ZRIK</p>
         <div className="panel" style={{ marginTop: "1.5rem", lineHeight: 1.6 }}>
           <p>
-            A Movio é um marketplace que liga clientes a motoristas privados. A plataforma não é
+            A ZRIK é um marketplace que liga clientes a motoristas privados. A plataforma não é
             transportadora: facilita pedidos, propostas e reservas.
           </p>
           <p>

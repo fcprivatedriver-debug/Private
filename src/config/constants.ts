@@ -1,4 +1,4 @@
-export const APP_NAME = "Movio";
+export { BRAND_NAME, BRAND_NAME as APP_NAME } from "@/config/brand";
 export const DEFAULT_CURRENCY = "EUR";
 export const PLATFORM_FEE_PERCENT_DEFAULT = 15;
 

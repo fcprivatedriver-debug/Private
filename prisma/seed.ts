@@ -23,7 +23,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       email: "admin@movio.app",
-      name: "Admin Movio",
+      name: "Admin ZRIK",
       role: "ADMIN",
       passwordHash,
       phone: "+351900000001",
@@ -175,7 +175,7 @@ async function main() {
     },
   });
 
-  console.log("Seed Movio concluído.");
+  console.log("Seed ZRIK concluído.");
   console.log("Contas (password: movio123):");
   console.log(`  Admin:      ${admin.email}`);
   console.log(`  Cliente:    ${customer.email}`);

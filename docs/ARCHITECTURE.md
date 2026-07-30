@@ -1,4 +1,4 @@
-# Movio — Plano de Arquitetura
+# ZRIK — Plano de Arquitetura
 
 > Marketplace de motoristas privados (modelo GetTransfer).  
 > **Estado:** proposta — aguarda aprovação antes da implementação.
@@ -7,7 +7,7 @@
 
 ## 1. Visão do produto
 
-A **Movio** liga clientes que precisam de transporte privado a motoristas que enviam propostas.
+A **ZRIK** liga clientes que precisam de transporte privado a motoristas que enviam propostas.
 
 **Fluxo nuclear**
 
@@ -52,7 +52,7 @@ A **Movio** liga clientes que precisam de transporte privado a motoristas que en
 | `CUSTOMER` | Cliente que pede viagens | Criar/editar pedidos, ver propostas, aceitar, cancelar, avaliar |
 | `DRIVER` | Motorista independente | Perfil + veículo, ver pedidos abertos, enviar/atualizar propostas, gerir agenda |
 | `FLEET` *(fase 2)* | Gestor de frota | Mesmo que driver + gerir vários motoristas/veículos |
-| `ADMIN` | Operações Movio | Moderar pedidos/propostas, verificar KYC motoristas, suporte, métricas |
+| `ADMIN` | Operações ZRIK | Moderar pedidos/propostas, verificar KYC motoristas, suporte, métricas |
 
 Um utilizador tem **uma** role primária no MVP. Contas dual (cliente + motorista) ficam para fase 2 (mesmo email, profiles separados ou role switch).
 
@@ -68,7 +68,7 @@ Um utilizador tem **uma** role primária no MVP. Contas dual (cliente + motorist
 ## 4. Estrutura de pastas
 
 ```
-movio/
+zrik/
 ├── prisma/
 │   ├── schema.prisma
 │   ├── migrations/
@@ -292,7 +292,7 @@ Ao aceitar uma oferta: as outras `PENDING` do mesmo pedido passam a `REJECTED` (
 
 | Rota | Conteúdo |
 |------|----------|
-| `/` | Landing Movio — brand hero, CTA “Pedir viagem” / “Ser motorista” |
+| `/` | Landing ZRIK — brand hero, CTA “Pedir viagem” / “Ser motorista” |
 | `/como-funciona` | 3 passos (pedir → propostas → escolher) |
 | `/para-motoristas` | Pitch motoristas |
 | `/termos`, `/privacidade` | Legais |
@@ -473,7 +473,7 @@ Implementações:
 ### Modelo de negócio (alvo)
 
 - Cliente paga o valor da proposta.  
-- Movio retém **commission %** (`platformFeeAmount`).  
+- ZRIK retém **commission %** (`platformFeeAmount`).  
 - Motorista recebe o restante via Connect payout.  
 - Captura: na aceitação (auth+capture) ou no início da viagem — **recomendação:** authorize na aceitação, capture 24h antes do pickup ou no confirm.
 
@@ -509,7 +509,7 @@ Tabela `Notification` + polling leve no header; email via Resend templates.
 
 ### Fase 0 — Fundação (após aprovação deste plano)
 
-- Scaffold Next.js + Prisma + Auth + layout Movio  
+- Scaffold Next.js + Prisma + Auth + layout ZRIK  
 - Models + seed (admin, customer demo, driver demo)  
 - Landing + auth pages  
 
@@ -541,7 +541,7 @@ Tabela `Notification` + polling leve no header; email via Resend templates.
 
 ## 14. Decisões em aberto (para aprovares)
 
-1. **Nome do pacote/repo:** manter `Private` no GitHub e só brand “Movio” na app, ou renomear tudo para `movio`?  
+1. **Nome do pacote/repo:** GitHub pode manter `Private`; brand e pacote npm são **ZRIK** / `zrik`.  
 2. **Moeda default:** `EUR`?  
 3. **Commission default:** 15%?  
 4. **Contactos:** revelar telefone do cliente ao motorista no **aceite** ou só após **pagamento**?  
@@ -558,8 +558,8 @@ Tabela `Notification` + polling leve no header; email via Resend templates.
 - Motorista vê estado “aceite” e detalhes da viagem.  
 - Pagamento claramente stubbed, schema pronto para Stripe.  
 - Roles isolados por middleware; sem vazamento de dados entre users.  
-- Brand **Movio** consistente na landing e na app.
+- Brand **ZRIK** consistente na landing e na app.
 
 ---
 
-*Documento de arquitetura — Movio. Aguardar aprovação explícita antes de implementar código de aplicação.*
+*Documento de arquitetura — ZRIK. Aguardar aprovação explícita antes de implementar código de aplicação.*
