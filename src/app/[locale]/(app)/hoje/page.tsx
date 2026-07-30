@@ -8,7 +8,12 @@ import { ListenDayButtons } from "@/components/mel/ListenDayButtons";
 import { OrganizeDayPanel } from "@/components/mel/OrganizeDayPanel";
 import { TodayCountBanner } from "@/components/mel/TodayCountBanner";
 import Link from "next/link";
-import { startOfDay } from "date-fns";
+import {
+  endOfZonedDay,
+  formatDayIso,
+  formatZonedTime,
+  startOfZonedDay,
+} from "@/lib/zoned-date";
 
 export default async function TodayPage() {
   const { user } = await requireUser();
@@ -19,20 +24,21 @@ export default async function TodayPage() {
   ]);
 
   const open = tasks.filter((t) => t.status !== "DONE" && t.status !== "CANCELLED");
-  const start = startOfDay(new Date());
-  const end = new Date(start);
-  end.setHours(23, 59, 59, 999);
+  const start = startOfZonedDay(new Date());
+  const end = endOfZonedDay(new Date());
   const todayOpen = open.filter(
     (t) => t.dueAt && t.dueAt >= start && t.dueAt <= end,
   );
   const overdue = open.filter((t) => t.dueAt && t.dueAt < start);
   const firstName = user.name.split(" ")[0] || user.name;
+  const hojeIso = formatDayIso(new Date());
 
   return (
     <div className="stack anim-rise">
       <div>
         <h1 className="page-title">Olá, {firstName}</h1>
         <p className="page-lead">Aqui está o teu dia com a Mel.</p>
+        <p className="muted small">Hoje · {hojeIso}</p>
         <TodayCountBanner
           todayCount={todayOpen.length}
           overdueCount={overdue.length}
@@ -67,7 +73,7 @@ export default async function TodayPage() {
       <div className="panel">
         <div className="toggle-row">
           <h2 style={{ margin: 0 }}>Agenda de hoje</h2>
-          <Link href="/pt/agenda?mode=day" className="btn btn-ghost btn-sm">
+          <Link href={`/pt/agenda?mode=day&day=${hojeIso}`} className="btn btn-ghost btn-sm">
             Ver agenda
           </Link>
         </div>
@@ -89,12 +95,7 @@ export default async function TodayPage() {
                     {e.title}
                   </strong>
                   <p className="muted small" style={{ margin: "0.2rem 0 0" }}>
-                    {e.allDay
-                      ? "Todo o dia"
-                      : e.startsAt.toLocaleTimeString("pt-PT", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                    {e.allDay ? "Todo o dia" : formatZonedTime(e.startsAt)}
                     {e.location ? ` · ${e.location}` : ""}
                     {e.source === "task-sync" ? " · tarefa" : ""}
                   </p>
@@ -119,9 +120,12 @@ export default async function TodayPage() {
             ))}
           </ul>
         )}
-        <div style={{ marginTop: "0.75rem" }}>
+        <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
           <Link href="/pt/tarefas" className="btn btn-ghost btn-sm">
             Ver todas
+          </Link>
+          <Link href="/pt/objectivos" className="btn btn-ghost btn-sm">
+            Objectivos
           </Link>
         </div>
       </div>

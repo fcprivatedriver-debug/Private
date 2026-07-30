@@ -11,6 +11,7 @@ import {
   addDays,
 } from "date-fns";
 import type { MonthDaySummary } from "@/core/capabilities";
+import { formatZonedTime, isUntimedDueAt } from "@/lib/zoned-date";
 
 export type { MonthDaySummary };
 
@@ -57,12 +58,13 @@ export function parseDayIso(iso: string): Date {
 }
 
 export function toAgendaDTO(item: AgendaItem): AgendaItemDTO {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const startsAtLabel = item.allDay
-    ? "Todo o dia"
-    : `${pad(item.startsAt.getHours())}:${pad(item.startsAt.getMinutes())}`;
+  const startsAtLabel =
+    item.allDay || isUntimedDueAt(item.startsAt)
+      ? "Todo o dia"
+      : formatZonedTime(item.startsAt);
   return {
     ...item,
+    allDay: item.allDay || isUntimedDueAt(item.startsAt),
     startsAt: item.startsAt.toISOString(),
     endsAt: item.endsAt.toISOString(),
     startsAtLabel,

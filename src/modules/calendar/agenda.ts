@@ -1,21 +1,9 @@
 /**
  * Agregações da agenda (servidor) — NÃO importar em client components.
- * Usa agenda-shared para tipos/helpers puros.
  */
 import "server-only";
 
 import type { CalendarEvent } from "@prisma/client";
-import {
-  startOfDay,
-  endOfDay,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  format,
-} from "date-fns";
-import { pt } from "date-fns/locale";
 import { listEvents } from "@/modules/calendar/service";
 import {
   isTaskEventDone,
@@ -30,6 +18,14 @@ import {
   type AgendaMode,
   type MonthDaySummary,
 } from "@/modules/calendar/agenda-shared";
+import {
+  boundsForDayIso,
+  formatDayIso,
+  formatZonedTime,
+  shiftDayIso,
+  todayIso,
+  zonedParts,
+} from "@/lib/zoned-date";
 
 export type { AgendaItem, AgendaItemDTO, AgendaMode, MonthDaySummary };
 export {
@@ -41,6 +37,8 @@ export {
   shiftDay,
   hydrateAgendaItem,
 } from "@/modules/calendar/agenda-shared";
+
+const WEEKDAY_PT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"] as const;
 
 function toAgendaItem(e: CalendarEvent): AgendaItem {
   const meta = parseTaskEventMeta(e.description);
@@ -60,69 +58,85 @@ function toAgendaItem(e: CalendarEvent): AgendaItem {
   };
 }
 
-export async function getDayItems(userId: string, day: Date): Promise<AgendaItem[]> {
-  const events = await listEvents(userId, {
-    from: startOfDay(day),
-    to: endOfDay(day),
-  });
+export async function getDayItems(
+  userId: string,
+  dayIso: string,
+): Promise<AgendaItem[]> {
+  const { from, to } = boundsForDayIso(dayIso);
+  const events = await listEvents(userId, { from, to });
   return sortAgendaItems(events.map(toAgendaItem));
 }
 
 export async function getWeekItems(
   userId: string,
-  day: Date,
-): Promise<{ day: Date; label: string; items: AgendaItem[] }[]> {
-  const from = startOfWeek(day, { weekStartsOn: 1 });
-  const to = endOfWeek(day, { weekStartsOn: 1 });
+  dayIso: string,
+): Promise<{ dayIso: string; label: string; items: AgendaItem[] }[]> {
+  const p = dayIso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const y = p ? Number(p[1]) : zonedParts(new Date()).year;
+  const mo = p ? Number(p[2]) : zonedParts(new Date()).month;
+  const d = p ? Number(p[3]) : zonedParts(new Date()).day;
+  const jsDay = new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+  const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay;
+  const mondayIso = shiftDayIso(dayIso, mondayOffset);
+  const sundayIso = shiftDayIso(mondayIso, 6);
+  const { from } = boundsForDayIso(mondayIso);
+  const { to } = boundsForDayIso(sundayIso);
   const events = await listEvents(userId, { from, to });
   const items = events.map(toAgendaItem);
-  return eachDayOfInterval({ start: from, end: to }).map((d) => {
-    const key = format(d, "yyyy-MM-dd");
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const iso = shiftDayIso(mondayIso, i);
     const dayItems = sortAgendaItems(
-      items.filter((i) => format(i.startsAt, "yyyy-MM-dd") === key),
+      items.filter((it) => formatDayIso(it.startsAt) === iso),
     );
+    const wd = new Date(Date.UTC(
+      Number(iso.slice(0, 4)),
+      Number(iso.slice(5, 7)) - 1,
+      Number(iso.slice(8, 10)),
+    )).getUTCDay();
     return {
-      day: d,
-      label: format(d, "EEE d", { locale: pt }),
+      dayIso: iso,
+      label: `${WEEKDAY_PT[wd]} ${Number(iso.slice(8, 10))}`,
       items: dayItems,
     };
   });
 }
 
-/**
- * Resumo mensal agregado (sem N items por célula) — um dot + contagem.
- */
 export async function getMonthSummary(
   userId: string,
-  month: Date,
+  monthIso: string,
 ): Promise<MonthDaySummary[]> {
-  const from = startOfMonth(month);
-  const to = endOfMonth(month);
+  const y = Number(monthIso.slice(0, 4));
+  const mo = Number(monthIso.slice(5, 7));
+  const firstIso = `${monthIso.slice(0, 7)}-01`;
+  const lastDay = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const lastIso = `${monthIso.slice(0, 7)}-${String(lastDay).padStart(2, "0")}`;
+  const { from } = boundsForDayIso(firstIso);
+  const { to } = boundsForDayIso(lastIso);
   const events = await listEvents(userId, { from, to });
   const map = new Map<string, { count: number; top: "HIGH" | "MEDIUM" | "LOW" }>();
-  const rank = (p: string) => (p === "URGENT" || p === "HIGH" ? 0 : p === "LOW" ? 2 : 1);
+  const rank = (pr: string) => (pr === "URGENT" || pr === "HIGH" ? 0 : pr === "LOW" ? 2 : 1);
 
   for (const e of events) {
     if (isTaskEventDone(e.description)) continue;
-    const key = format(e.startsAt, "yyyy-MM-dd");
+    const key = formatDayIso(e.startsAt);
     const meta = parseTaskEventMeta(e.description);
-    let p: "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
-    if (meta?.priority === "URGENT" || meta?.priority === "HIGH") p = "HIGH";
-    else if (meta?.priority === "LOW") p = "LOW";
-    else if (e.color === "#DC2626") p = "HIGH";
-    else if (e.color === "#94A3B8") p = "LOW";
+    let pr: "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
+    if (meta?.priority === "URGENT" || meta?.priority === "HIGH") pr = "HIGH";
+    else if (meta?.priority === "LOW") pr = "LOW";
+    else if (e.color === "#DC2626") pr = "HIGH";
+    else if (e.color === "#94A3B8") pr = "LOW";
 
     const cur = map.get(key);
-    if (!cur) {
-      map.set(key, { count: 1, top: p });
-    } else {
+    if (!cur) map.set(key, { count: 1, top: pr });
+    else {
       cur.count += 1;
-      if (rank(p) < rank(cur.top)) cur.top = p;
+      if (rank(pr) < rank(cur.top)) cur.top = pr;
     }
   }
 
-  return eachDayOfInterval({ start: from, end: to }).map((d) => {
-    const day = format(d, "yyyy-MM-dd");
+  return Array.from({ length: lastDay }, (_, i) => {
+    const day = `${monthIso.slice(0, 7)}-${String(i + 1).padStart(2, "0")}`;
     const hit = map.get(day);
     return {
       day,
@@ -132,11 +146,19 @@ export async function getMonthSummary(
   });
 }
 
+/** Reexport helper for DTO labels in Lisbon. */
+export function agendaTimeLabel(item: AgendaItem): string {
+  if (item.allDay) return "Todo o dia";
+  return formatZonedTime(item.startsAt);
+}
+
 export function registerAgendaCapabilities(): void {
   registerCapability("calendar.listRange", async ({ userId, from, to }) =>
     listEvents(userId, { from, to }),
   );
   registerCapability("calendar.monthSummary", async ({ userId, month }) =>
-    getMonthSummary(userId, month),
+    getMonthSummary(userId, formatDayIso(month).slice(0, 7) + "-01"),
   );
 }
+
+export { todayIso };

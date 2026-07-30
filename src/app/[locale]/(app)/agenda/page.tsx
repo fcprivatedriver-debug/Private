@@ -6,10 +6,9 @@ import {
   toAgendaDTO,
   type AgendaMode,
 } from "@/modules/calendar/agenda";
-import { parseDayIso } from "@/modules/calendar/agenda-shared";
 import { AgendaBoard } from "@/modules/calendar/AgendaBoard";
-import { format, startOfMonth } from "date-fns";
 import { ensureMelCore } from "@/core/bootstrap";
+import { formatDayIso, todayIso } from "@/lib/zoned-date";
 
 export default async function AgendaPage({
   searchParams,
@@ -22,13 +21,14 @@ export default async function AgendaPage({
   const mode = (["day", "week", "month"].includes(sp.mode || "")
     ? sp.mode
     : "day") as AgendaMode;
-  const rawDay = sp.day ? parseDayIso(sp.day) : new Date();
-  const day = Number.isNaN(rawDay.getTime()) ? new Date() : rawDay;
+  const dayIso =
+    sp.day && /^\d{4}-\d{2}-\d{2}$/.test(sp.day) ? sp.day : todayIso();
+  const monthIso = `${dayIso.slice(0, 7)}-01`;
 
   const [dayItems, weekCols, monthSummaries] = await Promise.all([
-    getDayItems(user.id, day),
-    getWeekItems(user.id, day),
-    getMonthSummary(user.id, startOfMonth(day)),
+    getDayItems(user.id, dayIso),
+    getWeekItems(user.id, dayIso),
+    getMonthSummary(user.id, monthIso),
   ]);
 
   return (
@@ -36,20 +36,21 @@ export default async function AgendaPage({
       <div>
         <h1 className="page-title">Agenda</h1>
         <p className="page-lead">
-          Dia, semana e mês — tarefas com hora e eventos no mesmo sítio.
+          Dia, semana e mês — tarefas com ou sem hora, e eventos no mesmo sítio.
         </p>
+        <p className="muted small">Hoje (Lisboa): {formatDayIso(new Date())}</p>
       </div>
       <AgendaBoard
         initialMode={mode}
-        initialDayIso={format(day, "yyyy-MM-dd")}
+        initialDayIso={dayIso}
         dayItems={dayItems.map(toAgendaDTO)}
         weekColumns={weekCols.map((c) => ({
-          dayIso: format(c.day, "yyyy-MM-dd"),
+          dayIso: c.dayIso,
           label: c.label,
           items: c.items.map(toAgendaDTO),
         }))}
         monthSummaries={monthSummaries}
-        monthIso={format(startOfMonth(day), "yyyy-MM-dd")}
+        monthIso={monthIso}
       />
     </div>
   );

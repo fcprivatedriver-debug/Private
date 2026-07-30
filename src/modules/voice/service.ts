@@ -297,19 +297,35 @@ export async function processDetectedCapture(
   }
 
   let dueAt: Date | null = null;
+  const {
+    todayIso,
+    shiftDayIso,
+    zonedDateTimeToUtc,
+    dueAtEndOfDayInZone,
+  } = await import("@/lib/zoned-date");
+
   if (detected.dayHint === "today" || detected.dayHint === "tomorrow") {
-    dueAt = new Date();
-    if (detected.dayHint === "tomorrow") {
-      dueAt.setDate(dueAt.getDate() + 1);
-    }
+    const iso =
+      detected.dayHint === "tomorrow" ? shiftDayIso(todayIso(), 1) : todayIso();
     if (typeof detected.hour === "number") {
-      dueAt.setHours(detected.hour, 0, 0, 0);
+      const y = Number(iso.slice(0, 4));
+      const mo = Number(iso.slice(5, 7));
+      const d = Number(iso.slice(8, 10));
+      dueAt = zonedDateTimeToUtc(y, mo, d, detected.hour, 0, 0, 0);
     } else {
-      dueAt.setHours(23, 59, 0, 0);
+      dueAt = dueAtEndOfDayInZone(iso);
     }
   } else if (typeof detected.hour === "number") {
-    dueAt = new Date();
-    dueAt.setHours(detected.hour, 0, 0, 0);
+    const iso = todayIso();
+    dueAt = zonedDateTimeToUtc(
+      Number(iso.slice(0, 4)),
+      Number(iso.slice(5, 7)),
+      Number(iso.slice(8, 10)),
+      detected.hour,
+      0,
+      0,
+      0,
+    );
   }
 
   const task = await invokeCapability("tasks.create", {

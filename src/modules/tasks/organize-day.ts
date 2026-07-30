@@ -3,8 +3,14 @@
  * Usa só dados de tasks + calendar (via callers/capabilities).
  */
 import type { Task, CalendarEvent } from "@prisma/client";
-import { addMinutes, format, setHours, setMinutes, startOfDay } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import { parseTaskEventMeta, isTaskEventDone } from "@/modules/calendar/markers";
+import {
+  formatDayIso,
+  isUntimedDueAt,
+  zonedDateTimeToUtc,
+  zonedParts,
+} from "@/lib/zoned-date";
 
 export type PlanSlotKind = "task" | "event" | "focus" | "deferred";
 
@@ -47,23 +53,28 @@ const LUNCH_END = 14 * 60;
 const DAY_END = 18 * 60 + 30;
 
 function minutesOf(d: Date): number {
-  return d.getHours() * 60 + d.getMinutes();
+  const p = zonedParts(d);
+  return p.hour * 60 + p.minute;
 }
 
 function atMinutes(day: Date, mins: number): Date {
+  const iso = formatDayIso(day);
   const h = Math.floor(mins / 60);
   const m = mins % 60;
-  return setMinutes(setHours(startOfDay(day), h), m);
+  return zonedDateTimeToUtc(
+    Number(iso.slice(0, 4)),
+    Number(iso.slice(5, 7)),
+    Number(iso.slice(8, 10)),
+    h,
+    m,
+    0,
+    0,
+  );
 }
 
 function looksTimed(dueAt: Date | null | undefined): boolean {
   if (!dueAt) return false;
-  const h = dueAt.getHours();
-  const m = dueAt.getMinutes();
-  // 23:59 = prazo “fim do dia” sem hora útil
-  if (h === 23 && m >= 50) return false;
-  if (h === 0 && m === 0) return false;
-  return true;
+  return !isUntimedDueAt(dueAt);
 }
 
 function priorityRank(p: string): number {

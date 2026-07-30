@@ -2,7 +2,7 @@ import type { Task, TaskPriority, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { emitMelEvent } from "@/core/events";
 import { registerCapability, type TaskListFilter } from "@/core/capabilities";
-import { startOfDay, endOfDay } from "date-fns";
+import { endOfZonedDay, startOfZonedDay } from "@/lib/zoned-date";
 
 export type CreateTaskInput = {
   userId: string;
@@ -61,11 +61,11 @@ export async function listTasksFiltered(
       userId,
       ...(statusFilter ? { status: statusFilter } : {}),
       ...(filter?.dueAtDay === "today"
-        ? { dueAt: { gte: startOfDay(now), lte: endOfDay(now) } }
+        ? { dueAt: { gte: startOfZonedDay(now), lte: endOfZonedDay(now) } }
         : {}),
       ...(filter?.dueAtDay === "open"
         ? {
-            OR: [{ dueAt: { gte: startOfDay(now) } }, { dueAt: null }],
+            OR: [{ dueAt: { gte: startOfZonedDay(now) } }, { dueAt: null }],
           }
         : {}),
       ...(filter?.tag

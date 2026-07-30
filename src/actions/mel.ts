@@ -13,11 +13,27 @@ import { routeUtterance } from "@/core/router";
 import { setCalendarSyncPrefs } from "@/modules/calendar/sync";
 import { getOrCreateCurrentReport } from "@/modules/reports/service";
 import { saveExchange } from "@/lib/ai/mel-assistant";
+import {
+  dueAtEndOfDayInZone,
+  endOfZonedDay,
+  parseDatetimeLocalInZone,
+  startOfZonedDay,
+} from "@/lib/zoned-date";
 
 ensureMelCore();
 
 function revalidateApp() {
   revalidatePath("/", "layout");
+}
+
+/** Converte input de data/hora do cliente → Date em Europe/Lisbon. */
+function parseClientDueAt(value: string | null | undefined): Date | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return dueAtEndOfDayInZone(value);
+  }
+  return parseDatetimeLocalInZone(value);
 }
 
 const registerSchema = z.object({
@@ -110,14 +126,12 @@ export async function createTaskAction(input: {
     title,
     notes: input.notes,
     priority: input.priority,
-    dueAt: input.dueAt ? new Date(input.dueAt) : null,
+    dueAt: parseClientDueAt(input.dueAt ?? null) ?? null,
     tags: input.tags,
   });
   const due = task.dueAt ? new Date(task.dueAt) : null;
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
+  const start = startOfZonedDay(new Date());
+  const end = endOfZonedDay(new Date());
   revalidateApp();
   return {
     ok: true as const,
@@ -148,7 +162,8 @@ export async function updateTaskAction(
     taskId,
     data: {
       ...data,
-      dueAt: data.dueAt === undefined ? undefined : data.dueAt ? new Date(data.dueAt) : null,
+      dueAt:
+        data.dueAt === undefined ? undefined : parseClientDueAt(data.dueAt) ?? null,
     },
   });
   if (!updated) return { ok: false as const, error: "Tarefa não encontrada." };
@@ -176,9 +191,15 @@ export async function createEventAction(input: {
   const { user } = await requireUser();
   const title = input.title.trim();
   if (!title) return { ok: false as const, error: "Indica um título." };
-  const startsAt = new Date(input.startsAt);
-  const endsAt = new Date(input.endsAt);
-  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+  const startsAt =
+    input.allDay && /^\d{4}-\d{2}-\d{2}/.test(input.startsAt)
+      ? parseDatetimeLocalInZone(input.startsAt.slice(0, 10) + "T00:00")
+      : parseDatetimeLocalInZone(input.startsAt) ?? new Date(input.startsAt);
+  const endsAt =
+    input.allDay && /^\d{4}-\d{2}-\d{2}/.test(input.endsAt || input.startsAt)
+      ? dueAtEndOfDayInZone((input.endsAt || input.startsAt).slice(0, 10))
+      : parseDatetimeLocalInZone(input.endsAt) ?? new Date(input.endsAt);
+  if (!startsAt || !endsAt || Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
     return { ok: false as const, error: "Datas inválidas." };
   }
   const event = await invokeCapability("calendar.create", {
@@ -223,8 +244,12 @@ export async function updateEventAction(
       title: data.title,
       description: data.description,
       allDay: data.allDay,
-      startsAt: data.startsAt ? new Date(data.startsAt) : undefined,
-      endsAt: data.endsAt ? new Date(data.endsAt) : undefined,
+      startsAt: data.startsAt
+        ? parseDatetimeLocalInZone(data.startsAt) ?? new Date(data.startsAt)
+        : undefined,
+      endsAt: data.endsAt
+        ? parseDatetimeLocalInZone(data.endsAt) ?? new Date(data.endsAt)
+        : undefined,
     },
   });
   if (!updated) return { ok: false as const, error: "Evento não encontrado." };
@@ -262,10 +287,11 @@ export async function dayBriefingAction() {
   ensureMelCore();
   const { user } = await requireUser();
   const { getDayItems } = await import("@/modules/calendar/agenda");
+  const { todayIso } = await import("@/lib/zoned-date");
   const {
     formatDayBriefingParts,
   } = await import("@/modules/voice/briefing");
-  const items = await getDayItems(user.id, new Date());
+  const items = await getDayItems(user.id, todayIso());
   const open = items.filter((i) => !i.done);
   const highOnly = open.filter(
     (i) => i.priority === "HIGH" || i.priority === "URGENT",
@@ -328,10 +354,11 @@ export async function proposeOrganizeDayAction(opts?: {
   }
   const merged = Array.from(byId.values());
 
+  const { startOfZonedDay, endOfZonedDay } = await import("@/lib/zoned-date");
   const events = await invokeCapability("calendar.listRange", {
     userId: user.id,
-    from: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0),
-    to: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999),
+    from: startOfZonedDay(now),
+    to: endOfZonedDay(now),
   });
 
   const { buildDayPlan } = await import("@/modules/tasks/organize-day");
@@ -360,6 +387,60 @@ export async function applyOrganizeDayAction(
   }
   revalidateApp();
   return { ok: true as const, updated };
+}
+
+export async function createHabitAction(input: {
+  title: string;
+  description?: string;
+  frequency?: "DAILY" | "WEEKLY" | "CUSTOM";
+  targetPerWeek?: number;
+}) {
+  const { user } = await requireUser();
+  const { createHabit } = await import("@/modules/habits/service");
+  const habit = await createHabit({
+    userId: user.id,
+    title: input.title,
+    description: input.description,
+    frequency: input.frequency,
+    targetPerWeek: input.targetPerWeek,
+  });
+  revalidateApp();
+  return { ok: true as const, habit };
+}
+
+export async function updateHabitAction(
+  habitId: string,
+  data: {
+    title?: string;
+    description?: string | null;
+    frequency?: "DAILY" | "WEEKLY" | "CUSTOM";
+    targetPerWeek?: number | null;
+    active?: boolean;
+  },
+) {
+  const { user } = await requireUser();
+  const { updateHabit } = await import("@/modules/habits/service");
+  const habit = await updateHabit(user.id, habitId, data);
+  if (!habit) return { ok: false as const, error: "Objectivo não encontrado." };
+  revalidateApp();
+  return { ok: true as const, habit };
+}
+
+export async function deleteHabitAction(habitId: string) {
+  const { user } = await requireUser();
+  const { deleteHabit } = await import("@/modules/habits/service");
+  const ok = await deleteHabit(user.id, habitId);
+  revalidateApp();
+  return { ok };
+}
+
+export async function logHabitAction(habitId: string) {
+  const { user } = await requireUser();
+  const { logHabit } = await import("@/modules/habits/service");
+  const log = await logHabit(habitId, user.id);
+  if (!log) return { ok: false as const, error: "Objectivo não encontrado." };
+  revalidateApp();
+  return { ok: true as const, log };
 }
 
 export async function refreshWeeklyReportAction() {

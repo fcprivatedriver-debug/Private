@@ -17,28 +17,75 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
   URGENT: "Urgente",
 };
 
-function toLocalInput(d: Date | null | undefined): string {
-  if (!d) return "";
-  const date = new Date(d);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+const TZ = "Europe/Lisbon";
+
+function zonedParts(d: Date) {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  const map: Record<string, string> = {};
+  for (const p of fmt.formatToParts(d)) {
+    if (p.type !== "literal") map[p.type] = p.value;
+  }
+  return {
+    date: `${map.year}-${map.month}-${map.day}`,
+    time: `${map.hour}:${map.minute}`,
+    hour: Number(map.hour),
+    minute: Number(map.minute),
+  };
+}
+
+function isUntimedClient(d: Date): boolean {
+  const p = zonedParts(d);
+  return (p.hour === 23 && p.minute >= 50) || (p.hour === 0 && p.minute === 0);
+}
+
+/** Valor enviado ao servidor: data só OU datetime-local. */
+function composeDueValue(date: string, time: string, withTime: boolean): string | null {
+  if (!date) return null;
+  if (!withTime || !time) return date;
+  return `${date}T${time}`;
 }
 
 type Draft = {
   title: string;
   notes: string;
   priority: TaskPriority;
-  dueAt: string;
+  dueDate: string;
+  dueTime: string;
+  withTime: boolean;
   tags: string;
   status: TaskStatus;
 };
 
 function draftFromTask(task: Task): Draft {
+  if (!task.dueAt) {
+    return {
+      title: task.title,
+      notes: task.notes || "",
+      priority: task.priority,
+      dueDate: "",
+      dueTime: "",
+      withTime: false,
+      tags: (task.tags || []).join(", "),
+      status: task.status,
+    };
+  }
+  const p = zonedParts(new Date(task.dueAt));
+  const untimed = isUntimedClient(new Date(task.dueAt));
   return {
     title: task.title,
     notes: task.notes || "",
     priority: task.priority,
-    dueAt: toLocalInput(task.dueAt),
+    dueDate: p.date,
+    dueTime: untimed ? "" : p.time,
+    withTime: !untimed,
     tags: (task.tags || []).join(", "),
     status: task.status,
   };
@@ -48,7 +95,9 @@ export function TaskList({ initial }: { initial: Task[] }) {
   const [tasks, setTasks] = useState(initial);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
-  const [dueAt, setDueAt] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [dueTime, setDueTime] = useState("");
+  const [withTime, setWithTime] = useState(false);
   const [pending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -66,19 +115,21 @@ export function TaskList({ initial }: { initial: Task[] }) {
       const res = await createTaskAction({
         title,
         priority,
-        dueAt: dueAt || null,
+        dueAt: composeDueValue(dueDate, dueTime, withTime),
       });
       if (res.ok && res.task) {
         setTasks((prev) => [res.task!, ...prev]);
         setTitle("");
-        setDueAt("");
+        setDueDate("");
+        setDueTime("");
+        setWithTime(false);
         if (res.task.dueAt) {
           const due = new Date(res.task.dueAt);
           if (res.notifyToday) {
             notifyTaskForToday(res.task.title, due);
           }
           const prefs = readMelPrefs();
-          if (prefs.pushRemindersEnabled) {
+          if (prefs.pushRemindersEnabled && withTime) {
             void scheduleTaskReminder({
               taskId: res.task.id,
               title: res.task.title,
@@ -127,7 +178,7 @@ export function TaskList({ initial }: { initial: Task[] }) {
           title: draft.title,
           notes: draft.notes || null,
           priority: draft.priority,
-          dueAt: draft.dueAt || null,
+          dueAt: composeDueValue(draft.dueDate, draft.dueTime, draft.withTime),
           status: draft.status,
           tags: draft.tags
             .split(",")
@@ -141,14 +192,11 @@ export function TaskList({ initial }: { initial: Task[] }) {
         setEditingId(null);
         setDraft(null);
         setBaseline(null);
-        if (res.task.dueAt) {
+        if (res.task.dueAt && draft.withTime) {
           const due = new Date(res.task.dueAt);
-          const now = new Date();
-          const sameDay =
-            due.getFullYear() === now.getFullYear() &&
-            due.getMonth() === now.getMonth() &&
-            due.getDate() === now.getDate();
-          if (sameDay) notifyTaskForToday(res.task.title, due);
+          const today = zonedParts(new Date()).date;
+          const dueDay = zonedParts(due).date;
+          if (today === dueDay) notifyTaskForToday(res.task.title, due);
           if (prefs.pushRemindersEnabled) {
             void scheduleTaskReminder({
               taskId: res.task.id,
@@ -221,14 +269,37 @@ export function TaskList({ initial }: { initial: Task[] }) {
           </select>
         </div>
         <div className="field">
-          <label htmlFor="task-due">Data / hora (agenda)</label>
+          <label htmlFor="task-due-date">Data (agenda)</label>
           <input
-            id="task-due"
-            type="datetime-local"
-            value={dueAt}
-            onChange={(e) => setDueAt(e.target.value)}
+            id="task-due-date"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
           />
         </div>
+        <label className="toggle-row" style={{ alignItems: "center" }}>
+          <span className="small">Definir hora</span>
+          <input
+            className="switch"
+            type="checkbox"
+            checked={withTime}
+            onChange={(e) => setWithTime(e.target.checked)}
+            disabled={!dueDate}
+          />
+        </label>
+        {withTime ? (
+          <div className="field">
+            <label htmlFor="task-due-time">Hora (opcional)</label>
+            <input
+              id="task-due-time"
+              type="time"
+              value={dueTime}
+              onChange={(e) => setDueTime(e.target.value)}
+            />
+          </div>
+        ) : (
+          <p className="muted small">Sem hora — aparece como «todo o dia» na agenda.</p>
+        )}
         <button className="btn btn-primary" type="submit" disabled={pending}>
           Adicionar
         </button>
@@ -270,13 +341,15 @@ export function TaskList({ initial }: { initial: Task[] }) {
                   </div>
                   {task.dueAt ? (
                     <p className="muted small" style={{ margin: "0.25rem 0 0" }}>
-                      Até{" "}
-                      {new Date(task.dueAt).toLocaleString("pt-PT", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {isUntimedClient(new Date(task.dueAt))
+                        ? `Dia ${zonedParts(new Date(task.dueAt)).date}`
+                        : `Até ${new Date(task.dueAt).toLocaleString("pt-PT", {
+                            timeZone: TZ,
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}`}
                     </p>
                   ) : (
                     <p className="muted small" style={{ margin: "0.25rem 0 0" }}>
@@ -330,14 +403,37 @@ export function TaskList({ initial }: { initial: Task[] }) {
             />
           </div>
           <div className="field">
-            <label htmlFor="edit-due">Data / hora</label>
+            <label htmlFor="edit-due-date">Data</label>
             <input
-              id="edit-due"
-              type="datetime-local"
-              value={draft.dueAt}
-              onChange={(e) => setDraft({ ...draft, dueAt: e.target.value })}
+              id="edit-due-date"
+              type="date"
+              value={draft.dueDate}
+              onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
             />
           </div>
+          <label className="toggle-row" style={{ alignItems: "center" }}>
+            <span className="small">Definir hora</span>
+            <input
+              className="switch"
+              type="checkbox"
+              checked={draft.withTime}
+              disabled={!draft.dueDate}
+              onChange={(e) => setDraft({ ...draft, withTime: e.target.checked })}
+            />
+          </label>
+          {draft.withTime ? (
+            <div className="field">
+              <label htmlFor="edit-due-time">Hora</label>
+              <input
+                id="edit-due-time"
+                type="time"
+                value={draft.dueTime}
+                onChange={(e) => setDraft({ ...draft, dueTime: e.target.value })}
+              />
+            </div>
+          ) : (
+            <p className="muted small">Sem hora — bloco «todo o dia» na agenda.</p>
+          )}
           <div className="field">
             <label htmlFor="edit-priority">Prioridade</label>
             <select

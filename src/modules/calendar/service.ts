@@ -1,14 +1,17 @@
 import type { CalendarEvent } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import {
-  startOfDay,
-  endOfDay,
-  startOfWeek,
-  endOfWeek,
-  addDays,
-  addMinutes,
-} from "date-fns";
+import { addMinutes } from "date-fns";
 import { registerCapability } from "@/core/capabilities";
+import {
+  endOfZonedDay,
+  formatDayIso,
+  isUntimedDueAt,
+  startOfZonedDay,
+  shiftDayIso,
+  todayIso,
+  zonedDateTimeToUtc,
+  zonedParts,
+} from "@/lib/zoned-date";
 
 export type CreateEventInput = {
   userId: string;
@@ -52,14 +55,39 @@ export async function listEvents(
 }
 
 export async function listToday(userId: string, now = new Date()) {
-  return listEvents(userId, { from: startOfDay(now), to: endOfDay(now) });
+  return listEvents(userId, {
+    from: startOfZonedDay(now),
+    to: endOfZonedDay(now),
+  });
 }
 
 export async function listWeek(userId: string, now = new Date()) {
-  return listEvents(userId, {
-    from: startOfWeek(now, { weekStartsOn: 1 }),
-    to: endOfWeek(now, { weekStartsOn: 1 }),
-  });
+  const iso = formatDayIso(now);
+  const p = zonedParts(now);
+  // Segunda da semana civil (Seg=1 … Dom=0→7)
+  const jsDay = new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay();
+  const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay;
+  const mondayIso = shiftDayIso(iso, mondayOffset);
+  const sundayIso = shiftDayIso(mondayIso, 6);
+  const from = zonedDateTimeToUtc(
+    Number(mondayIso.slice(0, 4)),
+    Number(mondayIso.slice(5, 7)),
+    Number(mondayIso.slice(8, 10)),
+    0,
+    0,
+    0,
+    0,
+  );
+  const to = zonedDateTimeToUtc(
+    Number(sundayIso.slice(0, 4)),
+    Number(sundayIso.slice(5, 7)),
+    Number(sundayIso.slice(8, 10)),
+    23,
+    59,
+    59,
+    999,
+  );
+  return listEvents(userId, { from, to });
 }
 
 export async function createEvent(input: CreateEventInput): Promise<CalendarEvent> {
@@ -112,40 +140,39 @@ export async function findEventByExternalId(
   });
 }
 
-/** Sugere um slot amanhã à hora indicada (ou 10:00). */
+/** Sugere um slot amanhã (ou hoje) à hora indicada em Lisbon. */
 export function suggestSlot(opts: {
   dayHint?: "today" | "tomorrow";
   hour?: number;
   durationMinutes?: number;
 }): { startsAt: Date; endsAt: Date } {
-  const day = new Date();
-  if (opts.dayHint === "tomorrow" || !opts.dayHint) {
-    day.setDate(day.getDate() + 1);
-  }
+  const baseIso =
+    opts.dayHint === "today" ? todayIso() : shiftDayIso(todayIso(), 1);
   const hour = opts.hour ?? 10;
   const duration = opts.durationMinutes ?? 60;
-  const startsAt = new Date(day);
-  startsAt.setHours(hour, 0, 0, 0);
-  const endsAt = addDays(startsAt, 0);
-  endsAt.setMinutes(endsAt.getMinutes() + duration);
+  const y = Number(baseIso.slice(0, 4));
+  const mo = Number(baseIso.slice(5, 7));
+  const d = Number(baseIso.slice(8, 10));
+  const startsAt = zonedDateTimeToUtc(y, mo, d, hour, 0, 0, 0);
+  const endsAt = addMinutes(startsAt, duration);
   return { startsAt, endsAt };
 }
 
-export function slotFromDueAt(dueAt: Date): { startsAt: Date; endsAt: Date; allDay: boolean } {
-  const startsAt = new Date(dueAt);
-  const looksAllDay =
-    startsAt.getHours() === 23 && startsAt.getMinutes() >= 50;
-  if (looksAllDay) {
-    const dayStart = startOfDay(startsAt);
+export function slotFromDueAt(dueAt: Date): {
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+} {
+  if (isUntimedDueAt(dueAt)) {
     return {
-      startsAt: dayStart,
-      endsAt: endOfDay(startsAt),
+      startsAt: startOfZonedDay(dueAt),
+      endsAt: endOfZonedDay(dueAt),
       allDay: true,
     };
   }
   return {
-    startsAt,
-    endsAt: addMinutes(startsAt, 30),
+    startsAt: new Date(dueAt),
+    endsAt: addMinutes(dueAt, 30),
     allDay: false,
   };
 }

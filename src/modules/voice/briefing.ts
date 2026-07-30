@@ -83,7 +83,11 @@ export function formatTopPriority(tasks: Task[]): string {
 
 function timeLabel(d: Date, allDay?: boolean): string {
   if (allDay) return "todo o dia";
-  return d.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString("pt-PT", {
+    timeZone: "Europe/Lisbon",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 /** Guião «Ouvir o meu dia» — agenda + tarefas, hora depois prioridade. */
