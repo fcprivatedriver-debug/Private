@@ -32,7 +32,7 @@ PR body links must use GitHub URLs, for example:
 
 `https://github.com/<org>/<repo>/raw/<branch>/docs/pr-proof/pr-<N>/movio-pr-<N>-visual-proof.zip`
 
-## Roles to cover (Movio)
+## Roles to cover (ZELU)
 
 - **Customer:** login → pedidos → trip detail/offers → novo pedido
 - **Driver:** painel → pedidos abertos → propostas → viagens → veículo

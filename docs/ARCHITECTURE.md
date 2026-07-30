@@ -1,7 +1,7 @@
-# ZRIK — Architecture (Phase 0 Foundation)
+# ZELU — Architecture (Phase 0 Foundation)
 
 > Private-driver marketplace (GetTransfer-style).  
-> **Brand:** ZRIK  
+> **Brand:** ZELU  
 > **Phase in scope:** Phase 0 — Foundation only
 
 ---
@@ -10,7 +10,7 @@
 
 | Decision | Choice |
 |----------|--------|
-| Brand / project name | **ZRIK** (repo target: `movio`) |
+| Brand / project name | **ZELU** (repo target: `movio`) |
 | Default currency | **EUR** — multi-currency ready |
 | Platform commission | **15%** default — rates configurable (global + overrides later) |
 | Contact visibility | Phone/email **only after payment is successfully confirmed** (`Booking` paid / `Payment` CAPTURED) |
@@ -22,7 +22,7 @@
 
 ## Phase 0 deliverables
 
-1. Next.js 15 + TypeScript + Tailwind scaffold branded **Movio**
+1. Next.js 15 + TypeScript + Tailwind scaffold branded **ZELU**
 2. Prisma schema (multi-currency, commission settings, expanded driver profile)
 3. Auth.js foundation (credentials + optional Google OAuth)
 4. i18n routing (`/pt`, `/en`) with message catalogs

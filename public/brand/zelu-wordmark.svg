@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" role="img" aria-label="ZELU">
+  <g transform="translate(0,4)">
+    <rect width="40" height="40" rx="9" fill="#1F4F46"/>
+    <path
+      d="M10 11.5h20c.75 0 1.19.84.72 1.44L15.1 28.4H30c.7 0 .7 1.1 0 1.1H10c-.75 0-1.19-.84-.72-1.44L24.9 12.6H10c-.7 0-.7-1.1 0-1.1Z"
+      fill="#F6F7F5"
+    />
+  </g>
+  <text x="52" y="34" font-family="Sora, system-ui, sans-serif" font-size="28" font-weight="700" letter-spacing="-1.2">
+    <tspan fill="#1F4F46">Z</tspan><tspan fill="#14181C">ELU</tspan>
+  </text>
+</svg>

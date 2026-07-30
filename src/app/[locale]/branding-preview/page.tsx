@@ -1,16 +1,16 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import {
-  DEFAULT_ZRIK_VARIANT,
-  ZrikWordmark,
-  type ZrikLogoVariant,
+  DEFAULT_ZELU_VARIANT,
+  ZeluWordmark,
+  type ZeluLogoVariant,
 } from "@/components/layout/BrandLogo";
 import { BRAND_INK } from "@/config/brand";
 
 type Props = { params: Promise<{ locale: string }> };
 
 const VARIANTS: {
-  id: ZrikLogoVariant;
+  id: ZeluLogoVariant;
   titleKey: "optionA" | "optionB" | "optionC";
   descKey: "optionADesc" | "optionBDesc" | "optionCDesc";
 }[] = [
@@ -43,7 +43,7 @@ export default async function BrandingPreviewPage({ params }: Props) {
           <p className="muted branding-block-lead">{t("logoLead")}</p>
           <div className="branding-grid">
             {VARIANTS.map((v) => {
-              const isDefault = v.id === DEFAULT_ZRIK_VARIANT;
+              const isDefault = v.id === DEFAULT_ZELU_VARIANT;
               return (
                 <article
                   key={v.id}
@@ -59,12 +59,12 @@ export default async function BrandingPreviewPage({ params }: Props) {
 
                   <div className="branding-swatch branding-swatch-light">
                     <span className="branding-swatch-label">{t("onLight")}</span>
-                    <ZrikWordmark variant={v.id} className="branding-logo-lg" />
+                    <ZeluWordmark variant={v.id} className="branding-logo-lg" />
                   </div>
 
                   <div className="branding-swatch branding-swatch-dark">
                     <span className="branding-swatch-label">{t("onDark")}</span>
-                    <ZrikWordmark
+                    <ZeluWordmark
                       variant={v.id}
                       tone="on-dark"
                       className="branding-logo-lg branding-logo-on-dark"

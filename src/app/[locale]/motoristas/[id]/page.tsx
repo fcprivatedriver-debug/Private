@@ -36,7 +36,7 @@ export default async function DriverProfilePage({ params }: Props) {
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 820 }}>
         <p className="muted" style={{ marginBottom: "1rem" }}>
-          <Link href="/">← ZRIK</Link>
+          <Link href="/">← ZELU</Link>
         </p>
 
         <div className="profile-hero">
@@ -56,7 +56,7 @@ export default async function DriverProfilePage({ params }: Props) {
               {profile.user.name}
             </h1>
             <p className="page-lead" style={{ marginBottom: "0.75rem" }}>
-              {profile.bio || "Motorista privado na ZRIK."}
+              {profile.bio || "Motorista privado na ZELU."}
             </p>
             <div className="profile-meta">
               {profile.ratingAvg != null && (
@@ -70,7 +70,7 @@ export default async function DriverProfilePage({ params }: Props) {
               {profile.responseRate != null && <span>{Math.round(profile.responseRate)}% resposta</span>}
             </div>
             <div className="trust-row">
-              <span className="badge badge-success">Verificado ZRIK</span>
+              <span className="badge badge-success">Verificado ZELU</span>
               {languages && <span className="badge badge-neutral">{languages}</span>}
             </div>
           </div>

@@ -124,9 +124,7 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
       setError(result.error);
       return;
     }
-    setOk(
-      `Submitted — AI recommendation: ${result.recommendation} (risk ${result.riskScore})`,
-    );
+    setOk("A sua candidatura foi recebida e será analisada pela equipa ZELU.");
     router.refresh();
     await go("review");
   }
@@ -340,11 +338,11 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
       {step === "review" && (
         <div className="panel">
           <h2 className="font-display" style={{ marginTop: 0 }}>
-            Submit for AI verification
+            Submeter candidatura
           </h2>
           <p className="muted">
-            ZRIK AI checks document quality, completeness, vehicle consistency and profile
-            authenticity, then queues a human review.
+            A equipa ZELU analisa a documentação, o veículo e o perfil. Após a submissão, a
+            candidatura fica pendente de validação manual.
           </p>
           {profile.aiSummary && (
             <div className="alert alert-info" style={{ marginTop: "1rem" }}>
@@ -354,12 +352,12 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
           )}
           {!locked && (
             <button className="btn btn-primary" type="button" disabled={loading} onClick={onSubmit}>
-              {loading ? "Submitting…" : "Submit for verification"}
+              {loading ? "Submitting…" : "Enviar candidatura"}
             </button>
           )}
           {locked && profile.status !== "ACTIVE" && (
             <p className="muted" style={{ marginTop: "1rem" }}>
-              Your application is in the verification queue.
+              A sua candidatura foi recebida e será analisada pela equipa ZELU.
             </p>
           )}
           {profile.status === "ACTIVE" && (

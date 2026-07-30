@@ -24,16 +24,18 @@ export async function generateMetadata({
       template: `%s · ${t("appName")}`,
     },
     description: t("tagline"),
-    applicationName: t("appName"),
     icons: {
-      icon: [{ url: "/brand/zrik-mark.svg", type: "image/svg+xml" }],
+      icon: [{ url: "/brand/zelu-mark.svg", type: "image/svg+xml" }],
+      apple: [{ url: "/brand/zelu-mark.svg", type: "image/svg+xml" }],
     },
+    manifest: "/manifest.webmanifest",
     openGraph: {
       title: `${t("appName")} — ${t("tagline")}`,
       description: t("tagline"),
       siteName: t("appName"),
       type: "website",
     },
+    applicationName: t("appName"),
   };
 }
 

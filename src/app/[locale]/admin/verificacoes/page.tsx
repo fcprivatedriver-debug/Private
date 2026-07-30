@@ -17,7 +17,7 @@ export default async function AdminVerificationsPage() {
           AI verification queue
         </h1>
         <p className="lead">
-          Review driver applications with ZRIK AI risk scores, document signals and audit-ready
+          Review driver applications with ZELU AI risk scores, document signals and audit-ready
           decisions.
         </p>
         <VerificationQueue

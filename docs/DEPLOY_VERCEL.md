@@ -1,6 +1,6 @@
-# Deploy ZRIK to Vercel (phone-friendly)
+# Deploy ZELU to Vercel (phone-friendly)
 
-ZRIK uses **PostgreSQL** (Neon). SQLite is not supported.
+ZELU uses **PostgreSQL** (Neon). SQLite is not supported.
 
 ## Login on Vercel (important)
 

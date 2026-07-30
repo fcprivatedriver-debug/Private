@@ -8,7 +8,6 @@ import {
   createTripRequest,
   publishTrip,
   withdrawOffer,
-  DomainError,
   confirmBookingPayment,
   startTrip,
   completeTrip,
@@ -26,49 +25,61 @@ import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from "@/domain/onboarding";
 import { estimateRoute } from "@/lib/maps/route";
+import { toActionFailure } from "@/lib/action-errors";
 
 function fail(error: unknown) {
-  if (error instanceof DomainError) {
-    return { ok: false as const, error: error.message, code: error.code };
-  }
-  console.error(error);
-  return { ok: false as const, error: "Erro inesperado", code: "INTERNAL" };
+  return toActionFailure(error);
 }
 
 export async function registerAction(formData: FormData) {
   try {
+    const rawPhone = formData.get("phone");
     const parsed = registerSchema.parse({
       name: formData.get("name"),
       email: formData.get("email"),
       password: formData.get("password"),
-      phone: formData.get("phone") || undefined,
+      phone: typeof rawPhone === "string" ? rawPhone : undefined,
       role: formData.get("role"),
     });
 
-    const exists = await prisma.user.findUnique({
-      where: { email: parsed.email.toLowerCase() },
-    });
+    const email = parsed.email.toLowerCase();
+    const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) {
-      return { ok: false as const, error: "Email já registado" };
+      return { ok: false as const, error: "Este email já está registado.", code: "EMAIL_TAKEN" };
     }
 
     const passwordHash = await bcrypt.hash(parsed.password, 10);
-    await prisma.user.create({
-      data: {
-        name: parsed.name,
-        email: parsed.email.toLowerCase(),
-        passwordHash,
-        phone: parsed.phone || null,
-        role: parsed.role,
-        ...(parsed.role === "CUSTOMER"
-          ? { customerProfile: { create: {} } }
-          : {
-              driverProfile: {
-                create: { status: "PENDING_VERIFICATION", onboardingStatus: "NOT_STARTED" },
-              },
-            }),
-      },
-    });
+
+    if (parsed.role === "CUSTOMER") {
+      await prisma.user.create({
+        data: {
+          name: parsed.name,
+          email,
+          passwordHash,
+          phone: parsed.phone ?? null,
+          role: "CUSTOMER",
+          customerProfile: { create: {} },
+        },
+      });
+    } else {
+      await prisma.user.create({
+        data: {
+          name: parsed.name,
+          email,
+          passwordHash,
+          phone: parsed.phone ?? null,
+          role: "DRIVER",
+          driverProfile: {
+            create: {
+              status: "PENDING_VERIFICATION",
+              onboardingStatus: "NOT_STARTED",
+              onboardingStep: "profile",
+              languagesSpoken: '["pt"]',
+            },
+          },
+        },
+      });
+    }
 
     return { ok: true as const };
   } catch (error) {

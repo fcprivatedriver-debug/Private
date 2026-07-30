@@ -1,5 +1,5 @@
 /**
- * ZRIK brand — production locks + Homepage Lab candidates.
+ * ZELU brand — production locks + Homepage Lab candidates.
  */
 
 export const BRAND_INK = "#111111";

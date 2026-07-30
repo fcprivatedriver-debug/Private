@@ -1,8 +1,8 @@
-# ZRIK
+# ZELU
 
 Private-chauffeur marketplace — choose the best driver, choose the best price.
 
-**Brand:** ZRIK · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** ZELU · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
 
 ## Stack
 
@@ -40,10 +40,10 @@ Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/bran
 | `DATABASE_URL` | Neon pooled URL |
 | `DIRECT_URL` | Neon unpooled URL |
 | `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZRIK` |
+| `NEXT_PUBLIC_APP_NAME` | `ZELU` |
 
 See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
 
 ## Package
 
-- Package name: **zrik**
+- Package name: **zelu**

@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { ZrikWordmark } from "@/components/layout/BrandLogo";
+import { ZeluWordmark } from "@/components/layout/BrandLogo";
 import {
   PRODUCTION_HERO,
   PRODUCTION_OVERLAY,
@@ -60,7 +60,7 @@ export default async function HomePage({ params }: Props) {
         <div className="container hero-scene-content">
           <p className="hero-eyebrow fade-up">{t("eyebrow")}</p>
           <h1 className="hero-brand fade-up">
-            <ZrikWordmark as="span" variant="B" />
+            <ZeluWordmark as="span" variant="B" showMark markSize={48} />
           </h1>
           <p className="hero-copy fade-up-delay">
             <span className="hero-copy-line">{line1}</span>

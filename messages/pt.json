@@ -1,7 +1,7 @@
 {
   "meta": {
-    "appName": "ZRIK",
-    "tagline": "Tu escolhes. O resto é connosco."
+    "appName": "ZELU",
+    "tagline": "Excelência discreta. Sempre contigo."
   },
   "nav": {
     "howItWorks": "Como funciona",
@@ -24,20 +24,20 @@
   },
   "home": {
     "eyebrow": "Mobilidade privada · Premium",
-    "headline": "ZRIK",
-    "copy": "Tu escolhes.\nO resto é connosco.",
-    "copyLine1": "Tu escolhes.",
-    "copyLine2": "O resto é connosco.",
+    "headline": "ZELU",
+    "copy": "Excelência discreta.\nSempre contigo.",
+    "copyLine1": "Excelência discreta.",
+    "copyLine2": "Sempre contigo.",
     "labHint": "Comparar as 3 versões do Hero →",
     "labPhotoPending": "Fotografia editorial · escolha no Homepage Lab",
     "ctaRequest": "Receber propostas",
     "ctaHow": "Como funciona",
-    "ctaDriver": "Conduzir com ZRIK",
+    "ctaDriver": "Conduzir com ZELU",
     "ctaMyTrips": "Ver as minhas viagens",
     "ctaDashboard": "Abrir o meu painel",
     "ctaAdmin": "Abrir admin",
     "stepsTitle": "Precisão em três passos.",
-    "stepsLead": "ZRIK é um marketplace exclusivo: define a viagem, recebe propostas e escolhe com controlo total.",
+    "stepsLead": "ZELU é um marketplace exclusivo: define a viagem, recebe propostas e escolhe com controlo total.",
     "step1Title": "Peça a viagem",
     "step1Body": "Origem, destino e o que importa no caminho.",
     "step2Title": "Receba propostas",
@@ -57,7 +57,7 @@
     "invalidCredentials": "Email ou palavra-passe incorretos",
     "noAccount": "Ainda não tem conta?",
     "registerLink": "Criar conta",
-    "registerTitle": "Bem-vindo à ZRIK",
+    "registerTitle": "Bem-vindo à ZELU",
     "registerLead": "Peça viagens ou envie propostas — uma conta, um papel para começar.",
     "accountType": "Como quer começar?",
     "customer": "Quero viajar",
@@ -70,7 +70,7 @@
     "loginLink": "Entrar"
   },
   "how": {
-    "title": "Como a ZRIK funciona",
+    "title": "Como a ZELU funciona",
     "lead": "Marketplace de motoristas privados reduzido ao essencial: pedir, propor, escolher."
   },
   "forDrivers": {
@@ -82,7 +82,7 @@
   "legal": {
     "termsTitle": "Termos de utilização",
     "privacyTitle": "Privacidade",
-    "preliminary": "Versão preliminar · ZRIK"
+    "preliminary": "Versão preliminar · ZELU"
   },
   "common": {
     "loading": "A carregar…"
@@ -90,12 +90,12 @@
   "branding": {
     "title": "Branding Preview",
     "lead": "Variantes tipográficas do logótipo. Para fotografia e cor da homepage, use o Homepage Lab.",
-    "optionA": "Opção A — ZRIK a preto",
+    "optionA": "Opção A — ZELU a preto",
     "optionADesc": "Toda a palavra em #111111. Máxima simplicidade.",
-    "optionB": "Opção B — Z em azul",
-    "optionBDesc": "Z em accent · RIK em #111111. Estrutura preferida.",
-    "optionC": "Opção C — Z e K em azul",
-    "optionCDesc": "Z e K em accent · RI em #111111.",
+    "optionB": "Opção B — Z em verde",
+    "optionBDesc": "Z em accent · ELU em #111111. Estrutura preferida.",
+    "optionC": "Opção C — Z e U em verde",
+    "optionCDesc": "Z e U em accent · EL em #111111.",
     "onLight": "Fundo claro",
     "onDark": "Fundo escuro",
     "defaultBadge": "Estrutura",

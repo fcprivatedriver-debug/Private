@@ -1,7 +1,7 @@
 {
   "meta": {
-    "appName": "ZRIK",
-    "tagline": "You choose. We handle the rest."
+    "appName": "ZELU",
+    "tagline": "Quiet excellence. Always with you."
   },
   "nav": {
     "howItWorks": "How it works",
@@ -24,20 +24,20 @@
   },
   "home": {
     "eyebrow": "Private mobility · Premium",
-    "headline": "ZRIK",
-    "copy": "You choose.\nWe handle the rest.",
-    "copyLine1": "You choose.",
-    "copyLine2": "We handle the rest.",
+    "headline": "ZELU",
+    "copy": "Quiet excellence.\nAlways with you.",
+    "copyLine1": "Quiet excellence.",
+    "copyLine2": "Always with you.",
     "labHint": "Compare the 3 Hero versions →",
     "labPhotoPending": "Editorial photography · choose in Homepage Lab",
     "ctaRequest": "Get offers",
     "ctaHow": "How it works",
-    "ctaDriver": "Drive with ZRIK",
+    "ctaDriver": "Drive with ZELU",
     "ctaMyTrips": "View my trips",
     "ctaDashboard": "Open my dashboard",
     "ctaAdmin": "Open admin",
     "stepsTitle": "Precision in three steps.",
-    "stepsLead": "ZRIK is an exclusive marketplace: define the trip, receive offers, choose with full control.",
+    "stepsLead": "ZELU is an exclusive marketplace: define the trip, receive offers, choose with full control.",
     "step1Title": "Request the trip",
     "step1Body": "Origin, destination, and what matters along the way.",
     "step2Title": "Receive offers",
@@ -57,7 +57,7 @@
     "invalidCredentials": "Incorrect email or password",
     "noAccount": "Don't have an account yet?",
     "registerLink": "Create account",
-    "registerTitle": "Welcome to ZRIK",
+    "registerTitle": "Welcome to ZELU",
     "registerLead": "Request trips or send offers — one account, one role to start.",
     "accountType": "How would you like to begin?",
     "customer": "I want to travel",
@@ -70,7 +70,7 @@
     "loginLink": "Log in"
   },
   "how": {
-    "title": "How ZRIK works",
+    "title": "How ZELU works",
     "lead": "A private-chauffeur marketplace reduced to the essentials: request, propose, choose."
   },
   "forDrivers": {
@@ -82,7 +82,7 @@
   "legal": {
     "termsTitle": "Terms of use",
     "privacyTitle": "Privacy",
-    "preliminary": "Preliminary version · ZRIK"
+    "preliminary": "Preliminary version · ZELU"
   },
   "common": {
     "loading": "Loading…"
@@ -90,12 +90,12 @@
   "branding": {
     "title": "Branding Preview",
     "lead": "Typographic logo variants. For homepage photography and color, use Homepage Lab.",
-    "optionA": "Option A — ZRIK in black",
+    "optionA": "Option A — ZELU in black",
     "optionADesc": "Full wordmark in #111111. Maximum simplicity.",
-    "optionB": "Option B — Z in accent blue",
-    "optionBDesc": "Z in accent · RIK in #111111. Preferred structure.",
-    "optionC": "Option C — Z and K in accent",
-    "optionCDesc": "Z and K in accent · RI in #111111.",
+    "optionB": "Option B — Z in green",
+    "optionBDesc": "Z in accent · ELU in #111111. Preferred structure.",
+    "optionC": "Option C — Z and U in green",
+    "optionCDesc": "Z and U in accent · EL in #111111.",
     "onLight": "Light background",
     "onDark": "Dark background",
     "defaultBadge": "Structure",
