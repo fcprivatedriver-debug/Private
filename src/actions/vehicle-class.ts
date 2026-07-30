@@ -7,10 +7,14 @@ import {
   deactivateVehicleClass,
   type UpsertVehicleClassInput,
 } from "@/domain/vehicle-class";
-import { toActionFailure } from "@/lib/action-errors";
+import { DomainError } from "@/domain/marketplace";
 
 function fail(error: unknown) {
-  return toActionFailure(error);
+  if (error instanceof DomainError) {
+    return { ok: false as const, error: error.message, code: error.code };
+  }
+  console.error(error);
+  return { ok: false as const, error: "Erro inesperado", code: "INTERNAL" };
 }
 
 function parseForm(formData: FormData): UpsertVehicleClassInput {
