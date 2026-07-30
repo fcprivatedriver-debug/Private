@@ -1,8 +1,8 @@
-# ZRIK
+# ZELU
 
 Marketplace de chauffeurs privados — os clientes publicam pedidos de viagem, os motoristas enviam propostas, o cliente escolhe a melhor.
 
-**Tu escolhes. O resto é connosco.**
+**Excelência discreta. Sempre contigo.**
 
 ## Stack
 
@@ -24,15 +24,15 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000).
 
-### Contas demo (password: `movio123`)
+### Contas demo (password: `zelu123`)
 
 | Email | Role |
 |-------|------|
-| `cliente@movio.app` | Cliente |
-| `motorista@movio.app` | Motorista (ativo) |
-| `motorista2@movio.app` | Motorista (ativo) |
-| `pendente@movio.app` | Motorista (em verificação) |
-| `admin@movio.app` | Admin |
+| `cliente@zelu.app` | Cliente |
+| `motorista@zelu.app` | Motorista (ativo) |
+| `motorista2@zelu.app` | Motorista (ativo) |
+| `pendente@zelu.app` | Motorista (em verificação) |
+| `admin@zelu.app` | Admin |
 
 ## Documentação
 
@@ -41,7 +41,7 @@ Abre [http://localhost:3000](http://localhost:3000).
 ## Defaults de produto
 
 - Moeda: EUR
-- Comissão ZRIK: 15%
+- Comissão ZELU: 15%
 - Contactos revelados após aceite da proposta
 - Role única por conta no MVP
 - UI em português
@@ -49,7 +49,9 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ## Identidade
 
-- Nome: **ZRIK**
-- Accent: Azure Prestige `#1F5A96`
+- Nome: **ZELU**
+- Accent: Forest teal `#1F4F46`
 - Tipografia: Sora (display) + Plus Jakarta Sans (body)
-- Slogan: Tu escolhes. O resto é connosco.
+- Marca: monograma **Z** (ícone / favicon)
+- Slogan: Excelência discreta. Sempre contigo.
+- Valores: Excelência · Profissionalismo · Responsabilidade · Educação · Disponibilidade · Empatia · Discrição

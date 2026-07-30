@@ -43,7 +43,7 @@ function RegisterForm() {
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 520 }}>
         <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.5rem" }}>
-          Criar conta ZRIK
+          Criar conta ZELU
         </h1>
         <p className="muted" style={{ marginBottom: "1.5rem" }}>
           Escolhe se queres pedir viagens ou enviar propostas.

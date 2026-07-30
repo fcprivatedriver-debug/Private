@@ -30,7 +30,7 @@ export default async function AdminPage() {
     <section className="section fade-up">
       <div className="container">
         <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
-          Admin ZRIK
+          Admin ZELU
         </h1>
         <div className="steps" style={{ margin: "1.5rem 0" }}>
           <div className="panel">

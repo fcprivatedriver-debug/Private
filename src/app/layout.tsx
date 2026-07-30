@@ -19,12 +19,17 @@ const body = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
     default: BRAND_META.titleDefault,
     template: BRAND_META.titleTemplate,
   },
   description: BRAND_META.description,
   applicationName: BRAND_NAME,
+  icons: {
+    icon: [{ url: "/brand/zelu-mark.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/brand/zelu-mark.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({

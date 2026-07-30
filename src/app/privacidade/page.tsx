@@ -5,7 +5,7 @@ export default function PrivacidadePage() {
         <h1 className="font-display" style={{ fontSize: "2.4rem" }}>
           Privacidade
         </h1>
-        <p className="muted">Versão preliminar · ZRIK</p>
+        <p className="muted">Versão preliminar · ZELU</p>
         <div className="panel" style={{ marginTop: "1.5rem", lineHeight: 1.6 }}>
           <p>
             Tratamos dados de conta (nome, email, telefone), pedidos de viagem e propostas para
@@ -16,7 +16,7 @@ export default function PrivacidadePage() {
             proposta.
           </p>
           <p>
-            Podes pedir acesso ou eliminação dos teus dados contactando a equipa ZRIK. Esta página
+            Podes pedir acesso ou eliminação dos teus dados contactando a equipa ZELU. Esta página
             será atualizada antes do lançamento em produção.
           </p>
         </div>

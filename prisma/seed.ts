@@ -18,12 +18,12 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
 
-  const passwordHash = await bcrypt.hash("movio123", 10);
+  const passwordHash = await bcrypt.hash("zelu123", 10);
 
   const admin = await prisma.user.create({
     data: {
-      email: "admin@movio.app",
-      name: "Admin ZRIK",
+      email: "admin@zelu.app",
+      name: "Admin ZELU",
       role: "ADMIN",
       passwordHash,
       phone: "+351900000001",
@@ -32,7 +32,7 @@ async function main() {
 
   const customer = await prisma.user.create({
     data: {
-      email: "cliente@movio.app",
+      email: "cliente@zelu.app",
       name: "Ana Cliente",
       role: "CUSTOMER",
       passwordHash,
@@ -43,7 +43,7 @@ async function main() {
 
   const driver = await prisma.user.create({
     data: {
-      email: "motorista@movio.app",
+      email: "motorista@zelu.app",
       name: "Carlos Motorista",
       role: "DRIVER",
       passwordHash,
@@ -76,7 +76,7 @@ async function main() {
 
   const driver2 = await prisma.user.create({
     data: {
-      email: "motorista2@movio.app",
+      email: "motorista2@zelu.app",
       name: "Rita Condutora",
       role: "DRIVER",
       passwordHash,
@@ -108,7 +108,7 @@ async function main() {
 
   const pendingDriver = await prisma.user.create({
     data: {
-      email: "pendente@movio.app",
+      email: "pendente@zelu.app",
       name: "João Pendente",
       role: "DRIVER",
       passwordHash,
@@ -175,8 +175,8 @@ async function main() {
     },
   });
 
-  console.log("Seed ZRIK concluído.");
-  console.log("Contas (password: movio123):");
+  console.log("Seed ZELU concluído.");
+  console.log("Contas (password: zelu123):");
   console.log(`  Admin:      ${admin.email}`);
   console.log(`  Cliente:    ${customer.email}`);
   console.log(`  Motorista:  ${driver.email}`);

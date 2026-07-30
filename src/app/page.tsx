@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ZrikWordmark } from "@/components/layout/BrandLogo";
-import { BRAND_NAME, BRAND_TAGLINE_PT } from "@/config/brand";
+import { ZeluWordmark } from "@/components/layout/BrandLogo";
+import { BRAND_NAME, BRAND_TAGLINE_PT, BRAND_VALUES } from "@/config/brand";
 
 export default function HomePage() {
   return (
@@ -9,7 +9,7 @@ export default function HomePage() {
         <div className="hero-media" aria-hidden />
         <div className="container hero-content">
           <h1 className="hero-brand">
-            <ZrikWordmark as="span" tone="on-dark" />
+            <ZeluWordmark as="span" tone="on-dark" showMark markSize={56} />
           </h1>
           <p className="hero-tagline">
             {BRAND_TAGLINE_PT.line1}
@@ -17,8 +17,8 @@ export default function HomePage() {
             {BRAND_TAGLINE_PT.line2}
           </p>
           <p className="hero-copy">
-            Pedidos de viagem com chauffeurs privados. Publicas o trajeto, recebes propostas e
-            escolhes a melhor — ao teu preço, ao teu ritmo.
+            Chauffeurs privados com excelência e discrição. Publicas o trajeto, recebes propostas e
+            escolhes com confiança — ao teu ritmo.
           </p>
           <div className="cta-row">
             <Link href="/registo?role=CUSTOMER" className="btn btn-primary">
@@ -36,7 +36,7 @@ export default function HomePage() {
           <h2>Três passos. Controlo total.</h2>
           <p className="lead">
             A {BRAND_NAME} funciona como um marketplace: o cliente define a viagem, os motoristas
-            competem com propostas claras.
+            competem com propostas claras — com profissionalismo e empatia em cada detalhe.
           </p>
           <div className="steps">
             <div>
@@ -55,6 +55,9 @@ export default function HomePage() {
               <p className="muted">Compara e aceita. A reserva fica pronta.</p>
             </div>
           </div>
+          <p className="muted" style={{ marginTop: "2.5rem", fontSize: "0.92rem", maxWidth: "40rem" }}>
+            {BRAND_VALUES.join(" · ")}
+          </p>
         </div>
       </section>
     </>

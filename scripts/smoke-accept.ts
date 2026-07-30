@@ -3,13 +3,13 @@ import { acceptOffer, createOrUpdateOffer } from "../src/domain/marketplace";
 
 async function main() {
   // reset a fresh open trip for test if needed
-  const customer = await prisma.user.findUnique({ where: { email: "cliente@movio.app" } });
+  const customer = await prisma.user.findUnique({ where: { email: "cliente@zelu.app" } });
   const driver = await prisma.user.findUnique({
-    where: { email: "motorista@movio.app" },
+    where: { email: "motorista@zelu.app" },
     include: { driverProfile: { include: { vehicles: true } } },
   });
   const driver2 = await prisma.user.findUnique({
-    where: { email: "motorista2@movio.app" },
+    where: { email: "motorista2@zelu.app" },
     include: { driverProfile: { include: { vehicles: true } } },
   });
   if (!customer || !driver || !driver2) throw new Error("missing users");

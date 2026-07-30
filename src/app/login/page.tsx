@@ -51,11 +51,11 @@ function LoginForm() {
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 480 }}>
         <h1 className="font-display" style={{ fontSize: "2.4rem", marginBottom: "0.5rem" }}>
-          Entrar na ZRIK
+          Entrar na ZELU
         </h1>
         <p className="muted" style={{ marginBottom: "1.5rem" }}>
-          Demo: cliente@movio.app / motorista@movio.app / admin@movio.app — password{" "}
-          <code>movio123</code>
+          Demo: cliente@zelu.app / motorista@zelu.app / admin@zelu.app — password{" "}
+          <code>zelu123</code>
         </p>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={onSubmit} className="panel">

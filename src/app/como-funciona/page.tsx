@@ -3,7 +3,7 @@ export default function ComoFuncionaPage() {
     <section className="section fade-up">
       <div className="container">
         <h1 className="font-display" style={{ fontSize: "clamp(2rem,5vw,3rem)" }}>
-          Como funciona a ZRIK
+          Como funciona a ZELU
         </h1>
         <p className="lead">
           Um marketplace de motoristas privados: o cliente publica, os motoristas

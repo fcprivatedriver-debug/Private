@@ -1,28 +1,42 @@
-/** ZRIK — premium European private mobility. */
+/** ZELU — mobilidade privada premium. */
 
-export const BRAND_NAME = "ZRIK";
-export const BRAND_INK = "#111111";
-export const BRAND_ACCENT = "#1F5A96"; // Azure Prestige
-export const BRAND_ACCENT_STRONG = "#184A7C";
+export const BRAND_NAME = "ZELU";
+
+/** Deep ink — authority with restraint */
+export const BRAND_INK = "#14181C";
+
+/** Forest teal — trust, calm professionalism, discretion */
+export const BRAND_ACCENT = "#1F4F46";
+export const BRAND_ACCENT_STRONG = "#163B35";
+export const BRAND_ACCENT_SOFT = "#E7F0ED";
 
 export const BRAND_TAGLINE_PT = {
-  line1: "Tu escolhes.",
-  line2: "O resto é connosco.",
-  full: "Tu escolhes. O resto é connosco.",
+  line1: "Excelência discreta.",
+  line2: "Sempre contigo.",
+  full: "Excelência discreta. Sempre contigo.",
 } as const;
 
 export const BRAND_TAGLINE_EN = {
-  line1: "You choose.",
-  line2: "We handle the rest.",
-  full: "You choose. We handle the rest.",
+  line1: "Quiet excellence.",
+  line2: "Always with you.",
+  full: "Quiet excellence. Always with you.",
 } as const;
+
+export const BRAND_VALUES = [
+  "Excelência",
+  "Profissionalismo",
+  "Responsabilidade",
+  "Educação",
+  "Disponibilidade",
+  "Empatia",
+  "Discrição",
+] as const;
 
 export const BRAND_META = {
-  titleDefault: "ZRIK — Mobilidade privada",
-  titleTemplate: "%s · ZRIK",
+  titleDefault: "ZELU — Mobilidade privada",
+  titleTemplate: "%s · ZELU",
   description:
-    "Marketplace de chauffeurs privados. Publica o pedido, recebe propostas e escolhe com controlo total.",
+    "Marketplace de chauffeurs privados. Pedidos claros, propostas transparentes e um serviço marcado pela excelência e discrição.",
 } as const;
 
-/** @deprecated Prefer BRAND_NAME — kept for gradual migration from APP_NAME. */
 export const APP_NAME = BRAND_NAME;
