@@ -184,7 +184,9 @@ export function AddressAutocompleteInput({
       )}
       {googleConfigured === false && (
         <p className="muted" style={{ fontSize: "0.8rem", marginTop: "0.35rem" }}>
-          Google Maps key not set — free-text address mode.
+          Google Maps key not set — free-text address mode. Defina{" "}
+          <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> (ou{" "}
+          <code>GOOGLE_MAPS_API_KEY</code>) no ambiente Vercel e faça redeploy.
         </p>
       )}
     </div>
