@@ -63,4 +63,5 @@ You do **not** need this for `AUTH_SECRET` anymore.
 | `DIRECT_URL` | No — auto-derived at build from Neon unpooled / pooled URL |
 | `AUTH_SECRET` | No — demo fallback in code |
 | `AUTH_TRUST_HOST` | No — code sets `trustHost: true` |
-| Maps / Stripe / Google OAuth | Optional later |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | **Required for production Places/Directions** (aliases: `GOOGLE_MAPS_API_KEY`, `VITE_GOOGLE_MAPS_API_KEY`) |
+| Stripe / Google OAuth | Optional later |

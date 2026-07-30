@@ -131,16 +131,21 @@ export async function createTripAction(formData: FormData) {
         dropoffLat: parsed.dropoffLat,
         dropoffLng: parsed.dropoffLng,
       });
-      if (estimate) {
-        coords = {
-          pickupLat: estimate.pickup.lat,
-          pickupLng: estimate.pickup.lng,
-          dropoffLat: estimate.dropoff.lat,
-          dropoffLng: estimate.dropoff.lng,
-          distanceMeters: estimate.distanceMeters,
-          durationSeconds: estimate.durationSeconds,
+      if (!estimate) {
+        return {
+          ok: false as const,
+          error:
+            "Não foi possível calcular a distância e duração desta viagem. Confirme as moradas e tente novamente.",
         };
       }
+      coords = {
+        pickupLat: estimate.pickup.lat,
+        pickupLng: estimate.pickup.lng,
+        dropoffLat: estimate.dropoff.lat,
+        dropoffLng: estimate.dropoff.lng,
+        distanceMeters: estimate.distanceMeters,
+        durationSeconds: estimate.durationSeconds,
+      };
     }
 
     const trip = await createTripRequest({

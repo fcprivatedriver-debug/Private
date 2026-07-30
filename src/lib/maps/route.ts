@@ -1,4 +1,11 @@
-/** Route estimation helpers — OSRM when possible, Haversine fallback. */
+/** Route estimation — Google Directions when keyed, else OSRM / Haversine. */
+
+import { getGoogleMapsApiKey } from "./config";
+import {
+  geocodeAddressGoogle,
+  geocodeAddressNominatim,
+  googleDirections,
+} from "./google-rest";
 
 export type Coords = { lat: number; lng: number };
 
@@ -9,6 +16,7 @@ export type RouteEstimate = {
   dropoff: Coords;
   pickupLabel: string;
   dropoffLabel: string;
+  provider?: "google" | "osrm" | "haversine";
 };
 
 function haversineMeters(a: Coords, b: Coords): number {
@@ -24,34 +32,37 @@ function haversineMeters(a: Coords, b: Coords): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-async function geocodeNominatim(query: string): Promise<(Coords & { label: string }) | null> {
-  try {
-    const url = new URL("https://nominatim.openstreetmap.org/search");
-    url.searchParams.set("q", query);
-    url.searchParams.set("format", "json");
-    url.searchParams.set("limit", "1");
-    const res = await fetch(url.toString(), {
-      headers: { "User-Agent": "ZeluApp/1.0 (marketplace)" },
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { lat: string; lon: string; display_name: string }[];
-    const hit = data[0];
-    if (!hit) return null;
-    return {
-      lat: Number(hit.lat),
-      lng: Number(hit.lon),
-      label: hit.display_name,
-    };
-  } catch {
-    return null;
+async function geocodeAny(
+  query: string,
+): Promise<(Coords & { label: string }) | null> {
+  const key = getGoogleMapsApiKey();
+  if (key) {
+    try {
+      const google = await geocodeAddressGoogle(query, key);
+      if (google) {
+        return {
+          lat: google.lat,
+          lng: google.lng,
+          label: google.formattedAddress,
+        };
+      }
+    } catch (error) {
+      console.error("[maps/route] Google geocode failed", error);
+    }
   }
+  const nominatim = await geocodeAddressNominatim(query);
+  if (!nominatim) return null;
+  return {
+    lat: nominatim.lat,
+    lng: nominatim.lng,
+    label: nominatim.formattedAddress,
+  };
 }
 
-async function routeOsrm(pickup: Coords, dropoff: Coords): Promise<{
-  distanceMeters: number;
-  durationSeconds: number;
-} | null> {
+async function routeOsrm(
+  pickup: Coords,
+  dropoff: Coords,
+): Promise<{ distanceMeters: number; durationSeconds: number } | null> {
   try {
     const url = `https://router.project-osrm.org/route/v1/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?overview=false`;
     const res = await fetch(url, { next: { revalidate: 3600 } });
@@ -79,15 +90,49 @@ export async function estimateRoute(input: {
   dropoffLat?: number | null;
   dropoffLng?: number | null;
 }): Promise<RouteEstimate | null> {
+  const key = getGoogleMapsApiKey();
+
+  if (key) {
+    try {
+      const origin =
+        input.pickupLat != null && input.pickupLng != null
+          ? `${input.pickupLat},${input.pickupLng}`
+          : input.pickupAddress;
+      const destination =
+        input.dropoffLat != null && input.dropoffLng != null
+          ? `${input.dropoffLat},${input.dropoffLng}`
+          : input.dropoffAddress;
+
+      const google = await googleDirections(origin, destination, key);
+      if (google) {
+        return {
+          distanceMeters: google.distanceMeters,
+          durationSeconds: google.durationSeconds,
+          pickup: { lat: google.pickupLat, lng: google.pickupLng },
+          dropoff: { lat: google.dropoffLat, lng: google.dropoffLng },
+          pickupLabel: google.pickupLabel,
+          dropoffLabel: google.dropoffLabel,
+          provider: "google",
+        };
+      }
+    } catch (error) {
+      console.error("[maps/route] Google Directions failed", error);
+    }
+  }
+
   const pickup: (Coords & { label: string }) | null =
     input.pickupLat != null && input.pickupLng != null
       ? { lat: input.pickupLat, lng: input.pickupLng, label: input.pickupAddress }
-      : await geocodeNominatim(input.pickupAddress);
+      : await geocodeAny(input.pickupAddress);
 
   const dropoff: (Coords & { label: string }) | null =
     input.dropoffLat != null && input.dropoffLng != null
-      ? { lat: input.dropoffLat, lng: input.dropoffLng, label: input.dropoffAddress }
-      : await geocodeNominatim(input.dropoffAddress);
+      ? {
+          lat: input.dropoffLat,
+          lng: input.dropoffLng,
+          label: input.dropoffAddress,
+        }
+      : await geocodeAny(input.dropoffAddress);
 
   if (!pickup || !dropoff) return null;
 
@@ -99,6 +144,7 @@ export async function estimateRoute(input: {
       dropoff: { lat: dropoff.lat, lng: dropoff.lng },
       pickupLabel: pickup.label,
       dropoffLabel: dropoff.label,
+      provider: "osrm",
     };
   }
 
@@ -114,6 +160,7 @@ export async function estimateRoute(input: {
     dropoff: { lat: dropoff.lat, lng: dropoff.lng },
     pickupLabel: pickup.label,
     dropoffLabel: dropoff.label,
+    provider: "haversine",
   };
 }
 
