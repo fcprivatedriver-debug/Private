@@ -12,6 +12,8 @@ const protectedPrefixes = [
   "/hoje",
   "/tarefas",
   "/calendario",
+  "/agenda",
+  "/objectivos",
   "/captura",
   "/relatorios",
   "/habitos",
