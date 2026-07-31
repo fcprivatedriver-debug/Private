@@ -18,6 +18,7 @@
 - **Quatro níveis de adesão premium** com cartões de cor distinta (Bronze / Prata / Ouro / Diamante)
 - Formulário de proposta Diamante com persistência, e-mails e registo no admin
 - Secção admin **Clientes Diamante** com pipeline de estados e conversão em plano personalizado
+- **Confirmação de e-mail automática** no registo (token 24h, e-mail de ativação, página de sucesso, reenvio e gestão no admin)
 
 ## Novas funcionalidades
 
@@ -40,6 +41,15 @@
 - Após submissão: grava na BD, confirmação ao cliente, cópia para `fcprivatedriver@gmail.com`, notificação in-app aos admins
 - Admin → **Clientes Diamante** com estados: Recebido, Em análise, Contactado, Proposta enviada, Aceite, Rejeitado
 - Proposta aceite → conversão em subscrição personalizada (valor mensal, minutos, condições especiais, renovação, notas internas)
+
+### Confirmação de e-mail
+
+- Registo cria conta com `emailVerified = null` / `PENDING_EMAIL` e token seguro (24h)
+- Envio automático de `FC Private Driver <fcprivatedriver@gmail.com>` com assunto «Bem-vindo à FC Private Driver — Ative a sua conta»
+- `/ativar?token=…` valida, ativa a conta, apaga o token e mostra mensagem de sucesso
+- Token expirado/inválido → botão **Reenviar e-mail de ativação**
+- Admin → Clientes: estado de confirmação, data e reenvio manual
+- Falha de envio: aviso ao utilizador, registo em `AdminAuditLog`, reenvio disponível
 
 ### Restantes
 

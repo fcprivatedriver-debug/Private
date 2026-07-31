@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { registerAction, type ActionState } from "@/actions/auth";
+import { ResendActivationForm } from "@/components/auth/ResendActivationForm";
 
 const initial: ActionState = {};
 
@@ -17,9 +18,15 @@ export function RegisterForm() {
         <div className="container" style={{ maxWidth: 480 }}>
           <h1 className="page-title">{t("registerTitle")}</h1>
           <div className="alert alert-success">{state.success}</div>
-          <Link href="/login" className="btn btn-primary">
-            {t("loginLink")}
-          </Link>
+          {state.warning && <div className="alert alert-error">{state.warning}</div>}
+          {(state.warning || state.email) && (
+            <ResendActivationForm defaultEmail={state.email || ""} />
+          )}
+          <p style={{ marginTop: "1.25rem" }}>
+            <Link href="/login" className="btn btn-primary">
+              {t("loginLink")}
+            </Link>
+          </p>
         </div>
       </section>
     );

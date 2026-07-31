@@ -5,6 +5,7 @@ import { Link, redirect } from "@/i18n/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageGreeting } from "@/components/ui/PageGreeting";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ResendActivationForm } from "@/components/auth/ResendActivationForm";
 import { requireRole } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { getActiveSubscription } from "@/lib/minutes/ledger";
@@ -78,7 +79,11 @@ export default async function ClienteDashboardPage() {
 
       {!customer.emailVerified && (
         <div className="alert-banner alert-banner-warn">
-          Confirme o seu e-mail para poder marcar viagens e contratar planos. Verifique a sua caixa de entrada.
+          <p style={{ margin: "0 0 0.75rem" }}>
+            Confirme o seu e-mail para poder marcar viagens e contratar planos. Verifique a sua caixa
+            de entrada (e o spam). O link de ativação expira em 24 horas.
+          </p>
+          <ResendActivationForm defaultEmail={customer.email} compact />
         </div>
       )}
 

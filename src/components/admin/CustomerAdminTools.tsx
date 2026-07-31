@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { adminAdjustMinutesAction } from "@/actions/trips";
-import { suspendCustomerAction } from "@/actions/admin";
+import { suspendCustomerAction, adminResendActivationAction } from "@/actions/admin";
 import type { ActionState } from "@/actions/auth";
 
 const initial: ActionState = {};
@@ -48,5 +48,20 @@ export function SuspendButton({ userId, suspended }: { userId: string; suspended
       </button>
       {msg && <span className="muted" style={{ marginLeft: "0.5rem", fontSize: "0.84rem" }}>{msg}</span>}
     </div>
+  );
+}
+
+export function ResendActivationButton({ userId }: { userId: string }) {
+  const [state, formAction, pending] = useActionState(adminResendActivationAction, initial);
+
+  return (
+    <form action={formAction} style={{ marginTop: "0.5rem" }}>
+      <input type="hidden" name="userId" value={userId} />
+      {state.error && <div className="alert alert-error">{state.error}</div>}
+      {state.success && <div className="alert alert-success">{state.success}</div>}
+      <button type="submit" className="btn btn-secondary btn-sm" disabled={pending}>
+        {pending ? "A enviar…" : "Reenviar e-mail de ativação"}
+      </button>
+    </form>
   );
 }

@@ -12,6 +12,13 @@ type NotifyInput = {
   channels?: NotificationChannel[];
 };
 
+export type SendEmailResult = {
+  ok: boolean;
+  error?: string;
+  demo?: boolean;
+  providerId?: string;
+};
+
 export async function notify(input: NotifyInput) {
   const channels = input.channels ?? ["IN_APP", "EMAIL"];
   const created = [];
@@ -43,8 +50,8 @@ export async function notify(input: NotifyInput) {
       await prisma.notification.update({
         where: { id: row.id },
         data: {
-          status: sent ? NotificationStatus.SENT : NotificationStatus.FAILED,
-          sentAt: sent ? new Date() : null,
+          status: sent.ok ? NotificationStatus.SENT : NotificationStatus.FAILED,
+          sentAt: sent.ok ? new Date() : null,
         },
       });
     } else if (channel === "WHATSAPP" || channel === "SMS") {
@@ -61,13 +68,17 @@ export async function notify(input: NotifyInput) {
   return created;
 }
 
-export async function sendEmail(opts: { to: string; subject: string; html: string }) {
+export async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM || "FC Private Driver <fcprivatedriver@gmail.com>";
 
   if (!apiKey) {
-    console.info("[email:demo]", opts.to, opts.subject);
-    return true;
+    console.info("[email:demo]", { from, to: opts.to, subject: opts.subject });
+    return { ok: true, demo: true };
   }
 
   try {
@@ -79,10 +90,27 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
       },
       body: JSON.stringify({ from, to: opts.to, subject: opts.subject, html: opts.html }),
     });
-    return res.ok;
+
+    const bodyText = await res.text();
+    let parsed: { id?: string; message?: string; name?: string } = {};
+    try {
+      parsed = JSON.parse(bodyText) as typeof parsed;
+    } catch {
+      /* ignore */
+    }
+
+    if (!res.ok) {
+      const error =
+        parsed.message || parsed.name || bodyText.slice(0, 400) || `HTTP ${res.status}`;
+      console.error("[email] provider error", { to: opts.to, status: res.status, error });
+      return { ok: false, error };
+    }
+
+    return { ok: true, providerId: parsed.id };
   } catch (err) {
-    console.error("[email] failed", err);
-    return false;
+    const error = err instanceof Error ? err.message : String(err);
+    console.error("[email] failed", error);
+    return { ok: false, error };
   }
 }
 
@@ -100,11 +128,6 @@ export function emailShell(title: string, body: string, cta?: { label: string; h
   </div></body></html>`;
 }
 
-export function activationEmailHtml(token: string) {
-  const href = `${APP_URL}/pt/ativar?token=${token}`;
-  return emailShell(
-    "Ative a sua conta",
-    "Obrigado por se registar na FC Private Driver. Clique no botão abaixo para confirmar o seu e-mail e ativar a conta.",
-    { label: "Ativar conta", href },
-  );
+export function activationCtaHref(token: string, locale = "pt") {
+  return `${APP_URL}/${locale}/ativar?token=${encodeURIComponent(token)}`;
 }

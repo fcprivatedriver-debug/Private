@@ -192,6 +192,46 @@ export async function suspendCustomerAction(userId: string, suspend: boolean): P
   return { success: suspend ? "Cliente suspenso." : "Cliente reativado." };
 }
 
+export async function adminResendActivationAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  if (!(await requireAdmin())) return { error: "Sem permissão." };
+
+  const userId = String(formData.get("userId") || "");
+  if (!userId) return { error: "Cliente em falta." };
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { error: "Cliente não encontrado." };
+  if (user.emailVerified) {
+    return { error: "Este e-mail já está confirmado." };
+  }
+
+  const session = await auth();
+  const { issueAndSendActivationEmail } = await import("@/lib/auth/activation");
+  const { email: sendResult } = await issueAndSendActivationEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    actorId: session?.user?.id,
+    reason: "Reenvio manual pelo administrador",
+  });
+
+  revalidatePath("/pt/admin/clientes");
+
+  if (!sendResult.ok) {
+    return {
+      error: `Falha ao enviar e-mail de ativação: ${sendResult.error || "erro desconhecido"}`,
+    };
+  }
+
+  return {
+    success: sendResult.demo
+      ? "Token gerado (modo demo — e-mail registado no log do servidor)."
+      : "E-mail de ativação reenviado com sucesso.",
+  };
+}
+
 export async function contactFormAction(
   _prev: ActionState,
   formData: FormData,

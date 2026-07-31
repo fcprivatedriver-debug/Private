@@ -1,8 +1,14 @@
 import { getLocale } from "next-intl/server";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageGreeting } from "@/components/ui/PageGreeting";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { AdjustMinutesForm, SuspendButton } from "@/components/admin/CustomerAdminTools";
+import {
+  AdjustMinutesForm,
+  SuspendButton,
+  ResendActivationButton,
+} from "@/components/admin/CustomerAdminTools";
 import { requireRole } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { availableMinutes, formatMinutes } from "@/lib/utils";
@@ -61,15 +67,33 @@ export default async function AdminClientesPage({
         {customers.map((c) => {
           const sub = c.subscriptions[0];
           const habits = c.customerProfile?.travelHabits;
+          const verified = Boolean(c.emailVerified);
           return (
             <div key={c.id} className="list-item panel" style={{ cursor: "default" }}>
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
                 <div>
                   <strong>{c.name}</strong>
                   <div className="muted">{c.email}</div>
+                  <div style={{ marginTop: "0.35rem", fontSize: "0.88rem" }}>
+                    {verified ? (
+                      <span className="badge" style={{ background: "#e6f4ea", color: "#1b5e20" }}>
+                        E-mail confirmado ·{" "}
+                        {format(c.emailVerified!, "d MMM yyyy HH:mm", { locale: pt })}
+                      </span>
+                    ) : (
+                      <span className="badge" style={{ background: "#fff3e0", color: "#e65100" }}>
+                        E-mail por confirmar
+                      </span>
+                    )}
+                    <span className="muted" style={{ marginLeft: "0.5rem" }}>
+                      Estado: {c.status}
+                    </span>
+                  </div>
                 </div>
                 <SuspendButton userId={c.id} suspended={c.status === "SUSPENDED"} />
               </div>
+
+              {!verified && <ResendActivationButton userId={c.id} />}
 
               {sub && (
                 <p className="muted" style={{ margin: "0.5rem 0 0" }}>

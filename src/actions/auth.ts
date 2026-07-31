@@ -4,7 +4,8 @@ import { hash, compare } from "bcryptjs";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { activationEmailHtml, notify, sendEmail } from "@/lib/notifications";
+import { notify, sendEmail } from "@/lib/notifications";
+import { issueAndSendActivationEmail } from "@/lib/auth/activation";
 import { auth, signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
@@ -26,7 +27,14 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
-export type ActionState = { error?: string; success?: string };
+export type ActionState = {
+  error?: string;
+  success?: string;
+  warning?: string;
+  email?: string;
+  /** expired | invalid | missing — used by /ativar UI */
+  code?: "expired" | "invalid" | "missing" | "already_verified";
+};
 
 export async function registerAction(
   _prev: ActionState,
@@ -59,6 +67,7 @@ export async function registerAction(
       passwordHash,
       role: "CUSTOMER",
       status: "PENDING_EMAIL",
+      emailVerified: null,
       customerProfile: {
         create: {
           fullName: parsed.data.name,
@@ -68,19 +77,11 @@ export async function registerAction(
     },
   });
 
-  const token = randomBytes(32).toString("hex");
-  await prisma.emailConfirmToken.create({
-    data: {
-      userId: user.id,
-      token,
-      expiresAt: addHours(new Date(), 48),
-    },
-  });
-
-  await sendEmail({
-    to: email,
-    subject: "Ative a sua conta — FC Private Driver",
-    html: activationEmailHtml(token),
+  const { email: sendResult } = await issueAndSendActivationEmail({
+    userId: user.id,
+    email,
+    name: parsed.data.name,
+    reason: "Registo de nova conta",
   });
 
   await notify({
@@ -92,9 +93,19 @@ export async function registerAction(
     channels: ["IN_APP"],
   });
 
+  if (!sendResult.ok) {
+    return {
+      success: "Conta criada.",
+      warning:
+        "Não foi possível enviar o e-mail de ativação automaticamente. Pode reenviar abaixo. Se o problema continuar, contacte-nos.",
+      email,
+    };
+  }
+
   return {
     success:
-      "Conta criada. Enviámos um e-mail com o botão «Ativar conta». Confirme antes de contratar um plano.",
+      "Conta criada. Enviámos um e-mail com o botão «Ativar Conta». Confirme o endereço antes de contratar um plano. O link expira em 24 horas.",
+    email,
   };
 }
 
@@ -140,9 +151,47 @@ export async function loginAction(
 }
 
 export async function activateAccountAction(token: string): Promise<ActionState> {
-  const row = await prisma.emailConfirmToken.findUnique({ where: { token } });
-  if (!row || row.usedAt || row.expiresAt < new Date()) {
-    return { error: "Link de ativação inválido ou expirado." };
+  if (!token) {
+    return { error: "Link de ativação em falta.", code: "missing" };
+  }
+
+  const row = await prisma.emailConfirmToken.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+
+  if (!row) {
+    return {
+      error: "Link de ativação inválido.",
+      code: "invalid",
+    };
+  }
+
+  if (row.user.emailVerified) {
+    // Clean leftover tokens and treat as success
+    await prisma.emailConfirmToken.deleteMany({ where: { userId: row.userId } });
+    return {
+      success:
+        "O seu e-mail foi confirmado com sucesso.\nJá pode iniciar sessão e contratar um plano.",
+      code: "already_verified",
+      email: row.user.email,
+    };
+  }
+
+  if (row.usedAt) {
+    return {
+      error: "Este link de ativação já foi utilizado.",
+      code: "invalid",
+      email: row.user.email,
+    };
+  }
+
+  if (row.expiresAt < new Date()) {
+    return {
+      error: "O link de ativação expirou. Peça um novo e-mail de ativação.",
+      code: "expired",
+      email: row.user.email,
+    };
   }
 
   await prisma.$transaction([
@@ -150,24 +199,83 @@ export async function activateAccountAction(token: string): Promise<ActionState>
       where: { id: row.userId },
       data: { emailVerified: new Date(), status: "ACTIVE" },
     }),
-    prisma.emailConfirmToken.update({
-      where: { id: row.id },
-      data: { usedAt: new Date() },
-    }),
+    prisma.emailConfirmToken.deleteMany({ where: { userId: row.userId } }),
   ]);
 
-  const user = await prisma.user.findUnique({ where: { id: row.userId } });
-  if (user) {
-    await notify({
-      userId: user.id,
-      email: user.email,
-      type: "EMAIL_CONFIRMED",
-      title: "E-mail confirmado",
-      body: "A sua conta está ativa. Já pode escolher um plano.",
-    });
+  await notify({
+    userId: row.userId,
+    email: row.user.email,
+    type: "EMAIL_CONFIRMED",
+    title: "E-mail confirmado",
+    body: "A sua conta está ativa. Já pode escolher um plano.",
+    channels: ["IN_APP"],
+  });
+
+  await prisma.adminAuditLog.create({
+    data: {
+      action: "EMAIL_VERIFIED",
+      entityType: "User",
+      entityId: row.userId,
+      reason: "Conta ativada via link de e-mail",
+      meta: JSON.stringify({ email: row.user.email }),
+    },
+  });
+
+  return {
+    success:
+      "O seu e-mail foi confirmado com sucesso.\nJá pode iniciar sessão e contratar um plano.",
+    email: row.user.email,
+  };
+}
+
+/** Public resend — by e-mail (does not reveal whether the account exists). */
+export async function resendActivationAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  if (!email || !email.includes("@")) {
+    return { error: "Indique um e-mail válido." };
   }
 
-  return { success: "Conta ativada com sucesso. Já pode iniciar sessão." };
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    return {
+      success:
+        "Se existir uma conta por confirmar com este e-mail, enviámos um novo link de ativação.",
+      email,
+    };
+  }
+
+  if (user.emailVerified) {
+    return {
+      success: "Este e-mail já está confirmado. Pode iniciar sessão.",
+      email,
+      code: "already_verified",
+    };
+  }
+
+  const { email: sendResult } = await issueAndSendActivationEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    reason: "Reenvio público de ativação",
+  });
+
+  if (!sendResult.ok) {
+    return {
+      error:
+        "Não foi possível enviar o e-mail de ativação. Tente novamente mais tarde ou contacte-nos.",
+      email,
+    };
+  }
+
+  return {
+    success: "Enviámos um novo e-mail de ativação. Verifique a caixa de entrada (e o spam).",
+    email,
+  };
 }
 
 export async function requestPasswordResetAction(
