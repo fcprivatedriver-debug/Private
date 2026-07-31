@@ -54,6 +54,9 @@ export function ShoppingListClient({
     { id: string; label: string; product: unknown }[] | null
   >(null);
   const [tripReply, setTripReply] = useState<string | null>(null);
+  const [tripLines, setTripLines] = useState<
+    { storeName: string; totalLabel: string; missing: number }[] | null
+  >(null);
   const active = lists.find((l) => l.id === activeListId) || lists[0];
   const items = active?.items ?? [];
   const open = items.filter((i) => !i.isChecked);
@@ -91,10 +94,33 @@ export function ShoppingListClient({
             start(async () => {
               const res = await compareShoppingTrip();
               setTripReply(res.reply);
+              const comparison = res.comparison as
+                | {
+                    quotes?: {
+                      storeName: string;
+                      totalCents: number;
+                      missing: string[];
+                    }[];
+                  }
+                | undefined;
+              if (comparison?.quotes?.length) {
+                setTripLines(
+                  comparison.quotes.map((q) => ({
+                    storeName: q.storeName,
+                    totalLabel:
+                      q.totalCents > 0
+                        ? formatEUR(q.totalCents)
+                        : "sem preços",
+                    missing: q.missing?.length ?? 0,
+                  })),
+                );
+              } else {
+                setTripLines(null);
+              }
             });
           }}
         >
-          Vou às compras
+          Comparar Continente / Pingo Doce
         </button>
         <button
           type="button"
@@ -106,9 +132,23 @@ export function ShoppingListClient({
       </div>
 
       {tripReply ? (
-        <p className="muted" style={{ whiteSpace: "pre-wrap", margin: 0 }}>
-          {tripReply}
-        </p>
+        <div className="stack-sm" style={{ margin: 0 }}>
+          <p className="muted" style={{ whiteSpace: "pre-wrap", margin: 0 }}>
+            {tripReply}
+          </p>
+          {tripLines?.length ? (
+            <ul className="muted small" style={{ margin: 0, paddingLeft: "1.1rem" }}>
+              {tripLines.map((line) => (
+                <li key={line.storeName}>
+                  <strong>{line.storeName}</strong>: {line.totalLabel}
+                  {line.missing > 0
+                    ? ` (${line.missing} artigo${line.missing === 1 ? "" : "s"} sem preço)`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       ) : null}
 
       {showNewList ? (
@@ -159,10 +199,10 @@ export function ShoppingListClient({
         }}
       >
         <label className="field">
-          <span>Fala ou escreve naturalmente</span>
+          <span>Procurar produto (Continente · Pingo Doce)</span>
           <input
             name="utterance"
-            placeholder="Ex.: seis litros de leite Vigor meio gordo"
+            placeholder="Ex.: leite Vigor, manteiga Milhafre, arroz carolino"
             required
           />
         </label>
@@ -170,6 +210,11 @@ export function ShoppingListClient({
           Adicionar com a Nina
         </button>
       </form>
+
+      <p className="muted small" style={{ margin: 0 }}>
+        Preços via Product Service (Continente e Pingo Doce). Se o site da loja não responder,
+        a Nina usa um catálogo de referência sincronizado com a tua lista familiar.
+      </p>
 
       {voiceHint ? (
         <p className="muted small" style={{ margin: 0 }}>
@@ -299,6 +344,19 @@ export function ShoppingListClient({
                         .filter(Boolean)
                         .join(" · ")}
                       {item.priceCents != null ? ` · ${formatEUR(item.priceCents)}` : ""}
+                      {item.productUrl ? (
+                        <>
+                          {" · "}
+                          <a
+                            href={item.productUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Ver na loja
+                          </a>
+                        </>
+                      ) : null}
                     </span>
                   </span>
                 </label>

@@ -2,8 +2,8 @@ import type { ProductMatch, StoreProductProvider } from "../types";
 import { searchCatalog } from "../catalog";
 
 /**
- * Pingo Doce Provider (protótipo).
- * Isolado — fácil de trocar por API oficial.
+ * Pingo Doce Provider (V1).
+ * Tenta o site; se falhar ou vier sem preços úteis, usa catálogo de referência.
  */
 async function tryFetchPingoDoce(query: string): Promise<ProductMatch[]> {
   try {
@@ -11,7 +11,7 @@ async function tryFetchPingoDoce(query: string): Promise<ProductMatch[]> {
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; NinaProductBot/1.0; +https://nina.app)",
+          "Mozilla/5.0 (compatible; NinaProductBot/1.0; +https://ninapp.pt)",
         Accept: "text/html",
       },
       signal: AbortSignal.timeout(4000),
@@ -39,7 +39,7 @@ async function tryFetchPingoDoce(query: string): Promise<ProductMatch[]> {
         storeName: "Pingo Doce",
         storeId: "pingo_doce",
         productUrl: url,
-        score: 0.5,
+        score: 0.55,
       });
     }
     return matches;
@@ -48,16 +48,24 @@ async function tryFetchPingoDoce(query: string): Promise<ProductMatch[]> {
   }
 }
 
+function mergePreferPriced(live: ProductMatch[], catalog: ProductMatch[]): ProductMatch[] {
+  const liveUseful = live.filter((p) => p.priceCents != null && p.priceCents > 0);
+  if (liveUseful.length > 0) return liveUseful;
+  return catalog;
+}
+
 export const pingoDoceProvider: StoreProductProvider = {
   id: "pingo_doce",
   label: "Pingo Doce",
   async search(query: string) {
-    const live = await tryFetchPingoDoce(query);
-    if (live.length > 0) return live;
-    return searchCatalog(query, "pingo_doce");
+    const [live, catalog] = await Promise.all([
+      tryFetchPingoDoce(query),
+      Promise.resolve(searchCatalog(query, "pingo_doce")),
+    ]);
+    return mergePreferPriced(live, catalog);
   },
   async quote(productName: string) {
     const hits = await this.search(productName);
-    return hits[0] ?? null;
+    return hits.find((h) => h.priceCents != null) ?? hits[0] ?? null;
   },
 };

@@ -14,6 +14,7 @@ import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 const NAV = [
   { href: "/pt/captura", label: "Captura" },
   { href: "/pt/dashboard", label: "Hoje" },
+  { href: "/pt/guia", label: "Guia" },
   { href: "/pt/transacoes", label: "Transações" },
   { href: "/pt/receitas", label: "Receitas" },
   { href: "/pt/despesas", label: "Despesas" },
@@ -23,7 +24,6 @@ const NAV = [
   { href: "/pt/poupancas", label: "Poupanças" },
   { href: "/pt/objetivos", label: "Objetivos" },
   { href: "/pt/personalizar", label: "Personalizar a Nina" },
-  { href: "/pt/guia", label: "Guia" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/familia", label: "Conta" },
@@ -37,7 +37,7 @@ const NAV = [
 
 const MOBILE = [
   { href: "/pt/dashboard", label: "Hoje" },
-  { href: "/pt/transacoes", label: "Transações" },
+  { href: "/pt/guia", label: "Guia" },
   { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura" },
   { href: "/pt/lista", label: "Compras" },
   { href: "/pt/definicoes", label: "Mais" },

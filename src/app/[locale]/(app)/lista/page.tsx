@@ -49,8 +49,8 @@ export default async function ListaPage({
     <div className="page-stack">
       <h1 className="page-title">Lista de compras</h1>
       <p className="page-sub">
-        Diz à Nina o que precisas — «adiciona leite Vigor». Quando fores às compras, ela compara
-        supermercados por ti.
+        Diz ou escreve o produto — a Nina pesquisa no Continente e no Pingo Doce, mostra preços
+        quando disponíveis e, com «Vou às compras», compara o total entre lojas.
       </p>
       <Panel title={`${openCount} por comprar`}>
         {lists.length === 0 ? (

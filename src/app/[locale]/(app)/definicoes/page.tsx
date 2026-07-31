@@ -26,6 +26,10 @@ export default async function DefinicoesPage() {
 
         <Panel title="Atalhos">
           <div className="mais-links">
+            <Link href="/pt/guia">
+              <strong>Guia da Nina</strong>
+              <span className="muted small">Aprende a usar a app — receita, despesa, voz, compras…</span>
+            </Link>
             <Link href="/pt/captura?mode=voice&auto=1">
               <strong>Falar com a Nina</strong>
               <span className="muted small">Captura por voz imediata</span>

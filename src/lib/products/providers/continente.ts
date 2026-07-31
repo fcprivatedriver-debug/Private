@@ -2,8 +2,8 @@ import type { ProductMatch, StoreProductProvider } from "../types";
 import { searchCatalog } from "../catalog";
 
 /**
- * Continente Provider (protótipo).
- * Tenta pesquisa no site; se falhar, usa catálogo isolado.
+ * Continente Provider (V1).
+ * Tenta o site; se falhar ou vier sem preços úteis, usa catálogo de referência.
  * Substituível por API oficial sem mudar a Nina.
  */
 async function tryFetchContinente(query: string): Promise<ProductMatch[]> {
@@ -12,14 +12,13 @@ async function tryFetchContinente(query: string): Promise<ProductMatch[]> {
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; NinaProductBot/1.0; +https://nina.app)",
+          "Mozilla/5.0 (compatible; NinaProductBot/1.0; +https://ninapp.pt)",
         Accept: "text/html",
       },
       signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return [];
     const html = await res.text();
-    // Extrai blocos simples product/name/price — frágil; é só protótipo.
     const matches: ProductMatch[] = [];
     const priceRe = /(\d+)[,.](\d{2})\s*€/g;
     const titleHints = html.match(/product-name[^>]*>([^<]+)</gi) || [];
@@ -41,7 +40,7 @@ async function tryFetchContinente(query: string): Promise<ProductMatch[]> {
         storeName: "Continente",
         storeId: "continente",
         productUrl: url,
-        score: 0.5,
+        score: 0.55,
       });
     }
     return matches;
@@ -50,16 +49,24 @@ async function tryFetchContinente(query: string): Promise<ProductMatch[]> {
   }
 }
 
+function mergePreferPriced(live: ProductMatch[], catalog: ProductMatch[]): ProductMatch[] {
+  const liveUseful = live.filter((p) => p.priceCents != null && p.priceCents > 0);
+  if (liveUseful.length > 0) return liveUseful;
+  return catalog;
+}
+
 export const continenteProvider: StoreProductProvider = {
   id: "continente",
   label: "Continente",
   async search(query: string) {
-    const live = await tryFetchContinente(query);
-    if (live.length > 0) return live;
-    return searchCatalog(query, "continente");
+    const [live, catalog] = await Promise.all([
+      tryFetchContinente(query),
+      Promise.resolve(searchCatalog(query, "continente")),
+    ]);
+    return mergePreferPriced(live, catalog);
   },
   async quote(productName: string) {
     const hits = await this.search(productName);
-    return hits[0] ?? null;
+    return hits.find((h) => h.priceCents != null) ?? hits[0] ?? null;
   },
 };
