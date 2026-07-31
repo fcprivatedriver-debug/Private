@@ -104,7 +104,25 @@ export async function loginAction(
 ): Promise<ActionState> {
   const email = String(formData.get("email") || "").toLowerCase();
   const password = String(formData.get("password") || "");
-  const callbackUrl = String(formData.get("callbackUrl") || "/pt/cliente");
+  const requestedCallback = String(formData.get("callbackUrl") || "").trim();
+
+  const existing = await prisma.user.findUnique({
+    where: { email },
+    select: { role: true },
+  });
+  const roleHome =
+    existing?.role === "ADMIN"
+      ? "/pt/admin"
+      : existing?.role === "DRIVER"
+        ? "/pt/motorista"
+        : "/pt/cliente";
+  // Honour explicit deep-links; otherwise send each role to its home.
+  const callbackUrl =
+    requestedCallback &&
+    requestedCallback !== "/pt/cliente" &&
+    !requestedCallback.endsWith("/cliente")
+      ? requestedCallback
+      : roleHome;
 
   try {
     await signIn("credentials", {

@@ -23,6 +23,8 @@ type Plan = {
   ctaLabelPt?: string | null;
   accentColor?: string | null;
   isPersonalized?: boolean;
+  specialConditions?: string | null;
+  internalNotes?: string | null;
 };
 
 type Pkg = {
@@ -101,6 +103,22 @@ export function PlanEditor({ plans }: { plans: Plan[] }) {
             rows={3}
             style={{ marginTop: "0.5rem" }}
             placeholder='["benefício 1","benefício 2"]'
+          />
+          <textarea
+            className="input"
+            name="specialConditions"
+            defaultValue={p.specialConditions || ""}
+            rows={2}
+            style={{ marginTop: "0.5rem" }}
+            placeholder="Condições especiais (planos personalizados)"
+          />
+          <textarea
+            className="input"
+            name="internalNotes"
+            defaultValue={p.internalNotes || ""}
+            rows={2}
+            style={{ marginTop: "0.5rem" }}
+            placeholder="Observações internas (só admin)"
           />
           <input type="hidden" name="sortOrder" value={p.sortOrder} />
           <label className="quality-pill" style={{ marginTop: "0.5rem", display: "inline-flex" }}>

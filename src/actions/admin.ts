@@ -78,6 +78,7 @@ export async function upsertPlanAction(
     ctaLabelEn: String(formData.get("ctaLabelEn") || "") || null,
     accentColor: String(formData.get("accentColor") || "") || null,
     specialConditions: String(formData.get("specialConditions") || "") || null,
+    internalNotes: String(formData.get("internalNotes") || "") || null,
   };
 
   if (!data.code || !data.namePt) {

@@ -63,6 +63,9 @@ async function captureStills() {
   await gotoShot(desktop, "/pt", "d-00-landing");
   await gotoShot(phone, "/pt", "m-00-landing");
   await gotoShot(desktop, "/pt/planos", "d-01-planos");
+  await gotoShot(phone, "/pt/planos", "m-01-planos");
+  await gotoShot(desktop, "/pt/planos/diamante", "d-01b-diamante-form");
+  await gotoShot(phone, "/pt/planos/diamante", "m-01b-diamante-form");
   await gotoShot(desktop, "/pt/login", "d-02-login");
   await gotoShot(desktop, "/pt/registo", "d-03-registo");
   await gotoShot(desktop, "/pt/contacto", "d-04-contacto");
@@ -90,6 +93,7 @@ async function captureStills() {
   await page.context().clearCookies();
   await login(page, "admin@fcprivatedriver.demo");
   await gotoShot(page, "/pt/admin", "d-30-admin");
+  await gotoShot(page, "/pt/admin/diamante", "d-30b-clientes-diamante");
   await gotoShot(page, "/pt/admin/clientes", "d-31-clientes");
   await gotoShot(page, "/pt/admin/planos", "d-32-planos");
   await gotoShot(page, "/pt/admin/viagens", "d-33-viagens");
@@ -151,29 +155,7 @@ async function publishToRepo() {
   if (fs.existsSync(GIF)) fs.copyFileSync(GIF, path.join(repoDir, "flow-phone.gif"));
   if (fs.existsSync(WEBM)) fs.copyFileSync(WEBM, path.join(repoDir, "flow.webm"));
 
-  const changelog = `# FC Private Driver — PR ${PR}
-
-## Changelog
-- Nova plataforma FC Private Driver (PWA) por subscrição mensal de minutos
-- Landing, registo/login, confirmação de e-mail, perfil e hábitos
-- Planos editáveis, área de cliente com saldo de minutos
-- Pedido/agendamento de viagens, área de motorista e painel admin
-- Stripe (webhooks), Multibanco/MB WAY (estrutura), ledger de minutos
-
-## Novas funcionalidades
-- Planos Privado (300 min) e Privado Plus (600 min)
-- Contabilização ao minuto com mínimo e tolerância configuráveis
-- Painel admin para preços, contactos, textos e motoristas
-- PWA instalável no telemóvel
-
-## Provas visuais
-Ver \`docs/pr-proof/pr-${PR}/screenshots-phone/\` e \`flow-phone.gif\`.
-`;
-  fs.writeFileSync(path.join(repoDir, "CHANGELOG.md"), changelog);
-  fs.writeFileSync(
-    path.join(process.cwd(), "docs", "changelogs", `pr-${PR}.md`),
-    changelog,
-  );
+  // Changelog is maintained in docs/changelogs/pr-<N>.md — do not overwrite here.
   console.log("published", repoDir);
 }
 
