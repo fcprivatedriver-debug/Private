@@ -6,7 +6,7 @@ import { formatMoney } from "@/lib/money";
 import { ContactForm } from "@/components/landing/ContactForm";
 
 type Props = {
-  settings: SiteSettings;
+  settings: SiteSettings | null;
   plans: Plan[];
   locale: string;
 };
@@ -14,9 +14,14 @@ type Props = {
 export async function LandingPage({ settings, plans, locale }: Props) {
   const t = await getTranslations("home");
   const isPt = locale.startsWith("pt");
-  const heroTitle = isPt ? settings.heroTitlePt : settings.heroTitleEn;
-  const heroSubtitle = isPt ? settings.heroSubtitlePt : settings.heroSubtitleEn;
-  const heroImage = settings.heroImageUrl || BRAND.heroImage;
+  const heroTitle = (isPt ? settings?.heroTitlePt : settings?.heroTitleEn) || BRAND.tagline;
+  const heroSubtitle =
+    (isPt ? settings?.heroSubtitlePt : settings?.heroSubtitleEn) ||
+    "Escolha o seu plano mensal, marque as suas viagens e deixe o resto connosco.";
+  const heroImage = settings?.heroImageUrl || BRAND.heroImage;
+  const supportEmail = settings?.supportEmail || BRAND.email;
+  const supportPhone = settings?.supportPhone || BRAND.phoneDisplay;
+  const whatsapp = settings?.whatsappNumber || BRAND.phoneE164;
 
   return (
     <>
@@ -157,15 +162,19 @@ export async function LandingPage({ settings, plans, locale }: Props) {
               <div className="card-soft">
                 <p style={{ margin: "0 0 0.5rem" }}>
                   <strong>E-mail:</strong>{" "}
-                  <a href={`mailto:${settings.supportEmail}`}>{settings.supportEmail}</a>
+                  <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
                 </p>
                 <p style={{ margin: "0 0 0.5rem" }}>
                   <strong>Telefone:</strong>{" "}
-                  <a href={`tel:${settings.supportPhone.replace(/\s/g, "")}`}>{settings.supportPhone}</a>
+                  <a href={`tel:${supportPhone.replace(/\s/g, "")}`}>{supportPhone}</a>
                 </p>
                 <p style={{ margin: 0 }}>
                   <strong>WhatsApp:</strong>{" "}
-                  <a href={BRAND.whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`https://wa.me/${whatsapp.replace(/[^\d]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {t("ctaWhatsapp")}
                   </a>
                 </p>

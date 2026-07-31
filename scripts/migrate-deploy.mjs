@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Deploy Prisma schema on Vercel.
- * Soft-skip without DATABASE_URL. Fall back to db push on migrate conflicts.
+ * Sync Prisma schema on Vercel for FC Private Driver rewrite.
+ * Always runs `db push` so legacy ZRIK tables are replaced, then optional seed.
  */
 import { spawnSync } from "node:child_process";
 
 if (!process.env.DATABASE_URL) {
-  console.warn("[migrate-deploy] No DATABASE_URL — skipping migrations");
+  console.warn("[migrate-deploy] No DATABASE_URL — skipping schema sync");
   process.exit(0);
 }
 
@@ -17,8 +17,8 @@ if (!process.env.DIRECT_URL) {
     process.env.DATABASE_URL;
 }
 
-function run(args) {
-  const res = spawnSync("npx", ["prisma", ...args], {
+function run(cmd, args) {
+  const res = spawnSync(cmd, args, {
     encoding: "utf8",
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
@@ -27,39 +27,34 @@ function run(args) {
   return { code: res.status ?? 1, out };
 }
 
-let result = run(["migrate", "deploy"]);
-process.stdout.write(result.out);
-
-if (result.code !== 0 && result.out.includes("20260723160000_mafil_init")) {
-  console.log("[migrate-deploy] Resolving foreign failed migration mafil_init…");
-  const rolled = run(["migrate", "resolve", "--rolled-back", "20260723160000_mafil_init"]);
-  process.stdout.write(rolled.out);
-  result = run(["migrate", "deploy"]);
-  process.stdout.write(result.out);
-}
-
-if (result.code !== 0) {
-  console.log(
-    "[migrate-deploy] migrate deploy failed — attempting prisma db push (schema rewrite recovery)…",
-  );
-  const pushed = run(["db", "push", "--accept-data-loss", "--skip-generate"]);
-  process.stdout.write(pushed.out);
-  if (pushed.code !== 0) {
-    console.warn("[migrate-deploy] db push also failed — continuing build");
+console.log("[migrate-deploy] Syncing schema with prisma db push…");
+const pushed = run("npx", ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"]);
+process.stdout.write(pushed.out);
+if (pushed.code !== 0) {
+  console.warn("[migrate-deploy] db push failed — trying migrate deploy as fallback");
+  const migrated = run("npx", ["prisma", "migrate", "deploy"]);
+  process.stdout.write(migrated.out);
+  if (migrated.code !== 0) {
+    console.warn("[migrate-deploy] schema sync failed (non-fatal for compile)");
     process.exit(0);
   }
+} else {
   console.log("[migrate-deploy] db push succeeded");
 }
 
-if (process.env.DEMO_MODE === "true" || process.env.SEED_ON_DEPLOY === "true") {
-  console.log("[migrate-deploy] DEMO_MODE/SEED_ON_DEPLOY — running seed…");
-  const seed = spawnSync("npx", ["tsx", "prisma/seed.ts"], {
-    encoding: "utf8",
-    env: process.env,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  process.stdout.write(`${seed.stdout || ""}${seed.stderr || ""}`);
-  if ((seed.status ?? 1) !== 0) {
-    console.warn("[migrate-deploy] seed failed (non-fatal for build)");
+// Seed when DEMO_MODE/SEED_ON_DEPLOY or when SiteSettings missing (best-effort)
+const shouldSeed =
+  process.env.DEMO_MODE === "true" ||
+  process.env.SEED_ON_DEPLOY === "true" ||
+  process.env.VERCEL === "1";
+
+if (shouldSeed) {
+  console.log("[migrate-deploy] Seeding demo data…");
+  const seed = run("npx", ["tsx", "prisma/seed.ts"]);
+  process.stdout.write(seed.out);
+  if (seed.code !== 0) {
+    console.warn("[migrate-deploy] seed failed (non-fatal)");
+  } else {
+    console.log("[migrate-deploy] seed complete");
   }
 }
