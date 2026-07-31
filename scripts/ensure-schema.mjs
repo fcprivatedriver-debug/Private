@@ -4,6 +4,8 @@
  * Never fails the build: logs warnings and exits 0 so `next build` can proceed.
  * Prefer raw DDL over `prisma db push` — shared Neon often has foreign schemas
  * (Mafil/Mel) that make push fail while SELECT 1 still works.
+ *
+ * PrismaNeonHttp does not support transactions — seed with upserts, not createMany.
  * Runtime repair also lives in /api/health + vehicle-classes as a safety net.
  */
 import { PrismaClient } from "@prisma/client";
@@ -102,11 +104,49 @@ async function createVehicleClassTable(prisma) {
   );
 }
 
+function sqlString(value) {
+  if (value == null) return "NULL";
+  return `'${String(value).replace(/'/g, "''")}'`;
+}
+
 async function seedClasses(prisma) {
-  await prisma.vehicleClass.createMany({
-    data: DEFAULT_CLASSES,
-    skipDuplicates: true,
-  });
+  // Raw INSERT — PrismaNeonHttp rejects createMany (transactions).
+  for (const row of DEFAULT_CLASSES) {
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO "VehicleClass" (
+        "id","code","namePt","nameEn","descriptionPt","descriptionEn",
+        "minPassengers","maxPassengers","maxLuggage","iconKey","sortOrder",
+        "active","createdAt","updatedAt"
+      ) VALUES (
+        ${sqlString(row.id)},
+        ${sqlString(row.code)},
+        ${sqlString(row.namePt)},
+        ${sqlString(row.nameEn)},
+        ${sqlString(row.descriptionPt)},
+        ${sqlString(row.descriptionEn)},
+        ${row.minPassengers},
+        ${row.maxPassengers},
+        ${row.maxLuggage},
+        ${sqlString(row.iconKey)},
+        ${row.sortOrder},
+        true,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+      ON CONFLICT ("code") DO UPDATE SET
+        "namePt" = EXCLUDED."namePt",
+        "nameEn" = EXCLUDED."nameEn",
+        "descriptionPt" = EXCLUDED."descriptionPt",
+        "descriptionEn" = EXCLUDED."descriptionEn",
+        "minPassengers" = EXCLUDED."minPassengers",
+        "maxPassengers" = EXCLUDED."maxPassengers",
+        "maxLuggage" = EXCLUDED."maxLuggage",
+        "iconKey" = EXCLUDED."iconKey",
+        "sortOrder" = EXCLUDED."sortOrder",
+        "active" = true,
+        "updatedAt" = CURRENT_TIMESTAMP
+    `);
+  }
 }
 
 async function main() {
