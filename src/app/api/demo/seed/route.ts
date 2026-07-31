@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 /**
  * POST /api/demo/seed
  * Authorization: Bearer <CRON_SECRET|AUTH_SECRET>
- * Syncs schema (db push) then ensures demo accounts/plans.
+ *
+ * 1) Applies FC Private Driver schema via SQL migration (rewrites public schema)
+ * 2) Seeds demo plans + accounts
  */
 export async function POST(request: Request) {
   const auth = request.headers.get("authorization") || "";
@@ -24,31 +24,61 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let pushOut = "";
-  try {
-    const { stdout, stderr } = await execFileAsync(
-      "npx",
-      ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"],
-      {
-        env: process.env,
-        cwd: process.cwd(),
-        timeout: 120_000,
-        maxBuffer: 2_000_000,
-      },
-    );
-    pushOut = `${stdout}\n${stderr}`.slice(-3000);
-  } catch (err) {
-    pushOut = err instanceof Error ? err.message : "db push failed";
-    // continue — maybe schema already ok
-  }
-
   const prisma = new PrismaClient();
+  const steps: string[] = [];
+
   try {
+    // Detect legacy / missing schema
+    let needsSchema = false;
+    try {
+      await prisma.$queryRaw`SELECT 1 FROM "SiteSettings" LIMIT 1`;
+    } catch {
+      needsSchema = true;
+    }
+
+    if (needsSchema) {
+      steps.push("applying-schema");
+      const migrationPath = path.join(
+        process.cwd(),
+        "prisma/migrations/20260731090000_fc_private_driver_init/migration.sql",
+      );
+      const sql = await readFile(migrationPath, "utf8");
+
+      // Replace public schema so legacy ZRIK objects cannot block CREATE TYPE/TABLE
+      await prisma.$executeRawUnsafe(`
+        DROP SCHEMA IF EXISTS public CASCADE;
+        CREATE SCHEMA public;
+        GRANT ALL ON SCHEMA public TO PUBLIC;
+      `);
+
+      // Split on statements; Prisma migration SQL is semicolon-separated
+      const statements = sql
+        .split(";")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0 && !s.startsWith("--"));
+
+      for (const statement of statements) {
+        // Skip nested schema create already handled
+        if (/^CREATE SCHEMA/i.test(statement)) continue;
+        await prisma.$executeRawUnsafe(statement);
+      }
+      steps.push(`schema-statements:${statements.length}`);
+    } else {
+      steps.push("schema-ok");
+    }
+
     const passwordHash = await hash("fcpd123", 12);
 
     await prisma.siteSettings.upsert({
       where: { id: "default" },
-      create: { id: "default", demoMode: true },
+      create: {
+        id: "default",
+        demoMode: true,
+        brandName: "FC Private Driver",
+        supportEmail: "fcprivatedriver@gmail.com",
+        supportPhone: "+351 933 239 595",
+        whatsappNumber: "+351933239595",
+      },
       update: { demoMode: true },
     });
 
@@ -83,7 +113,7 @@ export async function POST(request: Request) {
         sortOrder: 2,
         featuresJson: JSON.stringify(["600 minutos mensais", "Renovação mensal"]),
       },
-      update: { active: true, priceCents: 19900, monthlyMinutes: 600 },
+      update: { active: true },
     });
 
     for (const pkg of [
@@ -94,7 +124,7 @@ export async function POST(request: Request) {
       await prisma.extraMinutePackage.upsert({
         where: { code: pkg.code },
         create: pkg,
-        update: { priceCents: pkg.priceCents, minutes: pkg.minutes, active: true },
+        update: { active: true, priceCents: pkg.priceCents },
       });
     }
 
@@ -123,7 +153,7 @@ export async function POST(request: Request) {
         emailVerified: new Date(),
         passwordHash,
       },
-      update: { passwordHash, status: "ACTIVE", emailVerified: new Date(), role: "CUSTOMER", name: "Ana Silva" },
+      update: { passwordHash, status: "ACTIVE", emailVerified: new Date(), role: "CUSTOMER" },
     });
 
     const driver = await prisma.user.upsert({
@@ -152,7 +182,7 @@ export async function POST(request: Request) {
         profileComplete: true,
         habitsComplete: true,
       },
-      update: { profileComplete: true, fullName: "Ana Silva" },
+      update: { profileComplete: true },
     });
 
     await prisma.driverProfile.upsert({
@@ -169,8 +199,7 @@ export async function POST(request: Request) {
     const driverProfile = await prisma.driverProfile.findUniqueOrThrow({
       where: { userId: driver.id },
     });
-    const vehicleCount = await prisma.vehicle.count({ where: { driverId: driverProfile.id } });
-    if (vehicleCount === 0) {
+    if ((await prisma.vehicle.count({ where: { driverId: driverProfile.id } })) === 0) {
       await prisma.vehicle.create({
         data: {
           driverId: driverProfile.id,
@@ -183,10 +212,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const existingSub = await prisma.subscription.findFirst({
-      where: { userId: customer.id, status: "ACTIVE" },
-    });
-    if (!existingSub) {
+    if (!(await prisma.subscription.findFirst({ where: { userId: customer.id, status: "ACTIVE" } }))) {
       const periodStart = new Date();
       periodStart.setDate(1);
       periodStart.setHours(0, 0, 0, 0);
@@ -207,20 +233,21 @@ export async function POST(request: Request) {
       });
     }
 
+    steps.push("seeded");
     return NextResponse.json({
       ok: true,
+      steps,
       admin: admin.email,
       customer: customer.email,
       driver: driver.email,
       password: "fcpd123",
-      pushOut: pushOut.slice(-800),
     });
   } catch (err) {
     return NextResponse.json(
       {
         ok: false,
+        steps,
         error: err instanceof Error ? err.message : "seed failed",
-        pushOut: pushOut.slice(-800),
       },
       { status: 500 },
     );
@@ -231,6 +258,6 @@ export async function POST(request: Request) {
 
 export async function GET() {
   return NextResponse.json({
-    hint: "POST with Authorization: Bearer <CRON_SECRET> to sync schema + seed demo data",
+    hint: "POST with Authorization: Bearer <CRON_SECRET> to apply schema + seed demo data",
   });
 }
