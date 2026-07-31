@@ -24,8 +24,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const prisma = new PrismaClient();
+  const direct =
+    process.env.DIRECT_URL ||
+    process.env.DATABASE_URL_UNPOOLED ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.DATABASE_URL;
+
+  const prisma = new PrismaClient(
+    direct ? { datasources: { db: { url: direct } } } : undefined,
+  );
   const steps: string[] = [];
+  steps.push(direct?.includes("pooler") ? "using-pooler-url" : "using-direct-url");
 
   try {
     // Detect legacy / missing schema
