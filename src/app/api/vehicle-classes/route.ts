@@ -22,23 +22,31 @@ const upsertSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const locale = searchParams.get("locale") || "pt";
-  const activeOnly = searchParams.get("all") !== "true";
+  try {
+    const { searchParams } = new URL(request.url);
+    const locale = searchParams.get("locale") || "pt";
+    const activeOnly = searchParams.get("all") !== "true";
 
-  // Public read of active classes; admins can request all with ?all=true
-  if (!activeOnly) {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return apiError("FORBIDDEN", "Sem permissão", 403);
+    if (!activeOnly) {
+      const session = await auth();
+      if (!session?.user || session.user.role !== "ADMIN") {
+        return apiError("FORBIDDEN", "Sem permissão", 403);
+      }
     }
-  }
 
-  const classes = await listVehicleClasses({
-    activeOnly,
-    locale,
-  });
-  return Response.json({ classes });
+    const classes = await listVehicleClasses({
+      activeOnly,
+      locale,
+    });
+    return Response.json({ classes });
+  } catch (error) {
+    console.error("[vehicle-classes] GET failed", error);
+    return apiError(
+      "INTERNAL",
+      "Não foi possível carregar as classes de veículo.",
+      500,
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -55,6 +63,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof DomainError) return apiError(error.code, error.message);
     if (error instanceof z.ZodError) return apiError("VALIDATION", error.message);
-    throw error;
+    console.error("[vehicle-classes] POST failed", error);
+    return apiError("INTERNAL", "Não foi possível criar a classe de veículo.", 500);
   }
 }

@@ -22,9 +22,13 @@ export async function GET() {
         process.env.DATABASE_URL,
     ),
     database: "unknown" as "ok" | "error" | "unknown",
+    vehicleClasses: "unknown" as "ok" | "error" | "unknown",
+    vehicleClassCount: null as number | null,
+    vehicleClassError: null as string | null,
     googleMapsConfigured: isGoogleMapsConfigured(),
     googleMapsKeySource: getGoogleMapsApiKeySource(),
     googleMapsAcceptedEnvNames: [...GOOGLE_MAPS_ENV_NAMES],
+    prismaAdapter: "@prisma/adapter-neon",
   };
 
   try {
@@ -32,6 +36,16 @@ export async function GET() {
     checks.database = "ok";
   } catch {
     checks.database = "error";
+    checks.ok = false;
+  }
+
+  try {
+    checks.vehicleClassCount = await prisma.vehicleClass.count();
+    checks.vehicleClasses = "ok";
+  } catch (error) {
+    checks.vehicleClasses = "error";
+    checks.vehicleClassError =
+      error instanceof Error ? `${error.name}: ${error.message.slice(0, 180)}` : "unknown";
     checks.ok = false;
   }
 
