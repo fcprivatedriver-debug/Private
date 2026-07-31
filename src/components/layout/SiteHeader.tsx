@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link as LocaleLink } from "@/i18n/navigation";
-import { auth, signOut } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
+import { getSessionSafe } from "@/lib/session-safe";
 import { routing } from "@/i18n/routing";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 
@@ -23,7 +24,7 @@ function LocaleSwitcher({ locale }: { locale: string }) {
 }
 
 export async function SiteHeader() {
-  const session = await auth();
+  const session = await getSessionSafe();
   const role = session?.user?.role;
   const locale = await getLocale();
   const t = await getTranslations("nav");

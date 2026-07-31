@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { auth } from "@/lib/auth";
+import { getSessionSafe } from "@/lib/session-safe";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ZeluWordmark } from "@/components/layout/BrandLogo";
 import {
@@ -17,7 +17,7 @@ export default async function HomePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("home");
-  const session = await auth();
+  const session = await getSessionSafe();
   const role = session?.user?.role;
   const isPt = locale.startsWith("pt");
 
@@ -44,7 +44,6 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      {/* Photo IS the scene — full-bleed atmosphere, content on top */}
       <section
         className="hero hero-scene"
         style={{ ["--hero-overlay" as string]: String(PRODUCTION_OVERLAY) }}
