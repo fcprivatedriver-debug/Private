@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 /**
  * POST /api/demo/seed
  * Authorization: Bearer <CRON_SECRET|AUTH_SECRET>
+ * Syncs schema (db push) then ensures demo accounts/plans.
  */
 export async function POST(request: Request) {
   const auth = request.headers.get("authorization") || "";
@@ -19,18 +24,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  let pushOut = "";
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      "npx",
+      ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"],
+      {
+        env: process.env,
+        cwd: process.cwd(),
+        timeout: 120_000,
+        maxBuffer: 2_000_000,
+      },
+    );
+    pushOut = `${stdout}\n${stderr}`.slice(-3000);
+  } catch (err) {
+    pushOut = err instanceof Error ? err.message : "db push failed";
+    // continue — maybe schema already ok
+  }
+
   const prisma = new PrismaClient();
   try {
     const passwordHash = await hash("fcpd123", 12);
 
-    // Ensure settings
     await prisma.siteSettings.upsert({
       where: { id: "default" },
       create: { id: "default", demoMode: true },
       update: { demoMode: true },
     });
 
-    // Plans
     const privado = await prisma.plan.upsert({
       where: { code: "privado" },
       create: {
@@ -88,7 +109,7 @@ export async function POST(request: Request) {
         emailVerified: new Date(),
         passwordHash,
       },
-      update: { passwordHash, status: "ACTIVE", emailVerified: new Date() },
+      update: { passwordHash, status: "ACTIVE", emailVerified: new Date(), role: "ADMIN" },
     });
 
     const customer = await prisma.user.upsert({
@@ -101,19 +122,8 @@ export async function POST(request: Request) {
         status: "ACTIVE",
         emailVerified: new Date(),
         passwordHash,
-        customerProfile: {
-          create: {
-            fullName: "Ana Silva",
-            addressLine: "Av. da Liberdade 100",
-            postalCode: "1250-096",
-            city: "Lisboa",
-            phone: "+351910000001",
-            profileComplete: true,
-            habitsComplete: true,
-          },
-        },
       },
-      update: { passwordHash, status: "ACTIVE", emailVerified: new Date() },
+      update: { passwordHash, status: "ACTIVE", emailVerified: new Date(), role: "CUSTOMER", name: "Ana Silva" },
     });
 
     const driver = await prisma.user.upsert({
@@ -126,27 +136,10 @@ export async function POST(request: Request) {
         status: "ACTIVE",
         emailVerified: new Date(),
         passwordHash,
-        driverProfile: {
-          create: {
-            phone: "+351933239595",
-            active: true,
-            photoUrl: "/brand/fc-icon.svg",
-            vehicles: {
-              create: {
-                make: "Mercedes-Benz",
-                model: "Classe E",
-                plate: "AA-00-FC",
-                color: "Preto",
-                seats: 4,
-              },
-            },
-          },
-        },
       },
-      update: { passwordHash, status: "ACTIVE", emailVerified: new Date() },
+      update: { passwordHash, status: "ACTIVE", emailVerified: new Date(), role: "DRIVER" },
     });
 
-    // Ensure customer profile + active subscription
     await prisma.customerProfile.upsert({
       where: { userId: customer.id },
       create: {
@@ -159,7 +152,7 @@ export async function POST(request: Request) {
         profileComplete: true,
         habitsComplete: true,
       },
-      update: { profileComplete: true },
+      update: { profileComplete: true, fullName: "Ana Silva" },
     });
 
     await prisma.driverProfile.upsert({
@@ -168,9 +161,27 @@ export async function POST(request: Request) {
         userId: driver.id,
         phone: "+351933239595",
         active: true,
+        photoUrl: "/brand/fc-icon.svg",
       },
       update: { active: true },
     });
+
+    const driverProfile = await prisma.driverProfile.findUniqueOrThrow({
+      where: { userId: driver.id },
+    });
+    const vehicleCount = await prisma.vehicle.count({ where: { driverId: driverProfile.id } });
+    if (vehicleCount === 0) {
+      await prisma.vehicle.create({
+        data: {
+          driverId: driverProfile.id,
+          make: "Mercedes-Benz",
+          model: "Classe E",
+          plate: "AA-00-FC",
+          color: "Preto",
+          seats: 4,
+        },
+      });
+    }
 
     const existingSub = await prisma.subscription.findFirst({
       where: { userId: customer.id, status: "ACTIVE" },
@@ -202,10 +213,15 @@ export async function POST(request: Request) {
       customer: customer.email,
       driver: driver.email,
       password: "fcpd123",
+      pushOut: pushOut.slice(-800),
     });
   } catch (err) {
     return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : "seed failed" },
+      {
+        ok: false,
+        error: err instanceof Error ? err.message : "seed failed",
+        pushOut: pushOut.slice(-800),
+      },
       { status: 500 },
     );
   } finally {
@@ -215,6 +231,6 @@ export async function POST(request: Request) {
 
 export async function GET() {
   return NextResponse.json({
-    hint: "POST with Authorization: Bearer <CRON_SECRET> to seed demo data",
+    hint: "POST with Authorization: Bearer <CRON_SECRET> to sync schema + seed demo data",
   });
 }
