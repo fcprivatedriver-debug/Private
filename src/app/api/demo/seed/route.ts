@@ -45,11 +45,10 @@ export async function POST(request: Request) {
       const sql = await readFile(migrationPath, "utf8");
 
       // Replace public schema so legacy ZRIK objects cannot block CREATE TYPE/TABLE
-      await prisma.$executeRawUnsafe(`
-        DROP SCHEMA IF EXISTS public CASCADE;
-        CREATE SCHEMA public;
-        GRANT ALL ON SCHEMA public TO PUBLIC;
-      `);
+      await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS public CASCADE`);
+      await prisma.$executeRawUnsafe(`CREATE SCHEMA public`);
+      await prisma.$executeRawUnsafe(`GRANT ALL ON SCHEMA public TO PUBLIC`);
+      await prisma.$executeRawUnsafe(`GRANT ALL ON SCHEMA public TO CURRENT_USER`);
 
       // Split on statements; Prisma migration SQL is semicolon-separated
       const statements = sql
