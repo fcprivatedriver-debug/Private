@@ -32,7 +32,7 @@ export function PlanTierGrid({
         const description = isPt ? plan.descriptionPt : plan.descriptionEn;
         const cta =
           (isPt ? plan.ctaLabelPt : plan.ctaLabelEn) ||
-          (plan.showPrice ? (isPt ? `Aderir ao ${name}` : `Join ${name}`) : isPt ? "Solicitar Proposta" : "Request a Proposal");
+          (plan.showPrice ? (isPt ? "Escolher plano" : "Choose plan") : isPt ? "Pedir proposta personalizada" : "Request a custom proposal");
         const accent = plan.accentColor || tier.accent;
         const isDiamond = plan.tier === "diamond" || !plan.showPrice;
 

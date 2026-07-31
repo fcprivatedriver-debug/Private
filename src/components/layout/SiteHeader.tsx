@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Link as LocaleLink, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { signOut } from "next-auth/react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { dashboardPathForRole } from "@/lib/auth-routes";
 import { useLocale } from "next-intl";
@@ -67,11 +66,6 @@ export function SiteHeader() {
               {t("dashboard")}
             </LocaleLink>
           )}
-          {role === "DRIVER" && (
-            <LocaleLink href="/motorista" onClick={() => setOpen(false)}>
-              {t("dashboard")}
-            </LocaleLink>
-          )}
           {role === "ADMIN" && (
             <LocaleLink href="/admin" onClick={() => setOpen(false)}>
               {t("admin")}
@@ -119,7 +113,10 @@ export function SiteHeader() {
             <LocaleLink href="/planos" aria-current={pathname === "/planos" ? "page" : undefined}>
               Planos
             </LocaleLink>
-            <LocaleLink href={dashboardHref} aria-current={pathname.startsWith(dashboardHref) ? "page" : undefined}>
+            <LocaleLink
+              href={dashboardHref}
+              aria-current={pathname.startsWith(dashboardHref) ? "page" : undefined}
+            >
               Painel
             </LocaleLink>
             <LocaleLink href="/contacto" aria-current={pathname === "/contacto" ? "page" : undefined}>

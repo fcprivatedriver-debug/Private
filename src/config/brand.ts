@@ -20,10 +20,10 @@ export const BRAND = {
   icon: "/brand/fc-icon.svg",
 } as const;
 
+/** Only used when NEXT_PUBLIC_DEMO_MODE=true */
 export const DEMO_ACCOUNTS = [
   { email: "admin@fcprivatedriver.demo", role: "ADMIN", label: "Administrador" },
   { email: "cliente@fcprivatedriver.demo", role: "CUSTOMER", label: "Cliente" },
-  { email: "motorista@fcprivatedriver.demo", role: "DRIVER", label: "Motorista" },
 ] as const;
 
-export const DEMO_PASSWORD = "fcpd123";
+export const DEMO_PASSWORD = "fcpd1234";

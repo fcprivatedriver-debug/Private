@@ -5,9 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { loginAction, type ActionState } from "@/actions/auth";
-import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "@/config/brand";
+import { ResendActivationForm } from "@/components/auth/ResendActivationForm";
 
 const initial: ActionState = {};
+const showDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 export function LoginForm() {
   const t = useTranslations("auth");
@@ -22,6 +23,9 @@ export function LoginForm() {
         <p className="page-lead">{t("loginHint")}</p>
 
         {state.error && <div className="alert alert-error">{state.error}</div>}
+        {state.email && state.error?.includes("e-mail") && (
+          <ResendActivationForm defaultEmail={state.email} compact />
+        )}
 
         <form action={action} className="panel">
           <input type="hidden" name="callbackUrl" value={callbackUrl} />
@@ -29,7 +33,15 @@ export function LoginForm() {
             <label className="label" htmlFor="email">
               {t("email")}
             </label>
-            <input className="input" id="email" name="email" type="email" required autoComplete="email" />
+            <input
+              className="input"
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              disabled={pending}
+            />
           </div>
           <div className="field">
             <label className="label" htmlFor="password">
@@ -42,6 +54,7 @@ export function LoginForm() {
               type="password"
               required
               autoComplete="current-password"
+              disabled={pending}
             />
           </div>
           <button className="btn btn-primary" type="submit" disabled={pending}>
@@ -62,16 +75,11 @@ export function LoginForm() {
           </Link>
         </p>
 
-        <div className="demo-hint">
-          <strong>Contas demo</strong> (password <code>{DEMO_PASSWORD}</code>):
-          <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.1rem" }}>
-            {DEMO_ACCOUNTS.map((a) => (
-              <li key={a.email}>
-                {a.label}: {a.email}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {showDemo ? (
+          <p className="muted" style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
+            Modo demonstração ativo.
+          </p>
+        ) : null}
       </div>
     </section>
   );

@@ -53,12 +53,16 @@ export default async function AtivarPage({ params, searchParams }: Props) {
 
         {result?.success && (
           <>
-            <div className="alert alert-success" style={{ whiteSpace: "pre-line" }}>
-              {result.success}
+            <div className="alert alert-success">{result.success}</div>
+            <p className="page-lead">Já pode iniciar sessão e escolher o seu plano.</p>
+            <div className="cta-row" style={{ marginTop: "1rem" }}>
+              <Link href="/planos" className="btn btn-primary">
+                Escolher plano
+              </Link>
+              <Link href="/login" className="btn btn-secondary">
+                {t("loginLink")}
+              </Link>
             </div>
-            <Link href="/login" className="btn btn-primary">
-              {t("loginLink")}
-            </Link>
           </>
         )}
       </div>

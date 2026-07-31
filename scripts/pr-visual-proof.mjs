@@ -20,7 +20,7 @@ const OUT = `/opt/cursor/artifacts/screenshots/pr-${PR}`;
 const VIDEO_DIR = `/opt/cursor/artifacts/pr-${PR}-video`;
 const GIF = `/opt/cursor/artifacts/pr-${PR}-flow.gif`;
 const WEBM = `/opt/cursor/artifacts/pr-${PR}-flow.webm`;
-const PASSWORD = "fcpd123";
+const PASSWORD = "fcpd1234";
 
 fs.mkdirSync(OUT, { recursive: true });
 fs.rmSync(VIDEO_DIR, { recursive: true, force: true });
@@ -87,7 +87,7 @@ async function captureStills() {
 
   // Driver
   await login(page, "motorista@fcprivatedriver.demo");
-  await gotoShot(page, "/pt/motorista", "d-20-motorista");
+  
 
   // Admin
   await page.context().clearCookies();
@@ -97,7 +97,7 @@ async function captureStills() {
   await gotoShot(page, "/pt/admin/clientes", "d-31-clientes");
   await gotoShot(page, "/pt/admin/planos", "d-32-planos");
   await gotoShot(page, "/pt/admin/viagens", "d-33-viagens");
-  await gotoShot(page, "/pt/admin/motoristas", "d-34-motoristas");
+  
   await gotoShot(page, "/pt/admin/pagamentos", "d-35-pagamentos");
   await gotoShot(page, "/pt/admin/configuracoes", "d-36-config");
 

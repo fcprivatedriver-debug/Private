@@ -21,21 +21,13 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    id: string;
-    role: Role;
-  }
-}
-
 const credentialsSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  // Credentials + JWT — avoid PrismaAdapter (session/cookie conflicts)
   providers: [
     Credentials({
       name: "credentials",
@@ -52,6 +44,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         if (!user?.passwordHash) return null;
         if (user.status === "SUSPENDED") return null;
+        // Full access requires verified email (admins always allowed)
+        if (user.role !== "ADMIN" && !user.emailVerified) return null;
 
         const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
         if (!valid) return null;

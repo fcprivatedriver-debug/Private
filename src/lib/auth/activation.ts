@@ -2,9 +2,11 @@ import { randomBytes } from "crypto";
 import { addHours } from "date-fns";
 import { prisma } from "@/lib/db";
 import { APP_URL } from "@/config/constants";
-import { sendEmail, type SendEmailResult } from "@/lib/notifications";
+import { sendEmail, emailShell, type SendEmailResult } from "@/lib/notifications";
 
-export const ACTIVATION_SUBJECT = "Bem-vindo à FC Private Driver — Ative a sua conta";
+export const ACTIVATION_SUBJECT = "Confirme a sua conta — FC Private Driver";
+export const ACTIVATION_SUBJECT_EN = "Confirm your account — FC Private Driver";
+export const ACTIVATED_SUBJECT = "Conta ativada — FC Private Driver";
 export const ACTIVATION_TTL_HOURS = 24;
 
 export type ActivationSendResult = {
@@ -36,6 +38,15 @@ export function activationLink(token: string, locale = "pt") {
 export function buildActivationEmailHtml(name: string, token: string, locale = "pt") {
   const href = activationLink(token, locale);
   const safeName = escapeHtml(name || "Cliente");
+  const isPt = !locale.startsWith("en");
+
+  if (!isPt) {
+    return emailShell(
+      "Confirm your account",
+      `Hello, ${safeName}.<br/><br/>Thank you for creating your account with FC Private Driver.<br/><br/>To activate your account, click the button below.`,
+      { label: "Activate account", href },
+    );
+  }
 
   return `<!doctype html>
 <html lang="pt">
@@ -45,17 +56,17 @@ export function buildActivationEmailHtml(name: string, token: string, locale = "
       <div style="font-size:12px;letter-spacing:.18em;color:#0A4F5C;font-weight:700;margin-bottom:22px">
         FC PRIVATE DRIVER
       </div>
-      <p style="font-size:17px;line-height:1.55;margin:0 0 16px">Olá, ${safeName},</p>
+      <p style="font-size:17px;line-height:1.55;margin:0 0 16px">Olá, ${safeName}.</p>
       <p style="font-size:16px;line-height:1.6;margin:0 0 16px;color:#333">
-        Obrigado por se registar na FC Private Driver.
+        Obrigado por criar a sua conta na FC Private Driver.
       </p>
       <p style="font-size:16px;line-height:1.6;margin:0 0 24px;color:#333">
-        Para concluir o registo, confirme o seu endereço de e-mail clicando no botão abaixo.
+        Para ativar a sua conta, clique no botão abaixo.
       </p>
       <p style="margin:0 0 28px">
         <a href="${href}"
            style="display:inline-block;background:#0A4F5C;color:#ffffff;padding:14px 26px;border-radius:6px;text-decoration:none;font-weight:600;font-family:system-ui,-apple-system,sans-serif;font-size:15px">
-          Ativar Conta
+          Ativar conta
         </a>
       </p>
       <p style="font-size:14px;line-height:1.55;margin:0 0 8px;color:#555">
@@ -75,7 +86,7 @@ export function buildActivationEmailHtml(name: string, token: string, locale = "
         Equipa FC Private Driver
       </p>
       <p style="margin-top:32px;font-size:12px;color:#888">
-        fcprivatedriver@gmail.com · +351 933 239 595
+        Apoio: fcprivatedriver@gmail.com · +351 933 239 595
       </p>
     </div>
   </div>
@@ -142,4 +153,22 @@ export async function issueAndSendActivationEmail(opts: {
   }
 
   return { token, email: emailResult };
+}
+
+export async function sendAccountActivatedEmail(opts: {
+  email: string;
+  name: string;
+}) {
+  return sendEmail({
+    to: opts.email,
+    subject: ACTIVATED_SUBJECT,
+    html: emailShell(
+      "Conta ativada",
+      `Olá, ${escapeHtml(opts.name)}.<br/><br/>A sua conta foi ativada com sucesso. Já pode escolher o seu plano e começar a utilizar o serviço.`,
+      {
+        label: "Escolher plano",
+        href: `${APP_URL}/pt/planos`,
+      },
+    ),
+  });
 }

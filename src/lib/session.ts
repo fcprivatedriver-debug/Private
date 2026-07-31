@@ -21,8 +21,6 @@ export function dashboardPathForRole(role: Role) {
   switch (role) {
     case "ADMIN":
       return "/pt/admin";
-    case "DRIVER":
-      return "/pt/motorista";
     default:
       return "/pt/cliente";
   }

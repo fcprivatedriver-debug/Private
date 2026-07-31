@@ -8,14 +8,14 @@ import {
 
 describe("activation email", () => {
   it("uses the required subject and 24h TTL", () => {
-    expect(ACTIVATION_SUBJECT).toBe("Bem-vindo à FC Private Driver — Ative a sua conta");
+    expect(ACTIVATION_SUBJECT).toBe("Confirme a sua conta — FC Private Driver");
     expect(ACTIVATION_TTL_HOURS).toBe(24);
   });
 
   it("builds HTML with name, CTA and plain link", () => {
     const html = buildActivationEmailHtml("Maria Silva", "abc123token");
-    expect(html).toContain("Olá, Maria Silva,");
-    expect(html).toContain("Ativar Conta");
+    expect(html).toContain("Olá, Maria Silva.");
+    expect(html).toContain("Ativar conta");
     expect(html).toContain("Este link expira ao fim de 24 horas.");
     expect(html).toContain("Equipa FC Private Driver");
     expect(html).toContain(activationLink("abc123token"));

@@ -1,11 +1,11 @@
 import type { Role } from "@prisma/client";
 
-export function dashboardPathForRole(role: Role | string) {
+/** Home path after login for each role (Cliente + Administrador only). */
+export function dashboardPathForRole(role: Role | string): string {
   switch (role) {
     case "ADMIN":
       return "/admin";
-    case "DRIVER":
-      return "/motorista";
+    case "CUSTOMER":
     default:
       return "/cliente";
   }

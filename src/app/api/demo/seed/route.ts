@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       steps.push("schema-ok");
     }
 
-    const passwordHash = await hash("fcpd123", 12);
+    const passwordHash = await hash("fcpd1234", 12);
 
     await prisma.siteSettings.upsert({
       where: { id: "default" },
@@ -163,8 +163,8 @@ export async function POST(request: Request) {
         equivalentHours: 2,
         sortOrder: 1,
         accentColor: "#8B5E3C",
-        ctaLabelPt: "Aderir ao Bronze",
-        ctaLabelEn: "Join Bronze",
+        ctaLabelPt: "Escolher plano",
+        ctaLabelEn: "Choose plan",
         featuresJson: JSON.stringify([
           "120 minutos mensais",
           "Ideal para utilização ocasional",
@@ -181,13 +181,13 @@ export async function POST(request: Request) {
         descriptionPt: "Ideal para utilização frequente",
         descriptionEn: "Ideal for frequent use",
         showPrice: true,
-        priceCents: 11900,
+        priceCents: 9900,
         monthlyMinutes: 300,
         equivalentHours: 5,
         sortOrder: 2,
         accentColor: "#6B7280",
-        ctaLabelPt: "Aderir ao Prata",
-        ctaLabelEn: "Join Silver",
+        ctaLabelPt: "Escolher plano",
+        ctaLabelEn: "Choose plan",
         featuresJson: JSON.stringify([
           "300 minutos mensais",
           "Prioridade nas marcações",
@@ -204,13 +204,13 @@ export async function POST(request: Request) {
         descriptionPt: "Ideal para empresários e clientes frequentes",
         descriptionEn: "Ideal for business and frequent travellers",
         showPrice: true,
-        priceCents: 19900,
+        priceCents: 29900,
         monthlyMinutes: 600,
         equivalentHours: 10,
         sortOrder: 3,
         accentColor: "#B45309",
-        ctaLabelPt: "Aderir ao Ouro",
-        ctaLabelEn: "Join Gold",
+        ctaLabelPt: "Escolher plano",
+        ctaLabelEn: "Choose plan",
         featuresJson: JSON.stringify([
           "600 minutos mensais",
           "Prioridade elevada",
@@ -234,8 +234,8 @@ export async function POST(request: Request) {
         equivalentHours: null as number | null,
         sortOrder: 4,
         accentColor: "#0A4F5C",
-        ctaLabelPt: "Solicitar Proposta",
-        ctaLabelEn: "Request a Proposal",
+        ctaLabelPt: "Pedir proposta personalizada",
+        ctaLabelEn: "Request a custom proposal",
         featuresJson: JSON.stringify([
           "Empresas",
           "Hotéis",
@@ -401,7 +401,7 @@ export async function POST(request: Request) {
       admin: admin.email,
       customer: customer.email,
       driver: driver.email,
-      password: "fcpd123",
+      password: "fcpd1234",
     });
   } catch (err) {
     return NextResponse.json(

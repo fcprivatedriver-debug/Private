@@ -5,7 +5,7 @@ import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { notify, sendEmail } from "@/lib/notifications";
-import { issueAndSendActivationEmail } from "@/lib/auth/activation";
+import { issueAndSendActivationEmail, sendAccountActivatedEmail } from "@/lib/auth/activation";
 import { auth, signIn } from "@/lib/auth";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
@@ -51,12 +51,19 @@ export async function registerAction(
   });
 
   if (!parsed.success) {
+    const msg = parsed.error.issues[0]?.message || "";
+    if (msg.includes("coincidem") || parsed.error.issues.some((i) => i.path.includes("confirmPassword"))) {
+      return { error: "As palavras-passe não coincidem." };
+    }
+    if (parsed.error.issues.some((i) => i.path.includes("password"))) {
+      return { error: "A palavra-passe deve ter pelo menos 8 caracteres." };
+    }
     return { error: "Preencha todos os campos corretamente e aceite os termos." };
   }
 
   const email = parsed.data.email.toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return { error: "Já existe uma conta com este e-mail." };
+  if (existing) return { error: "Este email já está registado." };
 
   const passwordHash = await hash(parsed.data.password, 12);
   const user = await prisma.user.create({
@@ -103,8 +110,7 @@ export async function registerAction(
   }
 
   return {
-    success:
-      "Conta criada. Enviámos um e-mail com o botão «Ativar Conta». Confirme o endereço antes de contratar um plano. O link expira em 24 horas.",
+    success: "Enviámos um email para confirmar a sua conta.",
     email,
   };
 }
@@ -117,17 +123,33 @@ export async function loginAction(
   const password = String(formData.get("password") || "");
   const requestedCallback = String(formData.get("callbackUrl") || "").trim();
 
+  if (!email || !password) {
+    return { error: "E-mail ou palavra-passe incorretos." };
+  }
+
   const existing = await prisma.user.findUnique({
     where: { email },
-    select: { role: true },
+    select: { role: true, emailVerified: true, passwordHash: true, status: true },
   });
+
+  if (existing?.passwordHash) {
+    const { compare } = await import("bcryptjs");
+    const valid = await compare(password, existing.passwordHash);
+    if (valid && existing.status === "SUSPENDED") {
+      return { error: "A sua conta está suspensa. Contacte-nos para mais informações." };
+    }
+    if (valid && existing.role !== "ADMIN" && !existing.emailVerified) {
+      return {
+        error:
+          "Ainda não confirmou o seu e-mail. Consulte a caixa de entrada ou reenvie o e-mail de ativação.",
+        email,
+        code: "invalid",
+      };
+    }
+  }
+
   const roleHome =
-    existing?.role === "ADMIN"
-      ? "/pt/admin"
-      : existing?.role === "DRIVER"
-        ? "/pt/motorista"
-        : "/pt/cliente";
-  // Honour explicit deep-links; otherwise send each role to its home.
+    existing?.role === "ADMIN" ? "/pt/admin" : "/pt/cliente";
   const callbackUrl =
     requestedCallback &&
     requestedCallback !== "/pt/cliente" &&
@@ -211,6 +233,11 @@ export async function activateAccountAction(token: string): Promise<ActionState>
     channels: ["IN_APP"],
   });
 
+  await sendAccountActivatedEmail({
+    email: row.user.email,
+    name: row.user.name,
+  });
+
   await prisma.adminAuditLog.create({
     data: {
       action: "EMAIL_VERIFIED",
@@ -222,8 +249,7 @@ export async function activateAccountAction(token: string): Promise<ActionState>
   });
 
   return {
-    success:
-      "O seu e-mail foi confirmado com sucesso.\nJá pode iniciar sessão e contratar um plano.",
+    success: "Conta ativada com sucesso.",
     email: row.user.email,
   };
 }

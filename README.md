@@ -27,7 +27,7 @@ npm run dev
 
 Abrir [http://localhost:3000/pt](http://localhost:3000/pt).
 
-### Contas de demonstração (password: `fcpd123`)
+### Contas de demonstração (password: `fcpd1234`)
 
 | E-mail | Perfil |
 |--------|--------|

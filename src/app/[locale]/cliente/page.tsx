@@ -143,12 +143,12 @@ export default async function ClienteDashboardPage() {
           Marcar viagem
         </Link>
         <a
-          href={whatsappLink(BRAND.phoneE164, "Olá, preciso de falar com o meu motorista FC Private Driver.")}
+          href={whatsappLink(BRAND.phoneE164, "Olá, preciso de falar com a FC Private Driver.")}
           className="btn btn-secondary"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Contactar motorista
+          Contactar FC Private Driver
         </a>
         <Link href="/faturas" className="btn btn-ghost">
           Ver faturas

@@ -67,7 +67,7 @@
 
 ## Credenciais demo
 
-Password: `fcpd123`
+Password: `fcpd1234`
 
 | Perfil | E-mail |
 |--------|--------|
@@ -81,3 +81,12 @@ Password: `fcpd123`
 2. **Admin → Planos** — preços, minutos, tier, cor, CTA, condições especiais, pacotes extra
 3. **Admin → Clientes Diamante** — pipeline de propostas e conversão em plano personalizado
 4. **Admin → Configurações** — e-mail, telefone, WhatsApp, tolerância, cobrança mínima, textos do site, termos e privacidade
+
+## Correção urgente (ZELU → FC Private Driver)
+
+- Produção em `main` estava a servir a app **ZELU** (marketplace Cliente/Motorista) — causa raiz do digest e da identidade errada
+- Merge de `main` resolvido a favor da FC Private Driver; removidos onboarding, propostas, Homepage Lab, ModeSwitcher, área `/motorista`
+- Apenas acessos **Cliente** e **Administrador**
+- Planos: Bronze 59€/120, Prata 99€/300, Ouro 299€/600, Diamante sob consulta
+- E-mails: «Confirme a sua conta» + «Conta ativada»; sem credenciais demo na UI de produção
+- Typecheck, testes (14) e build de produção OK

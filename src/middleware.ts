@@ -10,11 +10,10 @@ const intlMiddleware = createMiddleware(routing);
 
 const protectedPrefixes = [
   { prefix: "/cliente", roles: ["CUSTOMER", "ADMIN"] },
-  { prefix: "/perfil", roles: ["CUSTOMER", "DRIVER", "ADMIN"] },
-  { prefix: "/habitos", roles: ["CUSTOMER"] },
-  { prefix: "/minutos", roles: ["CUSTOMER"] },
-  { prefix: "/faturas", roles: ["CUSTOMER"] },
-  { prefix: "/motorista", roles: ["DRIVER", "ADMIN"] },
+  { prefix: "/perfil", roles: ["CUSTOMER", "ADMIN"] },
+  { prefix: "/habitos", roles: ["CUSTOMER", "ADMIN"] },
+  { prefix: "/minutos", roles: ["CUSTOMER", "ADMIN"] },
+  { prefix: "/faturas", roles: ["CUSTOMER", "ADMIN"] },
   { prefix: "/admin", roles: ["ADMIN"] },
 ];
 

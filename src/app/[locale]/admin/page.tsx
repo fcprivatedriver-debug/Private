@@ -9,66 +9,61 @@ export default async function AdminPage() {
   await requireRole(["ADMIN"]);
   const locale = await getLocale();
 
-  const [
-    customers,
-    drivers,
-    activeSubs,
-    pendingTrips,
-    pendingPayments,
-    tripsToday,
-  ] = await Promise.all([
-    prisma.user.count({ where: { role: "CUSTOMER" } }),
-    prisma.driverProfile.count({ where: { active: true } }),
-    prisma.subscription.count({ where: { status: "ACTIVE" } }),
-    prisma.trip.count({ where: { status: "AWAITING_CONFIRMATION" } }),
-    prisma.payment.count({ where: { status: "PENDING" } }),
-    prisma.trip.count({
-      where: {
-        scheduledAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          lt: new Date(new Date().setHours(23, 59, 59, 999)),
+  const [customers, activeSubs, pendingTrips, pendingPayments, tripsToday, diamond] =
+    await Promise.all([
+      prisma.user.count({ where: { role: "CUSTOMER" } }),
+      prisma.subscription.count({ where: { status: "ACTIVE" } }),
+      prisma.trip.count({ where: { status: "AWAITING_CONFIRMATION" } }),
+      prisma.payment.count({ where: { status: "PENDING" } }),
+      prisma.trip.count({
+        where: {
+          scheduledAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            lt: new Date(new Date().setHours(23, 59, 59, 999)),
+          },
         },
-      },
-    }),
-  ]);
+      }),
+      prisma.diamondProposal.count({
+        where: { status: { in: ["RECEIVED", "UNDER_REVIEW", "CONTACTED"] } },
+      }),
+    ]);
 
   const links = [
     { href: "/admin/clientes", label: "Clientes", desc: "Pesquisar, suspender, ajustar minutos" },
-    { href: "/admin/diamante", label: "Clientes Diamante", desc: "Propostas personalizadas e conversão" },
+    { href: "/admin/diamante", label: "Clientes Diamante", desc: "Propostas personalizadas" },
     { href: "/admin/planos", label: "Planos e pacotes", desc: "Gerir planos e minutos extra" },
-    { href: "/admin/viagens", label: "Viagens", desc: "Confirmar, recusar, atribuir motorista" },
-    { href: "/admin/motoristas", label: "Motoristas", desc: "Criar e editar perfis" },
-    { href: "/admin/pagamentos", label: "Pagamentos", desc: "Lista e confirmação demo" },
-    { href: "/admin/configuracoes", label: "Configurações", desc: "Marca, tolerâncias, textos" },
+    { href: "/admin/viagens", label: "Pedidos / Viagens", desc: "Confirmar, rejeitar e concluir" },
+    { href: "/admin/pagamentos", label: "Pagamentos", desc: "Histórico e estados" },
+    { href: "/admin/configuracoes", label: "Configurações", desc: "Contactos, tolerâncias, textos" },
   ];
 
   return (
     <AppShell locale={locale}>
       <PageGreeting
-        hello="Administração FC"
-        sub="Visão geral da operação — clientes, viagens e pagamentos."
+        hello="Administração FC Private Driver"
+        sub="Clientes, planos, pagamentos e pedidos de serviço."
       />
 
       <SummaryStrip
         items={[
           { label: "Clientes", value: String(customers) },
           { label: "Subscrições ativas", value: String(activeSubs) },
-          { label: "Viagens pendentes", value: String(pendingTrips) },
+          { label: "Pedidos pendentes", value: String(pendingTrips) },
         ]}
       />
 
       <div className="stat-grid">
         <div className="stat-card">
-          <div className="label-sm">Motoristas ativos</div>
-          <strong>{drivers}</strong>
-        </div>
-        <div className="stat-card">
           <div className="label-sm">Pagamentos pendentes</div>
           <strong>{pendingPayments}</strong>
         </div>
         <div className="stat-card">
-          <div className="label-sm">Viagens hoje</div>
+          <div className="label-sm">Serviços hoje</div>
           <strong>{tripsToday}</strong>
+        </div>
+        <div className="stat-card">
+          <div className="label-sm">Propostas Diamante</div>
+          <strong>{diamond}</strong>
         </div>
       </div>
 

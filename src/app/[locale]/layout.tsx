@@ -6,7 +6,6 @@ import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { DemoModeBanner } from "@/components/layout/DemoModeBanner";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
 import "@/app/globals.css";
@@ -49,6 +48,7 @@ export async function generateMetadata({
       type: "website",
       locale: locale === "pt" ? "pt_PT" : "en_GB",
     },
+    applicationName: t("appName"),
   };
 }
 
@@ -75,7 +75,6 @@ export default async function LocaleLayout({
           className={`${display.variable} ${body.variable} has-bottom-nav`}
         >
           <RegisterSW />
-          <DemoModeBanner />
           <SiteHeader />
           <main>{children}</main>
           <SiteFooter />

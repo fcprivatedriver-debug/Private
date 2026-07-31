@@ -1,19 +1,23 @@
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
+import {
+  getGoogleMapsApiKey,
+  isGoogleMapsConfigured,
+} from "./config";
+
+export {
+  getGoogleMapsApiKey,
+  isGoogleMapsConfigured,
+  getGoogleMapsApiKeySource,
+} from "./config";
 
 let configured = false;
-
-export function getGoogleMapsApiKey(): string | undefined {
-  return process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined;
-}
-
-export function isGoogleMapsConfigured(): boolean {
-  return Boolean(getGoogleMapsApiKey());
-}
 
 function ensureConfigured() {
   const apiKey = getGoogleMapsApiKey();
   if (!apiKey) {
-    throw new Error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not configured");
+    throw new Error(
+      "Google Maps API key not configured (set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY or GOOGLE_MAPS_API_KEY)",
+    );
   }
   if (!configured) {
     setOptions({
@@ -24,7 +28,7 @@ function ensureConfigured() {
   }
 }
 
-/** Geocode a free-text address to coordinates. */
+/** Geocode a free-text address to coordinates (client JS API). */
 export async function geocodeAddress(address: string): Promise<{
   lat: number;
   lng: number;
@@ -58,11 +62,13 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
 export type PlaceSuggestion = {
   placeId: string;
   description: string;
+  lat?: number;
+  lng?: number;
 };
 
 /**
- * Places Autocomplete suggestions.
- * Returns [] when Maps is not configured (Phase 0 safe degradation).
+ * Places Autocomplete suggestions via client JS API.
+ * Prefer /api/places/autocomplete from UI (works with server-only keys).
  */
 export async function suggestPlaces(input: string): Promise<PlaceSuggestion[]> {
   if (!input.trim() || !isGoogleMapsConfigured()) return [];
@@ -73,9 +79,12 @@ export async function suggestPlaces(input: string): Promise<PlaceSuggestion[]> {
     const service = new AutocompleteService();
     const predictions = await new Promise<google.maps.places.AutocompletePrediction[]>(
       (resolve) => {
-        service.getPlacePredictions({ input, types: ["geocode"] }, (res) => {
-          resolve(res ?? []);
-        });
+        service.getPlacePredictions(
+          { input, types: ["geocode"], componentRestrictions: { country: "pt" } },
+          (res) => {
+            resolve(res ?? []);
+          },
+        );
       },
     );
 
