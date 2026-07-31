@@ -34,6 +34,7 @@ export default async function AdminPage() {
 
   const links = [
     { href: "/admin/clientes", label: "Clientes", desc: "Pesquisar, suspender, ajustar minutos" },
+    { href: "/admin/diamante", label: "Clientes Diamante", desc: "Propostas personalizadas e conversão" },
     { href: "/admin/planos", label: "Planos e pacotes", desc: "Gerir planos e minutos extra" },
     { href: "/admin/viagens", label: "Viagens", desc: "Confirmar, recusar, atribuir motorista" },
     { href: "/admin/motoristas", label: "Motoristas", desc: "Criar e editar perfis" },

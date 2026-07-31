@@ -58,22 +58,33 @@ export async function upsertPlanAction(
   if (!(await requireAdmin())) return { error: "Sem permissão." };
 
   const id = String(formData.get("id") || "");
+  const showPrice = formData.get("showPrice") === "on";
   const data = {
     code: String(formData.get("code") || ""),
     namePt: String(formData.get("namePt") || ""),
     nameEn: String(formData.get("nameEn") || String(formData.get("namePt") || "")),
     descriptionPt: String(formData.get("descriptionPt") || "") || null,
     descriptionEn: String(formData.get("descriptionEn") || "") || null,
+    tier: String(formData.get("tier") || "custom"),
+    showPrice,
     priceCents: Math.round(Number(formData.get("priceEuros") || 0) * 100),
     monthlyMinutes: Number(formData.get("monthlyMinutes") || 0),
     equivalentHours: Number(formData.get("equivalentHours") || 0) || null,
     active: formData.get("active") === "on",
+    isPersonalized: formData.get("isPersonalized") === "on",
     sortOrder: Number(formData.get("sortOrder") || 0),
     featuresJson: String(formData.get("featuresJson") || "[]"),
+    ctaLabelPt: String(formData.get("ctaLabelPt") || "") || null,
+    ctaLabelEn: String(formData.get("ctaLabelEn") || "") || null,
+    accentColor: String(formData.get("accentColor") || "") || null,
+    specialConditions: String(formData.get("specialConditions") || "") || null,
   };
 
-  if (!data.code || !data.namePt || !data.priceCents || !data.monthlyMinutes) {
-    return { error: "Preencha código, nome, preço e minutos." };
+  if (!data.code || !data.namePt) {
+    return { error: "Preencha código e nome." };
+  }
+  if (showPrice && (!data.priceCents || !data.monthlyMinutes)) {
+    return { error: "Planos com preço precisam de valor e minutos." };
   }
 
   if (id) {

@@ -35,7 +35,7 @@ describe("demo seed integrity", () => {
       where: { userId: user!.id, status: "ACTIVE" },
       include: { plan: true },
     });
-    expect(sub?.plan.code).toBe("privado");
+    expect(sub?.plan.code).toBe("prata");
     expect(sub?.minutesIncluded).toBe(300);
     expect(sub?.minutesUsed).toBe(85);
     expect(sub?.minutesReserved).toBe(40);

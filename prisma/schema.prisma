@@ -301,6 +301,15 @@ model Vehicle {
   @@index([driverId])
 }
 
+enum DiamondProposalStatus {
+  RECEIVED
+  UNDER_REVIEW
+  CONTACTED
+  PROPOSAL_SENT
+  ACCEPTED
+  REJECTED
+}
+
 model Plan {
   id              String   @id @default(cuid())
   code            String   @unique
@@ -308,20 +317,60 @@ model Plan {
   nameEn          String
   descriptionPt   String?
   descriptionEn   String?
-  priceCents      Int
-  monthlyMinutes  Int
+  /// bronze | silver | gold | diamond | custom
+  tier            String   @default("custom")
+  /// When false (Diamante), UI hides price and shows custom copy
+  showPrice       Boolean  @default(true)
+  priceCents      Int      @default(0)
+  monthlyMinutes  Int      @default(0)
   equivalentHours Float?
   active          Boolean  @default(true)
+  /// Public catalog vs admin-created personalised plan
+  isPersonalized  Boolean  @default(false)
   sortOrder       Int      @default(0)
   featuresJson    String   @default("[]")
+  ctaLabelPt      String?
+  ctaLabelEn      String?
+  accentColor     String?
+  specialConditions String?
+  internalNotes   String?
   stripePriceId   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  subscriptions Subscription[]
+  subscriptions    Subscription[]
+  diamondProposals DiamondProposal[] @relation("ConvertedPlan")
 
   @@index([active, sortOrder])
+  @@index([tier])
 }
+
+model DiamondProposal {
+  id                     String                @id @default(cuid())
+  name                   String
+  company                String?
+  email                  String
+  phone                  String
+  estimatedUsers         Int?
+  tripsPerWeek           Int?
+  usualHours             String?
+  serviceZone            String?
+  notes                  String?
+  status                 DiamondProposalStatus @default(RECEIVED)
+  adminNotes             String?
+  convertedPlanId        String?
+  convertedSubscriptionId String?
+  convertedAt            DateTime?
+  contactedAt            DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  convertedPlan Plan? @relation("ConvertedPlan", fields: [convertedPlanId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
 
 model ExtraMinutePackage {
   id             String   @id @default(cuid())

@@ -1,9 +1,8 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatMoney } from "@/lib/money";
 import { Link } from "@/i18n/navigation";
-import { PlanCheckoutForm } from "@/components/plans/PlanCheckoutForm";
+import { PlanTierGrid } from "@/components/plans/PlanTierGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +12,12 @@ export default async function PlanosPage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("plans");
-  const isPt = locale.startsWith("pt");
 
   const [plans, session] = await Promise.all([
-    prisma.plan.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.plan.findMany({
+      where: { active: true, isPersonalized: false },
+      orderBy: { sortOrder: "asc" },
+    }),
     auth(),
   ]);
 
@@ -44,50 +45,17 @@ export default async function PlanosPage({ params }: Props) {
             {t("loginRequired")}{" "}
             <Link href="/login" style={{ textDecoration: "underline" }}>
               {t("loginLink")}
-            </Link>
+            </Link>{" "}
+            para aderir aos planos Bronze, Prata ou Ouro. O Diamante pode ser solicitado sem conta.
           </div>
         )}
 
-        <div className="steps">
-          {plans.map((plan, i) => {
-            const features = JSON.parse(plan.featuresJson || "[]") as string[];
-            const name = isPt ? plan.namePt : plan.nameEn;
-            const description = isPt ? plan.descriptionPt : plan.descriptionEn;
-            const price = formatMoney(plan.priceCents, "EUR", locale);
-
-            return (
-              <article
-                key={plan.id}
-                className={`card-soft plan-card${i === 1 ? " plan-card-featured" : ""}`}
-              >
-                <div>
-                  <h2 style={{ margin: "0 0 0.25rem", fontSize: "1.35rem" }}>{name}</h2>
-                  {description && <p className="muted" style={{ margin: 0 }}>{description}</p>}
-                </div>
-                <p className="plan-price" style={{ margin: 0 }}>
-                  {price}
-                  <span style={{ fontSize: "0.9rem", color: "var(--fg-muted)" }}>/mês</span>
-                </p>
-                <p className="muted" style={{ margin: 0, fontSize: "0.88rem" }}>
-                  {plan.monthlyMinutes} min/mês
-                  {plan.equivalentHours ? ` · ~${plan.equivalentHours}h` : ""}
-                </p>
-                <ul className="plan-features">
-                  {features.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
-                {session?.user ? (
-                  <PlanCheckoutForm planId={plan.id} planName={name} priceLabel={price} />
-                ) : (
-                  <Link href="/registo" className="btn btn-primary">
-                    {t("createAccount")}
-                  </Link>
-                )}
-              </article>
-            );
-          })}
-        </div>
+        <PlanTierGrid
+          plans={plans}
+          locale={locale}
+          interactive
+          loggedIn={Boolean(session?.user)}
+        />
       </div>
     </section>
   );

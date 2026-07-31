@@ -29,6 +29,9 @@ export async function startPlanCheckoutAction(
 
   const plan = await prisma.plan.findUnique({ where: { id: planId } });
   if (!plan || !plan.active) return { error: "Plano inválido." };
+  if (!plan.showPrice || plan.tier === "diamond") {
+    return { error: "O plano Diamante requer uma proposta personalizada." };
+  }
 
   const subscription = await prisma.subscription.create({
     data: {

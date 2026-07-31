@@ -2,8 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Plan, SiteSettings } from "@prisma/client";
 import { BRAND } from "@/config/brand";
-import { formatMoney } from "@/lib/money";
 import { ContactForm } from "@/components/landing/ContactForm";
+import { PlanTierGrid } from "@/components/plans/PlanTierGrid";
 
 type Props = {
   settings: SiteSettings | null;
@@ -101,36 +101,8 @@ export async function LandingPage({ settings, plans, locale }: Props) {
             <h2>{t("plansTitle")}</h2>
             <p className="lead">{t("plansLead")}</p>
           </div>
-          <div className="steps">
-            {plans.map((plan, i) => {
-              const features = JSON.parse(plan.featuresJson || "[]") as string[];
-              const name = isPt ? plan.namePt : plan.nameEn;
-              const description = isPt ? plan.descriptionPt : plan.descriptionEn;
-              return (
-                <article
-                  key={plan.id}
-                  className={`card-soft plan-card${i === 1 ? " plan-card-featured" : ""}`}
-                >
-                  <div>
-                    <h3 style={{ margin: "0 0 0.25rem" }}>{name}</h3>
-                    {description && <p className="muted" style={{ margin: 0 }}>{description}</p>}
-                  </div>
-                  <p className="plan-price" style={{ margin: 0 }}>
-                    {formatMoney(plan.priceCents, "EUR", locale)}
-                    <span style={{ fontSize: "0.9rem", color: "var(--fg-muted)" }}>/mês</span>
-                  </p>
-                  <ul className="plan-features">
-                    {features.map((f) => (
-                      <li key={f}>{f}</li>
-                    ))}
-                  </ul>
-                  <Link href="/planos" className="btn btn-primary">
-                    {t("ctaPlans")}
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
+          {/* PlanTierGrid imported dynamically via child — keep SSR simple */}
+          <PlanTierGrid plans={plans} locale={locale} interactive={false} />
           <p className="muted" style={{ marginTop: "1.5rem", fontSize: "0.88rem" }}>
             {t("plansNote")}
           </p>

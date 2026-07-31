@@ -12,10 +12,14 @@ export function PlanCheckoutForm({
   planId,
   planName,
   priceLabel,
+  ctaLabel,
+  accent,
 }: {
   planId: string;
   planName: string;
   priceLabel: string;
+  ctaLabel?: string;
+  accent?: string;
 }) {
   const [state, action, pending] = useActionState(startPlanCheckoutAction, initial);
 
@@ -26,22 +30,22 @@ export function PlanCheckoutForm({
   }, [state.redirectUrl]);
 
   return (
-    <form action={action} className="panel" style={{ marginTop: "1rem" }}>
+    <form action={action} className="plan-checkout-inline">
       <input type="hidden" name="planId" value={planId} />
       {state.error && <div className="alert alert-error">{state.error}</div>}
       {state.success && <div className="alert alert-success">{state.success}</div>}
 
-      <p className="muted" style={{ margin: "0 0 1rem", fontSize: "0.9rem" }}>
+      <p className="muted" style={{ margin: "0 0 0.75rem", fontSize: "0.82rem" }}>
         Contratar <strong>{planName}</strong> — {priceLabel}/mês
       </p>
 
-      <fieldset className="field" style={{ border: "none", padding: 0, margin: 0 }}>
-        <legend className="label" style={{ marginBottom: "0.5rem" }}>
+      <fieldset className="field" style={{ border: "none", padding: 0, margin: "0 0 0.75rem" }}>
+        <legend className="label" style={{ marginBottom: "0.35rem", fontSize: "0.78rem" }}>
           Método de pagamento
         </legend>
         <label className="checkbox-row">
           <input type="radio" name="method" value="CARD" defaultChecked />
-          <span>Cartão (Visa / Mastercard)</span>
+          <span>Cartão</span>
         </label>
         <label className="checkbox-row">
           <input type="radio" name="method" value="MB_WAY" />
@@ -54,8 +58,8 @@ export function PlanCheckoutForm({
       </fieldset>
 
       <div className="field">
-        <label className="label" htmlFor={`mbway-${planId}`}>
-          Telemóvel MB WAY (se aplicável)
+        <label className="label" htmlFor={`mbway-${planId}`} style={{ fontSize: "0.78rem" }}>
+          Telemóvel MB WAY (opcional)
         </label>
         <input
           className="input"
@@ -67,8 +71,13 @@ export function PlanCheckoutForm({
         />
       </div>
 
-      <button className="btn btn-primary" type="submit" disabled={pending}>
-        {pending ? "A processar…" : "Contratar plano"}
+      <button
+        className="btn plan-tier-cta"
+        type="submit"
+        disabled={pending}
+        style={accent ? { background: accent, borderColor: accent } : undefined}
+      >
+        {pending ? "A processar…" : ctaLabel || "Contratar plano"}
       </button>
     </form>
   );

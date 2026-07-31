@@ -17,10 +17,10 @@ export default async function HomePage({ params }: Props) {
   try {
     [settings, plans] = await Promise.all([
       getSiteSettings(),
-      prisma.plan.findMany({
-        where: { active: true },
-        orderBy: { sortOrder: "asc" },
-      }),
+    prisma.plan.findMany({
+      where: { active: true, isPersonalized: false },
+      orderBy: { sortOrder: "asc" },
+    }),
     ]);
   } catch (err) {
     console.error("[home] db unavailable", err);

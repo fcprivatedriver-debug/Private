@@ -18,6 +18,11 @@ type Plan = {
   sortOrder: number;
   featuresJson: string;
   descriptionPt: string | null;
+  tier?: string;
+  showPrice?: boolean;
+  ctaLabelPt?: string | null;
+  accentColor?: string | null;
+  isPersonalized?: boolean;
 };
 
 type Pkg = {
@@ -46,14 +51,67 @@ export function PlanEditor({ plans }: { plans: Plan[] }) {
             <input className="input" name="namePt" defaultValue={p.namePt} placeholder="Nome PT" required />
           </div>
           <div className="grid-2" style={{ marginTop: "0.5rem" }}>
-            <input className="input" name="priceEuros" type="number" step="0.01" defaultValue={(p.priceCents / 100).toFixed(2)} required />
-            <input className="input" name="monthlyMinutes" type="number" defaultValue={p.monthlyMinutes} required />
+            <select className="input" name="tier" defaultValue={p.tier || "custom"}>
+              <option value="bronze">Bronze</option>
+              <option value="silver">Prata</option>
+              <option value="gold">Ouro</option>
+              <option value="diamond">Diamante</option>
+              <option value="custom">Personalizado</option>
+            </select>
+            <input
+              className="input"
+              name="accentColor"
+              defaultValue={p.accentColor || ""}
+              placeholder="Cor (#hex)"
+            />
           </div>
-          <input className="input" name="descriptionPt" defaultValue={p.descriptionPt || ""} placeholder="Descrição" style={{ marginTop: "0.5rem" }} />
-          <input type="hidden" name="featuresJson" value={p.featuresJson} />
+          <div className="grid-2" style={{ marginTop: "0.5rem" }}>
+            <input
+              className="input"
+              name="priceEuros"
+              type="number"
+              step="0.01"
+              defaultValue={(p.priceCents / 100).toFixed(2)}
+            />
+            <input
+              className="input"
+              name="monthlyMinutes"
+              type="number"
+              defaultValue={p.monthlyMinutes}
+            />
+          </div>
+          <input
+            className="input"
+            name="ctaLabelPt"
+            defaultValue={p.ctaLabelPt || ""}
+            placeholder="Texto do botão"
+            style={{ marginTop: "0.5rem" }}
+          />
+          <input
+            className="input"
+            name="descriptionPt"
+            defaultValue={p.descriptionPt || ""}
+            placeholder="Descrição"
+            style={{ marginTop: "0.5rem" }}
+          />
+          <textarea
+            className="input"
+            name="featuresJson"
+            defaultValue={p.featuresJson}
+            rows={3}
+            style={{ marginTop: "0.5rem" }}
+            placeholder='["benefício 1","benefício 2"]'
+          />
           <input type="hidden" name="sortOrder" value={p.sortOrder} />
           <label className="quality-pill" style={{ marginTop: "0.5rem", display: "inline-flex" }}>
             <input type="checkbox" name="active" defaultChecked={p.active} /> Ativo
+          </label>
+          <label className="quality-pill" style={{ marginTop: "0.5rem", display: "inline-flex" }}>
+            <input type="checkbox" name="showPrice" defaultChecked={p.showPrice !== false} /> Mostrar preço
+          </label>
+          <label className="quality-pill" style={{ marginTop: "0.5rem", display: "inline-flex" }}>
+            <input type="checkbox" name="isPersonalized" defaultChecked={Boolean(p.isPersonalized)} />{" "}
+            Personalizado
           </label>
           <button type="submit" className="btn btn-primary btn-sm" style={{ marginTop: "0.5rem" }} disabled={pending}>
             Guardar {p.namePt}
@@ -68,10 +126,29 @@ export function PlanEditor({ plans }: { plans: Plan[] }) {
           <input className="input" name="namePt" placeholder="Nome PT" required />
         </div>
         <div className="grid-2" style={{ marginTop: "0.5rem" }}>
-          <input className="input" name="priceEuros" type="number" step="0.01" placeholder="Preço €" required />
-          <input className="input" name="monthlyMinutes" type="number" placeholder="Minutos/mês" required />
+          <select className="input" name="tier" defaultValue="custom">
+            <option value="bronze">Bronze</option>
+            <option value="silver">Prata</option>
+            <option value="gold">Ouro</option>
+            <option value="diamond">Diamante</option>
+            <option value="custom">Personalizado</option>
+          </select>
+          <input className="input" name="accentColor" placeholder="#0A4F5C" />
         </div>
-        <input type="hidden" name="featuresJson" value="[]" />
+        <div className="grid-2" style={{ marginTop: "0.5rem" }}>
+          <input className="input" name="priceEuros" type="number" step="0.01" placeholder="Preço €" />
+          <input className="input" name="monthlyMinutes" type="number" placeholder="Minutos/mês" />
+        </div>
+        <textarea
+          className="input"
+          name="featuresJson"
+          defaultValue='["Benefício"]'
+          rows={2}
+          style={{ marginTop: "0.5rem" }}
+        />
+        <label className="quality-pill" style={{ marginTop: "0.5rem", display: "inline-flex" }}>
+          <input type="checkbox" name="active" defaultChecked /> Ativo
+        </label>
         <button type="submit" className="btn btn-primary btn-sm" style={{ marginTop: "0.5rem" }} disabled={pending}>
           Criar plano
         </button>

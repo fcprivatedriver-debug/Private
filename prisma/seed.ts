@@ -69,45 +69,116 @@ async function main() {
     },
   });
 
-  const planPrivado = await prisma.plan.create({
+  const planBronze = await prisma.plan.create({
     data: {
-      code: "privado",
-      namePt: "Plano Privado",
-      nameEn: "Private Plan",
-      descriptionPt: "300 minutos mensais · equivalente a 5 horas",
-      descriptionEn: "300 monthly minutes · equivalent to 5 hours",
-      priceCents: 9900,
-      monthlyMinutes: 300,
-      equivalentHours: 5,
+      code: "bronze",
+      tier: "bronze",
+      namePt: "Bronze",
+      nameEn: "Bronze",
+      descriptionPt: "Ideal para utilização ocasional",
+      descriptionEn: "Ideal for occasional use",
+      showPrice: true,
+      priceCents: 5900,
+      monthlyMinutes: 120,
+      equivalentHours: 2,
       sortOrder: 1,
+      accentColor: "#8B5E3C",
+      ctaLabelPt: "Aderir ao Bronze",
+      ctaLabelEn: "Join Bronze",
       featuresJson: JSON.stringify([
-        "300 minutos mensais",
-        "Renovação mensal",
-        "Atendimento personalizado",
+        "120 minutos mensais",
+        "Ideal para utilização ocasional",
         "Agendamento antecipado",
+        "Histórico de viagens",
+        "Suporte por e-mail",
       ]),
     },
   });
 
-  const planPlus = await prisma.plan.create({
+  const planPrata = await prisma.plan.create({
     data: {
-      code: "privado-plus",
-      namePt: "Plano Privado Plus",
-      nameEn: "Private Plus Plan",
-      descriptionPt: "600 minutos mensais · equivalente a 10 horas",
-      descriptionEn: "600 monthly minutes · equivalent to 10 hours",
-      priceCents: 19900,
-      monthlyMinutes: 600,
-      equivalentHours: 10,
+      code: "prata",
+      tier: "silver",
+      namePt: "Prata",
+      nameEn: "Silver",
+      descriptionPt: "Ideal para utilização frequente",
+      descriptionEn: "Ideal for frequent use",
+      showPrice: true,
+      priceCents: 11900,
+      monthlyMinutes: 300,
+      equivalentHours: 5,
       sortOrder: 2,
+      accentColor: "#6B7280",
+      ctaLabelPt: "Aderir ao Prata",
+      ctaLabelEn: "Join Silver",
       featuresJson: JSON.stringify([
-        "600 minutos mensais",
-        "Renovação mensal",
-        "Prioridade de marcação",
-        "Apoio direto por WhatsApp",
+        "300 minutos mensais",
+        "Prioridade nas marcações",
+        "Contacto direto por WhatsApp",
+        "Gestão simplificada das viagens",
+        "Ideal para utilização frequente",
       ]),
     },
   });
+
+  await prisma.plan.create({
+    data: {
+      code: "ouro",
+      tier: "gold",
+      namePt: "Ouro",
+      nameEn: "Gold",
+      descriptionPt: "Ideal para empresários e clientes frequentes",
+      descriptionEn: "Ideal for business and frequent travellers",
+      showPrice: true,
+      priceCents: 19900,
+      monthlyMinutes: 600,
+      equivalentHours: 10,
+      sortOrder: 3,
+      accentColor: "#B45309",
+      ctaLabelPt: "Aderir ao Ouro",
+      ctaLabelEn: "Join Gold",
+      featuresJson: JSON.stringify([
+        "600 minutos mensais",
+        "Prioridade elevada",
+        "Contacto direto com o motorista",
+        "Gestão completa das viagens",
+        "Ideal para empresários e clientes frequentes",
+      ]),
+    },
+  });
+
+  await prisma.plan.create({
+    data: {
+      code: "diamante",
+      tier: "diamond",
+      namePt: "Diamante",
+      nameEn: "Diamond",
+      descriptionPt:
+        "Solução totalmente personalizada para quem pretende um serviço exclusivo de motorista privado.",
+      descriptionEn:
+        "A fully personalised solution for those who want an exclusive private driver service.",
+      showPrice: false,
+      priceCents: 0,
+      monthlyMinutes: 0,
+      sortOrder: 4,
+      accentColor: "#0A4F5C",
+      ctaLabelPt: "Solicitar Proposta",
+      ctaLabelEn: "Request a Proposal",
+      featuresJson: JSON.stringify([
+        "Empresas",
+        "Hotéis",
+        "Alojamentos Locais",
+        "Clínicas",
+        "Escritórios",
+        "Famílias",
+        "Clientes com necessidades específicas",
+      ]),
+    },
+  });
+
+  // Keep references used below for demo subscription (Prata = former Privado)
+  const planPrivado = planPrata;
+  void planBronze;
 
   await prisma.extraMinutePackage.createMany({
     data: [
@@ -284,7 +355,7 @@ async function main() {
       type: MinuteTxnType.PLAN_RENEWAL,
       minutes: 300,
       balanceAfter: 300,
-      reason: "Renovação do Plano Privado",
+      reason: "Renovação do Plano Prata",
       actorId: admin.id,
     },
   });
@@ -481,7 +552,7 @@ async function main() {
   console.log("Admin:    admin@fcprivatedriver.demo");
   console.log("Customer: cliente@fcprivatedriver.demo");
   console.log("Driver:   motorista@fcprivatedriver.demo");
-  console.log("Plans:", planPrivado.code, planPlus.code);
+  console.log("Plans:", "bronze", "prata", "ouro", "diamante");
 }
 
 main()

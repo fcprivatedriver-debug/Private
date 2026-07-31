@@ -43,8 +43,8 @@
     "advantage5": "Motorista alternativo de confiança quando necessário",
     "advantage6": "Sem preços dinâmicos",
     "advantage7": "Apoio direto por telefone e WhatsApp",
-    "plansTitle": "Planos mensais",
-    "plansLead": "Minutos incluídos todos os meses. Escolha o ritmo que faz sentido para si.",
+    "plansTitle": "Níveis de adesão",
+    "plansLead": "Bronze, Prata, Ouro ou Diamante — escolha o ritmo certo para si.",
     "plansNote": "Os minutos não utilizados não transitam automaticamente para o mês seguinte.",
     "rulesTitle": "Informação importante",
     "rule1": "Os minutos são utilizados durante o mês da subscrição e não transitam automaticamente.",
@@ -91,8 +91,8 @@
     "saving": "A guardar…"
   },
   "plans": {
-    "title": "Planos",
-    "lead": "Escolha o plano mensal de minutos. Renovação automática, cancelamento a qualquer momento.",
+    "title": "Níveis de adesão",
+    "lead": "Bronze, Prata, Ouro ou Diamante — serviço premium de motorista privado por subscrição.",
     "rulesTitle": "Regras do serviço",
     "rule1": "Os minutos incluídos são válidos no mês corrente e não transitam para o mês seguinte.",
     "rule2": "Sem preços dinâmicos — o valor mensal é fixo conforme o plano escolhido.",
