@@ -49,7 +49,7 @@
   },
   "auth": {
     "loginTitle": "Log in",
-    "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
+    "loginHint": "Sign in to your ZELU account to request trips or manage offers.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Log in",

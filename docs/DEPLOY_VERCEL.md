@@ -53,7 +53,7 @@ You do **not** need this for `AUTH_SECRET` anymore.
 1. Visit `https://YOUR-APP.vercel.app/api/health`  
    Expect `"database":"ok"` and `"authSecretConfigured":true`.
 2. Seed once (needs a computer or Neon SQL editor on phone — or ask the agent to seed if `DATABASE_URL` is shared).
-3. Login: `motorista@movio.app` / `movio123`
+3. Seed accounts exist for internal QA only (not shown in the public UI).
 
 ## Required vs optional
 

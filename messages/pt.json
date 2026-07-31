@@ -49,7 +49,7 @@
   },
   "auth": {
     "loginTitle": "Entrar",
-    "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
+    "loginHint": "Aceda à sua conta ZELU para pedir viagens ou gerir propostas.",
     "email": "Email",
     "password": "Palavra-passe",
     "submitLogin": "Entrar",
