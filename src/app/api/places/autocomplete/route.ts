@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getGoogleMapsApiKey } from "@/lib/maps/config";
 import { googlePlaceAutocomplete, nominatimSuggest } from "@/lib/maps/google-rest";
+import {
+  matchCuratedPois,
+  mergePlaceSuggestions,
+} from "@/lib/maps/lisbon-pois";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,26 +28,43 @@ export async function GET(request: Request) {
 
     const { q, sessionToken } = parsed.data;
     const key = getGoogleMapsApiKey();
+    const curated = matchCuratedPois(q, 5);
 
+    let google: Awaited<ReturnType<typeof googlePlaceAutocomplete>> = [];
     if (key) {
       try {
-        const suggestions = await googlePlaceAutocomplete(q, key, sessionToken);
-        if (suggestions.length > 0) {
-          return NextResponse.json({
-            suggestions,
-            provider: "google",
-            configured: true,
-          });
-        }
+        google = await googlePlaceAutocomplete(q, key, sessionToken);
       } catch (error) {
         console.error("[places/autocomplete] Google failed", error);
       }
     }
 
-    const suggestions = await nominatimSuggest(q);
+    // Always merge Nominatim so POIs (airport, stations) are not lost when
+    // Google returns only a street geocode (e.g. “Estrada do Aeroporto”).
+    let nominatim: Awaited<ReturnType<typeof nominatimSuggest>> = [];
+    try {
+      nominatim = await nominatimSuggest(q);
+    } catch (error) {
+      console.error("[places/autocomplete] Nominatim failed", error);
+    }
+
+    const suggestions = mergePlaceSuggestions(curated, google, nominatim).slice(0, 8);
+    const provider =
+      curated.length > 0 && google.length > 0
+        ? "curated+google"
+        : curated.length > 0
+          ? "curated"
+          : google.length > 0
+            ? "google"
+            : nominatim.length > 0
+              ? key
+                ? "nominatim-fallback"
+                : "nominatim"
+              : "none";
+
     return NextResponse.json({
       suggestions,
-      provider: key ? "nominatim-fallback" : "nominatim",
+      provider,
       configured: Boolean(key),
     });
   } catch (error) {

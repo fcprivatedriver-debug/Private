@@ -3,11 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ZeluWordmark } from "@/components/layout/BrandLogo";
-import {
-  PRODUCTION_HERO,
-  PRODUCTION_OVERLAY,
-  PRODUCTION_SLOGAN,
-} from "@/config/brand";
+import { PRODUCTION_HERO, PRODUCTION_OVERLAY } from "@/config/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +15,6 @@ export default async function HomePage({ params }: Props) {
   const t = await getTranslations("home");
   const session = await auth();
   const role = session?.user?.role;
-  const isPt = locale.startsWith("pt");
 
   const primary =
     role === "CUSTOMER"
@@ -39,8 +34,8 @@ export default async function HomePage({ params }: Props) {
           ? { href: "/admin/verificacoes" as const, label: t("ctaAdmin") }
           : { href: "/como-funciona" as const, label: t("ctaHow") };
 
-  const line1 = isPt ? PRODUCTION_SLOGAN.line1Pt : PRODUCTION_SLOGAN.line1En;
-  const line2 = isPt ? PRODUCTION_SLOGAN.line2Pt : PRODUCTION_SLOGAN.line2En;
+  const line1 = t("copyLine1");
+  const line2 = t("copyLine2");
 
   return (
     <>
@@ -103,7 +98,11 @@ export default async function HomePage({ params }: Props) {
         </div>
       </section>
 
-      <SiteFooter termsLabel={t("terms")} privacyLabel={t("privacy")} />
+      <SiteFooter
+        termsLabel={t("terms")}
+        privacyLabel={t("privacy")}
+        driversLabel={t("ctaDriver")}
+      />
     </>
   );
 }

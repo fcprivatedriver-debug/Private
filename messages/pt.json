@@ -1,7 +1,7 @@
 {
   "meta": {
     "appName": "ZELU",
-    "tagline": "Excelência discreta. Sempre contigo."
+    "tagline": "Peça a viagem. Receba propostas. Escolha a melhor."
   },
   "nav": {
     "howItWorks": "Como funciona",
@@ -18,32 +18,32 @@
     "verifications": "Verificações",
     "vehicleClasses": "Classes",
     "login": "Entrar",
-    "start": "Começar",
+    "start": "Pedir viagem",
     "logout": "Sair",
     "branding": "Homepage Lab"
   },
   "home": {
-    "eyebrow": "Mobilidade privada · Premium",
+    "eyebrow": "Viagens privadas · Para si",
     "headline": "ZELU",
-    "copy": "Excelência discreta.\nSempre contigo.",
-    "copyLine1": "Excelência discreta.",
-    "copyLine2": "Sempre contigo.",
+    "copy": "Peça a viagem.\nReceba propostas.\nEscolha a melhor.",
+    "copyLine1": "Peça a viagem. Receba propostas.",
+    "copyLine2": "Escolha a melhor — consigo no comando.",
     "labHint": "Comparar as 3 versões do Hero →",
     "labPhotoPending": "Fotografia editorial · escolha no Homepage Lab",
-    "ctaRequest": "Receber propostas",
+    "ctaRequest": "Pedir uma viagem",
     "ctaHow": "Como funciona",
-    "ctaDriver": "Conduzir com ZELU",
+    "ctaDriver": "Sou motorista",
     "ctaMyTrips": "Ver as minhas viagens",
     "ctaDashboard": "Abrir o meu painel",
     "ctaAdmin": "Abrir admin",
-    "stepsTitle": "Precisão em três passos.",
-    "stepsLead": "ZELU é um marketplace exclusivo: define a viagem, recebe propostas e escolhe com controlo total.",
+    "stepsTitle": "A sua viagem, em três passos.",
+    "stepsLead": "A ZELU é feita para quem viaja: publique o pedido, compare propostas de motoristas verificados e escolha com total controlo.",
     "step1Title": "Peça a viagem",
-    "step1Body": "Origem, destino e o que importa no caminho.",
+    "step1Body": "Origem, destino e o que importa no caminho — aeroporto, hotel ou reunião.",
     "step2Title": "Receba propostas",
     "step2Body": "Motoristas verificados respondem com preço e veículo.",
-    "step3Title": "Escolha com confiança",
-    "step3Body": "Compare, aceite e viaje com transparência.",
+    "step3Title": "Escolha e viaje",
+    "step3Body": "Compare, aceite a melhor proposta e siga viagem com transparência.",
     "terms": "Termos",
     "privacy": "Privacidade"
   },

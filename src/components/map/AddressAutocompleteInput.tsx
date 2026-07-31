@@ -57,7 +57,7 @@ export function AddressAutocompleteInput({
   }
 
   useEffect(() => {
-    if (value.trim().length < 3) {
+    if (value.trim().length < 2) {
       setSuggestions([]);
       return;
     }

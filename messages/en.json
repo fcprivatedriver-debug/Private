@@ -1,7 +1,7 @@
 {
   "meta": {
     "appName": "ZELU",
-    "tagline": "Quiet excellence. Always with you."
+    "tagline": "Request the trip. Receive offers. Choose the best."
   },
   "nav": {
     "howItWorks": "How it works",
@@ -18,32 +18,32 @@
     "verifications": "Verifications",
     "vehicleClasses": "Classes",
     "login": "Log in",
-    "start": "Get started",
+    "start": "Request a trip",
     "logout": "Log out",
     "branding": "Homepage Lab"
   },
   "home": {
-    "eyebrow": "Private mobility · Premium",
+    "eyebrow": "Private trips · For you",
     "headline": "ZELU",
-    "copy": "Quiet excellence.\nAlways with you.",
-    "copyLine1": "Quiet excellence.",
-    "copyLine2": "Always with you.",
+    "copy": "Request the trip.\nReceive offers.\nChoose the best.",
+    "copyLine1": "Request the trip. Receive offers.",
+    "copyLine2": "Choose the best — you're in control.",
     "labHint": "Compare the 3 Hero versions →",
     "labPhotoPending": "Editorial photography · choose in Homepage Lab",
-    "ctaRequest": "Get offers",
+    "ctaRequest": "Request a trip",
     "ctaHow": "How it works",
-    "ctaDriver": "Drive with ZELU",
+    "ctaDriver": "I'm a driver",
     "ctaMyTrips": "View my trips",
     "ctaDashboard": "Open my dashboard",
     "ctaAdmin": "Open admin",
-    "stepsTitle": "Precision in three steps.",
-    "stepsLead": "ZELU is an exclusive marketplace: define the trip, receive offers, choose with full control.",
+    "stepsTitle": "Your trip, in three steps.",
+    "stepsLead": "ZELU is built for travellers: publish a request, compare offers from verified drivers, and choose with full control.",
     "step1Title": "Request the trip",
-    "step1Body": "Origin, destination, and what matters along the way.",
+    "step1Body": "Origin, destination, and what matters — airport, hotel, or meeting.",
     "step2Title": "Receive offers",
     "step2Body": "Verified drivers reply with price and vehicle.",
-    "step3Title": "Choose with confidence",
-    "step3Body": "Compare, accept, and travel with transparency.",
+    "step3Title": "Choose and go",
+    "step3Body": "Compare, accept the best offer, and travel with transparency.",
     "terms": "Terms",
     "privacy": "Privacy"
   },

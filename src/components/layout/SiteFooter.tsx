@@ -4,9 +4,11 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 export function SiteFooter({
   termsLabel,
   privacyLabel,
+  driversLabel,
 }: {
   termsLabel: string;
   privacyLabel: string;
+  driversLabel?: string;
 }) {
   return (
     <footer className="site-footer">
@@ -18,6 +20,14 @@ export function SiteFooter({
             ·
           </span>
           <Link href="/privacidade">{privacyLabel}</Link>
+          {driversLabel ? (
+            <>
+              <span aria-hidden className="site-footer-sep">
+                ·
+              </span>
+              <Link href="/para-motoristas">{driversLabel}</Link>
+            </>
+          ) : null}
         </div>
       </div>
     </footer>
