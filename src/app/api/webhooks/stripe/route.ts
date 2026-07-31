@@ -1,18 +1,62 @@
-import { getPaymentProvider } from "@/lib/payments/provider";
+import { NextResponse } from "next/server";
+import { getStripe } from "@/lib/stripe/client";
+import { prisma } from "@/lib/db";
+import { activateSubscriptionFromPayment } from "@/lib/payments/activate";
 
-/** Stripe webhook stub — ready for future Connect integration. */
 export async function POST(request: Request) {
-  const signature = request.headers.get("stripe-signature") || "";
-  const rawBody = Buffer.from(await request.arrayBuffer());
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const stripe = getStripe();
 
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    return Response.json({
+  if (!secret || !stripe) {
+    return NextResponse.json({
       received: true,
       ignored: true,
-      reason: "STRIPE_WEBHOOK_SECRET not configured",
+      reason: "Stripe webhook not configured",
     });
   }
 
-  const event = await getPaymentProvider().parseWebhook(rawBody, signature);
-  return Response.json({ received: true, event });
+  const signature = request.headers.get("stripe-signature");
+  if (!signature) {
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+  }
+
+  const rawBody = await request.text();
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, signature, secret);
+  } catch {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    const sessionId = session.id;
+
+    let payment = await prisma.payment.findFirst({
+      where: { providerSessionId: sessionId },
+    });
+
+    if (!payment && session.metadata?.subscriptionId) {
+      payment = await prisma.payment.findFirst({
+        where: {
+          subscriptionId: session.metadata.subscriptionId,
+          status: "PENDING",
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }
+
+    if (!payment && session.metadata?.paymentId) {
+      payment = await prisma.payment.findUnique({
+        where: { id: session.metadata.paymentId },
+      });
+    }
+
+    if (payment) {
+      await activateSubscriptionFromPayment(payment.id);
+    }
+  }
+
+  return NextResponse.json({ received: true, type: event.type });
 }

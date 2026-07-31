@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import type { Role } from "@prisma/client";
@@ -35,53 +34,39 @@ const credentialsSchema = z.object({
   password: z.string().min(6),
 });
 
-const googleConfigured = Boolean(
-  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
-);
-
-const providers = [
-  Credentials({
-    name: "credentials",
-    credentials: {
-      email: { label: "Email", type: "email" },
-      password: { label: "Password", type: "password" },
-    },
-    async authorize(credentials) {
-      const parsed = credentialsSchema.safeParse(credentials);
-      if (!parsed.success) return null;
-
-      const user = await prisma.user.findUnique({
-        where: { email: parsed.data.email.toLowerCase() },
-      });
-      if (!user?.passwordHash) return null;
-
-      const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
-      if (!valid) return null;
-
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        image: user.image,
-      };
-    },
-  }),
-];
-
-if (googleConfigured) {
-  providers.push(
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID!,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
-    }) as never,
-  );
-}
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  ...(googleConfigured ? { adapter: PrismaAdapter(prisma) } : {}),
-  providers,
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    Credentials({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const parsed = credentialsSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { email: parsed.data.email.toLowerCase() },
+        });
+        if (!user?.passwordHash) return null;
+        if (user.status === "SUSPENDED") return null;
+
+        const valid = await bcrypt.compare(parsed.data.password, user.passwordHash);
+        if (!valid) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          image: user.image,
+        };
+      },
+    }),
+  ],
   callbacks: {
     ...authConfig.callbacks,
     async jwt({ token, user }) {
@@ -90,7 +75,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         return token;
       }
-
       if (token.email && !token.role) {
         try {
           const dbUser = await prisma.user.findUnique({

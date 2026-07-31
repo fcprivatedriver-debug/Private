@@ -1,8 +1,14 @@
-import { getLocale, getTranslations } from "next-intl/server";
-import { Link as LocaleLink } from "@/i18n/navigation";
-import { auth, signOut } from "@/lib/auth";
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
+import { Link as LocaleLink, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { signOut } from "next-auth/react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { dashboardPathForRole } from "@/lib/auth-routes";
+import { useLocale } from "next-intl";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
@@ -22,73 +28,106 @@ function LocaleSwitcher({ locale }: { locale: string }) {
   );
 }
 
-export async function SiteHeader() {
-  const session = await auth();
+export function SiteHeader() {
+  const { data: session } = useSession();
   const role = session?.user?.role;
-  const locale = await getLocale();
-  const t = await getTranslations("nav");
+  const locale = useLocale();
+  const pathname = usePathname();
+  const t = useTranslations("nav");
+  const [open, setOpen] = useState(false);
+
+  const dashboardHref = role ? dashboardPathForRole(role) : "/login";
 
   return (
     <header className="site-header">
-      <div className="container site-header-inner">
+      <div className="container site-header-inner" style={{ position: "relative" }}>
         <BrandLogo />
-        <nav className="nav-links">
-          {!session && (
-            <>
-              <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
-              <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
-              <LocaleLink href="/homepage-lab">{t("branding")}</LocaleLink>
-            </>
-          )}
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-expanded={open}
+          aria-controls="site-nav"
+          onClick={() => setOpen((v) => !v)}
+        >
+          Menu
+        </button>
+        <nav id="site-nav" className={`nav-links${open ? " is-open" : ""}`}>
+          <LocaleLink href="/planos" onClick={() => setOpen(false)}>
+            {t("plans")}
+          </LocaleLink>
+          <LocaleLink href="/#como-funciona" onClick={() => setOpen(false)}>
+            {t("howItWorks")}
+          </LocaleLink>
+          <LocaleLink href="/contacto" onClick={() => setOpen(false)}>
+            {t("contact")}
+          </LocaleLink>
+
           {role === "CUSTOMER" && (
-            <>
-              <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>
-              <LocaleLink href="/pedidos/novo">{t("newTrip")}</LocaleLink>
-            </>
+            <LocaleLink href="/cliente" onClick={() => setOpen(false)}>
+              {t("dashboard")}
+            </LocaleLink>
           )}
           {role === "DRIVER" && (
-            <>
-              <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
-              <LocaleLink href="/pedidos-abertos">{t("openRequests")}</LocaleLink>
-              <LocaleLink href="/propostas">{t("myOffers")}</LocaleLink>
-              <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
-              <LocaleLink href="/veiculo">{t("vehicle")}</LocaleLink>
-            </>
+            <LocaleLink href="/motorista" onClick={() => setOpen(false)}>
+              {t("dashboard")}
+            </LocaleLink>
           )}
           {role === "ADMIN" && (
-            <>
-              <LocaleLink href="/admin">{t("admin")}</LocaleLink>
-              <LocaleLink href="/admin/verificacoes">{t("verifications")}</LocaleLink>
-              <LocaleLink href="/admin/vehicle-classes">{t("vehicleClasses")}</LocaleLink>
-            </>
+            <LocaleLink href="/admin" onClick={() => setOpen(false)}>
+              {t("admin")}
+            </LocaleLink>
           )}
+
           <LocaleSwitcher locale={locale} />
+
           {!session ? (
             <>
-              <LocaleLink href="/login">{t("login")}</LocaleLink>
-              <LocaleLink href="/registo" className="btn btn-primary btn-sm">
-                {t("start")}
+              <LocaleLink href="/login" onClick={() => setOpen(false)}>
+                {t("login")}
+              </LocaleLink>
+              <LocaleLink
+                href="/registo"
+                className="btn btn-primary btn-sm"
+                onClick={() => setOpen(false)}
+              >
+                {t("register")}
               </LocaleLink>
             </>
           ) : (
             <>
-              <span className="muted" style={{ fontSize: "0.88rem" }}>
+              <LocaleLink href={dashboardHref} className="muted" style={{ fontSize: "0.88rem" }}>
                 {session.user.name?.split(" ")[0]}
-              </span>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: `/${locale}` });
-                }}
+              </LocaleLink>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => signOut({ callbackUrl: `/${locale}` })}
               >
-                <button type="submit" className="btn btn-secondary btn-sm">
-                  {t("logout")}
-                </button>
-              </form>
+                {t("logout")}
+              </button>
             </>
           )}
         </nav>
       </div>
+
+      {session && (
+        <nav className="bottom-nav" aria-label="Navegação principal">
+          <div className="bottom-nav-inner">
+            <LocaleLink href="/" aria-current={pathname === "/" ? "page" : undefined}>
+              Início
+            </LocaleLink>
+            <LocaleLink href="/planos" aria-current={pathname === "/planos" ? "page" : undefined}>
+              Planos
+            </LocaleLink>
+            <LocaleLink href={dashboardHref} aria-current={pathname.startsWith(dashboardHref) ? "page" : undefined}>
+              Painel
+            </LocaleLink>
+            <LocaleLink href="/contacto" aria-current={pathname === "/contacto" ? "page" : undefined}>
+              Contacto
+            </LocaleLink>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

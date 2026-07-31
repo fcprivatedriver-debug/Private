@@ -1,72 +1,37 @@
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import clsx from "clsx";
-
-export type ZrikLogoVariant = "A" | "B" | "C";
-
-/**
- * Default product logo: Option B — Z in petroleum blue,
- * RIK in ink black (#111111).
- */
-export const DEFAULT_ZRIK_VARIANT: ZrikLogoVariant = "B";
-
-/**
- * Typographic ZRIK wordmark — always uppercase.
- * A: all black · B: Z petrol · C: Z+K petrol
- */
-export function ZrikWordmark({
-  variant = DEFAULT_ZRIK_VARIANT,
-  className = "",
-  as: Tag = "span",
-  tone = "default",
-}: {
-  variant?: ZrikLogoVariant;
-  className?: string;
-  as?: "span" | "h1" | "div" | "p";
-  tone?: "default" | "on-dark";
-}) {
-  return (
-    <Tag
-      className={clsx(
-        "zrik-wordmark",
-        `zrik-wordmark-${variant}`,
-        tone === "on-dark" && "zrik-wordmark-on-dark",
-        className,
-      )}
-      aria-label="ZRIK"
-    >
-      {variant === "A" && <span className="zrik-ink">ZRIK</span>}
-      {variant === "B" && (
-        <>
-          <span className="zrik-accent">Z</span>
-          <span className="zrik-ink">RIK</span>
-        </>
-      )}
-      {variant === "C" && (
-        <>
-          <span className="zrik-accent">Z</span>
-          <span className="zrik-ink">RI</span>
-          <span className="zrik-accent">K</span>
-        </>
-      )}
-    </Tag>
-  );
-}
+import { BRAND } from "@/config/brand";
 
 export function BrandLogo({
   href = "/",
   size = "md",
-  variant = DEFAULT_ZRIK_VARIANT,
   tone = "default",
+  showText = true,
 }: {
   href?: "/" | string;
   size?: "sm" | "md" | "lg";
-  variant?: ZrikLogoVariant;
   tone?: "default" | "on-dark";
+  showText?: boolean;
 }) {
-  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.2rem";
+  const fontSize = size === "lg" ? "1.35rem" : size === "sm" ? "0.95rem" : "1.1rem";
+  const imgSize = size === "lg" ? 36 : size === "sm" ? 24 : 30;
+
   return (
-    <Link href={href as "/"} className="logo" style={{ fontSize }} aria-label="ZRIK">
-      <ZrikWordmark variant={variant} tone={tone} />
+    <Link
+      href={href as "/"}
+      className={clsx("brand-logo", tone === "on-dark" && "brand-logo-on-dark")}
+      style={{ fontSize }}
+      aria-label={BRAND.name}
+    >
+      <Image
+        src={tone === "on-dark" ? BRAND.logoLight : BRAND.logo}
+        alt=""
+        width={imgSize}
+        height={imgSize}
+        priority
+      />
+      {showText && <span>FC Private Driver</span>}
     </Link>
   );
 }

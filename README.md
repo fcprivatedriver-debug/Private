@@ -1,16 +1,21 @@
-# ZRIK
+# FC Private Driver
 
-Private-chauffeur marketplace — choose the best driver, choose the best price.
+Serviço de motorista privado por subscrição mensal — Progressive Web App (PWA).
 
-**Brand:** ZRIK · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Marca:** FC Private Driver  
+**Contacto:** fcprivatedriver@gmail.com · +351 933 239 595  
+**Idioma:** Português de Portugal (i18n preparado para inglês)
 
 ## Stack
 
 - Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
-- Auth.js (credentials) · Prisma · Neon PostgreSQL
+- Auth.js (credenciais) · Prisma · PostgreSQL
+- Stripe (Cartão / MB WAY / Multibanco via webhooks)
+- Google Maps (autocomplete + rotas)
+- PWA instalável (manifest + service worker)
 - next-intl (`/pt`, `/en`)
 
-## Local setup
+## Arranque local
 
 ```bash
 cp .env.example .env
@@ -20,30 +25,66 @@ npm run db:seed
 npm run dev
 ```
 
-### Demo accounts (password: `movio123`)
+Abrir [http://localhost:3000/pt](http://localhost:3000/pt).
 
-| Email | Role |
-|-------|------|
-| `cliente@movio.app` | Customer |
-| `motorista@movio.app` | Driver (active) |
-| `admin@movio.app` | Admin |
+### Contas de demonstração (password: `fcpd123`)
 
-Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
+| E-mail | Perfil |
+|--------|--------|
+| `admin@fcprivatedriver.demo` | Administrador |
+| `cliente@fcprivatedriver.demo` | Cliente (Plano Privado ativo) |
+| `motorista@fcprivatedriver.demo` | Motorista |
 
-## Branding
+## Planos iniciais
 
-Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
-Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
+| Plano | Preço | Minutos |
+|-------|-------|---------|
+| Privado | 99 €/mês | 300 (≈ 5 h) |
+| Privado Plus | 199 €/mês | 600 (≈ 10 h) |
 
-| Variable | Example |
-|----------|---------|
-| `DATABASE_URL` | Neon pooled URL |
-| `DIRECT_URL` | Neon unpooled URL |
-| `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZRIK` |
+Preços, minutos, tolerância (10 min), cobrança mínima (15 min) e contactos são editáveis em **Admin → Configurações / Planos** — sem alterar código.
 
-See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
+## Variáveis de ambiente
 
-## Package
+Ver `.env.example`:
 
-- Package name: **zrik**
+| Variável | Descrição |
+|----------|-----------|
+| `DATABASE_URL` / `DIRECT_URL` | PostgreSQL (Neon em produção) |
+| `AUTH_SECRET` | Segredo Auth.js (32+ caracteres) |
+| `NEXT_PUBLIC_APP_NAME` | `FC Private Driver` |
+| `NEXT_PUBLIC_APP_URL` | URL pública |
+| `PAYMENTS_ENABLED` | `true` para Stripe real |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe (cliente) |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Maps |
+| `RESEND_API_KEY` / `EMAIL_FROM` | E-mails transacionais |
+| `DEMO_MODE` | Banner de demonstração |
+
+## Scripts
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npm run db:demo
+npm run pr:proof -- --pr <N>
+```
+
+## Áreas da aplicação
+
+- **Pública:** landing, planos, contacto, termos, privacidade
+- **Cliente:** painel de minutos, marcar viagem, faturas, perfil, hábitos
+- **Motorista:** viagens atribuídas, estados, temporizador, custos extra
+- **Admin:** clientes, planos, viagens, motoristas, pagamentos, configurações
+
+## Deploy (Vercel + Neon)
+
+1. Ligar o repositório à Vercel
+2. Adicionar PostgreSQL (Neon) e copiar `DATABASE_URL` / `DIRECT_URL`
+3. Definir `AUTH_SECRET` e restantes variáveis
+4. Configurar webhook Stripe → `/api/webhooks/stripe`
+5. Deploy — `npm run build` corre migrate automaticamente
+
+Ver também `docs/DEPLOY_VERCEL.md`.

@@ -1,107 +1,67 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { isGoogleMapsConfigured, suggestPlaces, type PlaceSuggestion } from "@/lib/maps";
+import { useEffect, useRef } from "react";
 
 type Props = {
-  id?: string;
+  value: string;
+  onChange: (value: string, place?: { lat?: number; lng?: number; formatted?: string }) => void;
   name: string;
-  label: string;
   placeholder?: string;
-  defaultValue?: string;
   required?: boolean;
-  onChangeValue?: (value: string) => void;
+  id?: string;
 };
 
-/**
- * Address input with Google Places Autocomplete when configured.
- * Degrades to a plain text field in Phase 0 without an API key.
- */
 export function AddressAutocompleteInput({
-  id,
+  value,
+  onChange,
   name,
-  label,
   placeholder,
-  defaultValue,
   required,
-  onChangeValue,
+  id,
 }: Props) {
-  const autoId = useId();
-  const inputId = id || autoId;
-  const [value, setValue] = useState(defaultValue || "");
-  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
-  const mapsReady = isGoogleMapsConfigured();
-
-  function updateValue(next: string) {
-    setValue(next);
-    onChangeValue?.(next);
-  }
+  const inputRef = useRef<HTMLInputElement>(null);
+  const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
-    if (!mapsReady || value.trim().length < 3) {
-      setSuggestions([]);
-      return;
+    if (!key || !inputRef.current) return;
+    let cancelled = false;
+
+    async function load() {
+      const { importLibrary, setOptions } = await import("@googlemaps/js-api-loader");
+      setOptions({ key: key! });
+      await importLibrary("places");
+      if (cancelled || !inputRef.current) return;
+      const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
+        fields: ["formatted_address", "geometry"],
+        componentRestrictions: { country: ["pt"] },
+      });
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        onChange(place.formatted_address || inputRef.current?.value || "", {
+          formatted: place.formatted_address,
+          lat: place.geometry?.location?.lat(),
+          lng: place.geometry?.location?.lng(),
+        });
+      });
     }
-    const handle = setTimeout(async () => {
-      const next = await suggestPlaces(value);
-      setSuggestions(next.slice(0, 5));
-    }, 250);
-    return () => clearTimeout(handle);
-  }, [value, mapsReady]);
+
+    load().catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [key, onChange]);
 
   return (
-    <div className="field" style={{ position: "relative" }}>
-      <label className="label" htmlFor={inputId}>
-        {label}
-      </label>
-      <input
-        className="input"
-        id={inputId}
-        name={name}
-        value={value}
-        onChange={(e) => updateValue(e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        autoComplete="off"
-      />
-      {suggestions.length > 0 && (
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: "0.35rem 0",
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: "100%",
-            zIndex: 20,
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--line)",
-            borderRadius: 12,
-          }}
-        >
-          {suggestions.map((s) => (
-            <li key={s.placeId}>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                style={{ width: "100%", justifyContent: "flex-start", borderRadius: 0 }}
-                onClick={() => {
-                  updateValue(s.description);
-                  setSuggestions([]);
-                }}
-              >
-                {s.description}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {!mapsReady && (
-        <p className="muted" style={{ fontSize: "0.8rem", marginTop: "0.35rem" }}>
-          Google Maps key not set — free-text address mode.
-        </p>
-      )}
-    </div>
+    <input
+      ref={inputRef}
+      id={id}
+      name={name}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      className="field"
+      autoComplete="street-address"
+    />
   );
 }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" fill="none">
+  <rect width="48" height="48" y="8" rx="6" fill="#0A4F5C"/>
+  <text x="24" y="40" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="700" fill="#FFFFFF">FC</text>
+  <text x="64" y="30" font-family="Georgia, serif" font-size="18" font-weight="600" fill="#FFFFFF" letter-spacing="0.04em">PRIVATE DRIVER</text>
+  <text x="64" y="48" font-family="system-ui, sans-serif" font-size="10" fill="#A8D0D6" letter-spacing="0.18em">MOTORISTA PRIVADO</text>
+</svg>

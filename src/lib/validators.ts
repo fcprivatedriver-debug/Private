@@ -1,55 +1,39 @@
 import { z } from "zod";
 
-export const createTripSchema = z.object({
-  pickupAddress: z.string().min(3, "Indica a origem"),
-  dropoffAddress: z.string().min(3, "Indica o destino"),
-  pickupAt: z.string().min(1, "Indica data e hora"),
-  passengers: z.coerce.number().int().min(1).max(20),
-  luggage: z.coerce.number().int().min(0).max(30),
+export const registerSchema = z
+  .object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    phone: z.string().min(9),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "As palavras-passe não coincidem",
+    path: ["confirmPassword"],
+  });
+
+export const tripBookingSchema = z.object({
+  pickupAddress: z.string().min(3),
+  dropoffAddress: z.string().min(3),
+  date: z.string().min(1),
+  time: z.string().min(1),
+  passengers: z.coerce.number().int().min(1).max(8),
+  luggage: z.coerce.number().int().min(0).max(10),
+  tripType: z.enum(["ONE_WAY", "ROUND_TRIP"]).default("ONE_WAY"),
+  needsWaiting: z.boolean().optional(),
+  estimatedWaitMinutes: z.coerce.number().int().min(0).optional(),
   notes: z.string().optional(),
-  flightNumber: z.string().optional(),
-  preferredVehicleClassId: z.string().min(1).optional(),
-  publish: z.coerce.boolean().optional(),
-  pickupLat: z.coerce.number().optional(),
-  pickupLng: z.coerce.number().optional(),
-  dropoffLat: z.coerce.number().optional(),
-  dropoffLng: z.coerce.number().optional(),
-  distanceMeters: z.coerce.number().int().positive().optional(),
-  durationSeconds: z.coerce.number().int().positive().optional(),
+  passengerContact: z.string().optional(),
 });
 
-export const createOfferSchema = z.object({
-  tripRequestId: z.string().min(1),
-  vehicleId: z.string().optional(),
-  priceEuros: z.coerce.number().positive("Preço inválido"),
-  message: z.string().max(500).optional(),
-  includesTolls: z.coerce.boolean().optional(),
-  includesWaiting: z.coerce.boolean().optional(),
-  estimatedArrivalMinutes: z.coerce.number().int().min(1).max(240).optional(),
-});
-
-export const reviewSchema = z.object({
-  bookingId: z.string().min(1),
-  rating: z.coerce.number().int().min(1).max(5),
-  vehicleRating: z.coerce.number().int().min(1).max(5).optional(),
-  comment: z.string().max(1000).optional(),
-});
-
-export const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  phone: z.string().optional(),
-  role: z.enum(["CUSTOMER", "DRIVER"]),
-});
-
-export const vehicleSchema = z.object({
-  make: z.string().min(1),
-  model: z.string().min(1),
-  year: z.coerce.number().int().min(1990).max(2100),
-  color: z.string().min(1),
-  plate: z.string().min(2),
-  seats: z.coerce.number().int().min(1).max(50),
-  luggageCapacity: z.coerce.number().int().min(0).max(50),
-  vehicleClassId: z.string().min(1),
+export const profileSchema = z.object({
+  fullName: z.string().min(2),
+  addressLine: z.string().min(3),
+  postalCode: z.string().min(4),
+  city: z.string().min(2),
+  phone: z.string().min(9),
+  taxId: z.string().optional(),
+  altPhone: z.string().optional(),
+  notes: z.string().optional(),
 });
