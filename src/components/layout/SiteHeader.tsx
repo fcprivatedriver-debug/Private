@@ -36,8 +36,6 @@ export async function SiteHeader() {
           {!session && (
             <>
               <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
-              <LocaleLink href="/para-motoristas">{t("drivers")}</LocaleLink>
-              <LocaleLink href="/homepage-lab">{t("branding")}</LocaleLink>
             </>
           )}
           {role === "CUSTOMER" && (
@@ -66,7 +64,7 @@ export async function SiteHeader() {
           {!session ? (
             <>
               <LocaleLink href="/login">{t("login")}</LocaleLink>
-              <LocaleLink href="/registo" className="btn btn-primary btn-sm">
+              <LocaleLink href="/registo?role=CUSTOMER" className="btn btn-primary btn-sm">
                 {t("start")}
               </LocaleLink>
             </>
