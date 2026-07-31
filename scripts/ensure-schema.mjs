@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
  * Ensure critical ZELU tables exist on the target database.
- * Shared Neon can report migrate as applied while tables are missing
- * (partial/foreign migration history). In that case, `db push` repairs schema.
+ * Never fails the build: logs warnings and exits 0 so `next build` can proceed.
+ * Prefer raw DDL over `prisma db push` — shared Neon often has foreign schemas
+ * (Mafil/Mel) that make push fail while SELECT 1 still works.
+ * Runtime repair also lives in /api/health + vehicle-classes as a safety net.
  */
-import { spawnSync } from "node:child_process";
 import { PrismaClient } from "@prisma/client";
 import { PrismaNeonHttp } from "@prisma/adapter-neon";
 
@@ -19,152 +20,141 @@ function sanitizeDatabaseUrl(url) {
   }
 }
 
+function makePrisma(raw) {
+  return new PrismaClient({
+    adapter: new PrismaNeonHttp(sanitizeDatabaseUrl(raw), {
+      arrayMode: false,
+      fullResults: true,
+    }),
+  });
+}
+
+const DEFAULT_CLASSES = [
+  {
+    id: "vc_comfort",
+    code: "COMFORT",
+    namePt: "Comfort",
+    nameEn: "Comfort",
+    descriptionPt: "Veículos executivos standard até 4 passageiros",
+    descriptionEn: "Standard executive vehicles up to 4 passengers",
+    minPassengers: 1,
+    maxPassengers: 4,
+    maxLuggage: 3,
+    iconKey: "comfort",
+    sortOrder: 10,
+    active: true,
+  },
+  {
+    id: "vc_premium",
+    code: "PREMIUM",
+    namePt: "Premium",
+    nameEn: "Premium",
+    descriptionPt: "Veículos executivos de luxo até 4 passageiros",
+    descriptionEn: "Luxury executive vehicles up to 4 passengers",
+    minPassengers: 1,
+    maxPassengers: 4,
+    maxLuggage: 4,
+    iconKey: "premium",
+    sortOrder: 20,
+    active: true,
+  },
+  {
+    id: "vc_van",
+    code: "VAN",
+    namePt: "Van",
+    nameEn: "Van",
+    descriptionPt: "Vans executivas para famílias e grupos até 8 passageiros",
+    descriptionEn: "Executive vans for families and groups up to 8 passengers",
+    minPassengers: 1,
+    maxPassengers: 8,
+    maxLuggage: 8,
+    iconKey: "van",
+    sortOrder: 30,
+    active: true,
+  },
+];
+
+async function createVehicleClassTable(prisma) {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "VehicleClass" (
+      "id" TEXT NOT NULL,
+      "code" TEXT NOT NULL,
+      "namePt" TEXT NOT NULL,
+      "nameEn" TEXT NOT NULL,
+      "descriptionPt" TEXT,
+      "descriptionEn" TEXT,
+      "minPassengers" INTEGER NOT NULL DEFAULT 1,
+      "maxPassengers" INTEGER NOT NULL,
+      "maxLuggage" INTEGER NOT NULL DEFAULT 2,
+      "iconKey" TEXT,
+      "sortOrder" INTEGER NOT NULL DEFAULT 0,
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "VehicleClass_pkey" PRIMARY KEY ("id")
+    )
+  `);
+  await prisma.$executeRawUnsafe(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "VehicleClass_code_key" ON "VehicleClass"("code")`,
+  );
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "VehicleClass_active_sortOrder_idx" ON "VehicleClass"("active", "sortOrder")`,
+  );
+}
+
+async function seedClasses(prisma) {
+  await prisma.vehicleClass.createMany({
+    data: DEFAULT_CLASSES,
+    skipDuplicates: true,
+  });
+}
+
 async function main() {
   const raw = process.env.DATABASE_URL;
   if (!raw) {
-    console.error("[ensure-schema] DATABASE_URL missing");
-    process.exit(1);
+    console.warn("[ensure-schema] DATABASE_URL missing — skip");
+    return;
   }
 
-  const adapter = new PrismaNeonHttp(sanitizeDatabaseUrl(raw), {
-    arrayMode: false,
-    fullResults: true,
-  });
-  const prisma = new PrismaClient({ adapter });
-
+  const prisma = makePrisma(raw);
   try {
     await prisma.$queryRaw`SELECT 1`;
+
+    let needsCreate = false;
     try {
       const count = await prisma.vehicleClass.count();
       console.log("[ensure-schema] VehicleClass OK, count=", count);
       if (count === 0) {
-        console.log("[ensure-schema] Seeding default vehicle classes…");
-        await prisma.vehicleClass.createMany({
-          data: [
-            {
-              code: "SEDAN",
-              namePt: "Sedan",
-              nameEn: "Sedan",
-              descriptionPt: "Conforto para até 3 passageiros",
-              descriptionEn: "Comfort for up to 3 passengers",
-              minPassengers: 1,
-              maxPassengers: 3,
-              maxLuggage: 2,
-              sortOrder: 10,
-              active: true,
-            },
-            {
-              code: "EXECUTIVE",
-              namePt: "Executivo",
-              nameEn: "Executive",
-              descriptionPt: "Premium para até 3 passageiros",
-              descriptionEn: "Premium for up to 3 passengers",
-              minPassengers: 1,
-              maxPassengers: 3,
-              maxLuggage: 3,
-              sortOrder: 20,
-              active: true,
-            },
-            {
-              code: "VAN",
-              namePt: "Van",
-              nameEn: "Van",
-              descriptionPt: "Grupo até 7 passageiros",
-              descriptionEn: "Group up to 7 passengers",
-              minPassengers: 1,
-              maxPassengers: 7,
-              maxLuggage: 6,
-              sortOrder: 30,
-              active: true,
-            },
-          ],
-          skipDuplicates: true,
-        });
+        await seedClasses(prisma);
         console.log("[ensure-schema] Default classes seeded");
       }
       return;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn("[ensure-schema] VehicleClass missing/broken:", message.slice(0, 200));
+      needsCreate = /does not exist|P2021/i.test(message);
     }
 
-    console.log("[ensure-schema] Running prisma db push to sync schema…");
-    const push = spawnSync(
-      "npx",
-      ["prisma", "db", "push", "--skip-generate", "--accept-data-loss"],
-      { encoding: "utf8", env: process.env, stdio: ["ignore", "pipe", "pipe"] },
-    );
-    process.stdout.write(push.stdout || "");
-    process.stderr.write(push.stderr || "");
-    if ((push.status ?? 1) !== 0) {
-      console.error("[ensure-schema] db push failed");
-      process.exit(push.status ?? 1);
+    if (!needsCreate) {
+      console.warn("[ensure-schema] unexpected VehicleClass error — skip DDL");
+      return;
     }
 
-    // Re-check
-    const prisma2 = new PrismaClient({
-      adapter: new PrismaNeonHttp(sanitizeDatabaseUrl(raw), {
-        arrayMode: false,
-        fullResults: true,
-      }),
-    });
-    try {
-      const count = await prisma2.vehicleClass.count();
-      console.log("[ensure-schema] VehicleClass repaired, count=", count);
-      if (count === 0) {
-        console.log("[ensure-schema] Seeding default vehicle classes…");
-        await prisma2.vehicleClass.createMany({
-          data: [
-            {
-              code: "SEDAN",
-              namePt: "Sedan",
-              nameEn: "Sedan",
-              descriptionPt: "Conforto para até 3 passageiros",
-              descriptionEn: "Comfort for up to 3 passengers",
-              minPassengers: 1,
-              maxPassengers: 3,
-              maxLuggage: 2,
-              sortOrder: 10,
-              active: true,
-            },
-            {
-              code: "EXECUTIVE",
-              namePt: "Executivo",
-              nameEn: "Executive",
-              descriptionPt: "Premium para até 3 passageiros",
-              descriptionEn: "Premium for up to 3 passengers",
-              minPassengers: 1,
-              maxPassengers: 3,
-              maxLuggage: 3,
-              sortOrder: 20,
-              active: true,
-            },
-            {
-              code: "VAN",
-              namePt: "Van",
-              nameEn: "Van",
-              descriptionPt: "Grupo até 7 passageiros",
-              descriptionEn: "Group up to 7 passengers",
-              minPassengers: 1,
-              maxPassengers: 7,
-              maxLuggage: 6,
-              sortOrder: 30,
-              active: true,
-            },
-          ],
-          skipDuplicates: true,
-        });
-        console.log("[ensure-schema] Default classes seeded");
-      }
-    } finally {
-      await prisma2.$disconnect();
-    }
+    console.log("[ensure-schema] Creating VehicleClass via DDL…");
+    await createVehicleClassTable(prisma);
+    await seedClasses(prisma);
+    const count = await prisma.vehicleClass.count();
+    console.log("[ensure-schema] VehicleClass repaired, count=", count);
+  } catch (error) {
+    console.warn("[ensure-schema] non-fatal error", error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-main().catch((error) => {
-  console.error("[ensure-schema] fatal", error);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.warn("[ensure-schema] swallowed fatal", error);
+    process.exit(0);
+  });

@@ -2,12 +2,33 @@ import { requireRole } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { VehicleClassAdminPanel } from "@/components/admin/VehicleClassAdminPanel";
 import { Link } from "@/i18n/navigation";
+import { repairVehicleClassSchema } from "@/lib/db-repair";
 
 export default async function AdminVehicleClassesPage() {
   await requireRole("ADMIN");
-  const classes = await prisma.vehicleClass.findMany({
-    orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
-  });
+
+  let classes;
+  try {
+    classes = await prisma.vehicleClass.findMany({
+      orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+    });
+    if (classes.length === 0) {
+      await repairVehicleClassSchema();
+      classes = await prisma.vehicleClass.findMany({
+        orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/does not exist|P2021/i.test(message)) {
+      await repairVehicleClassSchema();
+      classes = await prisma.vehicleClass.findMany({
+        orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
+      });
+    } else {
+      throw error;
+    }
+  }
 
   return (
     <section className="section fade-up">
