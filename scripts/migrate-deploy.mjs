@@ -38,3 +38,17 @@ if (result.code !== 0) {
   }
   console.log("[migrate-deploy] db push succeeded");
 }
+
+// Optionally seed demo accounts when DEMO_MODE=true and no admin exists yet
+if (process.env.DEMO_MODE === "true" || process.env.SEED_ON_DEPLOY === "true") {
+  console.log("[migrate-deploy] DEMO_MODE/SEED_ON_DEPLOY — running seed…");
+  const seed = spawnSync("npx", ["tsx", "prisma/seed.ts"], {
+    encoding: "utf8",
+    env: process.env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  process.stdout.write(`${seed.stdout || ""}${seed.stderr || ""}`);
+  if ((seed.status ?? 1) !== 0) {
+    console.warn("[migrate-deploy] seed failed (non-fatal for build)");
+  }
+}
