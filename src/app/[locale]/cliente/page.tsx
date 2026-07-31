@@ -24,7 +24,7 @@ import {
 } from "@/config/constants";
 
 export default async function ClienteDashboardPage() {
-  const session = await requireRole(["CUSTOMER"]);
+  const session = await requireRole(["CUSTOMER", "ADMIN"]);
   const locale = await getLocale();
 
   const customer = await prisma.user.findUniqueOrThrow({
@@ -32,7 +32,11 @@ export default async function ClienteDashboardPage() {
     include: { customerProfile: true },
   });
 
-  if (!customer.customerProfile?.profileComplete) {
+  if (
+    session.user.role === "CUSTOMER" &&
+    customer.customerProfile &&
+    !customer.customerProfile.profileComplete
+  ) {
     redirect({ href: "/perfil", locale });
   }
 
