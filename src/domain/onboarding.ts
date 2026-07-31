@@ -11,9 +11,59 @@ import type {
 const REQUIRED_DOC_TYPES: DriverDocumentType[] = [
   "IDENTITY",
   "DRIVING_LICENSE",
-  "INSURANCE",
-  "VEHICLE_REGISTRATION",
+  "TVDE_CERTIFICATE",
+  "CRIMINAL_RECORD",
 ];
+
+/** Optional but recommended when applicable. */
+const OPTIONAL_DOC_TYPES: DriverDocumentType[] = ["CMTVDE_LICENSE"];
+
+const REQUIRED_PHOTO_KEYS = [
+  "front",
+  "rear",
+  "left",
+  "right",
+  "interiorFront",
+  "interiorRear",
+  "trunk",
+] as const;
+
+export type AiVerdict = "APPROVED" | "PENDING" | "REJECTED";
+
+export function mapRecommendationToVerdict(
+  recommendation: string,
+  riskScore: number,
+): AiVerdict {
+  if (recommendation === "APPROVE" && riskScore <= 35) return "APPROVED";
+  if (recommendation === "REJECT" || riskScore >= 85) return "REJECTED";
+  return "PENDING";
+}
+
+function parseVehiclePhotos(raw: string | null | undefined): Record<string, string> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, string>;
+    }
+    if (Array.isArray(parsed)) {
+      const keys = REQUIRED_PHOTO_KEYS;
+      const out: Record<string, string> = {};
+      parsed.forEach((url, i) => {
+        if (typeof url === "string" && keys[i]) out[keys[i]] = url;
+      });
+      return out;
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
+export function missingVehiclePhotos(photoUrls: string | null | undefined): string[] {
+  const photos = parseVehiclePhotos(photoUrls);
+  return REQUIRED_PHOTO_KEYS.filter((k) => !photos[k]);
+}
 
 const STEPS = ["profile", "vehicle", "documents", "review"] as const;
 export type OnboardingStep = (typeof STEPS)[number];
@@ -52,17 +102,19 @@ export function computeCompleteness(input: {
   languagesSpoken: string;
   hasVehicle: boolean;
   docTypes: string[];
+  vehiclePhotoCount?: number;
 }): number {
   let score = 0;
-  if (input.photoUrl) score += 15;
-  if (input.bio && input.bio.trim().length >= 40) score += 15;
-  else if (input.bio && input.bio.trim().length >= 10) score += 8;
-  if (input.yearsOfExperience > 0) score += 10;
-  if (parseLanguages(input.languagesSpoken).length > 0) score += 10;
-  if (input.hasVehicle) score += 20;
+  if (input.photoUrl) score += 8;
+  if (input.bio && input.bio.trim().length >= 20) score += 8;
+  if (input.yearsOfExperience > 0) score += 6;
+  if (parseLanguages(input.languagesSpoken).length > 0) score += 6;
+  if (input.hasVehicle) score += 16;
   const present = new Set(input.docTypes);
   const requiredHit = REQUIRED_DOC_TYPES.filter((t) => present.has(t)).length;
-  score += Math.round((requiredHit / REQUIRED_DOC_TYPES.length) * 30);
+  score += Math.round((requiredHit / REQUIRED_DOC_TYPES.length) * 36);
+  const photos = Math.min(REQUIRED_PHOTO_KEYS.length, input.vehiclePhotoCount ?? 0);
+  score += Math.round((photos / REQUIRED_PHOTO_KEYS.length) * 20);
   return Math.min(100, score);
 }
 
@@ -75,6 +127,7 @@ export async function refreshCompleteness(driverProfileId: string) {
     },
   });
   if (!profile) return 0;
+  const photos = parseVehiclePhotos(profile.vehicles[0]?.photoUrls);
   const score = computeCompleteness({
     bio: profile.bio,
     photoUrl: profile.photoUrl,
@@ -82,6 +135,9 @@ export async function refreshCompleteness(driverProfileId: string) {
     languagesSpoken: profile.languagesSpoken,
     hasVehicle: profile.vehicles.length > 0,
     docTypes: profile.verificationDocs.map((d) => d.type),
+    vehiclePhotoCount: Object.keys(photos).filter((k) =>
+      (REQUIRED_PHOTO_KEYS as readonly string[]).includes(k),
+    ).length,
   });
   await prisma.driverProfile.update({
     where: { id: driverProfileId },
@@ -214,6 +270,7 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
   });
   if (!profile) throw new DomainError("NOT_FOUND", "Perfil em falta");
 
+  const vehiclePhotos = parseVehiclePhotos(profile.vehicles[0]?.photoUrls);
   const result = await getAiVerificationProvider().analyzeDriver({
     name: profile.user.name,
     bio: profile.bio,
@@ -228,6 +285,7 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
           year: profile.vehicles[0].year,
           plate: profile.vehicles[0].plate,
           seats: profile.vehicles[0].seats,
+          photos: vehiclePhotos,
         }
       : null,
     documents: profile.verificationDocs.map((d) => ({
@@ -245,7 +303,11 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
       where: { id: doc.id },
       data: {
         aiScore: score,
-        aiAnalysis: JSON.stringify({ provider: result.provider, score }),
+        aiAnalysis: JSON.stringify({
+          provider: result.provider,
+          score,
+          verdict: mapRecommendationToVerdict(result.recommendation, result.riskScore),
+        }),
         aiFlags: JSON.stringify(
           result.findings.filter((f) => f.message.includes(doc.type)).map((f) => f.code),
         ),
@@ -261,6 +323,10 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
     ESCALATE: "ESCALATE",
   };
 
+  const verdict = mapRecommendationToVerdict(result.recommendation, result.riskScore);
+  const autoApprove =
+    process.env.ZELU_AI_AUTO_APPROVE !== "false" && verdict === "APPROVED";
+
   await prisma.verificationReview.create({
     data: {
       driverProfileId: profile.id,
@@ -268,24 +334,66 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
       decision: decisionMap[result.recommendation],
       riskScore: result.riskScore,
       confidence: result.confidence,
-      recommendation: result.summary,
+      recommendation: `${result.summary} · Veredito: ${verdict}`,
       findings: JSON.stringify(result.findings),
       actorUserId: actorUserId || null,
     },
   });
 
-  await prisma.driverProfile.update({
-    where: { id: profile.id },
-    data: {
-      aiRiskScore: result.riskScore,
-      aiConfidence: result.confidence,
-      aiSummary: result.summary,
-      onboardingStatus: "UNDER_REVIEW",
-      status: "PENDING_VERIFICATION",
-    },
-  });
+  if (autoApprove) {
+    await prisma.driverProfile.update({
+      where: { id: profile.id },
+      data: {
+        aiRiskScore: result.riskScore,
+        aiConfidence: result.confidence,
+        aiSummary: `${result.summary} · Aprovado automaticamente pela IA.`,
+        onboardingStatus: "APPROVED",
+        onboardingStep: "done",
+        status: "ACTIVE",
+        verifiedAt: new Date(),
+        rejectionReason: null,
+      },
+    });
+    await prisma.driverDocument.updateMany({
+      where: { driverProfileId: profile.id },
+      data: { status: "APPROVED", reviewedAt: new Date() },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: profile.userId,
+        type: "DRIVER_APPROVED",
+        title: "Conta aprovada",
+        body: "A análise automática da ZELU aprovou o seu perfil. Já pode receber pedidos.",
+      },
+    });
+  } else if (verdict === "REJECTED") {
+    await prisma.driverProfile.update({
+      where: { id: profile.id },
+      data: {
+        aiRiskScore: result.riskScore,
+        aiConfidence: result.confidence,
+        aiSummary: result.summary,
+        onboardingStatus: "REJECTED",
+        status: "REJECTED",
+        rejectionReason:
+          result.findings.find((f) => f.severity === "critical")?.message ||
+          "Documentação ou fotografias não cumprem os critérios ZELU.",
+      },
+    });
+  } else {
+    await prisma.driverProfile.update({
+      where: { id: profile.id },
+      data: {
+        aiRiskScore: result.riskScore,
+        aiConfidence: result.confidence,
+        aiSummary: `${result.summary} · Veredito IA: PENDENTE (revisão manual).`,
+        onboardingStatus: "UNDER_REVIEW",
+        status: "PENDING_VERIFICATION",
+      },
+    });
+  }
 
-  return result;
+  return { ...result, verdict, autoApprove };
 }
 
 export async function submitOnboarding(userId: string) {
@@ -308,10 +416,20 @@ export async function submitOnboarding(userId: string) {
   const present = new Set(profile.verificationDocs.map((d) => d.type));
   const missing = REQUIRED_DOC_TYPES.filter((t) => !present.has(t));
   if (missing.length) {
-    throw new DomainError("MISSING_DOCS", `Documentos em falta: ${missing.join(", ")}`);
+    throw new DomainError(
+      "MISSING_DOCS",
+      `Documentos obrigatórios em falta: ${missing.join(", ")}`,
+    );
   }
   if (profile.vehicles.length === 0) {
-    throw new DomainError("NO_VEHICLE", "Regista um veículo antes de submeter");
+    throw new DomainError("NO_VEHICLE", "Registe um veículo antes de submeter.");
+  }
+  const missingPhotos = missingVehiclePhotos(profile.vehicles[0]?.photoUrls);
+  if (missingPhotos.length) {
+    throw new DomainError(
+      "MISSING_PHOTOS",
+      `Fotografias do veículo em falta: ${missingPhotos.join(", ")}`,
+    );
   }
 
   await prisma.driverProfile.update({
@@ -331,9 +449,16 @@ export async function submitOnboarding(userId: string) {
     data: {
       userId,
       type: "ONBOARDING_SUBMITTED",
-      title: "Candidatura recebida",
-      body: "A sua candidatura foi recebida e será analisada pela equipa ZELU.",
-      meta: JSON.stringify({ riskScore: ai.riskScore, recommendation: ai.recommendation }),
+      title: ai.autoApprove ? "Candidatura aprovada" : "Candidatura em validação",
+      body: ai.autoApprove
+        ? "A IA aprovou automaticamente o seu perfil. Já pode receber pedidos."
+        : "A sua candidatura foi recebida. A IA analisou os ficheiros e a equipa pode validar manualmente.",
+      meta: JSON.stringify({
+        riskScore: ai.riskScore,
+        recommendation: ai.recommendation,
+        verdict: ai.verdict,
+        autoApprove: ai.autoApprove,
+      }),
     },
   });
 
@@ -352,137 +477,134 @@ export async function adminDecideVerification(input: {
   });
   if (!profile) throw new DomainError("NOT_FOUND", "Perfil em falta");
 
+  // Neon HTTP adapter does not support interactive transactions — sequential writes.
   if (input.decision === "APPROVE") {
-    await prisma.$transaction(async (tx) => {
-      await tx.driverProfile.update({
-        where: { id: profile.id },
-        data: {
-          status: "ACTIVE",
-          onboardingStatus: "APPROVED",
-          onboardingStep: "done",
-          verifiedAt: new Date(),
-          rejectionReason: null,
-          infoRequestMessage: null,
-          adminNotes: input.notes || null,
-        },
-      });
-      await tx.driverDocument.updateMany({
-        where: { driverProfileId: profile.id },
-        data: { status: "APPROVED", reviewedAt: new Date() },
-      });
-      await tx.verificationReview.create({
-        data: {
-          driverProfileId: profile.id,
-          source: "ADMIN",
-          decision: "APPROVE",
-          riskScore: profile.aiRiskScore,
-          confidence: profile.aiConfidence,
-          recommendation: "Admin approved",
-          notes: input.notes || null,
-          actorUserId: input.adminUserId,
-          findings: "[]",
-        },
-      });
-      await tx.auditLog.create({
-        data: {
-          actorId: input.adminUserId,
-          action: "DRIVER_APPROVE",
-          entityType: "DriverProfile",
-          entityId: profile.id,
-          meta: JSON.stringify({ notes: input.notes || null }),
-        },
-      });
-      await tx.notification.create({
-        data: {
-          userId: profile.userId,
-          type: "DRIVER_APPROVED",
-          title: "Conta verificada",
-          body: "Parabéns! O teu perfil ZELU foi aprovado. Já podes enviar propostas.",
-        },
-      });
-    });
-    return { status: "ACTIVE" as const };
-  }
-
-  if (input.decision === "REJECT") {
-    await prisma.$transaction(async (tx) => {
-      await tx.driverProfile.update({
-        where: { id: profile.id },
-        data: {
-          status: "REJECTED",
-          onboardingStatus: "REJECTED",
-          verifiedAt: null,
-          rejectionReason: input.notes || "Documentação insuficiente",
-          adminNotes: input.notes || null,
-        },
-      });
-      await tx.verificationReview.create({
-        data: {
-          driverProfileId: profile.id,
-          source: "ADMIN",
-          decision: "REJECT",
-          riskScore: profile.aiRiskScore,
-          confidence: profile.aiConfidence,
-          recommendation: "Admin rejected",
-          notes: input.notes || null,
-          actorUserId: input.adminUserId,
-          findings: "[]",
-        },
-      });
-      await tx.auditLog.create({
-        data: {
-          actorId: input.adminUserId,
-          action: "DRIVER_REJECT",
-          entityType: "DriverProfile",
-          entityId: profile.id,
-          meta: JSON.stringify({ notes: input.notes || null }),
-        },
-      });
-      await tx.notification.create({
-        data: {
-          userId: profile.userId,
-          type: "DRIVER_REJECTED",
-          title: "Verificação recusada",
-          body: input.notes || "O pedido de verificação foi recusado.",
-        },
-      });
-    });
-    return { status: "REJECTED" as const };
-  }
-
-  // REQUEST_INFO
-  await prisma.$transaction(async (tx) => {
-    await tx.driverProfile.update({
+    await prisma.driverProfile.update({
       where: { id: profile.id },
       data: {
-        status: "PENDING_VERIFICATION",
-        onboardingStatus: "NEEDS_INFO",
-        onboardingStep: "documents",
-        infoRequestMessage: input.notes || "Precisamos de documentos adicionais ou mais nítidos.",
+        status: "ACTIVE",
+        onboardingStatus: "APPROVED",
+        onboardingStep: "done",
+        verifiedAt: new Date(),
+        rejectionReason: null,
+        infoRequestMessage: null,
         adminNotes: input.notes || null,
       },
     });
-    await tx.verificationReview.create({
+    await prisma.driverDocument.updateMany({
+      where: { driverProfileId: profile.id },
+      data: { status: "APPROVED", reviewedAt: new Date() },
+    });
+    await prisma.verificationReview.create({
       data: {
         driverProfileId: profile.id,
         source: "ADMIN",
-        decision: "REQUEST_INFO",
+        decision: "APPROVE",
         riskScore: profile.aiRiskScore,
         confidence: profile.aiConfidence,
-        recommendation: "Admin requested more info",
+        recommendation: "Admin approved",
         notes: input.notes || null,
         actorUserId: input.adminUserId,
         findings: "[]",
       },
     });
-    await tx.notification.create({
+    await prisma.auditLog.create({
       data: {
-        userId: profile.userId,
-        type: "DRIVER_NEEDS_INFO",
-        title: "Informação adicional necessária",
-        body: input.notes || "Atualiza os teus documentos e volta a submeter.",
+        actorId: input.adminUserId,
+        action: "DRIVER_APPROVE",
+        entityType: "DriverProfile",
+        entityId: profile.id,
+        meta: JSON.stringify({ notes: input.notes || null }),
       },
     });
+    await prisma.notification.create({
+      data: {
+        userId: profile.userId,
+        type: "DRIVER_APPROVED",
+        title: "Conta verificada",
+        body: "Parabéns! O seu perfil ZELU foi aprovado. Já pode enviar propostas.",
+      },
+    });
+    return { status: "ACTIVE" as const };
+  }
+
+  if (input.decision === "REJECT") {
+    const reason = input.notes?.trim() || "Documentação insuficiente";
+    await prisma.driverProfile.update({
+      where: { id: profile.id },
+      data: {
+        status: "REJECTED",
+        onboardingStatus: "REJECTED",
+        verifiedAt: null,
+        rejectionReason: reason,
+        adminNotes: reason,
+      },
+    });
+    await prisma.verificationReview.create({
+      data: {
+        driverProfileId: profile.id,
+        source: "ADMIN",
+        decision: "REJECT",
+        riskScore: profile.aiRiskScore,
+        confidence: profile.aiConfidence,
+        recommendation: "Admin rejected",
+        notes: reason,
+        actorUserId: input.adminUserId,
+        findings: "[]",
+      },
+    });
+    await prisma.auditLog.create({
+      data: {
+        actorId: input.adminUserId,
+        action: "DRIVER_REJECT",
+        entityType: "DriverProfile",
+        entityId: profile.id,
+        meta: JSON.stringify({ notes: reason }),
+      },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: profile.userId,
+        type: "DRIVER_REJECTED",
+        title: "Verificação rejeitada",
+        body: reason,
+      },
+    });
+    return { status: "REJECTED" as const };
+  }
+
+  const infoMsg =
+    input.notes?.trim() || "Precisamos de documentos ou fotografias adicionais.";
+  await prisma.driverProfile.update({
+    where: { id: profile.id },
+    data: {
+      status: "PENDING_VERIFICATION",
+      onboardingStatus: "NEEDS_INFO",
+      onboardingStep: "documents",
+      infoRequestMessage: infoMsg,
+      adminNotes: infoMsg,
+    },
+  });
+  await prisma.verificationReview.create({
+    data: {
+      driverProfileId: profile.id,
+      source: "ADMIN",
+      decision: "REQUEST_INFO",
+      riskScore: profile.aiRiskScore,
+      confidence: profile.aiConfidence,
+      recommendation: "Admin requested more info",
+      notes: infoMsg,
+      actorUserId: input.adminUserId,
+      findings: "[]",
+    },
+  });
+  await prisma.notification.create({
+    data: {
+      userId: profile.userId,
+      type: "DRIVER_NEEDS_INFO",
+      title: "Informação adicional necessária",
+      body: infoMsg,
+    },
   });
   return { status: "NEEDS_INFO" as OnboardingStatus };
 }
@@ -505,4 +627,4 @@ export async function listVerificationQueue() {
   });
 }
 
-export { REQUIRED_DOC_TYPES, STEPS, parseLanguages };
+export { REQUIRED_DOC_TYPES, OPTIONAL_DOC_TYPES, STEPS, parseLanguages, parseVehiclePhotos };

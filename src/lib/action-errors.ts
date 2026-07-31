@@ -47,13 +47,17 @@ export function toActionFailure(error: unknown): ActionFailure {
     return { ok: false, error: "Este email já está registado.", code: "EMAIL_TAKEN" };
   }
   if (code === "P2003") {
-    return { ok: false, error: "Não foi possível criar a conta. Consulte os logs do servidor.", code: "FK" };
+    return {
+      ok: false,
+      error: "Não foi possível concluir o pedido. Verifique os dados e tente novamente.",
+      code: "FK",
+    };
   }
   if (code?.startsWith("P") && name.includes("Prisma")) {
     console.error("[prisma known]", code, error);
     return {
       ok: false,
-      error: "Não foi possível criar a conta. Consulte os logs do servidor.",
+      error: "Não foi possível concluir o pedido. Tente novamente dentro de momentos.",
       code,
     };
   }
@@ -79,7 +83,7 @@ export function toActionFailure(error: unknown): ActionFailure {
     console.error("[action error]", error);
     return {
       ok: false,
-      error: "Não foi possível criar a conta. Consulte os logs do servidor.",
+      error: "Ocorreu um erro inesperado. Tente novamente.",
       code: "INTERNAL",
     };
   }
@@ -87,7 +91,7 @@ export function toActionFailure(error: unknown): ActionFailure {
   console.error("[action unknown]", error);
   return {
     ok: false,
-    error: "Não foi possível criar a conta. Consulte os logs do servidor.",
+    error: "Ocorreu um erro inesperado. Tente novamente.",
     code: "INTERNAL",
   };
 }

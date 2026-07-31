@@ -36,10 +36,70 @@ export const OFFER_STATUS_LABELS: Record<string, string> = {
 };
 
 export const DRIVER_STATUS_LABELS: Record<string, string> = {
-  PENDING_VERIFICATION: "Em verificação",
+  PENDING_VERIFICATION: "Em validação",
   ACTIVE: "Ativo",
   SUSPENDED: "Suspenso",
-  REJECTED: "Recusado",
+  REJECTED: "Rejeitado",
+};
+
+/** Public lifecycle labels for driver onboarding. */
+export const DRIVER_LIFECYCLE_LABELS: Record<string, string> = {
+  REGISTERED: "Registado",
+  DOCS_PENDING: "Documentos pendentes",
+  UNDER_REVIEW: "Em validação",
+  APPROVED: "Aprovado",
+  ACTIVE: "Ativo",
+  REJECTED: "Rejeitado",
+};
+
+export function driverLifecycleLabel(input: {
+  status: string;
+  onboardingStatus: string;
+  completenessScore?: number;
+}): string {
+  if (input.status === "ACTIVE" || input.onboardingStatus === "APPROVED") {
+    return input.status === "ACTIVE"
+      ? DRIVER_LIFECYCLE_LABELS.ACTIVE
+      : DRIVER_LIFECYCLE_LABELS.APPROVED;
+  }
+  if (input.status === "REJECTED" || input.onboardingStatus === "REJECTED") {
+    return DRIVER_LIFECYCLE_LABELS.REJECTED;
+  }
+  if (
+    input.onboardingStatus === "SUBMITTED" ||
+    input.onboardingStatus === "UNDER_REVIEW"
+  ) {
+    return DRIVER_LIFECYCLE_LABELS.UNDER_REVIEW;
+  }
+  if (
+    input.onboardingStatus === "IN_PROGRESS" ||
+    input.onboardingStatus === "NEEDS_INFO" ||
+    (input.completenessScore ?? 0) > 0
+  ) {
+    return DRIVER_LIFECYCLE_LABELS.DOCS_PENDING;
+  }
+  return DRIVER_LIFECYCLE_LABELS.REGISTERED;
+}
+
+export const REQUIRED_VEHICLE_PHOTO_KEYS = [
+  "front",
+  "rear",
+  "left",
+  "right",
+  "interiorFront",
+  "interiorRear",
+  "trunk",
+] as const;
+
+export const VEHICLE_PHOTO_LABELS: Record<string, string> = {
+  front: "Frente",
+  rear: "Traseira",
+  left: "Lado esquerdo",
+  right: "Lado direito",
+  interiorFront: "Interior frente",
+  interiorRear: "Interior traseiro",
+  trunk: "Bagageira aberta",
+  video: "Vídeo curto (opcional)",
 };
 
 export function isZeluElite(profile: {
