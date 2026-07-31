@@ -4,22 +4,22 @@ import createMiddleware from "next-intl/middleware";
 import { getToken } from "next-auth/jwt";
 import { authConfig } from "@/auth.config";
 import { routing } from "@/i18n/routing";
-import { dashboardPathForRole } from "@/lib/auth-routes";
+import { dashboardPathForMode } from "@/lib/auth-routes";
 import { resolveAuthSecret } from "@/lib/auth-secret";
 
 const { auth } = NextAuth(authConfig);
 const intlMiddleware = createMiddleware(routing);
 
 const protectedPrefixes = [
-  { prefix: "/pedidos", roles: ["CUSTOMER", "DRIVER", "ADMIN"] },
-  { prefix: "/pedidos/novo", roles: ["CUSTOMER"] },
-  { prefix: "/painel", roles: ["DRIVER"] },
-  { prefix: "/pedidos-abertos", roles: ["DRIVER"] },
-  { prefix: "/propostas", roles: ["DRIVER"] },
-  { prefix: "/veiculo", roles: ["DRIVER"] },
-  { prefix: "/viagens", roles: ["DRIVER"] },
-  { prefix: "/onboarding", roles: ["DRIVER"] },
-  { prefix: "/admin", roles: ["ADMIN"] },
+  { prefix: "/pedidos", roles: ["CUSTOMER", "DRIVER", "ADMIN"], modes: ["CUSTOMER", "DRIVER"] },
+  { prefix: "/pedidos/novo", roles: ["CUSTOMER", "DRIVER", "ADMIN"], modes: ["CUSTOMER"], requireCustomer: true },
+  { prefix: "/painel", roles: ["DRIVER", "CUSTOMER", "ADMIN"], modes: ["DRIVER"], requireDriver: true },
+  { prefix: "/pedidos-abertos", roles: ["DRIVER", "CUSTOMER", "ADMIN"], modes: ["DRIVER"], requireDriver: true },
+  { prefix: "/propostas", roles: ["DRIVER", "CUSTOMER", "ADMIN"], modes: ["DRIVER"], requireDriver: true },
+  { prefix: "/veiculo", roles: ["DRIVER", "CUSTOMER", "ADMIN"], modes: ["DRIVER"], requireDriver: true },
+  { prefix: "/viagens", roles: ["DRIVER", "CUSTOMER", "ADMIN"], modes: ["DRIVER"], requireDriver: true },
+  { prefix: "/onboarding", roles: ["DRIVER", "CUSTOMER", "ADMIN"], modes: ["DRIVER"], requireDriver: true },
+  { prefix: "/admin", roles: ["ADMIN"], modes: ["CUSTOMER", "DRIVER"] },
 ];
 
 const authOnlyGuestPaths = new Set(["/login", "/registo"]);
@@ -34,17 +34,16 @@ function stripLocale(pathname: string): { locale: string | null; path: string } 
   return { locale: null, path: pathname };
 }
 
-function rolesForPath(path: string): string[] | null {
-  const rule = [...protectedPrefixes]
+function matchRule(path: string) {
+  return [...protectedPrefixes]
     .sort((a, b) => b.prefix.length - a.prefix.length)
     .find((r) => {
       if (path === r.prefix) return true;
       if (r.prefix === "/veiculo") {
         return path.startsWith("/veiculo/") && !path.startsWith("/veiculos");
       }
-      return path.startsWith(`${r.prefix}/`);
+      return path.startsWith(`${r.prefix}/`) || path === r.prefix;
     });
-  return rule?.roles ?? null;
 }
 
 function isHttpsRequest(req: { nextUrl: URL; headers: Headers }): boolean {
@@ -54,26 +53,28 @@ function isHttpsRequest(req: { nextUrl: URL; headers: Headers }): boolean {
   );
 }
 
-/**
- * Root cause (production): session cookie is `__Secure-authjs.session-token`.
- * Raw `getToken({ req, secret })` without `secureCookie: true` returns null on HTTPS,
- * while Node `auth()` still sees the session — header shows the name, middleware
- * treats the user as logged out and redirects to login.
- *
- * Fix: Auth.js `auth()` wrapper (correct cookie decode) + diagnostic getToken compare.
- */
 export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const { locale, path } = stripLocale(pathname);
   const loc = locale || routing.defaultLocale;
   const session = req.auth;
   const role = session?.user?.role as string | undefined;
+  const activeMode =
+    (session?.user as { activeMode?: string } | undefined)?.activeMode ||
+    (role === "DRIVER" ? "DRIVER" : "CUSTOMER");
+  const hasCustomer =
+    Boolean((session?.user as { hasCustomer?: boolean } | undefined)?.hasCustomer) ||
+    role === "CUSTOMER" ||
+    role === "ADMIN" ||
+    role === "DRIVER"; // drivers also receive a customer profile (single account)
+  const hasDriver =
+    Boolean((session?.user as { hasDriver?: boolean } | undefined)?.hasDriver) ||
+    role === "DRIVER";
   const email = session?.user?.email ?? null;
   const cookieNames = req.cookies.getAll().map((c) => c.name);
   const https = isHttpsRequest(req);
   const secret = resolveAuthSecret();
 
-  // Temporary diagnostics: compare broken vs correct getToken modes
   const tokenInsecure = await getToken({ req, secret, secureCookie: false });
   const tokenSecure = await getToken({ req, secret, secureCookie: true });
 
@@ -83,79 +84,50 @@ export default auth(async (req) => {
     https,
     hasSession: Boolean(session),
     role: role ?? null,
+    activeMode,
+    hasCustomer,
+    hasDriver,
     email,
     cookieNames,
     getTokenInsecureRole: (tokenInsecure as { role?: string } | null)?.role ?? null,
     getTokenSecureRole: (tokenSecure as { role?: string } | null)?.role ?? null,
-    rootCauseWouldMissSession:
-      Boolean(session) && !tokenInsecure && Boolean(tokenSecure || session),
   });
 
+  // Block experimental lab routes in production
+  if (path.startsWith("/homepage-lab") || path.startsWith("/branding-preview")) {
+    return NextResponse.redirect(new URL(`/${loc}`, req.url));
+  }
+
   if (session && authOnlyGuestPaths.has(path)) {
-    const dest = dashboardPathForRole(role);
+    const dest = dashboardPathForMode(activeMode as "CUSTOMER" | "DRIVER", role);
     const url = new URL(`/${loc}${dest === "/" ? "" : dest}`, req.url);
-    console.info("[mw] redirect", {
-      reason: "authenticated-on-guest-page",
-      from: pathname,
-      to: url.pathname,
-      role: role ?? null,
-    });
     return NextResponse.redirect(url);
   }
 
-  const allowedRoles = rolesForPath(path);
-  if (allowedRoles) {
+  const rule = matchRule(path);
+  if (rule) {
     if (!session) {
       const login = new URL(`/${loc}/login`, req.url);
       login.searchParams.set("callbackUrl", pathname);
-      console.info("[mw] redirect", {
-        reason: "no-session-on-protected-route",
-        from: pathname,
-        to: login.pathname + login.search,
-        allowedRoles,
-        note:
-          tokenSecure && !tokenInsecure
-            ? "LEGACY_BUG: insecure getToken would also miss; auth() should have session — investigate secret"
-            : undefined,
-      });
       return NextResponse.redirect(login);
     }
 
-    if (!role || !allowedRoles.includes(role)) {
-      const home = new URL(`/${loc}`, req.url);
-      console.info("[mw] redirect", {
-        reason: "role-not-allowed",
-        from: pathname,
-        to: home.pathname,
-        role: role ?? null,
-        allowedRoles,
-      });
-      return NextResponse.redirect(home);
+    if (role === "ADMIN") {
+      return intlMiddleware(req);
     }
 
-    if (path === "/pedidos" && role === "DRIVER") {
-      const url = new URL(`/${loc}/pedidos-abertos`, req.url);
-      console.info("[mw] redirect", {
-        reason: "driver-pedidos-alias",
-        from: pathname,
-        to: url.pathname,
-        role,
-      });
-      return NextResponse.redirect(url);
+    if (rule.requireDriver && !hasDriver) {
+      return NextResponse.redirect(new URL(`/${loc}/tornar-motorista`, req.url));
     }
-    if (path.startsWith("/pedidos/novo") && role !== "CUSTOMER") {
-      const home = new URL(`/${loc}`, req.url);
-      console.info("[mw] redirect", {
-        reason: "non-customer-new-trip",
-        from: pathname,
-        to: home.pathname,
-        role,
-      });
-      return NextResponse.redirect(home);
+    if (rule.requireCustomer && !hasCustomer && !hasDriver) {
+      return NextResponse.redirect(new URL(`/${loc}`, req.url));
+    }
+
+    if (path === "/pedidos" && activeMode === "DRIVER" && hasDriver) {
+      return NextResponse.redirect(new URL(`/${loc}/pedidos-abertos`, req.url));
     }
   }
 
-  console.info("[mw] pass", { pathname, path, role: role ?? null, hasSession: Boolean(session) });
   return intlMiddleware(req);
 });
 

@@ -18,19 +18,23 @@ function LoginFormInner() {
 
   const configError = params.get("error") === "Configuration";
 
-  function go(role?: string | null) {
+  function go(role?: string | null, mode?: string | null) {
     if (redirectingRef.current) return;
     redirectingRef.current = true;
-    const target = safePostLoginPath(role, params.get("callbackUrl"), locale);
+    const target = safePostLoginPath(role, params.get("callbackUrl"), locale, {
+      activeMode: mode,
+      hasCustomer: true,
+      hasDriver: role === "DRIVER",
+    });
     window.location.assign(target);
   }
 
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
-      go(session.user.role);
+      go(session.user.role, session.user.activeMode);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session?.user?.role]);
+  }, [status, session?.user?.role, session?.user?.activeMode]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -73,7 +77,8 @@ function LoginFormInner() {
 
       const fresh = await getSession();
       const role = fresh?.user?.role ?? session?.user?.role;
-      go(role);
+      const mode = fresh?.user?.activeMode ?? session?.user?.activeMode;
+      go(role, mode);
       window.setTimeout(() => {
         if (redirectingRef.current) setLoading(false);
       }, 8000);

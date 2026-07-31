@@ -5,112 +5,102 @@ import type {
   AiVerificationResult,
 } from "./types";
 
-const REQUIRED_DOCS = ["IDENTITY", "DRIVING_LICENSE", "INSURANCE", "VEHICLE_REGISTRATION"] as const;
+const REQUIRED_DOCS = [
+  "IDENTITY",
+  "DRIVING_LICENSE",
+  "TVDE_CERTIFICATE",
+  "CRIMINAL_RECORD",
+] as const;
+
+const REQUIRED_PHOTOS = [
+  "front",
+  "rear",
+  "left",
+  "right",
+  "interiorFront",
+  "interiorRear",
+  "trunk",
+] as const;
 
 /**
- * Premium-grade heuristic AI verifier used when no external LLM key is set.
- * Produces explainable risk scores, findings, and recommendations suitable
- * for admin review queues. Swap for OpenAI provider when configured.
+ * Heuristic AI verifier used when no external LLM key is set.
+ * Checks document presence/quality signals and vehicle photo completeness.
  */
 export class HeuristicAiVerificationProvider implements AiVerificationProvider {
   async analyzeDriver(ctx: AiDriverContext): Promise<AiVerificationResult> {
     const findings: AiFinding[] = [];
-    let risk = 12;
+    let risk = 10;
     const documentScores: Record<string, number> = {};
+    const photoScores: Record<string, number> = {};
 
     const presentTypes = new Set(ctx.documents.map((d) => d.type));
     for (const required of REQUIRED_DOCS) {
       if (!presentTypes.has(required)) {
-        risk += 18;
+        risk += 16;
         findings.push({
           code: "MISSING_DOC",
           severity: "critical",
-          message: `Missing required document: ${required}`,
+          message: `Documento obrigatório em falta: ${required}`,
         });
       }
     }
 
     for (const doc of ctx.documents) {
-      let score = 88;
+      let score = 90;
       if (!doc.mimeType.startsWith("image/") && doc.mimeType !== "application/pdf") {
         score -= 35;
         risk += 10;
         findings.push({
           code: "UNSUPPORTED_MIME",
           severity: "warn",
-          message: `${doc.type} has unusual mime type (${doc.mimeType})`,
+          message: `${doc.type}: tipo de ficheiro pouco legível (${doc.mimeType})`,
         });
       }
       if (doc.sizeBytes < 8_000) {
-        score -= 25;
-        risk += 8;
+        score -= 30;
+        risk += 10;
         findings.push({
           code: "FILE_TOO_SMALL",
           severity: "warn",
-          message: `${doc.type} file may be too small for reliable OCR (${doc.sizeBytes} bytes)`,
+          message: `${doc.type}: ficheiro demasiado pequeno — possível baixa legibilidade`,
         });
       }
       if (doc.sizeBytes > 12_000_000) {
-        score -= 10;
+        score -= 8;
         findings.push({
           code: "FILE_LARGE",
           severity: "info",
-          message: `${doc.type} is unusually large`,
+          message: `${doc.type}: ficheiro muito grande`,
         });
       }
       const name = doc.fileName.toLowerCase();
       if (name.includes("screenshot") || name.includes("whatsapp")) {
-        score -= 15;
-        risk += 6;
+        score -= 18;
+        risk += 8;
         findings.push({
           code: "SCREENSHOT_LIKELY",
           severity: "warn",
-          message: `${doc.type} filename suggests a screenshot rather than an original scan`,
+          message: `${doc.type}: parece um screenshot — prefira digitalização ou fotografia nítida`,
+        });
+      }
+      if (name.includes("blur") || name.includes("dark")) {
+        score -= 20;
+        risk += 8;
+        findings.push({
+          code: "QUALITY_HINT",
+          severity: "warn",
+          message: `${doc.type}: indícios de má qualidade/iluminação`,
         });
       }
       documentScores[doc.type] = Math.max(0, Math.min(100, score));
     }
 
-    if (!ctx.hasPhoto) {
-      risk += 10;
-      findings.push({
-        code: "NO_PROFILE_PHOTO",
-        severity: "warn",
-        message: "Profile photo missing — face match against ID cannot run",
-      });
-    }
-
-    if (!ctx.bio || ctx.bio.trim().length < 40) {
-      risk += 6;
-      findings.push({
-        code: "THIN_BIO",
-        severity: "info",
-        message: "Biography is short; authenticity signal is weak",
-      });
-    }
-
-    if (ctx.yearsOfExperience < 1) {
-      risk += 8;
-      findings.push({
-        code: "LOW_EXPERIENCE",
-        severity: "warn",
-        message: "Less than 1 year of declared experience",
-      });
-    } else if (ctx.yearsOfExperience >= 5) {
-      risk -= 4;
-      findings.push({
-        code: "EXPERIENCED",
-        severity: "info",
-        message: "Declared experience supports approval",
-      });
-    }
-
     if (!ctx.hasVehicle || !ctx.vehicle) {
-      risk += 20;
+      risk += 22;
       findings.push({
         code: "NO_VEHICLE",
         severity: "critical",
-        message: "No vehicle registered",
+        message: "Veículo não registado",
       });
     } else {
       const plate = ctx.vehicle.plate.replace(/\s+/g, "").toUpperCase();
@@ -119,51 +109,85 @@ export class HeuristicAiVerificationProvider implements AiVerificationProvider {
         findings.push({
           code: "INVALID_PLATE",
           severity: "critical",
-          message: "Vehicle plate looks invalid",
+          message: "Matrícula inválida ou incompleta",
         });
       }
       const year = ctx.vehicle.year;
       const current = new Date().getFullYear();
-      if (year < 2005 || year > current + 1) {
-        risk += 10;
+      if (year < 2008 || year > current + 1) {
+        risk += 8;
         findings.push({
           code: "VEHICLE_YEAR",
           severity: "warn",
-          message: `Unusual vehicle year (${year})`,
+          message: `Ano do veículo invulgar (${year})`,
         });
+      }
+
+      const photos = ctx.vehicle.photos || {};
+      for (const key of REQUIRED_PHOTOS) {
+        if (!photos[key]) {
+          risk += 6;
+          photoScores[key] = 0;
+          findings.push({
+            code: "MISSING_PHOTO",
+            severity: "critical",
+            message: `Fotografia do veículo em falta: ${key}`,
+          });
+        } else {
+          let pScore = 88;
+          const url = photos[key].toLowerCase();
+          if (url.includes("blur") || url.includes("dark")) {
+            pScore -= 20;
+            risk += 4;
+            findings.push({
+              code: "PHOTO_QUALITY",
+              severity: "warn",
+              message: `Fotografia ${key}: qualidade/iluminação duvidosa`,
+            });
+          }
+          photoScores[key] = pScore;
+        }
+      }
+      if (photos.video) {
+        findings.push({
+          code: "VIDEO_PRESENT",
+          severity: "info",
+          message: "Vídeo opcional do veículo enviado",
+        });
+        risk -= 2;
       }
     }
 
-    if (ctx.languagesSpoken.length === 0) {
+    if (ctx.yearsOfExperience < 1) {
       risk += 4;
       findings.push({
-        code: "NO_LANGUAGES",
+        code: "LOW_EXPERIENCE",
         severity: "info",
-        message: "No spoken languages declared",
+        message: "Pouca experiência declarada",
       });
     }
 
     risk = Math.max(0, Math.min(100, Math.round(risk)));
     const confidence = Math.max(
       55,
-      Math.min(96, 92 - findings.filter((f) => f.severity !== "info").length * 4),
+      Math.min(96, 93 - findings.filter((f) => f.severity !== "info").length * 3),
     );
 
     let recommendation: AiVerificationResult["recommendation"] = "APPROVE";
-    if (risk >= 55 || findings.some((f) => f.code === "MISSING_DOC" || f.code === "NO_VEHICLE")) {
+    if (risk >= 40 || findings.some((f) => f.code === "MISSING_DOC" || f.code === "MISSING_PHOTO")) {
       recommendation = "REQUEST_INFO";
     }
-    if (risk >= 75) recommendation = "ESCALATE";
+    if (risk >= 70) recommendation = "ESCALATE";
     if (risk >= 88) recommendation = "REJECT";
 
     const summary =
       recommendation === "APPROVE"
-        ? `AI recommends approval for ${ctx.name} (risk ${risk}/100).`
+        ? `IA recomenda APROVADO para ${ctx.name} (risco ${risk}/100).`
         : recommendation === "REQUEST_INFO"
-          ? `AI recommends requesting more information from ${ctx.name} (risk ${risk}/100).`
+          ? `IA recomenda PENDENTE — pedir novos documentos/fotos a ${ctx.name} (risco ${risk}/100).`
           : recommendation === "ESCALATE"
-            ? `AI recommends human escalation for ${ctx.name} (risk ${risk}/100).`
-            : `AI recommends rejection for ${ctx.name} (risk ${risk}/100).`;
+            ? `IA recomenda revisão manual para ${ctx.name} (risco ${risk}/100).`
+            : `IA recomenda REJEITADO para ${ctx.name} (risco ${risk}/100).`;
 
     return {
       provider: "heuristic",
@@ -173,6 +197,7 @@ export class HeuristicAiVerificationProvider implements AiVerificationProvider {
       summary,
       findings,
       documentScores,
+      photoScores,
     };
   }
 }

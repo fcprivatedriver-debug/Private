@@ -76,6 +76,23 @@ const DEFAULT_CLASSES = [
   },
 ];
 
+async function ensureDriverDocumentEnums(prisma) {
+  const values = ["TVDE_CERTIFICATE", "CMTVDE_LICENSE", "CRIMINAL_RECORD"];
+  for (const value of values) {
+    try {
+      await prisma.$executeRawUnsafe(
+        `ALTER TYPE "DriverDocumentType" ADD VALUE IF NOT EXISTS '${value}'`,
+      );
+      console.log("[ensure-schema] enum value ok:", value);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // Older Postgres without IF NOT EXISTS — ignore duplicates
+      if (/already exists|duplicate/i.test(message)) continue;
+      console.warn("[ensure-schema] enum add skipped:", value, message.slice(0, 120));
+    }
+  }
+}
+
 async function createVehicleClassTable(prisma) {
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "VehicleClass" (
@@ -159,6 +176,7 @@ async function main() {
   const prisma = makePrisma(raw);
   try {
     await prisma.$queryRaw`SELECT 1`;
+    await ensureDriverDocumentEnums(prisma);
 
     let needsCreate = false;
     try {

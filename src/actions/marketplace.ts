@@ -43,9 +43,56 @@ export async function registerAction(formData: FormData) {
     });
 
     const email = parsed.email.toLowerCase();
-    const exists = await prisma.user.findUnique({ where: { email } });
+    const exists = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        customerProfile: true,
+        driverProfile: true,
+      },
+    });
+
+    // Same email: never create a second account — add the missing profile instead.
     if (exists) {
-      return { ok: false as const, error: "Este email já está registado.", code: "EMAIL_TAKEN" };
+      if (!exists.passwordHash) {
+        return {
+          ok: false as const,
+          error: "Este email já está registado. Entre com a sua conta.",
+          code: "EMAIL_TAKEN",
+        };
+      }
+      const valid = await bcrypt.compare(parsed.password, exists.passwordHash);
+      if (!valid) {
+        return {
+          ok: false as const,
+          error: "Este email já está registado. Entre com a palavra-passe correta para ativar o outro perfil.",
+          code: "EMAIL_TAKEN",
+        };
+      }
+
+      if (parsed.role === "CUSTOMER" && !exists.customerProfile) {
+        await prisma.customerProfile.create({ data: { userId: exists.id } });
+      }
+      if (parsed.role === "DRIVER" && !exists.driverProfile) {
+        await prisma.driverProfile.create({
+          data: {
+            userId: exists.id,
+            status: "PENDING_VERIFICATION",
+            onboardingStatus: "NOT_STARTED",
+            onboardingStep: "profile",
+            languagesSpoken: '["pt"]',
+          },
+        });
+      }
+      if (parsed.role === "DRIVER" && !exists.customerProfile) {
+        await prisma.customerProfile.create({ data: { userId: exists.id } });
+      }
+      if (parsed.phone && !exists.phone) {
+        await prisma.user.update({
+          where: { id: exists.id },
+          data: { phone: parsed.phone, name: exists.name || parsed.name },
+        });
+      }
+      return { ok: true as const, existingAccount: true as const };
     }
 
     const passwordHash = await bcrypt.hash(parsed.password, 10);
@@ -62,6 +109,7 @@ export async function registerAction(formData: FormData) {
         },
       });
     } else {
+      // Drivers also get a customer profile so one account can request trips later.
       await prisma.user.create({
         data: {
           name: parsed.name,
@@ -69,6 +117,7 @@ export async function registerAction(formData: FormData) {
           passwordHash,
           phone: parsed.phone ?? null,
           role: "DRIVER",
+          customerProfile: { create: {} },
           driverProfile: {
             create: {
               status: "PENDING_VERIFICATION",
@@ -89,8 +138,25 @@ export async function registerAction(formData: FormData) {
 
 export async function createTripAction(formData: FormData) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "CUSTOMER") {
-    return { ok: false as const, error: "Sem permissão" };
+  if (!session?.user) {
+    return { ok: false as const, error: "Inicie sessão para pedir uma viagem." };
+  }
+  const canCustomer =
+    session.user.role === "CUSTOMER" ||
+    session.user.role === "ADMIN" ||
+    session.user.hasCustomer ||
+    session.user.activeMode === "CUSTOMER";
+  if (!canCustomer && session.user.role !== "DRIVER") {
+    return { ok: false as const, error: "Sem permissão para pedir viagens." };
+  }
+  // Ensure driver-only legacy accounts can still request trips on the same user id.
+  if (session.user.role === "DRIVER" || session.user.hasDriver) {
+    const profile = await prisma.customerProfile.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!profile) {
+      await prisma.customerProfile.create({ data: { userId: session.user.id } });
+    }
   }
 
   try {
@@ -281,8 +347,8 @@ export async function advanceJourneyAction(
 
 export async function upsertVehicleAction(formData: FormData) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "DRIVER") {
-    return { ok: false as const, error: "Sem permissão" };
+  if (!session?.user?.id) {
+    return { ok: false as const, error: "Inicie sessão para continuar." };
   }
   try {
     const parsed = vehicleSchema.parse({
@@ -291,16 +357,26 @@ export async function upsertVehicleAction(formData: FormData) {
       year: formData.get("year"),
       color: formData.get("color"),
       plate: formData.get("plate"),
-      seats: formData.get("seats"),
-      luggageCapacity: formData.get("luggageCapacity"),
+      seats: formData.get("seats") || 4,
+      luggageCapacity: formData.get("luggageCapacity") || 3,
       vehicleClassId: formData.get("vehicleClassId"),
     });
+    const photoUrlsRaw = formData.get("photoUrls");
+    const photoUrls =
+      typeof photoUrlsRaw === "string" && photoUrlsRaw.trim()
+        ? photoUrlsRaw
+        : undefined;
 
     const profile = await prisma.driverProfile.findUnique({
       where: { userId: session.user.id },
       include: { vehicles: true },
     });
-    if (!profile) return { ok: false as const, error: "Perfil em falta" };
+    if (!profile) {
+      return {
+        ok: false as const,
+        error: "Ative o perfil de motorista nesta conta para continuar.",
+      };
+    }
 
     const vehicleClass = await prisma.vehicleClass.findFirst({
       where: { id: parsed.vehicleClassId, active: true },
@@ -310,11 +386,18 @@ export async function upsertVehicleAction(formData: FormData) {
     if (profile.vehicles[0]) {
       await prisma.vehicle.update({
         where: { id: profile.vehicles[0].id },
-        data: parsed,
+        data: {
+          ...parsed,
+          ...(photoUrls ? { photoUrls } : {}),
+        },
       });
     } else {
       await prisma.vehicle.create({
-        data: { ...parsed, driverId: profile.id },
+        data: {
+          ...parsed,
+          driverId: profile.id,
+          photoUrls: photoUrls || "[]",
+        },
       });
     }
     await setOnboardingStep(session.user.id, "vehicle");

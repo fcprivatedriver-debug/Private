@@ -1,24 +1,31 @@
-import { requireRole } from "@/lib/session";
+import { requireDriverAccess } from "@/lib/session";
 import { getDriverOnboarding } from "@/domain/onboarding";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { Link } from "@/i18n/navigation";
+import { listVehicleClasses } from "@/domain/vehicle-class";
 
 export default async function OnboardingPage() {
-  const session = await requireRole("DRIVER");
+  const session = await requireDriverAccess();
   const profile = await getDriverOnboarding(session.user.id);
+  const classes = await listVehicleClasses({ activeOnly: true, locale: "pt" });
 
   return (
     <section className="section fade-up">
       <div className="container" style={{ maxWidth: 820 }}>
         <p className="muted">
-          <Link href="/painel">← Dashboard</Link>
+          <Link href="/painel">← Painel</Link>
         </p>
-        <h1 className="page-title">Candidatura de motorista</h1>
+        <h1 className="page-title">Onboarding de motorista</h1>
         <p className="page-lead">
-          Complete o perfil, o veículo e a documentação. A equipa ZELU analisa cada candidatura com
-          discrição e profissionalismo.
+          Complete os dados, documentos e fotografias. A IA analisa tudo; a equipa pode aprovar
+          manualmente enquanto a rede cresce.
         </p>
         <OnboardingWizard
+          vehicleClasses={classes.map((c) => ({
+            id: c.id,
+            code: c.code,
+            name: c.name,
+          }))}
           profile={{
             id: profile.id,
             bio: profile.bio,
@@ -33,11 +40,18 @@ export default async function OnboardingPage() {
             aiSummary: profile.aiSummary,
             rejectionReason: profile.rejectionReason,
             infoRequestMessage: profile.infoRequestMessage,
+            user: profile.user,
             vehicles: profile.vehicles.map((v) => ({
               id: v.id,
               make: v.make,
               model: v.model,
+              year: v.year,
+              color: v.color,
               plate: v.plate,
+              seats: v.seats,
+              luggageCapacity: v.luggageCapacity,
+              vehicleClassId: v.vehicleClassId,
+              photoUrls: v.photoUrls,
             })),
             verificationDocs: profile.verificationDocs.map((d) => ({
               id: d.id,

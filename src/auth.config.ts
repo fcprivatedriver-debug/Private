@@ -14,10 +14,6 @@ export const authConfig = {
     signIn: "/pt/login",
   },
   callbacks: {
-    /**
-     * Always allow through here — route protection + redirects live in middleware.ts
-     * so we can log the exact reason for every redirect.
-     */
     authorized({ auth, request }) {
       console.info("[auth.authorized]", {
         pathname: request.nextUrl.pathname,
@@ -27,11 +23,31 @@ export const authConfig = {
       });
       return true;
     },
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id!;
-        const role = (user as { role?: string }).role;
-        if (role) token.role = role as never;
+        const u = user as {
+          role?: string;
+          hasCustomer?: boolean;
+          hasDriver?: boolean;
+          activeMode?: string;
+        };
+        if (u.role) token.role = u.role as never;
+        if (typeof u.hasCustomer === "boolean") token.hasCustomer = u.hasCustomer;
+        if (typeof u.hasDriver === "boolean") token.hasDriver = u.hasDriver;
+        if (u.activeMode) token.activeMode = u.activeMode as never;
+      }
+      if (trigger === "update" && session) {
+        const s = session as {
+          activeMode?: string;
+          hasCustomer?: boolean;
+          hasDriver?: boolean;
+          role?: string;
+        };
+        if (s.activeMode) token.activeMode = s.activeMode as never;
+        if (typeof s.hasCustomer === "boolean") token.hasCustomer = s.hasCustomer;
+        if (typeof s.hasDriver === "boolean") token.hasDriver = s.hasDriver;
+        if (s.role) token.role = s.role as never;
       }
       return token;
     },
@@ -41,6 +57,10 @@ export const authConfig = {
         if (token.role) {
           (session.user as { role?: string }).role = token.role as string;
         }
+        (session.user as { hasCustomer?: boolean }).hasCustomer = Boolean(token.hasCustomer);
+        (session.user as { hasDriver?: boolean }).hasDriver = Boolean(token.hasDriver);
+        (session.user as { activeMode?: string }).activeMode =
+          (token.activeMode as string) || "CUSTOMER";
       }
       return session;
     },

@@ -18,6 +18,7 @@ export type AiDriverContext = {
     year: number;
     plate: string;
     seats: number;
+    photos?: Record<string, string>;
   } | null;
   documents: AiDocumentInput[];
 };
@@ -36,6 +37,7 @@ export type AiVerificationResult = {
   summary: string;
   findings: AiFinding[];
   documentScores: Record<string, number>;
+  photoScores?: Record<string, number>;
 };
 
 export interface AiVerificationProvider {

@@ -13,12 +13,10 @@ export default async function AdminVerificationsPage() {
         <p className="muted">
           <Link href="/admin">← Admin</Link>
         </p>
-        <h1 className="page-title">
-          AI verification queue
-        </h1>
+        <h1 className="page-title">Validação de motoristas</h1>
         <p className="lead">
-          Review driver applications with ZELU AI risk scores, document signals and audit-ready
-          decisions.
+          Veja documentos, fotografias e o resultado da IA. Aprove, rejeite (com motivo) ou peça
+          novos documentos.
         </p>
         <VerificationQueue
           items={queue.map((q) => ({
@@ -29,12 +27,14 @@ export default async function AdminVerificationsPage() {
             aiRiskScore: q.aiRiskScore,
             aiConfidence: q.aiConfidence,
             aiSummary: q.aiSummary,
+            rejectionReason: q.rejectionReason,
             submittedAt: q.submittedAt,
             user: q.user,
             vehicles: q.vehicles.map((v) => ({
               make: v.make,
               model: v.model,
               plate: v.plate,
+              photoUrls: v.photoUrls,
             })),
             verificationDocs: q.verificationDocs.map((d) => ({
               id: d.id,
