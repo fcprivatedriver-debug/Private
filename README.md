@@ -20,20 +20,12 @@ npm run db:seed
 npm run dev
 ```
 
-### Demo accounts (password: `movio123`)
-
-| Email | Role |
-|-------|------|
-| `cliente@movio.app` | Customer |
-| `motorista@movio.app` | Driver (active) |
-| `admin@movio.app` | Admin |
-
-Demo emails keep the historical `@movio.app` domain so existing seeded data and production logins stay intact.
+Internal seed accounts (if used) are **never** shown in the public UI.
 
 ## Branding
 
-Premium European mobility: ink `#111111` + petroleum blue (default **Atlantic Navy** `#0D3B66`).
-Logo Option B (Z petrol · RIK black). Compare petrol tones + A/B/C at `/pt/branding-preview`.
+Premium European mobility: ink `#111111` + petroleum blue.
+Logo Option B (Z accent · ELU ink). Compare tones at `/pt/homepage-lab` (internal).
 
 | Variable | Example |
 |----------|---------|

@@ -117,4 +117,5 @@ export function BrandLogo({
 /** @deprecated Use ZeluWordmark */
 export const ZrikWordmark = ZeluWordmark;
 /** @deprecated Use DEFAULT_ZELU_VARIANT */
+/** @deprecated alias — use DEFAULT_ZELU_VARIANT */
 export const DEFAULT_ZRIK_VARIANT = DEFAULT_ZELU_VARIANT;

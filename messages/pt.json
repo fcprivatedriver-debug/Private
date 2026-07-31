@@ -18,7 +18,7 @@
     "verifications": "Verificações",
     "vehicleClasses": "Classes",
     "login": "Entrar",
-    "start": "Começar",
+    "start": "Pedir viagem",
     "logout": "Sair",
     "branding": "Homepage Lab"
   },
@@ -49,7 +49,7 @@
   },
   "auth": {
     "loginTitle": "Entrar",
-    "loginHint": "Demo: cliente@movio.app · motorista@movio.app · admin@movio.app — password movio123",
+    "loginHint": "",
     "email": "Email",
     "password": "Palavra-passe",
     "submitLogin": "Entrar",
