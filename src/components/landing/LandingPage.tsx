@@ -84,6 +84,8 @@ export async function LandingPage({ settings, plans, locale }: Props) {
             <li>{t("advantage3")}</li>
             <li>{t("advantage4")}</li>
             <li>{t("advantage5")}</li>
+            <li>{t("advantage6")}</li>
+            <li>{t("advantage7")}</li>
           </ul>
         </div>
       </section>
