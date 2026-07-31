@@ -93,41 +93,6 @@
   "common": {
     "loading": "Loading…"
   },
-  "branding": {
-    "title": "Branding Preview",
-    "lead": "Typographic logo variants. For homepage photography and color, use Homepage Lab.",
-    "optionA": "Option A — ZELU in black",
-    "optionADesc": "Full wordmark in #111111. Maximum simplicity.",
-    "optionB": "Option B — Z in green",
-    "optionBDesc": "Z in accent · ELU in #111111. Preferred structure.",
-    "optionC": "Option C — Z and U in green",
-    "optionCDesc": "Z and U in accent · EL in #111111.",
-    "onLight": "Light background",
-    "onDark": "Dark background",
-    "defaultBadge": "Structure",
-    "note": "No photo/color is locked here — decide in Homepage Lab.",
-    "petrolTitle": "Color candidates",
-    "petrolLead": "Quick preview. Final decision happens in Homepage Lab.",
-    "logoTitle": "Typographic logo",
-    "logoLead": "No 3D icon. A / B / C comparison."
-  },
-  "homepageLab": {
-    "title": "Homepage Lab — Full-bleed scene",
-    "lead": "Photography is the page atmosphere. Content sits on top. Compare FB1 / FB2 / FB3 and slogan.",
-    "note": "No people. Doors closed. Cascais Marina as atmosphere only. Premium automotive campaign grade.",
-    "sloganTitle": "1 · Slogan",
-    "versionsTitle": "2 · Full-bleed photography (Cascais)",
-    "colorTitle": "3 · Premium blue",
-    "overlayTitle": "4 · Light white veil",
-    "previewTitle": "5 · Preview",
-    "selectionTitle": "Current selection (not locked)",
-    "preferred": "Product",
-    "favorite": "Favorite",
-    "current": "Current",
-    "notLocked": "Tell us the winning combo to lock on the homepage.",
-    "textSide": "Private mobility · Premium",
-    "photoSide": "Editorial photography without people"
-  },
   "tripForm": {
     "title": "Where shall we take you?",
     "lead": "Tell us what matters. Verified chauffeurs will take care of the rest.",
