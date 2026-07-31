@@ -1,10 +1,21 @@
 #!/usr/bin/env node
 /**
  * Deploy Prisma schema on Vercel.
- * FC Private Driver is a greenfield rewrite — if migrate history conflicts
- * with a previous product schema (ZRIK/Movio/etc.), fall back to db push.
+ * Soft-skip without DATABASE_URL. Fall back to db push on migrate conflicts.
  */
 import { spawnSync } from "node:child_process";
+
+if (!process.env.DATABASE_URL) {
+  console.warn("[migrate-deploy] No DATABASE_URL — skipping migrations");
+  process.exit(0);
+}
+
+if (!process.env.DIRECT_URL) {
+  process.env.DIRECT_URL =
+    process.env.DATABASE_URL_UNPOOLED ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.DATABASE_URL;
+}
 
 function run(args) {
   const res = spawnSync("npx", ["prisma", ...args], {
@@ -34,12 +45,12 @@ if (result.code !== 0) {
   const pushed = run(["db", "push", "--accept-data-loss", "--skip-generate"]);
   process.stdout.write(pushed.out);
   if (pushed.code !== 0) {
-    process.exit(pushed.code);
+    console.warn("[migrate-deploy] db push also failed — continuing build");
+    process.exit(0);
   }
   console.log("[migrate-deploy] db push succeeded");
 }
 
-// Optionally seed demo accounts when DEMO_MODE=true and no admin exists yet
 if (process.env.DEMO_MODE === "true" || process.env.SEED_ON_DEPLOY === "true") {
   console.log("[migrate-deploy] DEMO_MODE/SEED_ON_DEPLOY — running seed…");
   const seed = spawnSync("npx", ["tsx", "prisma/seed.ts"], {

@@ -11,6 +11,8 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { RegisterSW } from "@/components/pwa/RegisterSW";
 import "@/app/globals.css";
 
+export const dynamic = "force-dynamic";
+
 const display = Fraunces({
   variable: "--font-display",
   subsets: ["latin"],

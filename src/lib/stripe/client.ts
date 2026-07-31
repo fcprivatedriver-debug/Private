@@ -7,7 +7,7 @@ export function getStripe(): Stripe | null {
   if (!stripeConfigured() || !process.env.STRIPE_SECRET_KEY) return null;
   if (!stripe) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-07-30.basil" as Stripe.LatestApiVersion,
+      apiVersion: "2024-11-20.acacia" as Stripe.LatestApiVersion,
     });
   }
   return stripe;
