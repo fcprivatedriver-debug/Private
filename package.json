@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/ensure-env.mjs && prisma generate && (node scripts/migrate-deploy.mjs || echo \"[migrate-deploy] WARN — continuing to next build\") && next build",
+    "build": "node scripts/ensure-env.mjs && prisma generate && (node scripts/migrate-deploy.mjs || echo \"[migrate-deploy] WARN\") && node scripts/ensure-schema.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
