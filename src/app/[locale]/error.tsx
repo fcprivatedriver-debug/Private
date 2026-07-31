@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
 
 export default function LocaleError({
   error,

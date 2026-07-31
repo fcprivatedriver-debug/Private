@@ -2,7 +2,6 @@ import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import {
   getGoogleMapsApiKey,
   isGoogleMapsConfigured,
-  getGoogleMapsApiKeySource,
 } from "./config";
 
 export {
