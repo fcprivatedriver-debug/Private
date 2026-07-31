@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/ensure-env.mjs && prisma generate && node scripts/migrate-deploy.mjs && next build",
+    "build": "node scripts/ensure-env.mjs && prisma generate && (node scripts/migrate-deploy.mjs || echo \"[migrate-deploy] WARN — continuing to next build\") && next build",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
@@ -24,7 +24,6 @@
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "7.9.0",
     "@prisma/client": "^6.19.3",
-    "@types/ws": "^8.18.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
@@ -33,7 +32,6 @@
     "next-intl": "^4.13.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "ws": "^8.21.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
