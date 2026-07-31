@@ -35,8 +35,53 @@ async function main() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     try {
-      await prisma.vehicleClass.count();
-      console.log("[ensure-schema] VehicleClass OK");
+      const count = await prisma.vehicleClass.count();
+      console.log("[ensure-schema] VehicleClass OK, count=", count);
+      if (count === 0) {
+        console.log("[ensure-schema] Seeding default vehicle classes…");
+        await prisma.vehicleClass.createMany({
+          data: [
+            {
+              code: "SEDAN",
+              namePt: "Sedan",
+              nameEn: "Sedan",
+              descriptionPt: "Conforto para até 3 passageiros",
+              descriptionEn: "Comfort for up to 3 passengers",
+              minPassengers: 1,
+              maxPassengers: 3,
+              maxLuggage: 2,
+              sortOrder: 10,
+              active: true,
+            },
+            {
+              code: "EXECUTIVE",
+              namePt: "Executivo",
+              nameEn: "Executive",
+              descriptionPt: "Premium para até 3 passageiros",
+              descriptionEn: "Premium for up to 3 passengers",
+              minPassengers: 1,
+              maxPassengers: 3,
+              maxLuggage: 3,
+              sortOrder: 20,
+              active: true,
+            },
+            {
+              code: "VAN",
+              namePt: "Van",
+              nameEn: "Van",
+              descriptionPt: "Grupo até 7 passageiros",
+              descriptionEn: "Group up to 7 passengers",
+              minPassengers: 1,
+              maxPassengers: 7,
+              maxLuggage: 6,
+              sortOrder: 30,
+              active: true,
+            },
+          ],
+          skipDuplicates: true,
+        });
+        console.log("[ensure-schema] Default classes seeded");
+      }
       return;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
