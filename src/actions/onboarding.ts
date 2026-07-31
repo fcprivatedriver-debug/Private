@@ -1,7 +1,6 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { DomainError } from "@/domain/marketplace";
 import {
   adminDecideVerification,
   runAiVerification,
@@ -12,13 +11,10 @@ import {
   type OnboardingStep,
 } from "@/domain/onboarding";
 import type { DriverDocumentType } from "@prisma/client";
+import { toActionFailure } from "@/lib/action-errors";
 
 function fail(error: unknown) {
-  if (error instanceof DomainError) {
-    return { ok: false as const, error: error.message, code: error.code };
-  }
-  console.error(error);
-  return { ok: false as const, error: "Unexpected error", code: "INTERNAL" };
+  return toActionFailure(error);
 }
 
 export async function saveOnboardingProfileAction(formData: FormData) {

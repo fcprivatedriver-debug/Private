@@ -1,7 +1,7 @@
-# ZRIK — Architecture (Phase 0 Foundation)
+# ZELU — Architecture (Phase 0 Foundation)
 
 > Private-driver marketplace (GetTransfer-style).  
-> **Brand:** ZRIK  
+> **Brand:** ZELU  
 > **Phase in scope:** Phase 0 — Foundation only
 
 ---
@@ -10,7 +10,7 @@
 
 | Decision | Choice |
 |----------|--------|
-| Brand / project name | **ZRIK** (repo target: `movio`) |
+| Brand / project name | **ZELU** (repo target: `movio`) |
 | Default currency | **EUR** — multi-currency ready |
 | Platform commission | **15%** default — rates configurable (global + overrides later) |
 | Contact visibility | Phone/email **only after payment is successfully confirmed** (`Booking` paid / `Payment` CAPTURED) |
@@ -22,7 +22,7 @@
 
 ## Phase 0 deliverables
 
-1. Next.js 15 + TypeScript + Tailwind scaffold branded **Movio**
+1. Next.js 15 + TypeScript + Tailwind scaffold branded **ZELU**
 2. Prisma schema (multi-currency, commission settings, expanded driver profile)
 3. Auth.js foundation (credentials + optional Google OAuth)
 4. i18n routing (`/pt`, `/en`) with message catalogs
@@ -140,13 +140,19 @@ Reveal only to the two parties of that booking (+ admin). Never on `OFFER_ACCEPT
 
 ## Google Maps
 
-Env: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`  
-Module `src/lib/maps/google.ts`:
+Canonical env: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`  
+Also accepted at runtime (server): `GOOGLE_MAPS_API_KEY`, `VITE_GOOGLE_MAPS_API_KEY`
 
-- load Maps JS API
-- Places Autocomplete helper
-- Geocode / reverse-geocode helpers  
-UI address fields consume this module in later phases; Phase 0 ships the provider + typed config.
+Server routes (preferred — key never required in the browser):
+- `GET /api/places/autocomplete?q=` — Places Autocomplete (Google) with Nominatim fallback
+- `GET /api/places/details?placeId=` — Place Details
+- `GET /api/routes/estimate?pickup=&dropoff=` — Directions (Google) with OSRM/Haversine fallback
+
+`GET /api/health` reports `googleMapsConfigured` and `googleMapsKeySource` (never the key value).
+
+Without a key, address suggestions still work via Nominatim and distance/duration via OSRM; the booking UI shows “Google Maps key not set — free-text address mode.” until a key is present in the published environment.
+
+Client helper `src/lib/maps/google.ts` remains available for Maps JS embeds when a `NEXT_PUBLIC_` key is present.
 
 ---
 

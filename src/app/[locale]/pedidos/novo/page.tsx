@@ -83,8 +83,11 @@ export default function NewTripPage() {
   const [classes, setClasses] = useState<VehicleClassOption[]>([]);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [route, setRoute] = useState<RouteInfo | null>(null);
   const [estimating, setEstimating] = useState(false);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
   const [selectedClassId, setSelectedClassId] = useState("");
 
   useEffect(() => {
@@ -97,24 +100,44 @@ export default function NewTripPage() {
   useEffect(() => {
     if (pickup.trim().length < 5 || dropoff.trim().length < 5) {
       setRoute(null);
+      setEstimateError(null);
       return;
     }
     const handle = setTimeout(async () => {
       setEstimating(true);
+      setEstimateError(null);
       try {
         const qs = new URLSearchParams({ pickup, dropoff });
+        if (pickupCoords) {
+          qs.set("pickupLat", String(pickupCoords.lat));
+          qs.set("pickupLng", String(pickupCoords.lng));
+        }
+        if (dropoffCoords) {
+          qs.set("dropoffLat", String(dropoffCoords.lat));
+          qs.set("dropoffLng", String(dropoffCoords.lng));
+        }
         const res = await fetch(`/api/routes/estimate?${qs}`);
         const data = await res.json();
-        if (res.ok) setRoute(data);
-        else setRoute(null);
+        if (res.ok) {
+          setRoute(data);
+          setEstimateError(null);
+        } else {
+          setRoute(null);
+          setEstimateError(
+            typeof data.error === "string"
+              ? data.error
+              : "Não foi possível estimar a rota para estas moradas.",
+          );
+        }
       } catch {
         setRoute(null);
+        setEstimateError("Não foi possível estimar a rota para estas moradas.");
       } finally {
         setEstimating(false);
       }
     }, 650);
     return () => clearTimeout(handle);
-  }, [pickup, dropoff]);
+  }, [pickup, dropoff, pickupCoords, dropoffCoords]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -174,15 +197,39 @@ export default function NewTripPage() {
                 label={t("pickup")}
                 placeholder={t("pickupPlaceholder")}
                 required
-                onChangeValue={setPickup}
+                onChangeValue={(v) => {
+                  setPickup(v);
+                  setPickupCoords(null);
+                }}
+                onPlaceSelect={(place) => {
+                  setPickup(place.description);
+                  if (place.lat != null && place.lng != null) {
+                    setPickupCoords({ lat: place.lat, lng: place.lng });
+                  }
+                }}
               />
               <AddressAutocompleteInput
                 name="dropoffAddress"
                 label={t("dropoff")}
                 placeholder={t("dropoffPlaceholder")}
                 required
-                onChangeValue={setDropoff}
+                onChangeValue={(v) => {
+                  setDropoff(v);
+                  setDropoffCoords(null);
+                }}
+                onPlaceSelect={(place) => {
+                  setDropoff(place.description);
+                  if (place.lat != null && place.lng != null) {
+                    setDropoffCoords({ lat: place.lat, lng: place.lng });
+                  }
+                }}
               />
+
+              {estimateError && !estimating && (
+                <p className="muted" style={{ color: "var(--danger, #b42318)" }}>
+                  {estimateError}
+                </p>
+              )}
 
               {(route || estimating) && (
                 <div className="booking-route-preview">

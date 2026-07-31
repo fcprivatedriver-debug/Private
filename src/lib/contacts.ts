@@ -2,7 +2,7 @@ import type { Booking, BookingStatus, Payment, PaymentStatus } from "@prisma/cli
 
 /**
  * Contact details (phone/email) are revealed only after payment success.
- * This prevents parties from bypassing the ZRIK platform.
+ * This prevents parties from bypassing the ZELU platform.
  */
 export function isPaymentConfirmed(input: {
   bookingStatus: BookingStatus;

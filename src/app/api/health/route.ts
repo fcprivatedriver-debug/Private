@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { resolveAuthSecret } from "@/lib/auth-secret";
+import {
+  isGoogleMapsConfigured,
+  getGoogleMapsApiKeySource,
+  GOOGLE_MAPS_ENV_NAMES,
+} from "@/lib/maps/config";
 
 /** Lightweight production diagnostics (no secrets leaked). */
 export async function GET() {
@@ -17,6 +22,9 @@ export async function GET() {
         process.env.DATABASE_URL,
     ),
     database: "unknown" as "ok" | "error" | "unknown",
+    googleMapsConfigured: isGoogleMapsConfigured(),
+    googleMapsKeySource: getGoogleMapsApiKeySource(),
+    googleMapsAcceptedEnvNames: [...GOOGLE_MAPS_ENV_NAMES],
   };
 
   try {

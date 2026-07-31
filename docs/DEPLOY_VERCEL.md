@@ -1,6 +1,6 @@
-# Deploy ZRIK to Vercel (phone-friendly)
+# Deploy ZELU to Vercel (phone-friendly)
 
-ZRIK uses **PostgreSQL** (Neon). SQLite is not supported.
+ZELU uses **PostgreSQL** (Neon). SQLite is not supported.
 
 ## Login on Vercel (important)
 
@@ -53,7 +53,7 @@ You do **not** need this for `AUTH_SECRET` anymore.
 1. Visit `https://YOUR-APP.vercel.app/api/health`  
    Expect `"database":"ok"` and `"authSecretConfigured":true`.
 2. Seed once (needs a computer or Neon SQL editor on phone — or ask the agent to seed if `DATABASE_URL` is shared).
-3. Login: `motorista@movio.app` / `movio123`
+3. Seed accounts exist for internal QA only (never shown in the public UI).
 
 ## Required vs optional
 
@@ -63,4 +63,5 @@ You do **not** need this for `AUTH_SECRET` anymore.
 | `DIRECT_URL` | No — auto-derived at build from Neon unpooled / pooled URL |
 | `AUTH_SECRET` | No — demo fallback in code |
 | `AUTH_TRUST_HOST` | No — code sets `trustHost: true` |
-| Maps / Stripe / Google OAuth | Optional later |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | **Required for production Places/Directions** (aliases: `GOOGLE_MAPS_API_KEY`, `VITE_GOOGLE_MAPS_API_KEY`) |
+| Stripe / Google OAuth | Optional later |

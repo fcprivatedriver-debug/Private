@@ -1,5 +1,5 @@
 /**
- * Catalog of realistic Portuguese demo fixtures for ZRIK Demo Mode.
+ * Catalog of realistic Portuguese demo fixtures for ZELU Demo Mode.
  */
 export const VEHICLE_CLASSES = [
   {

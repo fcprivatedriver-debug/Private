@@ -13,11 +13,10 @@ export default async function OnboardingPage() {
         <p className="muted">
           <Link href="/painel">← Dashboard</Link>
         </p>
-        <h1 className="page-title">
-          Driver onboarding
-        </h1>
+        <h1 className="page-title">Candidatura de motorista</h1>
         <p className="page-lead">
-          Premium verification powered by ZRIK AI — complete your profile, vehicle and documents.
+          Complete o perfil, o veículo e a documentação. A equipa ZELU analisa cada candidatura com
+          discrição e profissionalismo.
         </p>
         <OnboardingWizard
           profile={{

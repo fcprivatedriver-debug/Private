@@ -3,7 +3,7 @@
 import { getSession, signIn, useSession } from "next-auth/react";
 import { Link } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { safePostLoginPath } from "@/lib/auth-routes";
 
@@ -14,27 +14,28 @@ function LoginFormInner() {
   const { data: session, status } = useSession();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [leaving, setLeaving] = useState(false);
+  const redirectingRef = useRef(false);
 
   const configError = params.get("error") === "Configuration";
 
   function go(role?: string | null) {
-    setLeaving(true);
+    if (redirectingRef.current) return;
+    redirectingRef.current = true;
     const target = safePostLoginPath(role, params.get("callbackUrl"), locale);
-    // Hard navigation so the login RSC shell is fully replaced
     window.location.assign(target);
   }
 
-  // If session appears (hydration / post-login), never keep the form visible
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       go(session.user.role);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- redirect once when authenticated
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session?.user?.role]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading || redirectingRef.current) return;
+
     setLoading(true);
     setError(null);
     const form = new FormData(e.currentTarget);
@@ -55,57 +56,45 @@ function LoginFormInner() {
       const res = await Promise.race([signInPromise, timeout]);
 
       if (res === null) {
-        setError(
-          "O login demorou demasiado (base de dados). Tente de novo daqui a alguns segundos.",
-        );
+        setError("O login demorou demasiado. Verifique a ligação e tente novamente.");
+        setLoading(false);
         return;
       }
 
       if (res.error) {
         if (res.error === "Configuration" || res.status === 500) {
           setError("Erro temporário de autenticação. Atualize a página ou tente de novo.");
-          return;
+        } else {
+          setError(t("invalidCredentials"));
         }
-        setError(t("invalidCredentials"));
+        setLoading(false);
         return;
       }
 
       const fresh = await getSession();
       const role = fresh?.user?.role ?? session?.user?.role;
       go(role);
+      window.setTimeout(() => {
+        if (redirectingRef.current) setLoading(false);
+      }, 8000);
     } catch {
       setError("Não foi possível entrar. Verifique a ligação e tente de novo.");
       setLoading(false);
-      setLeaving(false);
+      redirectingRef.current = false;
     }
   }
 
-  if (status === "authenticated" || leaving || loading) {
-    return (
-      <section className="auth-shell fade-up">
-        <div className="container" style={{ maxWidth: 440 }}>
-          <h1 className="page-title">{t("loginTitle")}</h1>
-          <p className="page-lead">{loading ? t("loggingIn") : "A redirecionar…"}</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (status === "loading") {
-    return (
-      <section className="auth-shell fade-up">
-        <div className="container" style={{ maxWidth: 440 }}>
-          <p className="page-lead">…</p>
-        </div>
-      </section>
-    );
-  }
+  const redirecting = status === "authenticated" || redirectingRef.current;
 
   return (
     <section className="auth-shell fade-up">
       <div className="container" style={{ maxWidth: 440 }}>
         <h1 className="page-title">{t("loginTitle")}</h1>
-        <p className="page-lead">{t("loginHint")}</p>
+        {redirecting && (
+          <p className="muted" style={{ marginBottom: "1rem" }}>
+            {t("loggingIn")}
+          </p>
+        )}
         {configError && (
           <div className="alert alert-error">
             Erro temporário de autenticação. Atualize a página ou faça redeploy na Vercel.
@@ -117,7 +106,15 @@ function LoginFormInner() {
             <label className="label" htmlFor="email">
               {t("email")}
             </label>
-            <input className="input" id="email" name="email" type="email" required autoComplete="email" />
+            <input
+              className="input"
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              disabled={loading || redirecting}
+            />
           </div>
           <div className="field">
             <label className="label" htmlFor="password">
@@ -130,10 +127,11 @@ function LoginFormInner() {
               type="password"
               required
               autoComplete="current-password"
+              disabled={loading || redirecting}
             />
           </div>
-          <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? t("loggingIn") : t("submitLogin")}
+          <button className="btn btn-primary" type="submit" disabled={loading || redirecting}>
+            {loading || redirecting ? t("loggingIn") : t("submitLogin")}
           </button>
         </form>
         <p className="muted" style={{ marginTop: "1.25rem" }}>
@@ -151,9 +149,22 @@ export function LoginForm() {
   return (
     <Suspense
       fallback={
-        <section className="auth-shell">
+        <section className="auth-shell fade-up">
           <div className="container" style={{ maxWidth: 440 }}>
-            <p className="page-lead">…</p>
+            <h1 className="page-title">Entrar</h1>
+            <div className="panel" aria-hidden>
+              <div className="field">
+                <label className="label">Email</label>
+                <input className="input" disabled />
+              </div>
+              <div className="field">
+                <label className="label">Palavra-passe</label>
+                <input className="input" disabled />
+              </div>
+              <button className="btn btn-primary" type="button" disabled>
+                Entrar
+              </button>
+            </div>
           </div>
         </section>
       }

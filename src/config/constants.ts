@@ -1,4 +1,4 @@
-export const APP_NAME = "ZRIK";
+export const APP_NAME = "ZELU";
 export const DEFAULT_CURRENCY = "EUR";
 export const PLATFORM_FEE_PERCENT_DEFAULT = 15;
 
@@ -42,7 +42,7 @@ export const DRIVER_STATUS_LABELS: Record<string, string> = {
   REJECTED: "Recusado",
 };
 
-export function isZrikElite(profile: {
+export function isZeluElite(profile: {
   ratingAvg?: number | null;
   completedTripsCount?: number | null;
   ratingCount?: number | null;
@@ -54,11 +54,13 @@ export function isZrikElite(profile: {
   );
 }
 
-/** @deprecated Use isZrikElite */
-export const isHegosElite = isZrikElite;
-/** @deprecated Use isZrikElite */
-export const isMovioElite = isZrikElite;
+/** @deprecated Use isZeluElite */
+export const isZrikElite = isZeluElite;
+/** @deprecated Use isZeluElite */
+export const isHegosElite = isZeluElite;
+/** @deprecated Use isZeluElite */
+export const isMovioElite = isZeluElite;
 
 export function bookingReference(bookingId: string): string {
-  return `ZRK-${bookingId.slice(-8).toUpperCase()}`;
+  return `ZLU-${bookingId.slice(-8).toUpperCase()}`;
 }

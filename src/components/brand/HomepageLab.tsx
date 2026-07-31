@@ -62,9 +62,9 @@ function SceneHeroPreview({
         <div className="scene-hero-veil" aria-hidden />
         <div className="scene-hero-content">
           <p className="lab-hero-eyebrow">{labels.textSide}</p>
-          <h3 className="lab-hero-brand" aria-label="ZRIK">
+          <h3 className="lab-hero-brand" aria-label="ZELU">
             <span style={{ color: "var(--lab-accent)" }}>Z</span>
-            <span style={{ color: BRAND_INK }}>RIK</span>
+            <span style={{ color: BRAND_INK }}>ELU</span>
           </h3>
           <p className="lab-hero-copy">
             <span className="hero-copy-line">{line1}</span>
