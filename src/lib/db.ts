@@ -1,12 +1,13 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
 /**
- * Neon on Vercel serverless: use the WebSocket driver adapter.
- * Plain Prisma TCP + `channel_binding=require` commonly hangs forever
- * inside Auth.js `authorize`, which leaves the login button on "A entrar...".
+ * Neon on Vercel serverless: use the HTTP driver adapter.
+ * WebSocket (`PrismaNeon`) is fragile across cold starts and was producing
+ * empty HTTP 500s on model queries (e.g. VehicleClass.findMany) while
+ * `$queryRaw SELECT 1` still succeeded.
  */
 function createPrismaClient(): PrismaClient {
   const raw = process.env.DATABASE_URL;
@@ -15,7 +16,10 @@ function createPrismaClient(): PrismaClient {
   }
 
   const connectionString = sanitizeDatabaseUrl(raw);
-  const adapter = new PrismaNeon({ connectionString });
+  const adapter = new PrismaNeonHttp(connectionString, {
+    arrayMode: false,
+    fullResults: true,
+  });
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
@@ -42,6 +46,5 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 } else {
-  // Reuse across warm Vercel isolates
   globalForPrisma.prisma = prisma;
 }
