@@ -1,12 +1,13 @@
-import { getLocale, getTranslations } from "next-intl/server";
-import { Link as LocaleLink } from "@/i18n/navigation";
-import { signOut } from "@/lib/auth";
-import { getSessionSafe } from "@/lib/session-safe";
+"use client";
+
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { useSession, signOut } from "next-auth/react";
+import { Link as LocaleLink, usePathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { BrandLogo } from "@/components/layout/BrandLogo";
-import { ModeSwitcher } from "@/components/layout/ModeSwitcher";
-import { prisma } from "@/lib/db";
-import { resolveActiveMode } from "@/lib/account-mode";
+import { dashboardPathForRole } from "@/lib/auth-routes";
+import { useLocale } from "next-intl";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
@@ -26,111 +27,104 @@ function LocaleSwitcher({ locale }: { locale: string }) {
   );
 }
 
-export async function SiteHeader() {
-  const session = await getSessionSafe();
-  const locale = await getLocale();
-  const t = await getTranslations("nav");
-
-  let hasCustomer = Boolean(session?.user?.hasCustomer);
-  let hasDriver = Boolean(session?.user?.hasDriver);
-  let activeMode = session?.user?.activeMode ?? "CUSTOMER";
+export function SiteHeader() {
+  const { data: session } = useSession();
   const role = session?.user?.role;
+  const locale = useLocale();
+  const pathname = usePathname();
+  const t = useTranslations("nav");
+  const [open, setOpen] = useState(false);
 
-  if (session?.user?.id && (session.user.hasCustomer == null || session.user.hasDriver == null)) {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: {
-          role: true,
-          customerProfile: { select: { id: true } },
-          driverProfile: { select: { id: true } },
-        },
-      });
-      hasCustomer =
-        Boolean(user?.customerProfile) ||
-        user?.role === "CUSTOMER" ||
-        user?.role === "ADMIN";
-      hasDriver = Boolean(user?.driverProfile) || user?.role === "DRIVER";
-      activeMode = resolveActiveMode({
-        role: user?.role,
-        hasCustomer,
-        hasDriver,
-        preferred: session.user.activeMode,
-      });
-    } catch {
-      /* keep session defaults */
-    }
-  }
-
-  const showCustomerNav =
-    Boolean(session) &&
-    role !== "ADMIN" &&
-    (activeMode === "CUSTOMER" || (!hasDriver && hasCustomer));
-  const showDriverNav =
-    Boolean(session) &&
-    role !== "ADMIN" &&
-    activeMode === "DRIVER" &&
-    hasDriver;
+  const dashboardHref = role ? dashboardPathForRole(role) : "/login";
 
   return (
     <header className="site-header">
-      <div className="container site-header-inner">
+      <div className="container site-header-inner" style={{ position: "relative" }}>
         <BrandLogo />
-        <nav className="nav-links">
-          {!session && (
-            <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>
-          )}
-          {showCustomerNav && (
-            <>
-              <LocaleLink href="/pedidos">{t("myTrips")}</LocaleLink>
-              <LocaleLink href="/pedidos/novo">{t("newTrip")}</LocaleLink>
-            </>
-          )}
-          {showDriverNav && (
-            <>
-              <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
-              <LocaleLink href="/pedidos-abertos">{t("openRequests")}</LocaleLink>
-              <LocaleLink href="/propostas">{t("myOffers")}</LocaleLink>
-              <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
-              <LocaleLink href="/veiculo">{t("vehicle")}</LocaleLink>
-              <LocaleLink href="/onboarding">{t("onboarding")}</LocaleLink>
-            </>
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-expanded={open}
+          aria-controls="site-nav"
+          onClick={() => setOpen((v) => !v)}
+        >
+          Menu
+        </button>
+        <nav id="site-nav" className={`nav-links${open ? " is-open" : ""}`}>
+          <LocaleLink href="/planos" onClick={() => setOpen(false)}>
+            {t("plans")}
+          </LocaleLink>
+          <LocaleLink href="/#como-funciona" onClick={() => setOpen(false)}>
+            {t("howItWorks")}
+          </LocaleLink>
+          <LocaleLink href="/contacto" onClick={() => setOpen(false)}>
+            {t("contact")}
+          </LocaleLink>
+
+          {role === "CUSTOMER" && (
+            <LocaleLink href="/cliente" onClick={() => setOpen(false)}>
+              {t("dashboard")}
+            </LocaleLink>
           )}
           {role === "ADMIN" && (
-            <>
-              <LocaleLink href="/admin">{t("admin")}</LocaleLink>
-              <LocaleLink href="/admin/verificacoes">{t("verifications")}</LocaleLink>
-              <LocaleLink href="/admin/vehicle-classes">{t("vehicleClasses")}</LocaleLink>
-            </>
+            <LocaleLink href="/admin" onClick={() => setOpen(false)}>
+              {t("admin")}
+            </LocaleLink>
           )}
+
           <LocaleSwitcher locale={locale} />
+
           {!session ? (
             <>
-              <LocaleLink href="/login">{t("login")}</LocaleLink>
-              <LocaleLink href="/registo?role=CUSTOMER" className="btn btn-primary btn-sm">
-                {t("start")}
+              <LocaleLink href="/login" onClick={() => setOpen(false)}>
+                {t("login")}
+              </LocaleLink>
+              <LocaleLink
+                href="/registo"
+                className="btn btn-primary btn-sm"
+                onClick={() => setOpen(false)}
+              >
+                {t("register")}
               </LocaleLink>
             </>
           ) : (
             <>
-              <ModeSwitcher />
-              <span className="muted" style={{ fontSize: "0.88rem" }}>
+              <LocaleLink href={dashboardHref} className="muted" style={{ fontSize: "0.88rem" }}>
                 {session.user.name?.split(" ")[0]}
-              </span>
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: `/${locale}` });
-                }}
+              </LocaleLink>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => signOut({ callbackUrl: `/${locale}` })}
               >
-                <button type="submit" className="btn btn-secondary btn-sm">
-                  {t("logout")}
-                </button>
-              </form>
+                {t("logout")}
+              </button>
             </>
           )}
         </nav>
       </div>
+
+      {session && (
+        <nav className="bottom-nav" aria-label="Navegação principal">
+          <div className="bottom-nav-inner">
+            <LocaleLink href="/" aria-current={pathname === "/" ? "page" : undefined}>
+              Início
+            </LocaleLink>
+            <LocaleLink href="/planos" aria-current={pathname === "/planos" ? "page" : undefined}>
+              Planos
+            </LocaleLink>
+            <LocaleLink
+              href={dashboardHref}
+              aria-current={pathname.startsWith(dashboardHref) ? "page" : undefined}
+            >
+              Painel
+            </LocaleLink>
+            <LocaleLink href="/contacto" aria-current={pathname === "/contacto" ? "page" : undefined}>
+              Contacto
+            </LocaleLink>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

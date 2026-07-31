@@ -1,41 +1,16 @@
 import { auth } from "@/lib/auth";
-import { getPaymentProvider } from "@/lib/payments/provider";
-import { prisma } from "@/lib/db";
 import { apiError } from "@/lib/utils";
-import { paymentsEnabled } from "@/config/env";
 
-export async function POST(request: Request) {
+/** Legacy marketplace endpoint — FC Private Driver uses checkout sessions via server actions. */
+export async function POST() {
   const session = await auth();
   if (!session?.user || session.user.role !== "CUSTOMER") {
     return apiError("UNAUTHORIZED", "Login necessário", 401);
   }
 
-  const { bookingId } = await request.json();
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { customer: true, payment: true },
-  });
-
-  if (!booking || booking.customerId !== session.user.id) {
-    return apiError("NOT_FOUND", "Reserva não encontrada", 404);
-  }
-
-  if (!paymentsEnabled()) {
-    return Response.json({
-      status: "not_configured",
-      message:
-        "Pagamentos seguros em breve. Com PAYMENTS_ENABLED=false a reserva é confirmada manualmente no fluxo demo.",
-      payment: booking.payment,
-    });
-  }
-
-  const result = await getPaymentProvider().createPaymentIntent({
-    bookingId: booking.id,
-    amount: booking.totalAmount,
-    currency: booking.currency,
-    customerEmail: booking.customer.email,
-    platformFeeAmount: booking.platformFeeAmount,
-  });
-
-  return Response.json(result);
+  return apiError(
+    "NOT_AVAILABLE",
+    "Use as ações de pagamento no painel do cliente (planos e minutos).",
+    410,
+  );
 }

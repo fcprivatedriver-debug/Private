@@ -11,9 +11,10 @@ export default function LocaleError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[zelu] route error", {
+    console.error("[fc-private-driver] route error", {
       digest: error.digest,
       message: error.message,
+      stack: error.stack,
     });
   }, [error]);
 

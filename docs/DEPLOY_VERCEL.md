@@ -1,67 +1,21 @@
-# Deploy ZELU to Vercel (phone-friendly)
+# Deploy Vercel + Neon — FC Private Driver
 
-ZELU uses **PostgreSQL** (Neon). SQLite is not supported.
+1. Importar o repositório na Vercel.
+2. Storage → criar Neon Postgres; mapear `DATABASE_URL` e `DIRECT_URL` (ou `DATABASE_URL_UNPOOLED`).
+3. Environment variables:
+   - `AUTH_SECRET` (obrigatório)
+   - `AUTH_TRUST_HOST=true`
+   - `NEXT_PUBLIC_APP_NAME=FC Private Driver`
+   - `NEXT_PUBLIC_APP_URL=https://<seu-dominio>`
+   - `DEMO_MODE=true` (desligar em produção real)
+   - Opcional: Stripe, Google Maps, Resend
+4. Build command: `npm run build` (já corre `prisma migrate deploy`).
+5. Após o primeiro deploy: `vercel env` + se necessário `npx prisma db seed` via pipeline ou one-off.
+6. Stripe webhook: `https://<dominio>/api/webhooks/stripe` → eventos `checkout.session.completed`.
 
-## Login on Vercel (important)
+## Contas demo
 
-Production uses the **Neon serverless Prisma adapter**. Without it, Prisma TCP
-queries during Auth.js `authorize` can hang forever — the login button stays on
-**“A entrar…”**.
-
-After this fix is on `main`, open Vercel → **Deployments** → **Redeploy**.
-
-## Auth secret — no manual setup required
-
-The app includes a **built-in demo `AUTH_SECRET` fallback**.  
-You do **not** need to find Environment Variables on mobile for login to work.
-
-Optional later: set your own `AUTH_SECRET` in Vercel when you can.
-
-## Database (Neon)
-
-### Easiest on phone: Vercel Storage → Neon
-
-1. Open your project on [vercel.com](https://vercel.com) (mobile browser).
-2. Open the project.
-3. Tap **Storage** (or **Integrations** / **Marketplace** → Neon).
-4. Create / connect **Neon Postgres**.
-5. Vercel injects `DATABASE_URL` automatically.
-6. Redeploy (Deployments → … → Redeploy).
-
-The build script maps Neon’s unpooled URL to Prisma’s `DIRECT_URL` automatically.
-
-### If you already created Neon outside Vercel
-
-You must add `DATABASE_URL` + `DIRECT_URL` as env vars (see mobile steps below).
-
-## Where are Environment Variables on mobile?
-
-Vercel’s mobile site hides this. Try **Request Desktop Site** in Chrome/Safari, then:
-
-1. Open your **project**
-2. Top tabs → **Settings**
-3. Left/menu → **Environment Variables**
-
-Or open this URL on your phone (replace `TEAM` and `PROJECT`):
-
-`https://vercel.com/TEAM/PROJECT/settings/environment-variables`
-
-You do **not** need this for `AUTH_SECRET` anymore.
-
-## After deploy
-
-1. Visit `https://YOUR-APP.vercel.app/api/health`  
-   Expect `"database":"ok"` and `"authSecretConfigured":true`.
-2. Seed once (needs a computer or Neon SQL editor on phone — or ask the agent to seed if `DATABASE_URL` is shared).
-3. Seed accounts exist for internal QA only (never shown in the public UI).
-
-## Required vs optional
-
-| Variable | Required on phone? |
-|----------|-------------------|
-| `DATABASE_URL` | Yes — via Neon Storage integration (auto) |
-| `DIRECT_URL` | No — auto-derived at build from Neon unpooled / pooled URL |
-| `AUTH_SECRET` | No — demo fallback in code |
-| `AUTH_TRUST_HOST` | No — code sets `trustHost: true` |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | **Required for production Places/Directions** (aliases: `GOOGLE_MAPS_API_KEY`, `VITE_GOOGLE_MAPS_API_KEY`) |
-| Stripe / Google OAuth | Optional later |
+Password `fcpd123`:
+- admin@fcprivatedriver.demo
+- cliente@fcprivatedriver.demo
+- motorista@fcprivatedriver.demo

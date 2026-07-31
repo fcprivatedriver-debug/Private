@@ -1,21 +1,29 @@
-/**
- * ZELU brand — production locks only (no lab / A-B / FB variants).
- */
-
-export const BRAND_INK = "#111111";
-export const PRODUCTION_ACCENT = "#1F5A96";
-export const PRODUCTION_ACCENT_STRONG = "#184a7c";
-
-/** Full-bleed premium transfer atmosphere (edge-to-edge hero). */
-export const PRODUCTION_HERO =
-  "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=2400&q=80";
-
-/** Light veil — photo remains the atmosphere */
-export const PRODUCTION_OVERLAY = 0.55;
-
-export const PRODUCTION_SLOGAN = {
-  line1Pt: "Peça a sua viagem.",
-  line2Pt: "Escolha o melhor motorista.",
-  line1En: "Request your trip.",
-  line2En: "Choose the best driver.",
+/** FC Private Driver — brand tokens */
+export const BRAND = {
+  name: "FC Private Driver",
+  shortName: "FC",
+  tagline: "O seu motorista privado, sempre que precisar.",
+  email: "fcprivatedriver@gmail.com",
+  phoneDisplay: "+351 933 239 595",
+  phoneE164: "+351933239595",
+  whatsappUrl: "https://wa.me/351933239595",
+  ink: "#1A1A1A",
+  charcoal: "#111111",
+  white: "#FFFFFF",
+  petrol: "#0A4F5C",
+  petrolStrong: "#073A44",
+  petrolSoft: "#E6F1F3",
+  petrolMuted: "#4A7F89",
+  heroImage: "/brand/fc-hero.jpg",
+  logo: "/brand/fc-mark.svg",
+  logoLight: "/brand/fc-mark-light.svg",
+  icon: "/brand/fc-icon.svg",
 } as const;
+
+/** Only used when NEXT_PUBLIC_DEMO_MODE=true */
+export const DEMO_ACCOUNTS = [
+  { email: "admin@fcprivatedriver.demo", role: "ADMIN", label: "Administrador" },
+  { email: "cliente@fcprivatedriver.demo", role: "CUSTOMER", label: "Cliente" },
+] as const;
+
+export const DEMO_PASSWORD = "fcpd1234";

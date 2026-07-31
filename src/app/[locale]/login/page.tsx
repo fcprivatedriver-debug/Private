@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { auth } from "@/lib/auth";
 import { redirect } from "@/i18n/navigation";
 import { getLocale } from "next-intl/server";
 import { dashboardPathForRole } from "@/lib/auth-routes";
@@ -11,5 +13,17 @@ export default async function LoginPage() {
     redirect({ href: dashboardPathForRole(session.user.role), locale });
   }
 
-  return <LoginForm />;
+  return (
+    <Suspense
+      fallback={
+        <section className="auth-shell">
+          <div className="container" style={{ maxWidth: 440 }}>
+            <p className="page-lead">…</p>
+          </div>
+        </section>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  );
 }
