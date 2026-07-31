@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
     localPatterns: [{ pathname: "/brand/**" }],
   },
+  outputFileTracingIncludes: {
+    "/api/demo/seed": ["./prisma/migrations/**/*", "./prisma/schema.prisma"],
+  },
   async headers() {
     return [
       {

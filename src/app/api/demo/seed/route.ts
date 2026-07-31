@@ -59,18 +59,23 @@ export async function POST(request: Request) {
       await prisma.$executeRawUnsafe(`GRANT ALL ON SCHEMA public TO PUBLIC`);
       await prisma.$executeRawUnsafe(`GRANT ALL ON SCHEMA public TO CURRENT_USER`);
 
-      // Split on statements; Prisma migration SQL is semicolon-separated
       const statements = sql
         .split(";")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0 && !s.startsWith("--"));
+        .map((s) =>
+          s
+            .split("\n")
+            .filter((line) => !line.trim().startsWith("--"))
+            .join("\n")
+            .trim(),
+        )
+        .filter((s) => s.length > 0);
 
+      steps.push(`schema-statements:${statements.length}`);
       for (const statement of statements) {
-        // Skip nested schema create already handled
         if (/^CREATE SCHEMA/i.test(statement)) continue;
         await prisma.$executeRawUnsafe(statement);
       }
-      steps.push(`schema-statements:${statements.length}`);
+      steps.push("schema-applied");
     } else {
       steps.push("schema-ok");
     }
