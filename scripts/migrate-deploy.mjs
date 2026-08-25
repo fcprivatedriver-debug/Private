@@ -4,23 +4,6 @@
  * Always runs `db push` so legacy ZRIK tables are replaced, then optional seed.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-
-const KNOWN_FOREIGN = [
-  "20260723160000_mafil_init",
-  "20260727160000_mel_init",
-];
-
-function localMigrationNames() {
-  const dir = join(process.cwd(), "prisma", "migrations");
-  if (!existsSync(dir)) return new Set();
-  return new Set(
-    readdirSync(dir, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name),
-  );
-}
 
 if (!process.env.DATABASE_URL) {
   console.warn("[migrate-deploy] No DATABASE_URL — skipping schema sync");
