@@ -13,15 +13,24 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "src/app/**/*.ts",
+    "src/app/**/*.tsx",
+    "src/components/site/**/*.ts",
+    "src/components/site/**/*.tsx",
+    "src/components/forms/**/*.ts",
+    "src/components/forms/**/*.tsx",
+    "src/config/brand.ts",
+    "src/data/**/*.ts",
+    "src/lib/contact.ts",
+    "tests/marketing.test.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": ["node_modules", "prisma", "scripts"]
 }

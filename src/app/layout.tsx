@@ -1,42 +1,57 @@
 import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
+import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { BRAND } from "@/config/brand";
+import "./globals.css";
+
+const display = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const body = Source_Sans_3({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: {
     default: `${BRAND.name} — ${BRAND.tagline}`,
     template: `%s · ${BRAND.name}`,
   },
-  description: BRAND.tagline,
+  description: BRAND.subtitle,
   applicationName: BRAND.name,
-  manifest: "/manifest.webmanifest",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: BRAND.shortName,
-  },
   icons: {
-    icon: [{ url: BRAND.icon, type: "image/svg+xml" }],
-    apple: [{ url: BRAND.icon }],
+    icon: BRAND.icon,
+    apple: BRAND.icon,
   },
-  formatDetection: {
-    telephone: false,
+  openGraph: {
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: BRAND.subtitle,
+    siteName: BRAND.name,
+    locale: "pt_PT",
+    type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: BRAND.petrol,
+  themeColor: "#0A4F5C",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  colorScheme: "light",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt" suppressHydrationWarning>
-      <body className="antialiased">{children}</body>
+    <html lang="pt">
+      <body className={`${display.variable} ${body.variable} antialiased`}>
+        <SiteHeader />
+        <main>{children}</main>
+        <SiteFooter />
+      </body>
     </html>
   );
 }

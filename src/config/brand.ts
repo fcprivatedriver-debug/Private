@@ -1,29 +1,24 @@
-/** FC Private Driver — brand tokens */
+/** FC Private Driver — contactos e marca (website de apresentação) */
 export const BRAND = {
   name: "FC Private Driver",
-  shortName: "FC",
-  tagline: "O seu motorista privado, sempre que precisar.",
+  tagline: "Mobilidade privada. Serviço personalizado.",
+  subtitle: "Serviço de motorista privado para cada momento do seu dia.",
   email: "fcprivatedriver@gmail.com",
-  phoneDisplay: "+351 933 239 595",
+  phoneDisplay: "933 239 595",
+  phoneTel: "+351933239595",
   phoneE164: "+351933239595",
   whatsappUrl: "https://wa.me/351933239595",
-  ink: "#1A1A1A",
-  charcoal: "#111111",
-  white: "#FFFFFF",
-  petrol: "#0A4F5C",
-  petrolStrong: "#073A44",
-  petrolSoft: "#E6F1F3",
-  petrolMuted: "#4A7F89",
-  heroImage: "/brand/fc-hero.jpg",
   logo: "/brand/fc-mark.svg",
   logoLight: "/brand/fc-mark-light.svg",
   icon: "/brand/fc-icon.svg",
+  heroImage: "/brand/fc-hero.jpg",
 } as const;
 
-/** Only used when NEXT_PUBLIC_DEMO_MODE=true */
-export const DEMO_ACCOUNTS = [
-  { email: "admin@fcprivatedriver.demo", role: "ADMIN", label: "Administrador" },
-  { email: "cliente@fcprivatedriver.demo", role: "CUSTOMER", label: "Cliente" },
+export const PAYMENT_METHODS = [
+  "Cartão de débito",
+  "Cartão de crédito",
+  "Visa",
+  "Mastercard",
+  "MB WAY",
+  "Transferência bancária",
 ] as const;
-
-export const DEMO_PASSWORD = "fcpd1234";

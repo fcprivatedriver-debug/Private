@@ -1,25 +1,11 @@
 import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
-
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
     localPatterns: [{ pathname: "/brand/**" }],
-  },
-  outputFileTracingIncludes: {
-    "/api/demo/seed": ["./prisma/migrations/**/*", "./prisma/schema.prisma"],
   },
   async headers() {
     return [
-      {
-        source: "/manifest.webmanifest",
-        headers: [
-          { key: "Content-Type", value: "application/manifest+json" },
-          { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
-        ],
-      },
       {
         source: "/(.*)",
         headers: [
@@ -29,6 +15,25 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      { source: "/pt", destination: "/", permanent: false },
+      { source: "/pt/:path*", destination: "/:path*", permanent: false },
+      { source: "/en", destination: "/", permanent: false },
+      { source: "/en/:path*", destination: "/:path*", permanent: false },
+      { source: "/login", destination: "/contactos", permanent: false },
+      { source: "/registo", destination: "/contactos", permanent: false },
+      { source: "/planos", destination: "/servicos", permanent: false },
+      { source: "/planos/:path*", destination: "/servicos", permanent: false },
+      { source: "/cliente", destination: "/", permanent: false },
+      { source: "/cliente/:path*", destination: "/", permanent: false },
+      { source: "/admin", destination: "/", permanent: false },
+      { source: "/admin/:path*", destination: "/", permanent: false },
+      { source: "/ativar", destination: "/", permanent: false },
+      { source: "/recuperar", destination: "/", permanent: false },
+      { source: "/contacto", destination: "/contactos", permanent: false },
+    ];
+  },
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;
