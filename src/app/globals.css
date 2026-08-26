@@ -244,9 +244,13 @@ p {
 .hero-media {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(7, 30, 34, 0.35) 0%, rgba(7, 30, 34, 0.72) 55%, rgba(7, 30, 34, 0.88) 100%),
-    url("/brand/fc-hero.jpg") center / cover no-repeat;
+  background-color: #071e22;
+  background-image:
+    linear-gradient(180deg, rgba(7, 30, 34, 0.38) 0%, rgba(7, 30, 34, 0.68) 48%, rgba(7, 30, 34, 0.86) 100%),
+    url("/brand/fc-hero.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center 42%;
 }
 .hero-content {
   position: relative;
@@ -628,6 +632,9 @@ textarea.input {
   }
   .hero-content {
     padding-top: 6.5rem;
+  }
+  .hero-media {
+    background-position: 46% 38%;
   }
 }
 
