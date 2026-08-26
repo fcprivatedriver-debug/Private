@@ -9,6 +9,7 @@ import { BRAND } from "@/config/brand";
 const NAV = [
   { href: "/", label: "Início" },
   { href: "/servicos", label: "Serviços" },
+  { href: "/frota", label: "Frota" },
   { href: "/sobre", label: "Sobre" },
   { href: "/contactos", label: "Contactos" },
 ];

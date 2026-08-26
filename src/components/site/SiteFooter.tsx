@@ -21,6 +21,7 @@ export function SiteFooter() {
             <p className="footer-heading">Navegação</p>
             <div className="site-footer-links">
               <Link href="/servicos">Serviços</Link>
+              <Link href="/frota">Frota</Link>
               <Link href="/sobre">Sobre</Link>
               <Link href="/contactos">Contactos</Link>
               <Link href="/privacidade">Política de Privacidade</Link>

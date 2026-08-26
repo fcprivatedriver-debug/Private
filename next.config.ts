@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    localPatterns: [{ pathname: "/brand/**" }],
+    localPatterns: [{ pathname: "/brand/**" }, { pathname: "/fleet/**" }],
   },
   async headers() {
     return [

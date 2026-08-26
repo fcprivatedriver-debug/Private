@@ -47,8 +47,13 @@ for (const [page, prefix] of [
 
 await desktop.goto(`${BASE}/sobre`, { waitUntil: "networkidle" });
 await shot(desktop, "d-sobre");
+await desktop.goto(`${BASE}/frota`, { waitUntil: "networkidle" });
+await shot(desktop, "d-frota");
 await desktop.goto(`${BASE}/privacidade`, { waitUntil: "networkidle" });
 await shot(desktop, "d-privacidade");
+
+await phone.goto(`${BASE}/frota`, { waitUntil: "networkidle" });
+await shot(phone, "m-frota");
 
 await browser.close();
 console.log("done");

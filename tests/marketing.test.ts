@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildWhatsAppMessage, whatsappLinkWithMessage } from "@/lib/contact";
+import { FLEET } from "@/data/fleet";
 import { SERVICES } from "@/data/services";
 
 describe("marketing contact helpers", () => {
@@ -30,5 +31,14 @@ describe("marketing contact helpers", () => {
   it("exposes the ten service categories", () => {
     expect(SERVICES).toHaveLength(10);
     expect(SERVICES.map((s) => s.id)).toContain("motorista-disposicao");
+  });
+
+  it("exposes the three fleet vehicles", () => {
+    expect(FLEET).toHaveLength(3);
+    expect(FLEET.map((v) => `${v.model} ${v.year} ${v.color}`)).toEqual([
+      "Tesla Model 3 2024 Branco",
+      "Tesla Model 3 2025 Preto",
+      "Tesla Model Y 2026 Preto",
+    ]);
   });
 });

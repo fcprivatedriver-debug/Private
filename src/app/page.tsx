@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BRAND, PAYMENT_METHODS } from "@/config/brand";
+import { FLEET, FLEET_INTRO } from "@/data/fleet";
 import { SERVICES } from "@/data/services";
+import { FleetVehicle } from "@/components/site/FleetVehicle";
 import { ServiceCard } from "@/components/site/ServiceCard";
 
 export default function HomePage() {
@@ -73,6 +75,29 @@ export default function HomePage() {
           <p style={{ marginTop: "1.5rem" }}>
             <Link href="/servicos" className="btn btn-secondary">
               Ver todos os serviços
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      <section className="section" id="frota-resumo">
+        <div className="container">
+          <div className="section-head">
+            <span className="section-eyebrow">Frota</span>
+            <h2 className="section-title">{FLEET_INTRO}</h2>
+            <p className="section-lead">
+              Tesla Model 3 e Model Y — conforto elétrico, silêncio e apresentação cuidada em cada
+              deslocação.
+            </p>
+          </div>
+          <div className="fleet-grid">
+            {FLEET.map((vehicle) => (
+              <FleetVehicle key={vehicle.id} vehicle={vehicle} />
+            ))}
+          </div>
+          <p style={{ marginTop: "1.5rem" }}>
+            <Link href="/frota" className="btn btn-secondary">
+              Ver frota
             </Link>
           </p>
         </div>
