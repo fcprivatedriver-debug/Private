@@ -1,35 +1,25 @@
-import type { Booking, BookingStatus, Payment, PaymentStatus } from "@prisma/client";
+import type { PaymentStatus, TripStatus } from "@prisma/client";
 
-/**
- * Contact details (phone/email) are revealed only after payment success.
- * This prevents parties from bypassing the ZELU platform.
- */
-export function isPaymentConfirmed(input: {
-  bookingStatus: BookingStatus;
-  paymentStatus?: PaymentStatus | null;
-}): boolean {
-  if (input.paymentStatus === "AUTHORIZED" || input.paymentStatus === "CAPTURED") {
-    return true;
-  }
-  return input.bookingStatus === "PAID" || input.bookingStatus === "COMPLETED";
+/** FC Private Driver — driver contact revealed after trip confirmation. */
+export function isTripConfirmed(status: TripStatus): boolean {
+  return !["AWAITING_CONFIRMATION", "CANCELLED", "NO_SHOW"].includes(status);
 }
 
-export function canRevealContacts(input: {
+export function isPaymentConfirmed(paymentStatus?: PaymentStatus | null): boolean {
+  return paymentStatus === "PAID";
+}
+
+export function canRevealDriverContacts(input: {
   viewerId: string;
   customerId: string;
-  driverId: string;
-  bookingStatus: BookingStatus;
-  paymentStatus?: PaymentStatus | null;
+  driverUserId?: string | null;
+  tripStatus: TripStatus;
   isAdmin?: boolean;
 }): boolean {
   if (input.isAdmin) return true;
-  const isParty =
-    input.viewerId === input.customerId || input.viewerId === input.driverId;
-  if (!isParty) return false;
-  return isPaymentConfirmed({
-    bookingStatus: input.bookingStatus,
-    paymentStatus: input.paymentStatus,
-  });
+  if (input.viewerId !== input.customerId) return false;
+  if (!input.driverUserId) return false;
+  return isTripConfirmed(input.tripStatus);
 }
 
 export function sanitizeUserContacts<T extends { phone?: string | null; email?: string | null }>(
@@ -39,5 +29,3 @@ export function sanitizeUserContacts<T extends { phone?: string | null; email?: 
   if (reveal) return user;
   return { ...user, phone: null, email: null };
 }
-
-export type BookingWithPayment = Booking & { payment?: Payment | null };

@@ -1,21 +1,24 @@
-/**
- * ZELU brand — production locks only (no lab / A-B / FB variants).
- */
-
-export const BRAND_INK = "#111111";
-export const PRODUCTION_ACCENT = "#1F5A96";
-export const PRODUCTION_ACCENT_STRONG = "#184a7c";
-
-/** Full-bleed premium transfer atmosphere (edge-to-edge hero). */
-export const PRODUCTION_HERO =
-  "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=2400&q=80";
-
-/** Light veil — photo remains the atmosphere */
-export const PRODUCTION_OVERLAY = 0.55;
-
-export const PRODUCTION_SLOGAN = {
-  line1Pt: "Peça a sua viagem.",
-  line2Pt: "Escolha o melhor motorista.",
-  line1En: "Request your trip.",
-  line2En: "Choose the best driver.",
+/** FC Private Driver — contactos e marca (website de apresentação) */
+export const BRAND = {
+  name: "FC Private Driver",
+  tagline: "Mobilidade privada. Serviço personalizado.",
+  subtitle: "Serviço de motorista privado para cada momento do seu dia.",
+  email: "fcprivatedriver@gmail.com",
+  phoneDisplay: "933 239 595",
+  phoneTel: "+351933239595",
+  phoneE164: "+351933239595",
+  whatsappUrl: "https://wa.me/351933239595",
+  logo: "/brand/fc-mark.svg",
+  logoLight: "/brand/fc-mark-light.svg",
+  icon: "/brand/fc-icon.svg",
+  heroImage: "/brand/fc-hero.jpg",
 } as const;
+
+export const PAYMENT_METHODS = [
+  "Cartão de débito",
+  "Cartão de crédito",
+  "Visa",
+  "Mastercard",
+  "MB WAY",
+  "Transferência bancária",
+] as const;

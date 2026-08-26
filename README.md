@@ -1,41 +1,33 @@
-# ZELU
+# FC Private Driver — website de apresentação
 
-Private-chauffeur marketplace — choose the best driver, choose the best price.
+Website premium de contacto direto com a FC Private Driver.
 
-**Brand:** ZELU · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+Não inclui contas, pagamentos online, planos de minutos nem Google Maps.
 
-## Stack
+## Contactos
 
-- Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
-- Auth.js (credentials) · Prisma · Neon PostgreSQL
-- next-intl (`/pt`, `/en`)
+- WhatsApp / Telefone: **933 239 595** (`+351 933 239 595`)
+- Email: **fcprivatedriver@gmail.com**
 
-## Local setup
+## Desenvolvimento
 
 ```bash
-cp .env.example .env
 npm install
-npx prisma migrate deploy
-npm run db:seed
 npm run dev
 ```
 
-Internal seed accounts (if used) are **never** shown in the public UI.
+Abrir [http://localhost:3000](http://localhost:3000).
 
-## Branding
+```bash
+npm run build && npm run start
+npm test
+npm run typecheck
+```
 
-Premium European mobility: ink `#111111` + petroleum blue.
-Logo Option B (Z accent · ELU ink). Compare tones at `/pt/homepage-lab` (internal).
+## Páginas
 
-| Variable | Example |
-|----------|---------|
-| `DATABASE_URL` | Neon pooled URL |
-| `DIRECT_URL` | Neon unpooled URL |
-| `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZELU` |
-
-See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
-
-## Package
-
-- Package name: **zelu**
+- `/` — Homepage
+- `/servicos` — Categorias de serviço
+- `/sobre` — Sobre a FC Private Driver
+- `/contactos` — Pedido de serviço (WhatsApp / email)
+- `/privacidade` — Política de Privacidade

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 
 export async function isDemoMode(): Promise<boolean> {
   try {
-    const settings = await prisma.platformSettings.findUnique({
+    const settings = await prisma.siteSettings.findUnique({
       where: { id: "default" },
       select: { demoMode: true },
     });

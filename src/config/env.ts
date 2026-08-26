@@ -1,35 +1,11 @@
-import { z } from "zod";
-
-const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
-  DIRECT_URL: z.string().min(1).optional(),
-  AUTH_SECRET: z.string().min(16),
-  AUTH_TRUST_HOST: z.string().optional(),
-  AUTH_GOOGLE_ID: z.string().optional(),
-  AUTH_GOOGLE_SECRET: z.string().optional(),
-  PAYMENTS_ENABLED: z.string().default("false"),
-  PLATFORM_FEE_PERCENT: z.coerce.number().default(15),
-  NEXT_PUBLIC_APP_NAME: z.string().default("ZELU"),
-  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
-  CRON_SECRET: z.string().optional(),
-  DEMO_MODE: z.string().optional(),
-});
-
-export type AppEnv = z.infer<typeof envSchema>;
-
-export function getEnv(): AppEnv {
-  const parsed = envSchema.safeParse(process.env);
-  if (!parsed.success) {
-    console.error(parsed.error.flatten().fieldErrors);
-    throw new Error("Invalid environment variables");
-  }
-  return parsed.data;
+export function env(name: string, fallback = ""): string {
+  return process.env[name] ?? fallback;
 }
 
-export function paymentsEnabled(): boolean {
-  return getEnv().PAYMENTS_ENABLED === "true";
-}
+export const isDemoMode = () =>
+  process.env.DEMO_MODE === "true" || process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
-export function platformFeePercent(): number {
-  return getEnv().PLATFORM_FEE_PERCENT;
-}
+export const paymentsEnabled = () => process.env.PAYMENTS_ENABLED === "true";
+
+export const stripeConfigured = () =>
+  Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET);

@@ -1,17 +1,18 @@
 {
-  "name": "ZELU",
-  "short_name": "ZELU",
-  "description": "Excelência discreta. Sempre contigo.",
+  "name": "FC Private Driver",
+  "short_name": "FC Driver",
+  "description": "Serviço de motorista privado e personalizado.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F6F7F5",
-  "theme_color": "#1F4F46",
+  "background_color": "#F7F5F2",
+  "theme_color": "#0A4F5C",
+  "lang": "pt-PT",
   "icons": [
     {
-      "src": "/brand/zelu-mark.svg",
+      "src": "/brand/fc-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

@@ -14,121 +14,125 @@ enum Role {
   ADMIN
 }
 
-enum DriverStatus {
-  PENDING_VERIFICATION
+enum AccountStatus {
+  PENDING_EMAIL
   ACTIVE
   SUSPENDED
-  REJECTED
+  DELETION_REQUESTED
 }
 
-enum OnboardingStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  SUBMITTED
-  UNDER_REVIEW
-  NEEDS_INFO
-  APPROVED
-  REJECTED
+enum SubscriptionStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
 }
 
-enum DriverDocumentType {
-  IDENTITY
-  DRIVING_LICENSE
-  VEHICLE_REGISTRATION
-  INSURANCE
-  PROFILE_PHOTO
-  TVDE_CERTIFICATE
-  CMTVDE_LICENSE
-  CRIMINAL_RECORD
+enum PaymentKind {
+  SUBSCRIPTION
+  EXTRA_MINUTES
+  EXTRA_CHARGE
+}
+
+enum PaymentMethodType {
+  CARD
+  MB_WAY
+  MULTIBANCO
+  MANUAL
   OTHER
 }
 
-enum DriverDocumentStatus {
-  UPLOADED
-  AI_PROCESSING
-  AI_PASSED
-  AI_FLAGGED
-  APPROVED
-  REJECTED
-}
-
-enum VerificationDecision {
-  APPROVE
-  REJECT
-  REQUEST_INFO
-  ESCALATE
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+  PARTIALLY_REFUNDED
 }
 
 enum TripStatus {
-  DRAFT
-  OPEN
-  OFFER_ACCEPTED
+  AWAITING_CONFIRMATION
   CONFIRMED
+  DRIVER_ASSIGNED
   DRIVER_EN_ROUTE
   DRIVER_ARRIVED
   IN_PROGRESS
   COMPLETED
   CANCELLED
-  EXPIRED
+  NO_SHOW
 }
 
-enum OfferStatus {
+enum TripType {
+  ONE_WAY
+  ROUND_TRIP
+}
+
+enum AssignmentStatus {
   PENDING
-  WITHDRAWN
-  REJECTED
   ACCEPTED
-  EXPIRED
+  DECLINED
+  REASSIGNED
 }
 
-enum BookingStatus {
-  PENDING_PAYMENT
-  PAID
-  REFUNDED
-  CANCELLED
-  COMPLETED
+enum MinuteTxnType {
+  PLAN_RENEWAL
+  TRIP_COMPLETED
+  EXTRA_PURCHASE
+  PROMOTIONAL
+  ADMIN_ADJUSTMENT
+  RESERVATION
+  RESERVATION_RELEASE
+  WAITING
 }
 
-enum PaymentProvider {
-  STRIPE
-  MANUAL
-  NONE
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+  SMS
 }
 
-enum PaymentStatus {
-  REQUIRES_PAYMENT
-  AUTHORIZED
-  CAPTURED
+enum NotificationStatus {
+  PENDING
+  SENT
   FAILED
-  REFUNDED
+  READ
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String        @id @default(cuid())
+  email         String        @unique
   emailVerified DateTime?
   passwordHash  String?
   name          String
   phone         String?
-  role          Role      @default(CUSTOMER)
-  locale        String    @default("pt")
+  role          Role          @default(CUSTOMER)
+  status        AccountStatus @default(PENDING_EMAIL)
+  locale        String        @default("pt")
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  accounts         Account[]
-  sessions         Session[]
-  customerProfile  CustomerProfile?
-  driverProfile    DriverProfile?
-  tripRequests     TripRequest[]    @relation("CustomerTrips")
-  offers           Offer[]
-  bookingsAsCustomer Booking[]      @relation("CustomerBookings")
-  bookingsAsDriver   Booking[]      @relation("DriverBookings")
-  reviewsFrom      Review[]         @relation("ReviewsFrom")
-  reviewsTo        Review[]         @relation("ReviewsTo")
-  notifications    Notification[]
-  auditLogs        AuditLog[]
+  accounts              Account[]
+  sessions              Session[]
+  customerProfile       CustomerProfile?
+  driverProfile         DriverProfile?
+  subscriptions         Subscription[]
+  payments              Payment[]
+  trips                 Trip[]                 @relation("CustomerTrips")
+  tripAssignments       TripAssignment[]      @relation("DriverAssignments")
+  minuteTransactions    MinuteTransaction[]
+  notifications         Notification[]
+  adminAuditLogs        AdminAuditLog[]       @relation("AuditActor")
+  passwordResetTokens   PasswordResetToken[]
+  emailConfirmTokens    EmailConfirmToken[]
+  timerAdjustments      TripTimer[]           @relation("TimerAdjustedBy")
 
   @@index([role])
+  @@index([status])
 }
 
 model Account {
@@ -166,341 +170,467 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model EmailConfirmToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model CustomerProfile {
-  id              String  @id @default(cuid())
-  userId          String  @unique
-  defaultCurrency String  @default("EUR")
-  ratingAvg       Float?
-  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  fullName          String?
+  addressLine       String?
+  postalCode        String?
+  city              String?
+  birthDate         DateTime?
+  taxId             String?
+  phone             String?
+  altPhone          String?
+  notes             String?
+  profileComplete   Boolean   @default(false)
+  habitsComplete    Boolean   @default(false)
+  stripeCustomerId  String?
+  deletionRequestedAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addresses    Address[]
+  travelHabits CustomerTravelHabit?
+
+  @@index([taxId])
+}
+
+model CustomerTravelHabit {
+  id                    String   @id @default(cuid())
+  customerProfileId     String   @unique
+  tripsCount            Int?
+  frequencyUnit         String?
+  weekdays              String   @default("[]")
+  usualTimes            String?
+  usualPickups          String?
+  usualDestinations     String?
+  oftenAirport          Boolean  @default(false)
+  oftenRoundTrip        Boolean  @default(false)
+  needsWaiting          Boolean  @default(false)
+  travelsAlone          Boolean?
+  avgPassengers         Int?
+  needsChildSeat        Boolean  @default(false)
+  oftenLuggage          Boolean  @default(false)
+  otherPreferences      String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  id                String   @id @default(cuid())
+  customerProfileId String
+  label             String?
+  line              String
+  postalCode        String?
+  city              String?
+  lat               Float?
+  lng               Float?
+  isDefault         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([customerProfileId])
 }
 
 model DriverProfile {
-  id                     String           @id @default(cuid())
-  userId                 String           @unique
-  status                 DriverStatus     @default(PENDING_VERIFICATION)
-  onboardingStatus       OnboardingStatus @default(NOT_STARTED)
-  /// Wizard step: profile | vehicle | documents | review | done
-  onboardingStep         String           @default("profile")
-  /// 0–100 profile + docs completeness
-  completenessScore      Int              @default(0)
-  photoUrl               String?
-  bio                    String?
-  /// JSON string array of BCP-47 language codes, e.g. ["pt","en","es"]
-  languagesSpoken        String           @default("[\"pt\"]")
-  yearsOfExperience      Int              @default(0)
-  ratingAvg              Float?
-  ratingCount            Int              @default(0)
-  completedTripsCount    Int              @default(0)
-  /// 0–100 percentage of offers responded to
-  responseRate           Float?
-  /// Average minutes to first offer on a trip request
-  avgResponseTimeMinutes Float?
-  /// Legacy JSON metadata (kept for compatibility)
-  documents              String           @default("[]")
-  /// Latest AI risk score 0–100 (higher = riskier)
-  aiRiskScore            Float?
-  /// Latest AI confidence 0–100
-  aiConfidence           Float?
-  /// JSON summary from last AI run
-  aiSummary              String?
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  photoUrl        String?
+  phone           String?
+  active          Boolean  @default(true)
+  bio             String?
+  documents       String   @default("[]")
+  availability    String   @default("{}")
+  adminNotes      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles     Vehicle[]
+  assignments  TripAssignment[]
+
+  @@index([active])
+}
+
+model Vehicle {
+  id           String   @id @default(cuid())
+  driverId     String
+  make         String
+  model        String
+  plate        String
+  color        String?
+  year         Int?
+  seats        Int      @default(4)
+  photoUrl     String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  driver DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId])
+}
+
+enum DiamondProposalStatus {
+  RECEIVED
+  UNDER_REVIEW
+  CONTACTED
+  PROPOSAL_SENT
+  ACCEPTED
+  REJECTED
+}
+
+model Plan {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  namePt          String
+  nameEn          String
+  descriptionPt   String?
+  descriptionEn   String?
+  /// bronze | silver | gold | diamond | custom
+  tier            String   @default("custom")
+  /// When false (Diamante), UI hides price and shows custom copy
+  showPrice       Boolean  @default(true)
+  priceCents      Int      @default(0)
+  monthlyMinutes  Int      @default(0)
+  equivalentHours Float?
+  active          Boolean  @default(true)
+  /// Public catalog vs admin-created personalised plan
+  isPersonalized  Boolean  @default(false)
+  sortOrder       Int      @default(0)
+  featuresJson    String   @default("[]")
+  ctaLabelPt      String?
+  ctaLabelEn      String?
+  accentColor     String?
+  specialConditions String?
+  internalNotes   String?
+  stripePriceId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  subscriptions    Subscription[]
+  diamondProposals DiamondProposal[] @relation("ConvertedPlan")
+
+  @@index([active, sortOrder])
+  @@index([tier])
+}
+
+model DiamondProposal {
+  id                     String                @id @default(cuid())
+  name                   String
+  company                String?
+  email                  String
+  phone                  String
+  estimatedUsers         Int?
+  tripsPerWeek           Int?
+  usualHours             String?
+  serviceZone            String?
+  notes                  String?
+  status                 DiamondProposalStatus @default(RECEIVED)
   adminNotes             String?
-  rejectionReason        String?
-  infoRequestMessage     String?
-  submittedAt            DateTime?
-  verifiedAt             DateTime?
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  convertedPlanId        String?
+  convertedSubscriptionId String?
+  convertedAt            DateTime?
+  contactedAt            DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
 
-  user               User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vehicles           Vehicle[]
-  verificationDocs   DriverDocument[]
-  verificationReviews VerificationReview[]
+  convertedPlan Plan? @relation("ConvertedPlan", fields: [convertedPlanId], references: [id], onDelete: SetNull)
 
-  @@index([status])
-  @@index([onboardingStatus])
+  @@index([status, createdAt])
+  @@index([email])
 }
 
-model DriverDocument {
-  id               String               @id @default(cuid())
-  driverProfileId  String
-  type             DriverDocumentType
-  status           DriverDocumentStatus @default(UPLOADED)
-  fileName         String
-  mimeType         String
-  sizeBytes        Int
-  /// Relative storage path under uploads/
-  storageKey       String
-  /// Optional public-ish URL path served by API
-  url              String?
-  /// JSON AI extraction / signals
-  aiAnalysis       String?
-  aiScore          Float?
-  aiFlags          String               @default("[]")
-  reviewerNotes    String?
-  reviewedAt       DateTime?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
 
-  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
-
-  @@index([driverProfileId, type])
-  @@index([status])
-}
-
-model VerificationReview {
-  id              String               @id @default(cuid())
-  driverProfileId String
-  /// AI | ADMIN | SYSTEM
-  source          String
-  decision        VerificationDecision?
-  /// 0–100 risk
-  riskScore       Float?
-  confidence      Float?
-  /// Human-readable recommendation
-  recommendation  String?
-  /// JSON detailed findings
-  findings        String               @default("[]")
-  notes           String?
-  actorUserId     String?
-  createdAt       DateTime             @default(now())
-
-  driverProfile DriverProfile @relation(fields: [driverProfileId], references: [id], onDelete: Cascade)
-
-  @@index([driverProfileId, createdAt])
-}
-
-/// Singleton-style platform configuration (id = "default")
-model PlatformSettings {
-  id                        String   @id @default("default")
-  defaultCurrency           String   @default("EUR")
-  /// Default marketplace commission percent (e.g. 15.0)
-  defaultCommissionPercent  Float    @default(15)
-  /// JSON array of ISO currencies enabled on the platform
-  supportedCurrencies       String   @default("[\"EUR\"]")
-  /// When true, UI shows Demo Mode banner and seed accounts apply
-  demoMode                  Boolean  @default(false)
-  updatedAt                 DateTime @updatedAt
-}
-
-/// Future commission overrides (country, vehicle class, etc.)
-model CommissionRule {
+model ExtraMinutePackage {
   id             String   @id @default(cuid())
-  name           String
-  percent        Float
-  /// Optional ISO country code
-  countryCode    String?
-  vehicleClassId String?
-  currency       String?
+  code           String   @unique
+  namePt         String
+  nameEn         String
+  minutes        Int
+  priceCents     Int
   active         Boolean  @default(true)
-  priority       Int      @default(0)
+  sortOrder      Int      @default(0)
+  stripePriceId  String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  vehicleClass VehicleClass? @relation(fields: [vehicleClassId], references: [id], onDelete: SetNull)
-
-  @@index([active, priority])
-  @@index([vehicleClassId])
-}
-
-/// Database-driven vehicle classification (replaces hardcoded enums)
-model VehicleClass {
-  id            String   @id @default(cuid())
-  /// Stable machine code, e.g. SEDAN, EXECUTIVE
-  code          String   @unique
-  namePt        String
-  nameEn        String
-  descriptionPt String?
-  descriptionEn String?
-  minPassengers Int      @default(1)
-  maxPassengers Int
-  maxLuggage    Int      @default(2)
-  /// Optional UI/icon key for clients
-  iconKey       String?
-  sortOrder     Int      @default(0)
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  vehicles        Vehicle[]
-  tripRequests    TripRequest[]
-  commissionRules CommissionRule[]
 
   @@index([active, sortOrder])
 }
 
-model Vehicle {
-  id              String   @id @default(cuid())
-  driverId        String
-  vehicleClassId  String
-  make            String
-  model           String
-  year            Int
-  color           String
-  plate           String
-  seats           Int
-  luggageCapacity Int      @default(2)
-  photoUrls       String   @default("[]")
-  /// Aggregate vehicle rating from completed trip reviews
-  ratingAvg       Float?
-  ratingCount     Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  planId               String
+  status               SubscriptionStatus @default(PENDING_PAYMENT)
+  periodStart          DateTime?
+  periodEnd            DateTime?
+  nextRenewalAt        DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  cancelledAt          DateTime?
+  cancelledBy          String?
+  autoRenew            Boolean            @default(true)
+  minutesIncluded      Int                @default(0)
+  minutesUsed          Int                @default(0)
+  minutesReserved      Int                @default(0)
+  stripeSubscriptionId String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
-  driver       DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  vehicleClass VehicleClass  @relation(fields: [vehicleClassId], references: [id])
-  offers       Offer[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
+  payments Payment[]
+  trips    Trip[]
 
-  @@index([driverId])
-  @@index([vehicleClassId])
+  @@index([userId, status])
+  @@index([status, nextRenewalAt])
 }
 
-model TripRequest {
+model Payment {
+  id                    String            @id @default(cuid())
+  userId                String
+  subscriptionId        String?
+  kind                  PaymentKind
+  amountCents           Int
+  currency              String            @default("EUR")
+  method                PaymentMethodType @default(OTHER)
+  status                PaymentStatus     @default(PENDING)
+  provider              String            @default("stripe")
+  providerPaymentId     String?
+  providerSessionId     String?
+  mbEntity              String?
+  mbReference           String?
+  mbWayPhone            String?
+  expiresAt             DateTime?
+  paidAt                DateTime?
+  refundedCents         Int               @default(0)
+  invoiceUrl            String?
+  receiptUrl            String?
+  periodStart           DateTime?
+  periodEnd             DateTime?
+  extraMinutes          Int?
+  rawPayload            String?
+  idempotencyKey        String?           @unique
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([providerPaymentId])
+  @@index([status, createdAt])
+}
+
+model Trip {
   id                      String     @id @default(cuid())
   customerId              String
+  subscriptionId          String?
+  status                  TripStatus @default(AWAITING_CONFIRMATION)
+  tripType                TripType   @default(ONE_WAY)
   pickupAddress           String
   pickupLat               Float?
   pickupLng               Float?
   dropoffAddress          String
   dropoffLat              Float?
   dropoffLng              Float?
-  pickupAt                DateTime
+  scheduledAt             DateTime
   passengers              Int        @default(1)
-  luggage                 Int        @default(1)
+  luggage                 Int        @default(0)
+  needsWaiting            Boolean    @default(false)
+  estimatedWaitMinutes    Int?
   notes                   String?
-  flightNumber            String?
-  status                  TripStatus @default(DRAFT)
-  preferredVehicleClassId String?
-  currency                String     @default("EUR")
-  /// Route distance in meters (estimated)
+  passengerContact        String?
   distanceMeters          Int?
-  /// Route duration in seconds (estimated)
   durationSeconds         Int?
-  expiresAt               DateTime?
-  acceptedOfferId         String?    @unique
+  estimatedMinutes        Int?
+  reservedMinutes         Int        @default(0)
+  chargedMinutes          Int?
+  isImmediate             Boolean    @default(false)
+  cancelledReason         String?
+  adminNotes              String?
+  confirmedAt             DateTime?
+  completedAt             DateTime?
   createdAt               DateTime   @default(now())
   updatedAt               DateTime   @updatedAt
 
-  customer              User          @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
-  preferredVehicleClass VehicleClass? @relation(fields: [preferredVehicleClassId], references: [id], onDelete: SetNull)
-  offers                Offer[]
-  booking               Booking?
-  acceptedOffer         Offer?        @relation("AcceptedOffer", fields: [acceptedOfferId], references: [id])
+  customer         User              @relation("CustomerTrips", fields: [customerId], references: [id], onDelete: Cascade)
+  subscription     Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  assignments      TripAssignment[]
+  timer            TripTimer?
+  extraCharges     ExtraCharge[]
+  minuteTxns       MinuteTransaction[]
 
-  @@index([status, pickupAt])
-  @@index([customerId])
-  @@index([preferredVehicleClassId])
+  @@index([customerId, status])
+  @@index([status, scheduledAt])
 }
 
-model Offer {
-  id              String      @id @default(cuid())
-  tripRequestId   String
+model TripAssignment {
+  id              String           @id @default(cuid())
+  tripId          String
   driverId        String
-  vehicleId       String?
-  priceAmount     Int
-  currency        String      @default("EUR")
-  message         String?
-  includesTolls   Boolean     @default(true)
-  includesWaiting Boolean     @default(false)
-  /// Driver ETA to pickup in minutes (optional)
-  estimatedArrivalMinutes Int?
-  validUntil      DateTime?
-  status          OfferStatus @default(PENDING)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  driverUserId    String
+  status          AssignmentStatus @default(PENDING)
+  assignedById    String?
+  note            String?
+  respondedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  tripRequest    TripRequest  @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
-  driver         User         @relation(fields: [driverId], references: [id], onDelete: Cascade)
-  vehicle        Vehicle?     @relation(fields: [vehicleId], references: [id])
-  acceptedForTrip TripRequest? @relation("AcceptedOffer")
-  booking        Booking?
+  trip       Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  driver     DriverProfile @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driverUser User          @relation("DriverAssignments", fields: [driverUserId], references: [id], onDelete: Cascade)
 
-  @@index([tripRequestId, status])
-  @@index([driverId, status])
+  @@index([tripId, status])
+  @@index([driverUserId, status])
 }
 
-model Booking {
-  id                String        @id @default(cuid())
-  tripRequestId     String        @unique
-  offerId           String        @unique
-  customerId        String
-  driverId          String
-  status            BookingStatus @default(PENDING_PAYMENT)
-  totalAmount       Int
-  currency          String        @default("EUR")
-  platformFeeAmount Int
-  paymentIntentId   String?
-  confirmedAt       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+model TripTimer {
+  id                  String    @id @default(cuid())
+  tripId              String    @unique
+  scheduledAt         DateTime?
+  driverArrivedAt     DateTime?
+  startedAt           DateTime?
+  endedAt             DateTime?
+  waitingStartedAt    DateTime?
+  waitingEndedAt      DateTime?
+  waitingMinutes      Int       @default(0)
+  tripMinutes         Int       @default(0)
+  totalMinutes        Int       @default(0)
+  toleranceUsed       Boolean   @default(false)
+  manualAdjustments   String    @default("[]")
+  adjustedById        String?
+  adjustmentReason    String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  tripRequest TripRequest @relation(fields: [tripRequestId], references: [id], onDelete: Cascade)
-  offer       Offer       @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  customer    User        @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  driver      User        @relation("DriverBookings", fields: [driverId], references: [id], onDelete: Cascade)
-  payment     Payment?
-  review      Review?
-
-  @@index([customerId])
-  @@index([driverId])
+  trip       Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  adjustedBy User? @relation("TimerAdjustedBy", fields: [adjustedById], references: [id], onDelete: SetNull)
 }
 
-model Payment {
-  id                String          @id @default(cuid())
-  bookingId         String          @unique
-  provider          PaymentProvider @default(NONE)
-  providerPaymentId String?
-  amount            Int
-  currency          String          @default("EUR")
-  status            PaymentStatus   @default(REQUIRES_PAYMENT)
-  rawPayload        String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+model MinuteTransaction {
+  id             String        @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  tripId         String?
+  type           MinuteTxnType
+  minutes        Int
+  balanceAfter   Int
+  reason         String
+  actorId        String?
+  meta           String?
+  createdAt      DateTime      @default(now())
 
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip Trip? @relation(fields: [tripId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([tripId])
+  @@index([type])
 }
 
-model Review {
-  id            String   @id @default(cuid())
-  bookingId     String   @unique
-  fromUserId    String
-  toUserId      String
-  /// Driver rating 1–5
-  rating        Int
-  /// Vehicle rating 1–5 (optional)
-  vehicleRating Int?
-  comment       String?
-  createdAt     DateTime @default(now())
+model ExtraCharge {
+  id          String   @id @default(cuid())
+  tripId      String
+  label       String
+  amountCents Int
+  currency    String   @default("EUR")
+  kind        String
+  note        String?
+  createdById String?
+  createdAt   DateTime @default(now())
 
-  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  fromUser User    @relation("ReviewsFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser   User    @relation("ReviewsTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
 }
 
 model Notification {
-  id        String    @id @default(cuid())
+  id        String              @id @default(cuid())
   userId    String
+  channel   NotificationChannel @default(IN_APP)
   type      String
   title     String
   body      String
+  status    NotificationStatus  @default(PENDING)
   readAt    DateTime?
+  sentAt    DateTime?
   meta      String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime            @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, status])
   @@index([userId, readAt])
 }
 
-model AuditLog {
+model AdminAuditLog {
   id         String   @id @default(cuid())
   actorId    String?
   action     String
   entityType String
   entityId   String
+  reason     String?
   meta       String?
   createdAt  DateTime @default(now())
 
-  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
+
+/// Editable platform settings (singleton id = "default")
+model SiteSettings {
+  id                      String   @id @default("default")
+  brandName               String   @default("FC Private Driver")
+  supportEmail            String   @default("fcprivatedriver@gmail.com")
+  supportPhone            String   @default("+351 933 239 595")
+  whatsappNumber          String   @default("+351933239595")
+  toleranceMinutes        Int      @default(10)
+  minimumChargeMinutes    Int      @default(15)
+  lowBalanceThreshold     Int      @default(60)
+  maxPickupDistanceKm     Float?
+  serviceZonesJson        String   @default("[]")
+  heroTitlePt             String   @default("O seu motorista privado, sempre que precisar.")
+  heroSubtitlePt          String   @default("Escolha o seu plano mensal, marque as suas viagens e deixe o resto connosco. Sem procurar motoristas. Sem preços dinâmicos. Sem complicações.")
+  heroTitleEn             String   @default("Your private driver, whenever you need.")
+  heroSubtitleEn          String   @default("Choose your monthly plan, book your trips, and leave the rest with us.")
+  heroImageUrl            String   @default("/brand/fc-hero.jpg")
+  termsHtmlPt             String   @default("")
+  termsHtmlEn             String   @default("")
+  privacyHtmlPt           String   @default("")
+  privacyHtmlEn           String   @default("")
+  demoMode                Boolean  @default(true)
+  updatedAt               DateTime @updatedAt
 }

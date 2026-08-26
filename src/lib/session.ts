@@ -1,49 +1,45 @@
 import { auth } from "@/lib/auth";
-import type { Role } from "@prisma/client";
-import { redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
 import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import type { Role } from "@prisma/client";
 
 export async function requireSession() {
   const session = await auth();
-  if (!session?.user) {
-    const locale = await getLocale().catch(() => "pt");
-    redirect(`/${locale}/login`);
-  }
+  if (!session?.user?.id) redirect("/pt/login");
   return session;
 }
 
-export async function requireRole(...roles: Role[]) {
+export async function requireRole(roles: Role[]) {
   const session = await requireSession();
   if (!roles.includes(session.user.role)) {
-    // Dual-account: CUSTOMER with driverProfile can access DRIVER surfaces
-    if (roles.includes("DRIVER") && (session.user.hasDriver || session.user.role === "DRIVER")) {
-      return session;
-    }
-    if (roles.includes("CUSTOMER") && (session.user.hasCustomer || session.user.role === "CUSTOMER")) {
-      return session;
-    }
-    const locale = await getLocale().catch(() => "pt");
-    redirect(`/${locale}`);
+    redirect(dashboardPathForRole(session.user.role));
   }
   return session;
 }
 
-/** Ensure the signed-in user has a driver profile (create path is /tornar-motorista). */
-export async function requireDriverAccess() {
-  const session = await requireSession();
-  if (session.user.role === "ADMIN") return session;
-  if (session.user.hasDriver || session.user.role === "DRIVER") {
-    const profile = await prisma.driverProfile.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true },
-    });
-    if (profile) return session;
+export function dashboardPathForRole(role: Role) {
+  switch (role) {
+    case "ADMIN":
+      return "/pt/admin";
+    default:
+      return "/pt/cliente";
   }
-  const locale = await getLocale().catch(() => "pt");
-  redirect(`/${locale}/tornar-motorista`);
 }
 
-export async function getOptionalSession() {
-  return auth();
+export async function getCurrentUser() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+  return prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: {
+      customerProfile: { include: { travelHabits: true } },
+      driverProfile: { include: { vehicles: true } },
+    },
+  });
+}
+
+export async function getSiteSettings() {
+  const settings = await prisma.siteSettings.findUnique({ where: { id: "default" } });
+  if (settings) return settings;
+  return prisma.siteSettings.create({ data: { id: "default" } });
 }
