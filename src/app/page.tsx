@@ -3,7 +3,7 @@ import { BRAND, PAYMENT_METHODS } from "@/config/brand";
 import { FLEET, FLEET_INTRO } from "@/data/fleet";
 import { SERVICES } from "@/data/services";
 import { FleetVehicle } from "@/components/site/FleetVehicle";
-import { ServiceCard } from "@/components/site/ServiceCard";
+import { ServicesExplorer } from "@/components/site/ServicesExplorer";
 
 export default function HomePage() {
   return (
@@ -67,12 +67,8 @@ export default function HomePage() {
               adaptada ao que pretende.
             </p>
           </div>
-          <div className="service-grid">
-            {SERVICES.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
-          </div>
-          <p style={{ marginTop: "1.5rem" }}>
+          <ServicesExplorer services={SERVICES} />
+          <p style={{ marginTop: "1.75rem" }}>
             <Link href="/servicos" className="btn btn-secondary">
               Ver todos os serviços
             </Link>
