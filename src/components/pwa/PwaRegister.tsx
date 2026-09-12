@@ -142,7 +142,7 @@ export function PwaRegister() {
   return (
     <>
       <div id="nina-pwa-splash" className="nina-pwa-splash" aria-hidden>
-        <div className="nina-pwa-splash-mark">ADDYNOW</div>
+        <div className="nina-pwa-splash-mark">AddYnow</div>
       </div>
 
       {updateReady ? (
@@ -155,9 +155,9 @@ export function PwaRegister() {
       ) : null}
 
       {showInstall && deferred ? (
-        <div className="nina-pwa-toast nina-pwa-install" role="dialog" aria-label="Instalar ADDYNOW">
+        <div className="nina-pwa-toast nina-pwa-install" role="dialog" aria-label="Instalar AddYnow">
           <div>
-            <strong>Instalar ADDYNOW</strong>
+            <strong>Instalar AddYnow</strong>
             <p className="muted small" style={{ margin: "0.15rem 0 0" }}>
               Adiciona ao ecrã principal e usa como app.
             </p>

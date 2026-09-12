@@ -1,7 +1,7 @@
 /**
- * Missão ADDYNOW + MEL
+ * Missão AddYnow + MEL
  *
- * ADDYNOW = produto / marca
+ * AddYnow = produto / marca
  * MEL = assistente inteligente
  *
  * Conceito: SABER AGORA.

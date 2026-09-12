@@ -81,7 +81,7 @@ export function PersonalizeNinaForm({
   function previewVoice() {
     if (!voice || typeof window === "undefined") return;
     const u = new SpeechSynthesisUtterance(
-      "Olá. Sou a MEL — Controla. Poupa. Vive.",
+      "Olá. Sou a MEL — a assistente inteligente da AddYnow.",
     );
     u.lang = "pt-PT";
     const match = voices.find((v) => v.voiceURI === voice);

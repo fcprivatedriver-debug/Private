@@ -75,9 +75,18 @@ export function applyEnsureEnv({ exitOnError = true } = {}) {
   }
 
   if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+    if (process.env.VERCEL_ENV === "production") {
+      console.error(
+        "[ensure-env] AUTH_SECRET is required in production. Set it in Vercel Environment Variables.",
+      );
+      if (exitOnError) process.exit(1);
+      return false;
+    }
     process.env.AUTH_SECRET =
-      "nina-demo-auth-secret-do-not-use-in-real-prod-32b";
-    console.log("[ensure-env] AUTH_SECRET set to demo fallback for this build");
+      "addynow-local-dev-auth-secret-not-for-production-32";
+    console.warn(
+      "[ensure-env] AUTH_SECRET missing — using local-dev fallback (not for production)",
+    );
   }
 
   if (process.env.DATABASE_URL) {

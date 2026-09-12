@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma, resolveNinaSchema } from "@/lib/db";
-import { resolveAuthSecret } from "@/lib/auth-secret";
+import { authSecretSource } from "@/lib/auth-secret";
 
-/** Lightweight production diagnostics (no secrets leaked). */
+/** Lightweight production diagnostics (never leaks secret values). */
 export async function GET() {
-  const secret = resolveAuthSecret();
+  const secretSource = authSecretSource();
   const checks = {
     ok: true as boolean,
-    authSecretConfigured: Boolean(secret && secret.length >= 16),
-    authSecretSource: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET ? "env" : "demo-fallback",
+    authSecretConfigured: secretSource === "env",
+    authSecretSource: secretSource,
     authTrustHost: true,
     databaseUrl: Boolean(process.env.DATABASE_URL),
     directUrl: Boolean(
@@ -20,7 +20,16 @@ export async function GET() {
     userCount: null as number | null,
     dbDetail: null as string | null,
     database: "unknown" as "ok" | "error" | "unknown",
+    demoMode:
+      process.env.DEMO_MODE === "true" ||
+      process.env.NEXT_PUBLIC_DEMO_MODE === "true",
+    resendConfigured: Boolean(process.env.RESEND_API_KEY),
+    emailFromConfigured: Boolean(process.env.EMAIL_FROM),
   };
+
+  if (secretSource === "missing-production") {
+    checks.ok = false;
+  }
 
   try {
     await prisma.$queryRaw`SELECT 1`;

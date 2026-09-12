@@ -1,17 +1,17 @@
 {
   "app": {
-    "name": "ADDYNOW",
+    "name": "AddYnow",
     "tagline": "Sabe onde vai o teu dinheiro. Agora."
   },
   "auth": {
     "loginTitle": "Olá outra vez",
-    "loginHint": "Continua na ADDYNOW com a MEL.",
+    "loginHint": "Continua na AddYnow com a MEL.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Entrar",
     "loggingIn": "Um momento…",
     "invalidCredentials": "Email ou password incorrectos.",
-    "noAccount": "Ainda não tens conta na ADDYNOW?",
+    "noAccount": "Ainda não tens conta na AddYnow?",
     "registerLink": "Criar conta"
   },
   "nav": {

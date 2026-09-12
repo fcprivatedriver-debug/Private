@@ -8,4 +8,6 @@ export const routing = defineRouting({
   locales,
   defaultLocale,
   localePrefix: "always",
+  // PT is the primary product language. Do not send PT users to /en via Accept-Language.
+  localeDetection: false,
 });

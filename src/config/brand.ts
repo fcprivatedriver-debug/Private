@@ -1,14 +1,14 @@
 /**
  * Identidade final de produção.
  *
- * ADDYNOW = aplicação / produto / marca
- * MEL     = assistente pessoal inteligente dentro da ADDYNOW
+ * AddYnow = aplicação / produto / marca (grafia exacta)
+ * MEL     = assistente pessoal inteligente dentro da AddYnow
  *
- * Nunca chamar ADDYNOW à assistente.
- * Nunca substituir MEL por ADDYNOW.
+ * Nunca chamar AddYnow à assistente.
+ * Nunca substituir MEL por AddYnow.
  */
 
-export const APP_NAME = "ADDYNOW";
+export const APP_NAME = "AddYnow";
 export const ASSISTANT_NAME = "MEL";
 
 /** Assinatura principal */

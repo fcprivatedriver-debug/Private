@@ -1,24 +1,46 @@
 /**
  * Resolve Auth.js signing secret.
  *
- * On Vercel, AUTH_SECRET is recommended. For phone-only / demo deploys where
- * the Environment Variables UI is hard to reach, we fall back to a stable
- * demo secret so Auth.js does not show the Configuration error page.
- *
- * Prefer setting AUTH_SECRET in Vercel when you can.
+ * Development: may fall back to a local demo secret so `next dev` works.
+ * Production / Vercel production: NEVER fall back — AUTH_SECRET is required.
  */
-const DEMO_FALLBACK_SECRET =
-  "nina-demo-auth-secret-do-not-use-in-real-prod-32b";
+
+const LOCAL_DEV_FALLBACK =
+  "addynow-local-dev-auth-secret-not-for-production-32";
+
+function isProductionRuntime(): boolean {
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    (process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview")
+  );
+}
 
 export function resolveAuthSecret(): string {
   const fromEnv = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
   if (fromEnv && fromEnv.trim().length >= 16) {
     return fromEnv.trim();
   }
-  if (process.env.NODE_ENV === "production") {
-    console.warn(
-      "[auth] AUTH_SECRET missing — using built-in demo fallback. Set AUTH_SECRET in Vercel when possible.",
+
+  if (isProductionRuntime()) {
+    throw new Error(
+      "[auth] AUTH_SECRET is required in production. Set AUTH_SECRET in the deployment environment variables.",
     );
   }
-  return DEMO_FALLBACK_SECRET;
+
+  if (process.env.NODE_ENV === "production") {
+    // Preview builds: still require a real secret if present; otherwise warn loudly.
+    console.error(
+      "[auth] AUTH_SECRET missing on this deployment. Set AUTH_SECRET in Vercel Environment Variables. Using local-dev fallback only so the preview can boot — NOT safe for real users.",
+    );
+  }
+
+  return LOCAL_DEV_FALLBACK;
+}
+
+/** For /api/health — never expose the secret value. */
+export function authSecretSource(): "env" | "missing-production" | "local-dev-fallback" {
+  const fromEnv = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (fromEnv && fromEnv.trim().length >= 16) return "env";
+  if (isProductionRuntime()) return "missing-production";
+  return "local-dev-fallback";
 }

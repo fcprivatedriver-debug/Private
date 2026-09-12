@@ -15,4 +15,4 @@ export function validatePassword(password: string): { ok: true } | { ok: false; 
 }
 
 export const PASSWORD_HINT =
-  "Mínimo 8 caracteres, com maiúscula, número e símbolo (ex.: Nina2026!).";
+  "Mínimo 8 caracteres, com maiúscula, número e símbolo (ex.: Exemplo2026!).";

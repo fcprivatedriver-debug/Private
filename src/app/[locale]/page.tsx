@@ -69,7 +69,9 @@ export default function LandingPage() {
         <div className="feature-grid nina-examples" style={{ marginTop: "1.5rem" }}>
           {NATURAL_EXAMPLES.map((q) => (
             <article key={q} className="feature nina-example">
-              <p>“{q}.”</p>
+              <p>
+                “{/[.!?…]$/.test(q) ? q : `${q}.`}”
+              </p>
             </article>
           ))}
         </div>

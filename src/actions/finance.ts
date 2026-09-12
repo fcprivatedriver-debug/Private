@@ -910,7 +910,7 @@ export async function exportFamilyData(format: "csv" | "excel" | "pdf") {
     return { ok: true as const, filename: "nina-export.xls", content: toExcelTSV(rows, columns), mime: "application/vnd.ms-excel" };
   }
   const pdf = toSimplePdfText(
-    "ADDYNOW Export",
+    "AddYnow Export",
     rows.slice(0, 40).map((r) => `${r.data} ${r.tipo} ${r.descricao} ${r.valor}€`),
   );
   return { ok: true as const, filename: "nina-export.pdf", content: pdf, mime: "application/pdf" };
