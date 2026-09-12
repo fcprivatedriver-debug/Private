@@ -216,7 +216,7 @@ export function InstantCapture({
         <section className="captura-panel captura-voice-fast">
           <p className="muted" style={{ marginTop: 0 }}>
             {autoStart
-              ? "Diz o gasto agora — a Nina regista sozinha."
+              ? "Diz o gasto agora — a MEL regista sozinha."
               : "Um toque e fala. Exemplos: «BP 20 euros», «Continente 58 euros»."}
           </p>
           <button
@@ -233,7 +233,7 @@ export function InstantCapture({
                 ? "A registar…"
                 : needsTap
                   ? "Toca para falar"
-                  : "Falar com a Nina"}
+                  : "Falar com a MEL"}
           </button>
           {text ? <p className="captura-transcript">«{text}»</p> : null}
           <div className="nina-quick">
@@ -279,7 +279,7 @@ export function InstantCapture({
       {mode === "photo" ? (
         <section className="captura-panel">
           <p className="muted" style={{ marginTop: 0 }}>
-            Fotografa faturas, talões ou contas. A Nina lê com OCR, classifica e arquiva a imagem no
+            Fotografa faturas, talões ou contas. A MEL lê com OCR, classifica e arquiva a imagem no
             movimento.
           </p>
           <input
@@ -329,7 +329,7 @@ export function InstantCapture({
             </li>
           </ul>
           <p className="muted small" style={{ marginBottom: 0 }}>
-            A vida é para ser vivida. A Nina trata das contas.
+            A vida é para ser vivida. A MEL trata das contas.
           </p>
         </div>
       </section>

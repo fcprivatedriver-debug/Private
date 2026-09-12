@@ -63,7 +63,7 @@ export function ConnectionsCenter({
         </header>
         <div className="panel-body">
           <p className="muted small" style={{ marginTop: 0 }}>
-            A Nina adapta-se a ti — nunca o contrário. Podes mudar isto quando quiseres. Sem ligações
+            A MEL adapta-se a ti — nunca o contrário. Podes mudar isto quando quiseres. Sem ligações
             externas, tudo continua a funcionar por voz.
           </p>
           <div className="automation-levels">
@@ -266,7 +266,7 @@ export function ConnectionsCenter({
           })}
 
           {filter === "active" && activeCount === 0 ? (
-            <p className="muted">Ainda sem ligações. Autoriza só o que quiseres — ou fala só com a Nina.</p>
+            <p className="muted">Ainda sem ligações. Autoriza só o que quiseres — ou fala só com a MEL.</p>
           ) : null}
         </div>
       </section>
@@ -277,8 +277,8 @@ export function ConnectionsCenter({
         </header>
         <div className="panel-body">
           <p style={{ marginTop: 0 }}>
-            Diz simplesmente: «Nina, paguei 42 € de eletricidade.» · «Nina, recebi o salário.» ·
-            «Nina, fui às compras.» A IA trata do resto.
+            Diz simplesmente: «MEL, paguei 42 € de eletricidade.» · «MEL, recebi o salário.» ·
+            «MEL, fui às compras.» A IA trata do resto.
           </p>
           <p className="muted small">
             Privacidade primeiro: nenhuma integração é obrigatória. Todas são opcionais, reversíveis

@@ -187,11 +187,11 @@ export async function savingsSummaryReply(familyId: string): Promise<{
 
   if (m.totalCents <= 0 && m.timeMinutes <= 0) {
     parts.push(
-      "Ainda não registei poupanças este mês — cada vez que seguires uma recomendação da Nina (compras, combustível ou carregamento), conto aqui.",
+      "Ainda não registei poupanças este mês — cada vez que seguires uma recomendação da MEL (compras, combustível ou carregamento), conto aqui.",
     );
   } else {
     parts.push(
-      `Graças à Nina já poupaste aproximadamente ${formatEUR(m.totalCents)} este mês.`,
+      `Graças à MEL já poupaste aproximadamente ${formatEUR(m.totalCents)} este mês.`,
     );
     const cats: string[] = [];
     if (m.shoppingCents > 0) cats.push(`compras ${formatEUR(m.shoppingCents)}`);
@@ -215,7 +215,7 @@ export async function savingsSummaryReply(familyId: string): Promise<{
 export async function todaySavingsWhisper(familyId: string): Promise<string | null> {
   const { periods } = await savingsSummaryReply(familyId);
   if (periods.monthly.totalCents < 100) return null;
-  return `Graças à Nina já poupaste aproximadamente ${formatEUR(periods.monthly.totalCents)} este mês.`;
+  return `Graças à MEL já poupaste aproximadamente ${formatEUR(periods.monthly.totalCents)} este mês.`;
 }
 
 /** Finance tip: como gastar menos — heurística, sem LLM. */
@@ -249,7 +249,7 @@ export async function spendLessAdvice(familyId: string, memberId?: string) {
       "Ainda há poucos movimentos este mês. O caminho mais simples: regista despesas por voz e pergunta «vou às compras» ou «onde abasteço?» — eu mostro onde poupas.";
   }
   if (periods.monthly.totalCents > 0) {
-    reply += ` Já vais com ${formatEUR(periods.monthly.totalCents)} poupados via recomendações Nina.`;
+    reply += ` Já vais com ${formatEUR(periods.monthly.totalCents)} poupados via recomendações MEL.`;
   }
 
   return {

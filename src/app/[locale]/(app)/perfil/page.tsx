@@ -35,7 +35,7 @@ export default async function PerfilPage() {
       </Panel>
       <Panel title="Na Conta Familiar">
         <p style={{ marginTop: 0 }}>
-          A Nina trata-te por <strong>{membership.displayName}</strong> · {membership.role} ·{" "}
+          A MEL trata-te por <strong>{membership.displayName}</strong> · {membership.role} ·{" "}
           {membership.family.name}
         </p>
         <p className="muted small">

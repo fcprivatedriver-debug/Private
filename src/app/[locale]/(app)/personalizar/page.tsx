@@ -18,9 +18,9 @@ export default async function PersonalizarPage() {
   return (
     <div className="page-stack">
       <header>
-        <h1 className="page-title">Personalizar a Nina</h1>
+        <h1 className="page-title">Personalizar a MEL</h1>
         <p className="page-sub">
-          Voz, avatar, tema e estilo — a Nina adapta-se a ti. Sem complicar.
+          Voz, avatar, tema e estilo — a MEL adapta-se a ti. Sem complicar.
         </p>
       </header>
       <PersonalizeNinaForm

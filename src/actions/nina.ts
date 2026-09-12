@@ -205,7 +205,7 @@ async function commitExpense(opts: {
       description: opts.description,
       storeName: opts.storeName,
       paymentMethod: "OTHER",
-      notes: "Registado com a Nina",
+      notes: "Registado com a MEL",
     },
   });
   await logTransactionAudit({
@@ -215,7 +215,7 @@ async function commitExpense(opts: {
     action: "CREATE",
     actorUserId: opts.userId,
     actorDisplayName: opts.actorDisplayName,
-    summary: `Criou despesa «${created.description}» (Nina)`,
+    summary: `Criou despesa «${created.description}» (MEL)`,
   });
   await learnScopeHabit({
     userId: opts.userId,
@@ -569,7 +569,7 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
         action: "CREATE",
         actorUserId: session.user.id,
         actorDisplayName: displayName,
-        summary: `Criou receita «${createdIncome.description}» (Nina)`,
+        summary: `Criou receita «${createdIncome.description}» (MEL)`,
       });
       revalidatePath("/", "layout");
       return {

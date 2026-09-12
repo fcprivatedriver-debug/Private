@@ -118,7 +118,7 @@ export function generateInsights(
       kind: "save",
       title: "Há folga — boa oportunidade",
       body: shapeLength(
-        `Tens cerca de ${formatEUR(balance)} de margem. Se fizer sentido, reforça um objetivo com ${formatEUR(Math.round(balance * 0.2))} — a vida continua, a Nina trata das contas.`,
+        `Tens cerca de ${formatEUR(balance)} de margem. Se fizer sentido, reforça um objetivo com ${formatEUR(Math.round(balance * 0.2))} — a vida continua, a MEL trata das contas.`,
         prefs,
       ),
       severity: "success",
@@ -142,7 +142,7 @@ export function generateInsights(
 
 export function buildMonthlyReport(snap: FinanceSnapshot): string {
   const lines = [
-    "Resumo do mês · Nina",
+    "Resumo do mês · ADDYNOW",
     `Receitas: ${formatEUR(snap.incomeCents)}`,
     `Despesas: ${formatEUR(snap.expenseCents)}`,
     `Saldo: ${formatEUR(snap.incomeCents - snap.expenseCents)}`,

@@ -207,13 +207,13 @@ export function ShoppingListClient({
           />
         </label>
         <button className="btn btn-primary" type="submit" disabled={pending}>
-          Adicionar com a Nina
+          Adicionar com a MEL
         </button>
       </form>
 
       <p className="muted small" style={{ margin: 0 }}>
         Preços via Product Service (Continente e Pingo Doce). Se o site da loja não responder,
-        a Nina usa um catálogo de referência sincronizado com a tua lista familiar.
+        a MEL usa um catálogo de referência sincronizado com a tua lista familiar.
       </p>
 
       {voiceHint ? (
@@ -389,7 +389,7 @@ export function ShoppingListClient({
         ))}
         {open.length === 0 ? (
           <p className="muted">
-            Lista pronta e vazia. Diz à Nina o que precisas — «adiciona manteiga Milhafre».
+            Lista pronta e vazia. Diz à MEL o que precisas — «adiciona manteiga Milhafre».
           </p>
         ) : null}
       </div>

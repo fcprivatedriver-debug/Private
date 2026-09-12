@@ -36,13 +36,13 @@ export function ProfileForm({
         const fd = new FormData(e.currentTarget);
         start(async () => {
           await updateProfile(fd);
-          setMsg("Perfil atualizado. A Nina passa a tratar-te assim em toda a app.");
+          setMsg("Perfil atualizado. A MEL passa a tratar-te assim em toda a app.");
           router.refresh();
         });
       }}
     >
       <label className="field">
-        <span>Como pretendes que a Nina te trate?</span>
+        <span>Como pretendes que a MEL te trate?</span>
         <input
           name="preferredName"
           defaultValue={howToCall}
@@ -70,7 +70,7 @@ export function ProfileForm({
         </select>
       </label>
       <label className="field">
-        <span>Como a Nina te responde</span>
+        <span>Como a MEL te responde</span>
         <select name="ninaReplyStyle" defaultValue={ninaReplyStyle}>
           <option value="auto">Automático (aprende contigo)</option>
           <option value="short">Respostas curtas</option>
@@ -79,7 +79,7 @@ export function ProfileForm({
         </select>
       </label>
       <label className="field">
-        <span>Humor da Nina</span>
+        <span>Humor da MEL</span>
         <select name="ninaHumor" defaultValue={ninaHumor}>
           <option value="auto">Automático</option>
           <option value="light">Ligeiro (quando faz sentido)</option>
@@ -95,7 +95,7 @@ export function ProfileForm({
         <input name="pin" type="password" inputMode="numeric" minLength={4} placeholder="••••" />
       </label>
       <p className="muted small">
-        A vida é para ser vivida. A Nina trata das contas — sem culpas, no teu ritmo, pelo caminho mais simples.
+        A vida é para ser vivida. A MEL trata das contas — sem culpas, no teu ritmo, pelo caminho mais simples.
       </p>
       <button className="btn btn-primary" type="submit" disabled={pending}>
         Guardar perfil

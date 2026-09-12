@@ -31,7 +31,7 @@ export function MemoryRulesClient({ rules }: { rules: Rule[] }) {
           if (!triggerPhrase) return;
           start(async () => {
             await addMemoryRule({ triggerPhrase, scope });
-            setMsg("Regra guardada. A Nina vai lembrar-se.");
+            setMsg("Regra guardada. A MEL vai lembrar-se.");
             (e.target as HTMLFormElement).reset();
             router.refresh();
           });
@@ -80,7 +80,7 @@ export function MemoryRulesClient({ rules }: { rules: Rule[] }) {
         ))}
         {rules.length === 0 ? (
           <p className="muted">
-            Ainda sem regras. Diz à Nina: «Sempre que eu disser compras para casa, regista na Conta Familiar.»
+            Ainda sem regras. Diz à MEL: «Sempre que eu disser compras para casa, regista na Conta Familiar.»
           </p>
         ) : null}
       </div>

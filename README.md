@@ -1,15 +1,18 @@
-# Nina — Assistente financeira pessoal
+# ADDYNOW — Sabe onde vai o teu dinheiro. Agora.
 
-Aplicação moderna para controlar receitas e despesas da família, orçamentos, objetivos de poupança e insights com IA. Feita para Portugal (EUR, retalho, energia, Open Banking).
+Aplicação de organização pessoal e financeira com a **MEL**, assistente inteligente.
 
-**Brand:** Nina · **Moeda:** EUR · **Idioma:** Português (EN disponível) · **Base de dados:** PostgreSQL
+**Marca:** ADDYNOW · **Assistente:** MEL · **Moeda:** EUR · **Idioma:** Português (EN disponível)
+
+> Identidade: ADDYNOW = app / produto · MEL = assistente de IA  
+> Domínio técnico temporário: `ninapp.pt` (não inventar domínio novo nesta fase)
 
 ## Stack
 
 - Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
-- Auth.js (credentials + Google opcional) · Prisma · PostgreSQL
+- Auth.js · Prisma · PostgreSQL
 - next-intl (`/pt`, `/en`)
-- Arquitetura modular: OCR, importações, IA, exportação, Open Banking stubs
+- Módulos: OCR, importações, IA, exportação, ligações opcionais
 
 ## Arranque local
 
@@ -17,58 +20,34 @@ Aplicação moderna para controlar receitas e despesas da família, orçamentos,
 cp .env.example .env
 npm install
 npx prisma migrate deploy
-npm run db:seed
+# demo só em desenvolvimento:
+DEMO_MODE=true npm run db:demo
 npm run dev
 ```
 
-### Conta demo
+### Contas de desenvolvimento (nunca em produção)
 
 | Pessoa | Email | Password |
 |--------|-------|----------|
-| Filipe | `familia@nina.app` | `nina123` |
-| Nina | `nina@nina.app` | `nina123` |
+| Família (vazia) | `familia@nina.app` | `nina123` |
+| Demo seed | `demo@nina.app` | `nina123` |
 
-Guia completo para testar no browser: [`docs/LOCAL.md`](docs/LOCAL.md)
+Em produção, `DEMO_MODE` fica forçado a `false`.
 
-## Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina
+## Produção
 
-Funcionalidade integrada (não duas secções separadas):
+Ver `docs/DEPLOY_VERCEL.md`. Variáveis críticas:
 
-- Registo extremamente simples e Conta Familiar via convite por **link ou QR Code**
-- Perfis individuais com autenticação própria (PIN, biometria)
-- Separação entre **As Minhas Finanças** e **Conta Familiar**
-- Compreensão automática de despesas pessoais, familiares ou profissionais
-- Aprendizagem contínua a partir das confirmações do utilizador
-- Memória personalizada com regras editáveis
-- Automatização progressiva (cada vez menos perguntas)
-- Sugestões inteligentes e análise de padrões de consumo
-- Filosofia: *quanto mais a Nina é utilizada, menos trabalho o utilizador tem*
+| Variável | Notas |
+|----------|-------|
+| `DATABASE_URL` / `DIRECT_URL` | Neon, schema `nina` (legado técnico) |
+| `AUTH_SECRET` | Obrigatório |
+| `RESEND_API_KEY` | Obrigatório para emails reais |
+| `EMAIL_FROM` | `ADDYNOW <no-reply@ninapp.pt>` |
+| `DEMO_MODE` | `false` |
+| `NEXT_PUBLIC_APP_NAME` | `ADDYNOW` |
 
-Documento completo: [`docs/PRODUCT.md`](docs/PRODUCT.md)
+## Separação de marca
 
-## Ligações da Nina
-
-Automatização personalizada por módulos opcionais (`/pt/ligacoes`): autorizar, pausar ou remover bancos, email, supermercados e outros — nunca obrigatório. Sem ligações, a voz continua a funcionar.
-
-## Captura Instantânea
-
-Funcionalidade principal (`/pt/captura`): falar, escrever ou fotografar para registar em segundos. OCR arquiva a imagem no movimento. O mesmo resultado via Ligações / conversa.
-
-## Outras capacidades
-
-- Dashboard conversacional com a Nina
-- Receitas e despesas com categorias PT
-- OCR de faturas · importações (Continente, Galp, MB Way, CSV, …)
-- Orçamentos, estatísticas, pesquisa, alertas, recorrentes
-- Tema claro / escuro · exportação PDF / Excel / CSV
-
-## Ambiente
-
-| Variável | Exemplo |
-|----------|---------|
-| `DATABASE_URL` | PostgreSQL |
-| `DIRECT_URL` | PostgreSQL (migrate) |
-| `AUTH_SECRET` | 32+ chars |
-| `NEXT_PUBLIC_APP_NAME` | `Nina` |
-
-Ver também `docs/ARCHITECTURE.md` e `docs/PR_VISUAL_PROOF.md`.
+- UI / PWA / emails visíveis → **ADDYNOW** + **MEL**
+- Schema Postgres, modelos Prisma `Nina*`, emails `@nina.app`, cookie `nina_space`, domínio `ninapp.pt` → legado técnico preservado de propósito

@@ -113,7 +113,7 @@ export function InviteShare({
         }}
       >
         <p className="muted" style={{ marginTop: 0 }}>
-          Adicionar membro — a Nina envia o convite. Ao aceitar, só cria a palavra-passe.
+          Adicionar membro — a MEL envia o convite. Ao aceitar, só cria a palavra-passe.
         </p>
         <label className="field">
           <span>Nome</span>

@@ -49,7 +49,7 @@ export default async function ListaPage({
     <div className="page-stack">
       <h1 className="page-title">Lista de compras</h1>
       <p className="page-sub">
-        Diz ou escreve o produto — a Nina pesquisa no Continente e no Pingo Doce, mostra preços
+        Diz ou escreve o produto — a MEL pesquisa no Continente e no Pingo Doce, mostra preços
         quando disponíveis e, com «Comparar Continente / Pingo Doce», compara o total entre lojas.
       </p>
       <Panel title={`${openCount} por comprar`}>

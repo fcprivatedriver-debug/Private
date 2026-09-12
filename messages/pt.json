@@ -1,17 +1,17 @@
 {
   "app": {
-    "name": "Nina",
-    "tagline": "Assistente financeira pessoal"
+    "name": "ADDYNOW",
+    "tagline": "Sabe onde vai o teu dinheiro. Agora."
   },
   "auth": {
     "loginTitle": "Olá outra vez",
-    "loginHint": "Continua a conversa com a Nina.",
+    "loginHint": "Continua na ADDYNOW com a MEL.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Entrar",
     "loggingIn": "Um momento…",
-    "invalidCredentials": "Email ou password incorretos.",
-    "noAccount": "Ainda não falaste com a Nina?",
+    "invalidCredentials": "Email ou password incorrectos.",
+    "noAccount": "Ainda não tens conta na ADDYNOW?",
     "registerLink": "Criar conta"
   },
   "nav": {

@@ -142,12 +142,12 @@ export function PwaRegister() {
   return (
     <>
       <div id="nina-pwa-splash" className="nina-pwa-splash" aria-hidden>
-        <div className="nina-pwa-splash-mark">Nina</div>
+        <div className="nina-pwa-splash-mark">ADDYNOW</div>
       </div>
 
       {updateReady ? (
         <div className="nina-pwa-toast" role="status">
-          <span>Nova versão da Nina disponível.</span>
+          <span>Nova versão da MEL disponível.</span>
           <button type="button" className="btn btn-sm btn-primary" onClick={applyUpdate}>
             Atualizar
           </button>
@@ -155,9 +155,9 @@ export function PwaRegister() {
       ) : null}
 
       {showInstall && deferred ? (
-        <div className="nina-pwa-toast nina-pwa-install" role="dialog" aria-label="Instalar Nina">
+        <div className="nina-pwa-toast nina-pwa-install" role="dialog" aria-label="Instalar ADDYNOW">
           <div>
-            <strong>Instalar Nina</strong>
+            <strong>Instalar ADDYNOW</strong>
             <p className="muted small" style={{ margin: "0.15rem 0 0" }}>
               Adiciona ao ecrã principal e usa como app.
             </p>

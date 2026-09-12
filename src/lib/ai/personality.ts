@@ -1,7 +1,7 @@
 /**
- * Personalidade da Nina — assistente financeira humana, nunca robótica.
+ * Personalidade da MEL — assistente financeira humana, nunca robótica.
  *
- * Missão: ver `mission.ts` — "A vida é para ser vivida. A Nina trata das contas."
+ * Missão: ver `mission.ts` — "A vida é para ser vivida. A MEL trata das contas."
  * Filosofia: "Isto torna a vida do utilizador mais simples?"
  */
 

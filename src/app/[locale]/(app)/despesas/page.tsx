@@ -93,7 +93,7 @@ export default async function GastosPage({
         {expenses.length === 0 ? (
           <EmptyState
             title="Ainda sem despesas"
-            body="Quando gastares, diz à Nina, fotografa o talão ou regista aqui. Nada é criado automaticamente."
+            body="Quando gastares, diz à MEL, fotografa o talão ou regista aqui. Nada é criado automaticamente."
           />
         ) : (
           <div className="tx-list">

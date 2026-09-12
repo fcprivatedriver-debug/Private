@@ -27,13 +27,13 @@ export default async function CapturaPage({
         {mode === "photo"
           ? "Fotografar fatura"
           : autoStart
-            ? "Falar com a Nina"
+            ? "Falar com a MEL"
             : "Captura Instantânea"}
       </h1>
       <p className="page-sub">
         {autoStart && mode === "voice"
-          ? "Diz o valor e o sítio. A Nina interpreta a intenção, categoriza e atualiza tudo — tu continua a viver."
-          : "Fala, escreve ou fotografa a fatura. A Nina interpreta e executa — sem menus, sem formulários, sem burocracia."}
+          ? "Diz o valor e o sítio. A MEL interpreta a intenção, categoriza e atualiza tudo — tu continua a viver."
+          : "Fala, escreve ou fotografa a fatura. A MEL interpreta e executa — sem menus, sem formulários, sem burocracia."}
       </p>
       <InstantCapture initialMode={mode} autoStart={autoStart} />
     </div>

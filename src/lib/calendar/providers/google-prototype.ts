@@ -79,7 +79,7 @@ export const googleCalendarPrototype: CalendarProvider = {
       action: "TEMPLATE",
       text: draft.title,
       dates: `${fmt(draft.start)}/${fmt(draft.end)}`,
-      details: draft.notes || "Criado com a Nina",
+      details: draft.notes || "Criado com a ADDYNOW",
       location: draft.location || "",
     });
     const deepLink = `https://calendar.google.com/calendar/render?${params.toString()}`;

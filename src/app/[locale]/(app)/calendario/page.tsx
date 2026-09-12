@@ -24,7 +24,7 @@ export default async function CalendarioPage() {
         <p className="nina-kicker">{NINA_SLOGAN} · Calendário</p>
         <h1 className="page-title">O teu calendário</h1>
         <p className="page-sub">
-          A Nina nunca cria um calendário privado. Marca eventos no Google Calendar, Apple
+          A MEL nunca cria um calendário privado. Marca eventos no Google Calendar, Apple
           Calendar ou Outlook — com a tua autorização.
         </p>
       </header>
@@ -36,7 +36,7 @@ export default async function CalendarioPage() {
           <>
             <EmptyState
               title="Autoriza uma vez"
-              body="Concede permissão ao teu calendário. Depois é só voz: «Nina preciso de marcar cabeleireiro amanhã.»"
+              body="Concede permissão ao teu calendário. Depois é só voz: «MEL preciso de marcar cabeleireiro amanhã.»"
             />
             <div className="btn-row" style={{ marginTop: "1rem" }}>
               <a
@@ -48,7 +48,7 @@ export default async function CalendarioPage() {
                 Abrir {provider.label}
               </a>
               <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-ghost">
-                🎤 Falar com a Nina
+                🎤 Falar com a MEL
               </Link>
             </div>
           </>
@@ -84,7 +84,7 @@ export default async function CalendarioPage() {
 
       <Panel title="Lembretes">
         <p className="page-sub" style={{ margin: 0 }}>
-          «Lembra-me hoje às 11 para ligar ao cabeleireiro» — a Nina usa o serviço de lembretes /
+          «Lembra-me hoje às 11 para ligar ao cabeleireiro» — a MEL usa o serviço de lembretes /
           calendário do sistema, sem duplicar a funcionalidade.
         </p>
         <div className="btn-row" style={{ marginTop: "1rem" }}>

@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Nina",
-    short_name: "Nina",
+    name: "ADDYNOW",
+    short_name: "ADDYNOW",
     description:
-      "A vida é para ser vivida. A Nina trata das contas. Captura por voz, fotografia e texto.",
+      "ADDYNOW — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
     start_url: "/pt/dashboard",
     scope: "/",
     display: "standalone",
@@ -53,13 +53,13 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Dashboard",
         short_name: "Dashboard",
-        description: "Abrir o painel e falar com a Nina",
+        description: "Abrir o painel ADDYNOW e falar com a MEL",
         url: "/pt/dashboard?utm_source=pwa_shortcut&utm_medium=dashboard",
         icons: [{ src: "/icons/shortcut-dashboard.png", sizes: "96x96", type: "image/png" }],
       },
       {
-        name: "Falar com a Nina",
-        short_name: "Falar",
+        name: "Falar com a MEL",
+        short_name: "MEL",
         description: "Captura rápida por voz",
         url: "/pt/captura?mode=voice&auto=1&utm_source=pwa_shortcut&utm_medium=voice",
         icons: [{ src: "/icons/shortcut-voice.png", sizes: "96x96", type: "image/png" }],

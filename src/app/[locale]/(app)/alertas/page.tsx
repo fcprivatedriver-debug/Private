@@ -19,7 +19,7 @@ export default async function AlertasPage() {
 
   return (
     <div>
-      <h1 className="page-title">Avisos da Nina</h1>
+      <h1 className="page-title">Avisos da MEL</h1>
       <p className="page-sub">
         Eu aviso-te a tempo — sempre com tom positivo e construtivo, sem julgamentos. A vida continua; eu trato das contas.
       </p>

@@ -43,7 +43,7 @@ export function RegisterForm() {
     <div className="auth-page">
       <div className="auth-card">
         <BrandLogo href="/pt" />
-        <h1>Conhecer a Nina</h1>
+        <h1>Começar na ADDYNOW</h1>
         <p className="lead">
           Em menos de 3 minutos: conta, família e a tua assistente pessoal.
         </p>

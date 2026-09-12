@@ -13,7 +13,7 @@ const SECTIONS = [
   },
   {
     title: "Como adicionar uma despesa",
-    body: "Fala com a Nina, fotografa uma fatura ou preenche manualmente. Depois podes editar ou eliminar quando quiseres.",
+    body: "Fala com a MEL, fotografa uma fatura ou preenche manualmente. Depois podes editar ou eliminar quando quiseres.",
     href: "/pt/despesas/nova",
     cta: "Experimentar",
   },
@@ -31,7 +31,7 @@ const SECTIONS = [
   },
   {
     title: "Como utilizar a captura por voz",
-    body: "Toca em Falar e diz naturalmente: «gastei 12 euros no café» ou «recebi o salário». A Nina trata do resto.",
+    body: "Toca em Falar e diz naturalmente: «gastei 12 euros no café» ou «recebi o salário». A MEL trata do resto.",
     href: "/pt/captura?mode=voice&auto=1",
     cta: "Experimentar",
   },
@@ -55,13 +55,13 @@ const SECTIONS = [
   },
   {
     title: "Como funciona a Conta Familiar",
-    body: "Convida quem partilha a casa. Cada pessoa tem perfil próprio; a Nina organiza o que é de todos.",
+    body: "Convida quem partilha a casa. Cada pessoa tem perfil próprio; a MEL organiza o que é de todos.",
     href: "/pt/familia",
     cta: "Abrir",
   },
   {
     title: "Como funciona a Lista de Compras",
-    body: "Escreve ou diz o produto — a Nina pesquisa no Continente e no Pingo Doce, mostra preços e compara quando fores às compras.",
+    body: "Escreve ou diz o produto — a MEL pesquisa no Continente e no Pingo Doce, mostra preços e compara quando fores às compras.",
     href: "/pt/lista",
     cta: "Abrir",
   },
@@ -73,13 +73,13 @@ const SECTIONS = [
   },
   {
     title: "Mobilidade inteligente",
-    body: "Combustível ou elétrico — a Nina recomenda o melhor posto. Diz «onde abasteço?» ou «tenho 30% de bateria».",
+    body: "Combustível ou elétrico — a MEL recomenda o melhor posto. Diz «onde abasteço?» ou «tenho 30% de bateria».",
     href: "/pt/mobilidade",
     cta: "Abrir",
   },
   {
     title: "Calendário e lembretes",
-    body: "A Nina marca no Google, Apple ou Outlook e usa lembretes do sistema — sem calendário privado.",
+    body: "A MEL marca no Google, Apple ou Outlook e usa lembretes do sistema — sem calendário privado.",
     href: "/pt/calendario",
     cta: "Abrir",
   },
@@ -99,9 +99,9 @@ export default async function GuiaPage() {
 
   return (
     <div className="page-stack">
-      <h1 className="page-title">Guia da Nina</h1>
+      <h1 className="page-title">Guia da MEL</h1>
       <p className="page-sub">
-        Aprende a usar a Nina em minutos — cada tópico leva-te direto à funcionalidade.
+        Aprende a usar a MEL em minutos — cada tópico leva-te direto à funcionalidade.
       </p>
 
       <div className="guide-grid">

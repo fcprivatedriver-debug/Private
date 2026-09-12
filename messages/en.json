@@ -1,22 +1,22 @@
 {
   "app": {
-    "name": "Nina",
-    "tagline": "Personal financial assistant"
+    "name": "ADDYNOW",
+    "tagline": "Know where your money goes. Now."
   },
   "auth": {
     "loginTitle": "Welcome back",
-    "loginHint": "Continue your conversation with Nina.",
+    "loginHint": "Continue on ADDYNOW with MEL.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Sign in",
     "loggingIn": "One moment…",
-    "invalidCredentials": "Invalid email or password.",
-    "noAccount": "Haven't met Nina yet?",
+    "invalidCredentials": "Incorrect email or password.",
+    "noAccount": "No ADDYNOW account yet?",
     "registerLink": "Create account"
   },
   "nav": {
     "dashboard": "Chat",
     "incomes": "Income",
-    "expenses": "Spending"
+    "expenses": "Expenses"
   }
 }

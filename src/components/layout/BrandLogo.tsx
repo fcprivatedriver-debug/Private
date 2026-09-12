@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_NAME, ASSISTANT_NAME } from "@/config/brand";
 
 export function BrandLogo({
   href = "/pt",
@@ -10,13 +11,17 @@ export function BrandLogo({
   withWord?: boolean;
 }) {
   const sizes = {
-    sm: { mark: 30, text: "1.15rem" },
-    md: { mark: 38, text: "1.45rem" },
-    lg: { mark: 56, text: "2rem" },
+    sm: { mark: 30, text: "1.05rem" },
+    md: { mark: 38, text: "1.35rem" },
+    lg: { mark: 56, text: "1.85rem" },
   }[size];
 
   return (
-    <Link href={href} className="brand-logo" aria-label="Nina — assistente financeira pessoal">
+    <Link
+      href={href}
+      className="brand-logo"
+      aria-label={`${APP_NAME} — com a ${ASSISTANT_NAME}, a tua assistente inteligente`}
+    >
       <span className="brand-mark" style={{ width: sizes.mark, height: sizes.mark }} aria-hidden>
         <svg viewBox="0 0 40 40" fill="none">
           <rect width="40" height="40" rx="12" fill="currentColor" />
@@ -32,7 +37,7 @@ export function BrandLogo({
       </span>
       {withWord ? (
         <span className="brand-word" style={{ fontSize: sizes.text }}>
-          Nina
+          {APP_NAME}
         </span>
       ) : null}
     </Link>

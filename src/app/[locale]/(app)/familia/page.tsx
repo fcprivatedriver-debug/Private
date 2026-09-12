@@ -113,7 +113,7 @@ export default async function FamiliaPage() {
                 </div>
               ))}
               {activity.length === 0 ? (
-                <p className="muted">Ainda sem movimentos familiares. Diz à Nina o que gastaram em casa.</p>
+                <p className="muted">Ainda sem movimentos familiares. Diz à MEL o que gastaram em casa.</p>
               ) : null}
             </div>
           </Panel>
@@ -137,7 +137,7 @@ export default async function FamiliaPage() {
               );
             })}
             {goals.length === 0 ? (
-              <p className="muted">Criem um objetivo juntos — a Nina atualiza o progresso automaticamente.</p>
+              <p className="muted">Criem um objetivo juntos — a MEL atualiza o progresso automaticamente.</p>
             ) : null}
           </Panel>
         </div>

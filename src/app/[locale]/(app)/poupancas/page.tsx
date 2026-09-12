@@ -39,7 +39,7 @@ export default async function PoupancasPage({
     <div>
       <h1 className="page-title">Poupanças · {spaceLabel(data.space)}</h1>
       <p className="page-sub">
-        Transforma pequenas poupanças em objetivos concretos — com investimento e previsões da Nina.
+        Transforma pequenas poupanças em objetivos concretos — com investimento e previsões da MEL.
       </p>
 
       <div className="savings-tabs" role="tablist">
@@ -79,7 +79,7 @@ export default async function PoupancasPage({
         <div className="two-col">
           <Panel title="Simulações rápidas">
             <p className="muted small" style={{ marginBottom: "0.75rem" }}>
-              “Se eu poupar 150 € por mês, quando atinjo?” — a Nina responde na hora.
+              “Se eu poupar 150 € por mês, quando atinjo?” — a MEL responde na hora.
             </p>
             <SimulatorForm
               targets={[
@@ -90,7 +90,7 @@ export default async function PoupancasPage({
           </Panel>
           <Panel title="Transferir por texto">
             <p className="muted small" style={{ marginBottom: "0.75rem" }}>
-              Ou diz à Nina: “coloca 100 euros nas férias”.
+              Ou diz à MEL: “coloca 100 euros nas férias”.
             </p>
             <QuickTransferForm />
           </Panel>
@@ -170,7 +170,7 @@ export default async function PoupancasPage({
             <Panel title="Transferência rápida">
               <QuickTransferForm />
             </Panel>
-            <Panel title="Sugestões da Nina">
+            <Panel title="Sugestões da MEL">
               {data.tips.length === 0 ? (
                 <p className="muted">Por agora está tudo estável. Continua o bom ritmo.</p>
               ) : (

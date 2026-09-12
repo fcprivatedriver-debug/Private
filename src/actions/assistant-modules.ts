@@ -124,7 +124,7 @@ export async function handleCalendarConfirm(opts: {
     title: opts.title || "Compromisso",
     start: day,
     end,
-    notes: "Agendado com a Nina",
+    notes: "Agendado com a MEL",
   });
   return {
     ok: true as const,

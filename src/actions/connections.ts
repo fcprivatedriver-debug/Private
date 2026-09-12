@@ -43,7 +43,7 @@ export async function authorizeConnection(providerKey: string) {
     ? "Arquitetura preparada. A autorização fica registada; a sincronização chega em breve."
     : item.importProvider
       ? (await getImportAdapter(item.importProvider)?.connect?.())?.message ??
-        "Ligação autorizada. A Nina pode importar quando quiseres."
+        "Ligação autorizada. A MEL pode importar quando quiseres."
       : "Ligação autorizada.";
 
   const row = await prisma.ninaConnection.upsert({
@@ -81,7 +81,7 @@ export async function authorizeConnection(providerKey: string) {
       userId: session.user.id,
       type: "CUSTOM",
       title: `Ligação ativada: ${item.label}`,
-      message: "Podes desligar esta ligação a qualquer momento em Ligações da Nina.",
+      message: "Podes desligar esta ligação a qualquer momento em Ligações da MEL.",
       level: "success",
     },
   });
@@ -108,7 +108,7 @@ export async function revokeConnection(providerKey: string) {
       status: "PAUSED",
       revokedAt: new Date(),
       autoImport: false,
-      lastMessage: "Acesso removido. A Nina já não usa este serviço.",
+      lastMessage: "Acesso removido. A MEL já não usa este serviço.",
     },
   });
   // Remover registo para voltar ao estado “disponível”
@@ -238,7 +238,7 @@ export async function syncConnection(providerKey: string) {
       lastSyncAt: new Date(),
       lastMessage: imported
         ? `Importados ${imported} movimentos automaticamente.`
-        : "Sem novos movimentos. A Nina continua à escuta.",
+        : "Sem novos movimentos. A MEL continua à escuta.",
     },
   });
 
@@ -248,7 +248,7 @@ export async function syncConnection(providerKey: string) {
     imported,
     jobId: job.id,
     message: imported
-      ? `A Nina importou e classificou ${imported} movimentos de ${connection.label}.`
+      ? `A MEL importou e classificou ${imported} movimentos de ${connection.label}.`
       : "Nada novo por agora.",
   };
 }

@@ -77,7 +77,7 @@ export default async function DashboardPage() {
         </ul>
         <div className="btn-row" style={{ marginTop: "1rem" }}>
           <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
-            🎤 Falar com a Nina
+            🎤 Falar com a MEL
           </Link>
           <Link href="/pt/mobilidade" className="btn btn-ghost btn-sm">
             Mobilidade
@@ -107,14 +107,14 @@ export default async function DashboardPage() {
       ) : null}
 
       {isEmpty ? (
-        <Panel title="Começar com a Nina">
+        <Panel title="Começar na ADDYNOW">
           <EmptyState
             title="Tudo a zeros"
             body="Ainda não registaste nenhuma despesa. Diz-me quanto gastaste — ou o que precisas nas compras."
           />
           <div className="btn-row" style={{ marginTop: "1rem", justifyContent: "center" }}>
             <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
-              🎤 Falar com a Nina
+              🎤 Falar com a MEL
             </Link>
             <Link href="/pt/lista" className="btn btn-ghost">
               Lista de compras

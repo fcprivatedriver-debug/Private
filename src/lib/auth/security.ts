@@ -26,7 +26,8 @@ export async function sendAppEmail(opts: {
   html?: string;
 }): Promise<MailResult> {
   const resendKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || "Nina <no-reply@ninapp.pt>";
+  const from =
+    process.env.EMAIL_FROM || "ADDYNOW <no-reply@ninapp.pt>";
 
   if (resendKey) {
     try {

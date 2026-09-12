@@ -23,7 +23,7 @@ const NAV = [
   { href: "/pt/calendario", label: "Calendário" },
   { href: "/pt/poupancas", label: "Poupanças" },
   { href: "/pt/objetivos", label: "Objetivos" },
-  { href: "/pt/personalizar", label: "Personalizar a Nina" },
+  { href: "/pt/personalizar", label: "Personalizar a MEL" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
   { href: "/pt/familia", label: "Conta" },
@@ -127,7 +127,7 @@ export function AppShell({
       <Link
         href="/pt/captura?mode=voice&auto=1"
         className="captura-fab"
-        aria-label="Falar com a Nina — captura por voz"
+        aria-label="Falar com a MEL — captura por voz"
       >
         +
       </Link>

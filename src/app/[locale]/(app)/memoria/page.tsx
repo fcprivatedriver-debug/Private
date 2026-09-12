@@ -18,9 +18,9 @@ export default async function MemoriaPage() {
 
   return (
     <div>
-      <h1 className="page-title">Memória da Nina</h1>
+      <h1 className="page-title">Memória da MEL</h1>
       <p className="page-sub">
-        Regras que definiste — a Nina aplica-as automaticamente. Quanto mais usas, menos perguntas.
+        Regras que definiste — a MEL aplica-as automaticamente. Quanto mais usas, menos perguntas.
       </p>
       <Panel title="As tuas regras">
         <MemoryRulesClient rules={rules} />

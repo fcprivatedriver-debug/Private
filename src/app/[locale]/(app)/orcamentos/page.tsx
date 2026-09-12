@@ -24,7 +24,7 @@ export default async function OrcamentosPage() {
     <div>
       <h1 className="page-title">Os teus limites</h1>
       <p className="page-sub">
-        A Nina avisa-te com carinho quando estiveres perto do limite (75%, 90% e 100%).
+        A MEL avisa-te com carinho quando estiveres perto do limite (75%, 90% e 100%).
       </p>
       <div className="two-col">
         <Panel title="Estado atual">

@@ -67,7 +67,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         <div className="auth-card">
           <BrandLogo href="/pt" />
           <h1>Um momento…</h1>
-          <p className="lead">A Nina está a preparar tudo para ti.</p>
+          <p className="lead">A MEL está a preparar tudo para ti.</p>
         </div>
       </div>
     );
@@ -78,7 +78,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
       <div className="auth-card">
         <BrandLogo href="/pt" />
         <h1>Olá outra vez</h1>
-        <p className="lead">Entra para continuares com a Nina.</p>
+        <p className="lead">Entra para continuares com a MEL.</p>
         {error ? <p className="form-error">{error}</p> : null}
         {unverifiedEmail ? (
           <p className="muted small">
@@ -108,7 +108,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         </form>
         {demoMode ? (
           <p className="muted small" style={{ marginTop: "1rem" }}>
-            <strong>Modo Demo</strong>: demo@nina.app · nina123
+            <strong>Modo Demo (só desenvolvimento)</strong>: demo@nina.app · nina123
           </p>
         ) : null}
         <p className="muted small" style={{ marginTop: "1rem" }}>

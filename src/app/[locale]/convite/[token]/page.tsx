@@ -25,7 +25,7 @@ export default async function ConvitePage({
           <h1>Convite inválido</h1>
           <p className="muted">Este link já não funciona. Pede um novo convite à família.</p>
           <Link className="btn btn-primary" href="/pt/login">
-            Ir para a Nina
+            Ir para a MEL
           </Link>
         </div>
       </div>

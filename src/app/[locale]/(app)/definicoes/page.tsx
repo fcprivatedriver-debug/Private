@@ -16,22 +16,22 @@ export default async function DefinicoesPage() {
     <div>
       <h1 className="page-title">Mais opções</h1>
       <p className="page-sub">
-        Tudo o que precisas está aqui — sem complicar. A conversa com a Nina continua a ser o centro.
+        Tudo o que precisas está aqui — sem complicar. A conversa com a MEL continua a ser o centro.
       </p>
 
       <div className="stack-lg">
-        <Panel title="Instalar a Nina (app)">
+        <Panel title="Instalar a MEL (app)">
           <InstallGuide />
         </Panel>
 
         <Panel title="Atalhos">
           <div className="mais-links">
             <Link href="/pt/guia">
-              <strong>Guia da Nina</strong>
+              <strong>Guia da MEL</strong>
               <span className="muted small">Aprende a usar a app — receita, despesa, voz, compras…</span>
             </Link>
             <Link href="/pt/captura?mode=voice&auto=1">
-              <strong>Falar com a Nina</strong>
+              <strong>Falar com a MEL</strong>
               <span className="muted small">Captura por voz imediata</span>
             </Link>
             <Link href="/pt/captura?mode=photo&auto=1">
@@ -51,7 +51,7 @@ export default async function DefinicoesPage() {
               <span className="muted small">Partilhada na Conta Familiar</span>
             </Link>
             <Link href="/pt/ligacoes">
-              <strong>Ligações da Nina</strong>
+              <strong>Ligações da MEL</strong>
               <span className="muted small">Automatização opcional — bancos, email, supermercados…</span>
             </Link>
             <Link href="/pt/familia">
@@ -59,7 +59,7 @@ export default async function DefinicoesPage() {
               <span className="muted small">Criar, convidar com link/QR, perfis</span>
             </Link>
             <Link href="/pt/memoria">
-              <strong>Memória da Nina</strong>
+              <strong>Memória da MEL</strong>
               <span className="muted small">Regras que aprendeste — editáveis</span>
             </Link>
             <Link href="/pt/perfil">
@@ -72,14 +72,14 @@ export default async function DefinicoesPage() {
             </Link>
             <Link href="/pt/recorrentes">
               <strong>Pagamentos certos</strong>
-              <span className="muted small">Renda, luz, Netflix… a Nina lembra-te</span>
+              <span className="muted small">Renda, luz, Netflix… a MEL lembra-te</span>
             </Link>
             <Link href="/pt/importacoes">
               <strong>Importar automaticamente</strong>
               <span className="muted small">Continente, Galp, MB Way e mais</span>
             </Link>
             <Link href="/pt/ia">
-              <strong>Insights da Nina</strong>
+              <strong>Insights da MEL</strong>
               <span className="muted small">Sugestões e relatório do mês</span>
             </Link>
           </div>
@@ -94,7 +94,7 @@ export default async function DefinicoesPage() {
             {session.user.email} · {membership.role}
           </p>
           <p className="muted small">
-            A Nina está do teu lado 24 horas por dia — com confiança, calma e sem julgamentos.
+            A MEL está do teu lado 24 horas por dia — com confiança, calma e sem julgamentos.
           </p>
         </Panel>
 

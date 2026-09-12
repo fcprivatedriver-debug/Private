@@ -1,7 +1,7 @@
 import type { FinanceScope } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
-const AUTO_CONFIDENCE = 3; // após N confirmações, Nina deixa de perguntar
+const AUTO_CONFIDENCE = 3; // após N confirmações, MEL deixa de perguntar
 
 export type ScopeDecision = {
   scope: FinanceScope | null;

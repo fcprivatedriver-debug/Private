@@ -23,7 +23,7 @@ export default async function LigacoesPage() {
 
   return (
     <div>
-      <h1 className="page-title">Ligações da Nina</h1>
+      <h1 className="page-title">Ligações da MEL</h1>
       <p className="page-sub">
         Escolhe o teu nível de automatização. Cada ligação é opcional, independente e só ativa com a
         tua autorização.

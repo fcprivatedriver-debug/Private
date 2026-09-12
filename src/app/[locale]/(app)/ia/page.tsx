@@ -20,7 +20,7 @@ export default async function IaPage() {
 
   return (
     <div>
-      <h1 className="page-title">O que a Nina notou</h1>
+      <h1 className="page-title">O que a MEL notou</h1>
       <p className="page-sub">
         Sugestões claras para viveres com mais tranquilidade financeira.{" "}
         <Link href="/pt/dashboard">Voltar a conversar</Link>
@@ -34,7 +34,7 @@ export default async function IaPage() {
             </div>
           ))}
           {insights.length === 0 ? (
-            <p className="muted">Pede à Nina um resumo ou atualiza a análise.</p>
+            <p className="muted">Pede à MEL um resumo ou atualiza a análise.</p>
           ) : null}
         </Panel>
         <Panel title="Atualizar análise">

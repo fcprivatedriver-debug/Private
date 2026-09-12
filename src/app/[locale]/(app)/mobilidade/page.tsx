@@ -24,7 +24,7 @@ export default async function MobilidadePage() {
         <p className="nina-kicker">{NINA_SLOGAN} · Mobilidade</p>
         <h1 className="page-title">Mobilidade inteligente</h1>
         <p className="page-sub">
-          Combustível, elétrico e navegação — a Nina decide por ti. Diz simplesmente o que
+          Combustível, elétrico e navegação — a MEL decide por ti. Diz simplesmente o que
           precisas.
         </p>
       </header>
@@ -42,7 +42,7 @@ export default async function MobilidadePage() {
           </Link>
         </div>
         <p className="muted small" style={{ marginTop: "1rem" }}>
-          Exemplos: «Nina onde abasteço?», «Nina tenho 30% de bateria», «Nina leva-me ao posto
+          Exemplos: «MEL onde abasteço?», «MEL tenho 30% de bateria», «MEL leva-me ao posto
           mais barato.»
         </p>
       </Panel>
@@ -61,7 +61,7 @@ export default async function MobilidadePage() {
 
       <Panel title="App de navegação preferida">
         <p className="muted small" style={{ marginBottom: "0.75rem" }}>
-          A Nina abre a tua app favorita — Google Maps, Waze ou Apple Maps.
+          A MEL abre a tua app favorita — Google Maps, Waze ou Apple Maps.
         </p>
         <NavAppPicker />
       </Panel>

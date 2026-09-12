@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1e3a5f" />
-    <title>Nina — Sem ligação</title>
+    <title>ADDYNOW — Sem ligação</title>
     <style>
       :root {
         color-scheme: light dark;
@@ -55,10 +55,10 @@
   </head>
   <body>
     <div class="card">
-      <h1>Nina</h1>
+      <h1>ADDYNOW</h1>
       <p>
         Não foi possível contactar o servidor. Isto acontece quando um link temporário expirou
-        ou quando estás sem rede — não significa que a Nina esteja avariada.
+        ou quando estás sem rede — não significa que a MEL esteja avariada.
       </p>
       <p>Usa o URL estável da Vercel (não links trycloudflare) e limpa o cache abaixo.</p>
       <button type="button" id="retry">Limpar cache e tentar de novo</button>
@@ -86,7 +86,7 @@
       });
       document.getElementById("nuke").addEventListener("click", async function () {
         await clearAll();
-        alert("Cache da Nina removido. Abre o URL estável da Vercel.");
+        alert("Cache da MEL removido. Abre o URL estável da Vercel.");
         location.replace("/pt/login?nocache=" + Date.now());
       });
     </script>

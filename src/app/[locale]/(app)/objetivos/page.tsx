@@ -27,7 +27,7 @@ export default async function ObjetivosPage() {
     <div>
       <h1 className="page-title">Objetivos · {spaceLabel(data.space)}</h1>
       <p className="page-sub">
-        Divide o sonho em partes, acompanha o progresso e deixa a Nina sugerir o ritmo certo.
+        Divide o sonho em partes, acompanha o progresso e deixa a MEL sugerir o ritmo certo.
       </p>
 
       <div className="savings-tabs" role="tablist">
@@ -43,7 +43,7 @@ export default async function ObjetivosPage() {
       </div>
 
       {data.tips.length > 0 ? (
-        <Panel title="A Nina está a acompanhar" className="nina-tips-panel">
+        <Panel title="A MEL está a acompanhar" className="nina-tips-panel">
           <ul className="nina-tips">
             {data.tips.slice(0, 3).map((t) => (
               <li key={t.id} className={`nina-tip tone-${t.tone}`}>

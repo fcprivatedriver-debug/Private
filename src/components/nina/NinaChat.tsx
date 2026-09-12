@@ -119,7 +119,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
               </span>
             ) : null}
             <div className="nina-bubble-body">
-              {m.role === "nina" ? <strong className="nina-name">Nina</strong> : null}
+              {m.role === "nina" ? <strong className="nina-name">MEL</strong> : null}
               <p>{m.text}</p>
               {m.pendingScope ? (
                 <div className="nina-scope-actions">
@@ -158,7 +158,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
               N
             </span>
             <div className="nina-bubble-body">
-              <strong className="nina-name">Nina</strong>
+              <strong className="nina-name">MEL</strong>
               <p className="nina-typing">A pensar…</p>
             </div>
           </div>
@@ -177,7 +177,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder='Ex: "Gastei 35 € no Continente para casa"'
-          aria-label="Mensagem para a Nina"
+          aria-label="Mensagem para a MEL"
           disabled={pending}
         />
         <button className="btn btn-primary" type="submit" disabled={pending || !input.trim()}>

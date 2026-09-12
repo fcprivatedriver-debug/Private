@@ -233,9 +233,9 @@ export const AUTOMATION_LEVELS: {
   label: string;
   hint: string;
 }[] = [
-  { id: "VOICE", label: "Apenas voz", hint: "Falas com a Nina — sem ligações externas." },
+  { id: "VOICE", label: "Apenas voz", hint: "Falas com a MEL — sem ligações externas." },
   { id: "VOICE_OCR", label: "Voz + OCR", hint: "Conversas e fotografias de faturas." },
-  { id: "VOICE_EMAIL", label: "Voz + Email", hint: "Nina lê faturas no email que autorizares." },
+  { id: "VOICE_EMAIL", label: "Voz + Email", hint: "MEL lê faturas no email que autorizares." },
   { id: "VOICE_BANK", label: "Voz + Banco", hint: "Open Banking quando quiseres." },
   {
     id: "VOICE_BANK_EMAIL_RETAIL",

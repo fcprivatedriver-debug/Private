@@ -17,7 +17,16 @@ const VERIFY_HOURS = 48;
 const RESET_HOURS = 2;
 
 function isTestEmail(email: string) {
-  return /@(nina\.app)$/i.test(email) || process.env.AUTH_SKIP_EMAIL_VERIFY === "true";
+  // Contas técnicas @nina.app (seed/legado) podem saltar verificação.
+  if (/@(nina\.app)$/i.test(email)) return true;
+  // Nunca saltar verificação em produção real.
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production"
+  ) {
+    return false;
+  }
+  return process.env.AUTH_SKIP_EMAIL_VERIFY === "true";
 }
 
 async function storeToken(identifier: string, raw: string, hours: number) {
@@ -121,8 +130,8 @@ export async function registerFamily(formData: FormData) {
     const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
     const mail = await sendAppEmail({
       to: email,
-      subject: "Confirma o teu email na Nina",
-      text: `Olá ${parsed.data.name.split(" ")[0]},\n\nConfirma o teu email para activar a Nina:\n${verifyUrl}\n\nO link é válido por ${VERIFY_HOURS} horas.\n\n— Nina`,
+      subject: "Confirma o teu email na MEL",
+      text: `Olá ${parsed.data.name.split(" ")[0]},\n\nConfirma o teu email para activar a tua conta ADDYNOW:\n${verifyUrl}\n\nO link é válido por ${VERIFY_HOURS} horas.\n\n— ADDYNOW`,
     });
 
     return {
@@ -163,8 +172,8 @@ export async function resendVerificationEmail(emailRaw: string) {
   const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
   const mail = await sendAppEmail({
     to: email,
-    subject: "Confirma o teu email na Nina",
-    text: `Confirma o teu email:\n${verifyUrl}\n\n— Nina`,
+    subject: "Confirma o teu email na MEL",
+    text: `Confirma o teu email:\n${verifyUrl}\n\n— ADDYNOW`,
   });
   return {
     ok: true as const,
@@ -183,8 +192,8 @@ export async function requestPasswordReset(emailRaw: string) {
   const url = `${appBaseUrl()}/pt/recuperar/${raw}`;
   const mail = await sendAppEmail({
     to: email,
-    subject: "Recuperar palavra-passe — Nina",
-    text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— Nina`,
+    subject: "Recuperar palavra-passe — ADDYNOW",
+    text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— ADDYNOW`,
   });
   return {
     ok: true as const,

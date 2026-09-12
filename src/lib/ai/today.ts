@@ -74,7 +74,7 @@ export async function buildTodayBriefing(
     } else {
       insights.push({
         kind: "meeting",
-        text: "Agenda livre por agora — liga o Google Calendar para a Nina ver os teus eventos.",
+        text: "Agenda livre por agora — liga o Google Calendar para a MEL ver os teus eventos.",
         href: "/pt/calendario",
       });
     }
@@ -147,7 +147,7 @@ export async function buildTodayBriefing(
       } catch {
         insights.push({
           kind: "mobility",
-          text: `Tens ${battery}% de bateria. Diz «Nina onde devo carregar?»`,
+          text: `Tens ${battery}% de bateria. Diz «MEL onde devo carregar?»`,
           href: "/pt/mobilidade",
         });
       }

@@ -17,7 +17,7 @@ export default async function VerificarTokenPage({
         {res.ok ? (
           <>
             <h1>Email confirmado</h1>
-            <p className="lead">A tua conta está activa. Podes entrar na Nina.</p>
+            <p className="lead">A tua conta está activa. Podes entrar na MEL.</p>
             <Link className="btn btn-primary" href="/pt/login">
               Entrar
             </Link>

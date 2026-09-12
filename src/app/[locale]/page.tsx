@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import {
+  APP_NAME,
+  ASSISTANT_NAME,
+  APP_TAGLINE,
+  APP_HERO_SUPPORT,
+  ASSISTANT_LINE,
+} from "@/config/brand";
+import {
   NINA_CAPABILITIES,
   NINA_INPUT_CHANNELS,
-  NINA_PURPOSE,
-  NINA_SLOGAN,
-  NINA_SUBTITLE,
 } from "@/lib/ai/mission";
 import { NATURAL_EXAMPLES } from "@/lib/ai/personality";
 
@@ -19,7 +23,7 @@ export default function LandingPage() {
             Entrar
           </Link>
           <Link href="/pt/registo" className="btn btn-primary btn-sm">
-            Conhecer a Nina
+            Começar
           </Link>
         </div>
       </nav>
@@ -27,32 +31,32 @@ export default function LandingPage() {
       <section className="hero">
         <div className="hero-bg" aria-hidden />
         <div className="hero-content">
-          <p className="hero-brand">Nina</p>
+          <p className="hero-brand">{APP_NAME}</p>
           <h1>
-            Controla. Poupa. Vive.
+            Sabe onde vai o teu dinheiro.
             <br />
-            <span className="hero-mission-second">A tua assistente financeira pessoal.</span>
+            <span className="hero-mission-second">Agora.</span>
           </h1>
           <p>
-            Assistente inteligente para dinheiro e compras — fala naturalmente, e a Nina trata do
-            resto.
+            {APP_HERO_SUPPORT}
           </p>
+          <p className="hero-promise">{ASSISTANT_LINE}</p>
           <div className="hero-ctas">
             <Link href="/pt/registo" className="btn btn-primary">
-              Começar com a Nina
+              Começar
             </Link>
             <Link href="/pt/login" className="btn btn-ghost">
               Já tenho conta
             </Link>
           </div>
-          <p className="hero-promise">{NINA_PURPOSE}</p>
         </div>
       </section>
 
       <section className="section">
-        <h2>Fala naturalmente — voz, texto ou fotografia</h2>
+        <h2>Ver → Saber → Controlar → Decidir → Poupar</h2>
         <p className="section-lead">
-          A Nina interpreta a intenção e executa. Tu não aprendes a app; a app adapta-se a ti.
+          A {APP_NAME} transforma dados financeiros em conhecimento útil.
+          A {ASSISTANT_NAME} ajuda-te a perceber esses dados em linguagem simples.
         </p>
         <div className="feature-grid nina-channels">
           {NINA_INPUT_CHANNELS.map((ch) => (
@@ -72,86 +76,58 @@ export default function LandingPage() {
       </section>
 
       <section className="section section-adaptive" id="filosofia">
-        <p className="section-eyebrow">Filosofia</p>
-        <h2>Alguém ao teu lado, a organizar as contas</h2>
+        <p className="section-eyebrow">O que consegues saber</p>
+        <h2>{APP_TAGLINE}</h2>
         <p className="section-lead">
-          A Nina compreende, organiza, aprende e antecipa — para tu viveres com mais tranquilidade.
+          Clareza, controlo, poupança, simplicidade e inteligência — sem parecer
+          só um registo de despesas, nem uma app genérica de IA.
         </p>
 
         <div className="adaptive-flow">
           <article className="adaptive-block">
-            <h3>Compreende e executa</h3>
-            <p>
-              Diz o que aconteceu. A Nina classifica, regista e atualiza saldos, orçamentos e
-              objetivos — sem formulários.
-            </p>
+            <h3>O que tens</h3>
+            <p>Saldo, receitas e a fotografia real do teu mês.</p>
           </article>
           <article className="adaptive-block">
-            <h3>Aprende contigo</h3>
-            <p>
-              Quanto mais a usas, menos perguntas faz. Memoriza hábitos, lojas e o que é pessoal ou
-              familiar.
-            </p>
+            <h3>Quanto e onde gastas</h3>
+            <p>Categorias, lojas e evolução — para decidires com factos.</p>
           </article>
           <article className="adaptive-block">
-            <h3>Antecipa e sugere</h3>
-            <p>
-              Tarefa repetitiva? Sugere automatizar. Há folga? Propõe reforçar poupanças. Orçamento a
-              apertar? Avisa com calma e soluções.
-            </p>
+            <h3>Onde podes poupar</h3>
+            <p>A {ASSISTANT_NAME} aponta padrões e oportunidades concretas.</p>
           </article>
           <article className="adaptive-block">
-            <h3>Simplifica sempre</h3>
-            <p>
-              IA para reduzir cliques e burocracia. Sempre que existirem duas formas, escolhe a mais
-              simples.
-            </p>
+            <h3>Agora</h3>
+            <p>Fala, escreve ou fotografa. A {APP_NAME} organiza; tu decides.</p>
           </article>
         </div>
 
-        <ul className="mission-capabilities" aria-label="O que a Nina faz">
+        <ul className="mission-capabilities" aria-label={`O que a ${APP_NAME} faz`}>
           {NINA_CAPABILITIES.map((c) => (
             <li key={c}>{c}</li>
           ))}
         </ul>
-
-        <p className="adaptive-philosophy">{NINA_SLOGAN} — {NINA_SUBTITLE}</p>
       </section>
 
-      <section className="section">
-        <h2>O dia a dia, tratado</h2>
+      <section className="section section-cta">
+        <h2>Pronto para saber agora?</h2>
         <p className="section-lead">
-          Captura Instantânea, Conta Familiar, objetivos e resumos — sempre em linguagem humana.
+          {APP_NAME}. {APP_TAGLINE}
         </p>
-        <div className="feature-grid">
-          {[
-            {
-              title: "Captura Instantânea",
-              body: "Fala, escreve ou fotografa. Em segundos está feito.",
-            },
-            {
-              title: "Organiza sozinha",
-              body: "Explica para onde vai o dinheiro — sem culpas, só clareza.",
-            },
-            {
-              title: "Ajuda a poupar",
-              body: "Quando há margem, sugere reforçar objetivos. Quando há risco, acompanha.",
-            },
-          ].map((f) => (
-            <article key={f.title} className="feature">
-              <h3>{f.title}</h3>
-              <p className="muted">{f.body}</p>
-            </article>
-          ))}
-        </div>
+        <Link href="/pt/registo" className="btn btn-primary">
+          Criar conta
+        </Link>
       </section>
 
       <footer className="landing-footer">
-        <p>
-          Nina · {NINA_SLOGAN} · {NINA_SUBTITLE} ·{" "}
-          <Link href="/pt/privacidade">Privacidade</Link> ·{" "}
-          <Link href="/pt/termos">Termos</Link>
+        <BrandLogo href="/pt" size="sm" />
+        <p className="muted">
+          {APP_NAME} · {APP_TAGLINE}
         </p>
+        <div className="landing-footer-links">
+          <Link href="/pt/termos">Termos</Link>
+          <Link href="/pt/privacidade">Privacidade</Link>
+        </div>
       </footer>
     </div>
   );

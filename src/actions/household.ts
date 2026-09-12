@@ -171,7 +171,7 @@ export async function acceptFamilyInvite(token: string) {
       userId: session.user.id,
       type: "CUSTOM",
       title: "Bem-vindo à Conta Familiar",
-      message: `Já estás ligado a “${invite.family.name}”. A Nina sincroniza tudo por vocês.`,
+      message: `Já estás ligado a “${invite.family.name}”. A MEL sincroniza tudo por vocês.`,
       level: "success",
     },
   });
@@ -290,8 +290,8 @@ export async function inviteMemberByEmail(formData: FormData) {
   const url = `${appBaseUrl()}${invitePath}`;
   const mail = await sendAppEmail({
     to: email,
-    subject: `Convite para ${family.name} — Nina`,
-    text: `Olá ${name},\n\nFoste convidado(a) para a família «${family.name}» na Nina.\n\nAceita aqui (só precisas de criar a tua palavra-passe):\n${url}\n\n— Nina`,
+    subject: `Convite para ${family.name} — ADDYNOW`,
+    text: `Olá ${name},\n\nFoste convidado(a) para a família «${family.name}» na ADDYNOW.\n\nAceita aqui (só precisas de criar a tua palavra-passe):\n${url}\n\n— ADDYNOW`,
   });
 
   revalidateAll();

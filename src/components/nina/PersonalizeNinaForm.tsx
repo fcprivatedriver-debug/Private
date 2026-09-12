@@ -73,7 +73,7 @@ export function PersonalizeNinaForm({
       fd.set("ninaVoice", voice);
       await updateNinaPersonalization(fd);
       setTheme(themeVal as "light" | "dark" | "system" | "blue" | "green" | "purple");
-      setMsg("Preferências guardadas. A Nina adapta a forma de comunicar.");
+      setMsg("Preferências guardadas. A MEL adapta a forma de comunicar.");
       router.refresh();
     });
   }
@@ -81,7 +81,7 @@ export function PersonalizeNinaForm({
   function previewVoice() {
     if (!voice || typeof window === "undefined") return;
     const u = new SpeechSynthesisUtterance(
-      "Olá. Sou a Nina — Controla. Poupa. Vive.",
+      "Olá. Sou a MEL — Controla. Poupa. Vive.",
     );
     u.lang = "pt-PT";
     const match = voices.find((v) => v.voiceURI === voice);
@@ -127,7 +127,7 @@ export function PersonalizeNinaForm({
             </button>
           ))}
         </div>
-        <p className="muted small">Altera só a forma como a Nina fala — não as funcionalidades.</p>
+        <p className="muted small">Altera só a forma como a MEL fala — não as funcionalidades.</p>
       </section>
 
       <section className="panel">

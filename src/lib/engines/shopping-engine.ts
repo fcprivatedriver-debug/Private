@@ -75,7 +75,7 @@ export async function optimizeBasket(items: ShoppingListLine[]): Promise<EngineR
         engine: "shopping",
         bestLabel: "lista vazia",
         opener:
-          "A tua lista está vazia por agora. Diz-me o que precisas — por exemplo «Nina, adiciona leite Vigor».",
+          "A tua lista está vazia por agora. Diz-me o que precisas — por exemplo «MEL, adiciona leite Vigor».",
         reason: "Sem artigos ainda não consigo comparar supermercados.",
       }),
       recordImpact: false,
