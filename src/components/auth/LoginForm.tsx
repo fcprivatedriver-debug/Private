@@ -1,86 +1,138 @@
 "use client";
 
-import { useActionState } from "react";
+import { getSession, signIn, useSession } from "next-auth/react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
-import { loginAction, type ActionState } from "@/actions/auth";
-import { ResendActivationForm } from "@/components/auth/ResendActivationForm";
+import { FormEvent, Suspense, useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { safePostLoginPath } from "@/lib/auth-routes";
+import { BrandLogo } from "@/components/layout/BrandLogo";
+import { checkEmailVerified } from "@/actions/auth-account";
 
-const initial: ActionState = {};
-const showDemo = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
-
-export function LoginForm() {
-  const t = useTranslations("auth");
+function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/pt/cliente";
-  const [state, action, pending] = useActionState(loginAction, initial);
+  const locale = useLocale();
+  const { data: session, status } = useSession();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+
+  function go(role?: string | null) {
+    setLeaving(true);
+    window.location.assign(safePostLoginPath(role, params.get("callbackUrl"), locale));
+  }
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) go(session.user.role);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session?.user?.role]);
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setUnverifiedEmail(null);
+    const form = new FormData(e.currentTarget);
+    const email = String(form.get("email"));
+    try {
+      const check = await checkEmailVerified(email);
+      if (!check.ok && check.reason === "EMAIL_NOT_VERIFIED") {
+        setUnverifiedEmail(email);
+        setError("Confirma o teu email antes de entrar. Enviámos-te um link de activação.");
+        setLoading(false);
+        return;
+      }
+      const res = await signIn("credentials", {
+        email,
+        password: String(form.get("password")),
+        redirect: false,
+      });
+      if (res?.error) {
+        setError("Email ou palavra-passe incorrectos. Tenta outra vez com calma.");
+        setLoading(false);
+        return;
+      }
+      const fresh = await getSession();
+      go(fresh?.user?.role);
+    } catch {
+      setError("Não consegui entrar agora. Tenta daqui a um momento.");
+      setLoading(false);
+    }
+  }
+
+  if (status === "authenticated" || leaving || loading) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <BrandLogo href="/pt" />
+          <h1>Um momento…</h1>
+          <p className="lead">A MEL está a preparar tudo para ti.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <section className="auth-shell fade-up">
-      <div className="container" style={{ maxWidth: 440 }}>
-        <h1 className="page-title">{t("loginTitle")}</h1>
-        <p className="page-lead">{t("loginHint")}</p>
-
-        {state.error && <div className="alert alert-error">{state.error}</div>}
-        {state.email && state.error?.includes("e-mail") && (
-          <ResendActivationForm defaultEmail={state.email} compact />
-        )}
-
-        <form action={action} className="panel">
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          <div className="field">
-            <label className="label" htmlFor="email">
-              {t("email")}
-            </label>
+    <div className="auth-page">
+      <div className="auth-card">
+        <BrandLogo href="/pt" />
+        <h1>Olá outra vez</h1>
+        <p className="lead">Entra para continuares com a MEL.</p>
+        {error ? <p className="form-error">{error}</p> : null}
+        {unverifiedEmail ? (
+          <p className="muted small">
+            <Link href={`/pt/verificar-email?email=${encodeURIComponent(unverifiedEmail)}`}>
+              Reenviar email de confirmação
+            </Link>
+          </p>
+        ) : null}
+        <form onSubmit={onSubmit} className="form-grid">
+          <label className="field">
+            <span>Email</span>
+            <input name="email" type="email" required autoComplete="email" placeholder="o.teu@email.com" />
+          </label>
+          <label className="field">
+            <span>Palavra-passe</span>
             <input
-              className="input"
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              disabled={pending}
-            />
-          </div>
-          <div className="field">
-            <label className="label" htmlFor="password">
-              {t("password")}
-            </label>
-            <input
-              className="input"
-              id="password"
               name="password"
               type="password"
               required
               autoComplete="current-password"
-              disabled={pending}
+              placeholder="••••••••"
             />
-          </div>
-          <button className="btn btn-primary" type="submit" disabled={pending}>
-            {pending ? t("loggingIn") : t("submitLogin")}
+          </label>
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            Entrar
           </button>
         </form>
-
-        <p className="muted" style={{ marginTop: "1rem" }}>
-          <Link href="/recuperar" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
-            {t("forgotPassword")}
-          </Link>
-        </p>
-
-        <p className="muted" style={{ marginTop: "1.25rem" }}>
-          {t("noAccount")}{" "}
-          <Link href="/registo" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
-            {t("registerLink")}
-          </Link>
-        </p>
-
-        {showDemo ? (
-          <p className="muted" style={{ marginTop: "1rem", fontSize: "0.85rem" }}>
-            Modo demonstração ativo.
+        {demoMode ? (
+          <p className="muted small" style={{ marginTop: "1rem" }}>
+            <strong>Modo Demo (só desenvolvimento)</strong>: demo@nina.app · nina123
           </p>
         ) : null}
+        <p className="muted small" style={{ marginTop: "1rem" }}>
+          <Link href="/pt/recuperar">Recuperar palavra-passe</Link>
+          {" · "}
+          <Link href="/pt/registo">Criar conta</Link>
+        </p>
       </div>
-    </section>
+    </div>
+  );
+}
+
+export function LoginForm({ demoMode = false }: { demoMode?: boolean }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="auth-page">
+          <div className="auth-card">
+            <p className="lead">…</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginFormInner demoMode={demoMode} />
+    </Suspense>
   );
 }

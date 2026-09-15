@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Capture PR visual proof for FC Private Driver.
- * Usage: node scripts/pr-visual-proof.mjs --pr <N> [--base http://127.0.0.1:3000]
+ * Capture PR visual proof for Nina.
+ * Usage: node scripts/pr-visual-proof.mjs --pr N [--base http://127.0.0.1:3000]
  */
 import { chromium } from "playwright";
 import fs from "fs";
@@ -20,18 +20,19 @@ const OUT = `/opt/cursor/artifacts/screenshots/pr-${PR}`;
 const VIDEO_DIR = `/opt/cursor/artifacts/pr-${PR}-video`;
 const GIF = `/opt/cursor/artifacts/pr-${PR}-flow.gif`;
 const WEBM = `/opt/cursor/artifacts/pr-${PR}-flow.webm`;
-const PASSWORD = "fcpd1234";
+const REPO_PROOF = path.join(process.cwd(), `docs/pr-proof/pr-${PR}`);
 
 fs.mkdirSync(OUT, { recursive: true });
+fs.mkdirSync(REPO_PROOF, { recursive: true });
 fs.rmSync(VIDEO_DIR, { recursive: true, force: true });
 fs.mkdirSync(VIDEO_DIR, { recursive: true });
 
-async function login(page, email) {
+async function login(page) {
   await page.goto(`${BASE}/pt/login`, { waitUntil: "networkidle" });
-  await page.fill("#email", email);
-  await page.fill("#password", PASSWORD);
+  await page.locator('input[name="email"]').fill("familia@nina.app");
+  await page.locator('input[name="password"]').fill("nina123");
   await Promise.all([
-    page.waitForURL(/\/pt\//, { timeout: 25000 }),
+    page.waitForURL(/\/pt\/dashboard/, { timeout: 30000 }),
     page.click('button[type="submit"]'),
   ]);
   await page.waitForTimeout(600);
@@ -46,62 +47,85 @@ async function shot(page, name) {
 
 async function gotoShot(page, urlPath, name) {
   await page.goto(`${BASE}${urlPath}`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(450);
   return shot(page, name);
 }
 
 async function captureStills() {
   const browser = await chromium.launch({ headless: true });
-  const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  const phone = await browser.newPage({
-    viewport: { width: 390, height: 844 },
-    isMobile: true,
-    hasTouch: true,
-  });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
-  // Public
-  await gotoShot(desktop, "/pt", "d-00-landing");
-  await gotoShot(phone, "/pt", "m-00-landing");
-  await gotoShot(desktop, "/pt/planos", "d-01-planos");
-  await gotoShot(phone, "/pt/planos", "m-01-planos");
-  await gotoShot(desktop, "/pt/planos/diamante", "d-01b-diamante-form");
-  await gotoShot(phone, "/pt/planos/diamante", "m-01b-diamante-form");
-  await gotoShot(desktop, "/pt/login", "d-02-login");
-  await gotoShot(desktop, "/pt/registo", "d-03-registo");
-  await gotoShot(desktop, "/pt/contacto", "d-04-contacto");
+  await gotoShot(page, "/pt", "00-landing");
+  await gotoShot(page, "/pt/login", "01-login");
+  await gotoShot(page, "/pt/registo", "02-registo");
 
-  // Customer
-  await login(desktop, "cliente@fcprivatedriver.demo");
-  await gotoShot(desktop, "/pt/cliente", "d-10-cliente");
-  await gotoShot(phone, "/pt/cliente", "m-10-cliente");
-  await gotoShot(desktop, "/pt/cliente/viagem/nova", "d-11-nova-viagem");
-  await gotoShot(desktop, "/pt/minutos", "d-12-minutos");
-  await gotoShot(desktop, "/pt/faturas", "d-13-faturas");
-  await gotoShot(desktop, "/pt/perfil", "d-14-perfil");
-  await gotoShot(desktop, "/pt/habitos", "d-15-habitos");
-  await desktop.goto(`${BASE}/pt/login`); // clear via logout not available — new context
+  await login(page);
+  await shot(page, "10-dashboard");
+  await gotoShot(page, "/pt/captura", "10h-captura");
+  await gotoShot(page, "/pt/captura?mode=voice&auto=1", "10h2-captura-voz");
+  await gotoShot(page, "/pt/captura?mode=photo&auto=1", "10h3-captura-foto-auto");
+  await page.getByRole("button", { name: /Supermercado, 35 euros/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1200);
+  await shot(page, "10i-captura-registado");
+  await page.getByRole("button", { name: /Fotografar/i }).first().click().catch(() => {});
+  await page.waitForTimeout(400);
+  await shot(page, "10j-captura-foto");
+  await page.getByRole("button", { name: /Continente para casa/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1500);
+  await shot(page, "10b-nina-chat");
+  await page.getByRole("button", { name: /Café/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1200);
+  await gotoShot(page, "/pt/familia", "10c-conta-familiar");
+  await gotoShot(page, "/pt/ligacoes", "10g-ligacoes");
+  await gotoShot(page, "/pt/memoria", "10d-memoria");
+  await gotoShot(page, "/pt/perfil", "10e-perfil");
+  await gotoShot(page, "/pt/convite/nina-demo-invite-token-seguro", "10f-convite");
+  await gotoShot(page, "/pt/receitas", "11-receitas");
+  await gotoShot(page, "/pt/despesas", "12-despesas");
+  // Ficha de edição (primeiro movimento da lista)
+  const firstTx = page.locator("a.tx-row").first();
+  if (await firstTx.count()) {
+    await firstTx.click();
+    await page.waitForTimeout(700);
+    await shot(page, "12b-despesa-ficha");
+  }
+  await gotoShot(page, "/pt/despesas/nova", "13-despesa-nova");
+  await gotoShot(page, "/pt/orcamentos", "14-orcamentos");
+  await gotoShot(page, "/pt/poupancas", "14b-poupancas");
+  await gotoShot(page, "/pt/poupancas?tab=simulador", "14c-simulador");
+  await gotoShot(page, "/pt/objetivos", "15-objetivos");
+  await gotoShot(page, "/pt/estatisticas", "16-estatisticas");
+  await gotoShot(page, "/pt/pesquisa?q=Continente", "17-pesquisa");
+  await gotoShot(page, "/pt/recorrentes", "18-recorrentes");
+  await gotoShot(page, "/pt/importacoes", "19-importacoes");
+  await gotoShot(page, "/pt/ocr", "20-ocr");
+  await gotoShot(page, "/pt/ia", "21-ia");
+  await gotoShot(page, "/pt/familia", "22-familia");
+  await gotoShot(page, "/pt/alertas", "23-alertas");
+  await gotoShot(page, "/pt/definicoes", "24-definicoes");
+  await gotoShot(page, "/pt/perfil", "25-perfil-nome");
+  await gotoShot(page, "/pt/lista", "26-compras");
+  await gotoShot(page, "/pt/mobilidade", "27-mobilidade");
+  await gotoShot(page, "/pt/calendario", "28-calendario");
+  await gotoShot(page, "/pt/transacoes", "29-transacoes");
+
+  // Mobile stills
+  await page.setViewportSize({ width: 390, height: 844 });
+  await gotoShot(page, "/pt/dashboard", "30-mobile-dashboard");
+  await gotoShot(page, "/pt/despesas", "31-mobile-despesas");
+  if (await page.locator("a.tx-row").first().count()) {
+    await page.locator("a.tx-row").first().click();
+    await page.waitForTimeout(600);
+    await shot(page, "31b-mobile-despesa-ficha");
+  }
+  await gotoShot(page, "/pt/familia", "32-mobile-familia");
+  await gotoShot(page, "/pt/poupancas", "33-mobile-poupancas");
+  await gotoShot(page, "/pt/objetivos", "34-mobile-objetivos");
+  await gotoShot(page, "/pt/captura?mode=voice&auto=1", "35-mobile-captura-voz");
+  await gotoShot(page, "/pt/definicoes", "36-mobile-install");
+  await gotoShot(page, "/pt/mobilidade", "37-mobile-mobilidade");
+  await gotoShot(page, "/pt/calendario", "38-mobile-calendario");
   await browser.close();
-
-  const browser2 = await chromium.launch({ headless: true });
-  const page = await browser2.newPage({ viewport: { width: 1440, height: 900 } });
-
-  // Driver
-  await login(page, "motorista@fcprivatedriver.demo");
-  
-
-  // Admin
-  await page.context().clearCookies();
-  await login(page, "admin@fcprivatedriver.demo");
-  await gotoShot(page, "/pt/admin", "d-30-admin");
-  await gotoShot(page, "/pt/admin/diamante", "d-30b-clientes-diamante");
-  await gotoShot(page, "/pt/admin/clientes", "d-31-clientes");
-  await gotoShot(page, "/pt/admin/planos", "d-32-planos");
-  await gotoShot(page, "/pt/admin/viagens", "d-33-viagens");
-  
-  await gotoShot(page, "/pt/admin/pagamentos", "d-35-pagamentos");
-  await gotoShot(page, "/pt/admin/configuracoes", "d-36-config");
-
-  await browser2.close();
 }
 
 async function captureFlowVideo() {
@@ -114,15 +138,64 @@ async function captureFlowVideo() {
 
   await page.goto(`${BASE}/pt`, { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
-  await page.goto(`${BASE}/pt/planos`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(600);
-  await login(page, "cliente@fcprivatedriver.demo");
-  await page.goto(`${BASE}/pt/cliente`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(900);
-  await page.goto(`${BASE}/pt/cliente/viagem/nova`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(900);
-  await page.goto(`${BASE}/pt/minutos`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/pt/login`, { waitUntil: "networkidle" });
+  await page.locator('input[name="email"]').fill("familia@nina.app");
+  await page.locator('input[name="password"]').fill("nina123");
+  await Promise.all([
+    page.waitForURL(/\/pt\/dashboard/, { timeout: 30000 }),
+    page.click('button[type="submit"]'),
+  ]);
+  await page.waitForTimeout(1000);
+  await page.goto(`${BASE}/pt/captura`, { waitUntil: "networkidle" });
   await page.waitForTimeout(700);
+  await page.getByRole("button", { name: /Supermercado, 35 euros/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1000);
+  await page.getByRole("button", { name: /Conta Familiar/i }).first().click().catch(() => {});
+  await page.waitForTimeout(600);
+  await page.goto(`${BASE}/pt/familia`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/ligacoes`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/memoria`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.goto(`${BASE}/pt/despesas`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  const tx = page.locator("a.tx-row").first();
+  if (await tx.count()) {
+    await tx.click();
+    await page.waitForTimeout(900);
+    const amount = page.locator('input[name="amount"]').first();
+    if (await amount.count()) {
+      await amount.fill("21,00");
+      await page.getByRole("button", { name: /Guardar alterações/i }).click();
+      await page.waitForTimeout(1200);
+    }
+  }
+  await page.goto(`${BASE}/pt/perfil`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.goto(`${BASE}/pt/familia`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/poupancas`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/poupancas?tab=simulador`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.goto(`${BASE}/pt/objetivos`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  await page.goto(`${BASE}/pt/estatisticas`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/mobilidade`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/calendario`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(`${BASE}/pt/lista`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  await page.goto(`${BASE}/pt/dashboard`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1000);
+  // Voice intents via chat suggestions when available
+  await page.getByRole("button", { name: /Onde abasteço/i }).first().click().catch(() => {});
+  await page.waitForTimeout(1200);
+  await page.goto(`${BASE}/pt/ia`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
 
   await context.close();
   await browser.close();
@@ -130,36 +203,41 @@ async function captureFlowVideo() {
   const videos = fs.readdirSync(VIDEO_DIR).filter((f) => f.endsWith(".webm"));
   if (videos[0]) {
     fs.copyFileSync(path.join(VIDEO_DIR, videos[0]), WEBM);
-    console.log("video", WEBM);
+    console.log("webm", WEBM);
     const ff = spawnSync(
       "ffmpeg",
-      ["-y", "-i", WEBM, "-vf", "fps=8,scale=390:-1:flags=lanczos", "-loop", "0", GIF],
+      ["-y", "-i", WEBM, "-vf", "fps=10,scale=390:-1:flags=lanczos", "-loop", "0", GIF],
       { encoding: "utf8" },
     );
     if (ff.status === 0) console.log("gif", GIF);
-    else console.warn("ffmpeg gif skipped", ff.stderr?.slice(0, 200));
+    else console.warn("gif skipped", ff.stderr?.slice(0, 200));
   }
 }
 
-async function publishToRepo() {
-  const repoDir = path.join(process.cwd(), "docs", "pr-proof", `pr-${PR}`);
-  const shotsDir = path.join(repoDir, "screenshots-phone");
-  fs.mkdirSync(shotsDir, { recursive: true });
-
+function publishRepoCopies() {
+  const phoneDir = path.join(REPO_PROOF, "screenshots-phone");
+  fs.mkdirSync(phoneDir, { recursive: true });
   for (const file of fs.readdirSync(OUT)) {
     if (!file.endsWith(".png")) continue;
-    const src = path.join(OUT, file);
-    const dest = path.join(shotsDir, file.replace(/\.png$/, ".jpg"));
-    spawnSync("convert", [src, "-quality", "82", dest], { encoding: "utf8" });
+    fs.copyFileSync(path.join(OUT, file), path.join(REPO_PROOF, file));
+    // jpeg-ish copy for phone folder (png is fine for proof)
+    fs.copyFileSync(path.join(OUT, file), path.join(phoneDir, file.replace(".png", ".jpg")));
   }
-  if (fs.existsSync(GIF)) fs.copyFileSync(GIF, path.join(repoDir, "flow-phone.gif"));
-  if (fs.existsSync(WEBM)) fs.copyFileSync(WEBM, path.join(repoDir, "flow.webm"));
+  if (fs.existsSync(GIF)) fs.copyFileSync(GIF, path.join(REPO_PROOF, "flow-phone.gif"));
+  if (fs.existsSync(WEBM)) fs.copyFileSync(WEBM, path.join(REPO_PROOF, "flow-phone.webm"));
 
-  // Changelog is maintained in docs/changelogs/pr-<N>.md — do not overwrite here.
-  console.log("published", repoDir);
+  const changelog = path.join(process.cwd(), `docs/changelogs/pr-${PR}.md`);
+  if (fs.existsSync(changelog)) {
+    fs.copyFileSync(changelog, path.join(REPO_PROOF, "CHANGELOG.md"));
+  }
+  fs.writeFileSync(
+    path.join(REPO_PROOF, "README.md"),
+    `# Nina PR ${PR} visual proof\n\nScreenshots and flow capture for review.\n`,
+  );
+  console.log("published", REPO_PROOF);
 }
 
 await captureStills();
 await captureFlowVideo();
-await publishToRepo();
+publishRepoCopies();
 console.log("done");

@@ -1,0 +1,13 @@
+.next
+.git
+docs/pr-proof
+docs/changelogs
+node_modules
+*.db
+uploads
+.env.local.backup
+.env.neon.runtime
+playwright-report
+test-results
+coverage
+tsconfig.tsbuildinfo

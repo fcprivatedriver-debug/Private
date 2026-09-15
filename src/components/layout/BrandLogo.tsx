@@ -1,37 +1,45 @@
-import Image from "next/image";
-import { Link } from "@/i18n/navigation";
-import clsx from "clsx";
-import { BRAND } from "@/config/brand";
+import Link from "next/link";
+import { APP_NAME, ASSISTANT_NAME } from "@/config/brand";
 
 export function BrandLogo({
-  href = "/",
+  href = "/pt",
   size = "md",
-  tone = "default",
-  showText = true,
+  withWord = true,
 }: {
-  href?: "/" | string;
+  href?: string;
   size?: "sm" | "md" | "lg";
-  tone?: "default" | "on-dark";
-  showText?: boolean;
+  withWord?: boolean;
 }) {
-  const fontSize = size === "lg" ? "1.35rem" : size === "sm" ? "0.95rem" : "1.1rem";
-  const imgSize = size === "lg" ? 36 : size === "sm" ? 24 : 30;
+  const sizes = {
+    sm: { mark: 30, text: "1.05rem" },
+    md: { mark: 38, text: "1.35rem" },
+    lg: { mark: 56, text: "1.85rem" },
+  }[size];
 
   return (
     <Link
-      href={href as "/"}
-      className={clsx("brand-logo", tone === "on-dark" && "brand-logo-on-dark")}
-      style={{ fontSize }}
-      aria-label={BRAND.name}
+      href={href}
+      className="brand-logo"
+      aria-label={`${APP_NAME} — com a ${ASSISTANT_NAME}, a tua assistente inteligente`}
     >
-      <Image
-        src={tone === "on-dark" ? BRAND.logoLight : BRAND.logo}
-        alt=""
-        width={imgSize}
-        height={imgSize}
-        priority
-      />
-      {showText && <span>FC Private Driver</span>}
+      <span className="brand-mark" style={{ width: sizes.mark, height: sizes.mark }} aria-hidden>
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="12" fill="currentColor" />
+          <circle cx="20" cy="16" r="6" fill="#fff" fillOpacity="0.95" />
+          <path
+            d="M10 30c1.8-5.2 5.4-8 10-8s8.2 2.8 10 8"
+            stroke="#fff"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      </span>
+      {withWord ? (
+        <span className="brand-word" style={{ fontSize: sizes.text }}>
+          {APP_NAME}
+        </span>
+      ) : null}
     </Link>
   );
 }

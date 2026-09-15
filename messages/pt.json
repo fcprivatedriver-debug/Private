@@ -1,129 +1,22 @@
 {
-  "meta": {
-    "appName": "FC Private Driver",
-    "tagline": "O seu motorista privado, sempre que precisar."
-  },
-  "nav": {
-    "plans": "Planos",
-    "howItWorks": "Como funciona",
-    "contact": "Contactos",
-    "dashboard": "Painel",
-    "admin": "Admin",
-    "login": "Entrar",
-    "register": "Criar conta",
-    "logout": "Sair"
-  },
-  "footer": {
-    "tagline": "Motorista privado por subscrição — discrição, pontualidade e conforto.",
-    "contactTitle": "Contactos",
-    "legalTitle": "Legal",
-    "terms": "Termos",
-    "privacy": "Privacidade",
-    "rights": "Todos os direitos reservados."
-  },
-  "home": {
-    "eyebrow": "Motorista privado · Premium",
-    "ctaPlans": "Ver planos",
-    "ctaRegister": "Criar conta",
-    "ctaWhatsapp": "Falar no WhatsApp",
-    "stepsTitle": "Como funciona",
-    "stepsLead": "Três passos simples para ter o seu motorista sempre disponível.",
-    "step1Title": "Escolha o seu plano mensal.",
-    "step1Body": "Selecione o pacote de minutos que melhor se adapta à sua rotina.",
-    "step2Title": "Marque a viagem.",
-    "step2Body": "Através da aplicação ou por contacto direto — telefone ou WhatsApp.",
-    "step3Title": "O tempo é descontado do saldo.",
-    "step3Body": "O tempo da viagem é descontado do saldo mensal, ao minuto.",
-    "advantagesTitle": "Vantagens",
-    "advantagesLead": "Um serviço de chauffeur privado pensado para quem valoriza tempo e conforto.",
-    "advantage1": "Atendimento personalizado",
-    "advantage2": "Motorista conhecido e de confiança",
-    "advantage3": "Possibilidade de agendar antecipadamente",
-    "advantage4": "Acompanhamento dos minutos disponíveis",
-    "advantage5": "Motorista alternativo de confiança quando necessário",
-    "advantage6": "Sem preços dinâmicos",
-    "advantage7": "Apoio direto por telefone e WhatsApp",
-    "plansTitle": "Níveis de adesão",
-    "plansLead": "Bronze, Prata, Ouro ou Diamante — escolha o ritmo certo para si.",
-    "plansNote": "Os minutos não utilizados não transitam automaticamente para o mês seguinte.",
-    "rulesTitle": "Informação importante",
-    "rule1": "Os minutos são utilizados durante o mês da subscrição e não transitam automaticamente.",
-    "rule2": "Os minutos adicionais podem ser cobrados separadamente.",
-    "rule3": "Portagens, parques de estacionamento, entradas em aeroportos e outros custos externos não estão incluídos.",
-    "rule4": "O serviço depende de marcação e disponibilidade. O administrador pode oferecer minutos promocionais.",
-    "contactTitle": "Contactos",
-    "contactLead": "Estamos disponíveis para esclarecer dúvidas ou ajudar na escolha do plano."
+  "app": {
+    "name": "AddYnow",
+    "tagline": "Sabe onde vai o teu dinheiro. Agora."
   },
   "auth": {
-    "loginTitle": "Entrar",
-    "loginHint": "Aceda à sua conta para gerir planos e viagens.",
-    "email": "E-mail",
-    "password": "Palavra-passe",
+    "loginTitle": "Olá outra vez",
+    "loginHint": "Continua na AddYnow com a MEL.",
+    "email": "Email",
+    "password": "Password",
     "submitLogin": "Entrar",
-    "loggingIn": "A entrar…",
-    "invalidCredentials": "E-mail ou palavra-passe incorretos.",
-    "noAccount": "Ainda não tem conta?",
-    "registerLink": "Criar conta",
-    "forgotPassword": "Esqueceu a palavra-passe?",
-    "registerTitle": "Criar conta",
-    "registerLead": "Registe-se para contratar um plano e marcar viagens com o seu motorista privado.",
-    "name": "Nome completo",
-    "phone": "Telefone",
-    "confirmPassword": "Confirmar palavra-passe",
-    "acceptTerms": "Aceito os",
-    "acceptPrivacy": "Aceito a",
-    "termsLink": "termos e condições",
-    "privacyLink": "política de privacidade",
-    "createAccount": "Criar conta",
-    "creating": "A criar…",
-    "hasAccount": "Já tem conta?",
-    "loginLink": "Entrar",
-    "activateTitle": "Ativar conta",
-    "activateMissing": "Utilize o link enviado por e-mail para ativar a sua conta, ou peça um novo e-mail de ativação abaixo.",
-    "activateSuccess": "O seu e-mail foi confirmado com sucesso. Já pode iniciar sessão e contratar um plano.",
-    "resendActivation": "Reenviar e-mail de ativação",
-    "recoverTitle": "Recuperar palavra-passe",
-    "recoverLead": "Indique o seu e-mail e enviaremos instruções para redefinir a palavra-passe.",
-    "resetTitle": "Nova palavra-passe",
-    "resetLead": "Defina uma nova palavra-passe para a sua conta.",
-    "sendReset": "Enviar instruções",
-    "sending": "A enviar…",
-    "newPassword": "Nova palavra-passe",
-    "resetPassword": "Guardar palavra-passe",
-    "saving": "A guardar…"
+    "loggingIn": "Um momento…",
+    "invalidCredentials": "Email ou password incorrectos.",
+    "noAccount": "Ainda não tens conta na AddYnow?",
+    "registerLink": "Criar conta"
   },
-  "plans": {
-    "title": "Níveis de adesão",
-    "lead": "Bronze, Prata, Ouro ou Diamante — serviço premium de motorista privado por subscrição.",
-    "rulesTitle": "Regras do serviço",
-    "rule1": "Os minutos incluídos são válidos no mês corrente e não transitam para o mês seguinte.",
-    "rule2": "Sem preços dinâmicos — o valor mensal é fixo conforme o plano escolhido.",
-    "rule3": "Cada viagem consome minutos com base na duração real (mínimo de cobrança aplicável).",
-    "rule4": "Portagens, estacionamento e entradas em aeroportos são cobrados à parte.",
-    "rule5": "É necessário ter o e-mail confirmado e perfil completo antes da primeira viagem.",
-    "loginRequired": "Inicie sessão para contratar um plano.",
-    "loginLink": "Entrar",
-    "createAccount": "Criar conta"
-  },
-  "contact": {
-    "title": "Contactos",
-    "lead": "Envie-nos uma mensagem ou fale connosco diretamente.",
-    "whatsapp": "Falar no WhatsApp"
-  },
-  "legal": {
-    "termsTitle": "Termos e condições",
-    "privacyTitle": "Política de privacidade",
-    "preliminary": "Documento em atualização."
-  },
-  "dashboard": {
-    "title": "Painel",
-    "welcome": "Bem-vindo",
-    "minutes": "Minutos disponíveis",
-    "plan": "Plano atual",
-    "trips": "Viagens",
-    "profile": "Perfil"
-  },
-  "common": {
-    "loading": "A carregar…"
+  "nav": {
+    "dashboard": "Conversar",
+    "incomes": "Entradas",
+    "expenses": "Gastos"
   }
 }

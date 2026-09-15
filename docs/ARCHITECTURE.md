@@ -1,35 +1,103 @@
-# Arquitetura — FC Private Driver
+# Nina — Architecture
 
-## Modelo de negócio
+> Assistente financeira pessoal para o mercado português.  
+> **Brand:** Nina  
+> **Moeda:** EUR
 
-Subscrição mensal com saldo de minutos. O cliente marca viagens; a FC Private Driver confirma e atribui motorista. Os minutos descontam-se apenas após conclusão, ao minuto (mínimo configurável). Minutos estimados de viagens futuras confirmadas ficam **reservados**.
+---
 
-## Domínios
+## Product decisions
 
-| Domínio | Responsabilidade |
-|---------|------------------|
-| Auth | Registo, hash bcrypt, confirmação de e-mail, Auth.js JWT, roles CUSTOMER/DRIVER/ADMIN |
-| Planos | `Plan`, `ExtraMinutePackage`, `SiteSettings` editáveis no admin |
-| Subscrições | Ativação só via webhook Stripe / confirmação de pagamento (nunca só pelo redirect do browser) |
-| Minutos | `MinuteTransaction` ledger — nunca alterar saldo sem movimento |
-| Viagens | Pedido → aguardar confirmação → estados até conclusão + `TripTimer` |
-| Notificações | IN_APP + EMAIL (WhatsApp/SMS preparados, sem envio automático) |
-| Admin | Clientes, planos, viagens, motoristas, pagamentos, configurações, audit log |
+| Decision | Choice |
+|----------|--------|
+| Brand | **Nina** |
+| Default currency | **EUR** |
+| Locale | Portuguese first (`/pt`), English available |
+| Multi-user | Family + FamilyMember with roles (OWNER / ADMIN / MEMBER / VIEWER) |
+| Integrations | Adapter layer for retalho, energia, MB Way, Revolut, Open Banking |
+| OCR | Pluggable receipt recognition (confirm-before-save) |
+| AI | **Nina conversational assistant** (center of UX) + insights engine |
 
-## Fluxo de pagamento
+---
 
-1. Cliente escolhe plano → `Subscription` PENDING_PAYMENT + `Payment` PENDING  
-2. Stripe Checkout (ou demo Multibanco/MB WAY/CARD)  
-3. Webhook `checkout.session.completed` → `activateSubscriptionFromPayment`  
-4. Ledger `PLAN_RENEWAL` + notificação
+## Stack
 
-## Contabilização de tempo
+| Layer | Choice |
+|-------|--------|
+| App | Next.js 15 App Router + TypeScript |
+| UI | Tailwind v4 + design tokens (navy / white / soft gray) |
+| DB | Prisma + PostgreSQL (Neon in prod, local PG in dev) |
+| Auth | Auth.js (credentials + optional Google) |
+| Validation | Zod |
+| i18n | next-intl |
 
-- Início: motorista inicia / cliente entra / tolerância expirada (confirmada)  
-- Fim: destino ou fim de espera  
-- Espera conta; deslocação do motorista até ao cliente não conta  
-- Portagens/estacionamento = `ExtraCharge` em dinheiro, não em minutos
+---
 
-## PWA
+## Folder structure
 
-`manifest.webmanifest` + `sw.js` + meta Apple — instalável no ecrã principal.
+```
+nina/
+├── prisma/
+├── messages/
+├── src/
+│   ├── app/[locale]/
+│   │   ├── (app)/          # authenticated area
+│   │   ├── login|registo
+│   │   └── page.tsx        # landing
+│   ├── actions/finance.ts
+│   ├── components/
+│   ├── domain/             # categories, finance math
+│   └── lib/
+│       ├── ocr/
+│       ├── imports/
+│       ├── ai/
+│       ├── export/
+│       └── queries.ts
+```
+
+---
+
+## Modular integrations
+
+Each import provider implements `ImportAdapter` in `src/lib/imports`.  
+OCR lives in `src/lib/ocr`. AI insights in `src/lib/ai/finance-insights`.  
+Optional standing connections live in `NinaConnection` + `src/domain/connections.ts`
+(`Ligações da Nina` at `/ligacoes`) — authorize, pause, revoke, sync independently.
+Email invoice extraction stub: `src/lib/connections/email.ts`.
+Instant capture (voice / text / photo): `/captura` + `src/actions/capture.ts`
+(Web Speech when available; OCR archives receipt via `storeFamilyFile`).
+Future Open Banking and email OAuth plug into the same seams without UI rewrites.
+
+---
+
+## Security roadmap
+
+- Credentials + OAuth (Google / Apple)
+- PIN + biometrics flags on User (native clients)
+- HTTPS encryption in transit
+- Automated backups via managed Postgres
+- Explicit user consent for third-party imports
+
+
+---
+
+## Conversational core
+
+The home experience is a chat with **Nina**. Natural-language questions in Portuguese
+are answered by `src/lib/ai/nina-assistant.ts` using the family's live financial context.
+Menus stay secondary and use everyday language (Gastos, Entradas, Objetivos…).
+
+## Adaptive household intelligence
+
+Product narrative (single integrated capability):  
+[`docs/PRODUCT.md`](./PRODUCT.md) — *Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina*.
+
+Implementation seams:
+
+| Concern | Location |
+|---------|----------|
+| Personal vs family space | Cookie `nina_space` · `src/lib/scope.ts` · `SpaceSwitcher` |
+| Secure invites (link / QR) | `FamilyInvite` · `/[locale]/convite/[token]` |
+| Scope resolution & habits | `src/lib/ai/learning.ts` · `NinaHabitStat` |
+| User memory rules | `NinaMemoryRule` · `/memoria` · NL «sempre que…» |
+| Smart suggestions | `getSmartSuggestions` on dashboard |

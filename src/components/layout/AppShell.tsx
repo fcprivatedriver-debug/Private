@@ -1,78 +1,152 @@
-import { Link } from "@/i18n/navigation";
-import { BRAND } from "@/config/brand";
-import { signOut } from "@/lib/auth";
-import type { ReactNode } from "react";
+"use client";
 
-type NavItem = { href: string; label: string; icon: string };
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/layout/BrandLogo";
+import { SignOutButton } from "@/components/auth/SignOutButton";
+import { useTheme } from "@/components/providers/ThemeProvider";
+import { SpaceSwitcher } from "@/components/nina/SpaceSwitcher";
+import type { NinaSpace } from "@/actions/household";
+import { cn } from "@/lib/utils";
+import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 
-const CUSTOMER_NAV: NavItem[] = [
-  { href: "/cliente", label: "Início", icon: "⌂" },
-  { href: "/cliente/viagem/nova", label: "Viagem", icon: "→" },
-  { href: "/minutos", label: "Minutos", icon: "◷" },
-  { href: "/perfil", label: "Conta", icon: "◎" },
+/** Navegação simples — captura e conversa no centro. */
+const NAV = [
+  { href: "/pt/captura", label: "Captura" },
+  { href: "/pt/dashboard", label: "Hoje" },
+  { href: "/pt/guia", label: "Guia" },
+  { href: "/pt/transacoes", label: "Transações" },
+  { href: "/pt/receitas", label: "Receitas" },
+  { href: "/pt/despesas", label: "Despesas" },
+  { href: "/pt/lista", label: "Compras" },
+  { href: "/pt/mobilidade", label: "Mobilidade" },
+  { href: "/pt/calendario", label: "Calendário" },
+  { href: "/pt/poupancas", label: "Poupanças" },
+  { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/personalizar", label: "Personalizar a MEL" },
+  { href: "/pt/orcamentos", label: "Limites" },
+  { href: "/pt/estatisticas", label: "Resumo" },
+  { href: "/pt/familia", label: "Conta" },
+  { href: "/pt/ligacoes", label: "Ligações" },
+  { href: "/pt/memoria", label: "Memória" },
+  { href: "/pt/perfil", label: "Perfil" },
+  { href: "/pt/privacidade-dados", label: "Privacidade" },
+  { href: "/pt/alertas", label: "Avisos" },
+  { href: "/pt/definicoes", label: "Mais" },
 ];
 
-export async function AppShell({
+const MOBILE = [
+  { href: "/pt/dashboard", label: "Hoje" },
+  { href: "/pt/guia", label: "Guia" },
+  { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura" },
+  { href: "/pt/lista", label: "Compras" },
+  { href: "/pt/definicoes", label: "Mais" },
+];
+
+export function AppShell({
   children,
   userName,
-  showCustomerNav = false,
-  activePath,
-  locale = "pt",
+  familyName,
+  unreadAlerts = 0,
+  space = "personal",
 }: {
-  children: ReactNode;
-  userName?: string;
-  showCustomerNav?: boolean;
-  activePath?: string;
-  locale?: string;
+  children: React.ReactNode;
+  userName: string;
+  familyName?: string;
+  unreadAlerts?: number;
+  space?: NinaSpace;
 }) {
+  const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+
   return (
-    <div className={`app-shell${showCustomerNav ? " has-bottom-nav" : ""}`}>
-      <header className="app-topbar">
-        <div className="container app-topbar-inner">
-          <Link href="/cliente" className="app-topbar-brand">
-            {BRAND.shortName} <span>Private Driver</span>
-          </Link>
-          <div className="app-topbar-actions">
-            {userName && (
-              <span className="muted" style={{ fontSize: "0.86rem", color: "rgba(255,255,255,0.72)" }}>
-                {userName.split(" ")[0]}
-              </span>
-            )}
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: `/${locale}` });
-              }}
-            >
-              <button type="submit" className="btn btn-secondary btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.3)" }}>
-                Sair
-              </button>
-            </form>
-          </div>
+    <div className="app-shell">
+      <aside className="app-sidebar">
+        <div className="sidebar-top">
+          <BrandLogo href="/pt/dashboard" size="sm" />
+          <p className="sidebar-tag">{NINA_MISSION_SHORT}</p>
+          {familyName ? <p className="sidebar-family">{familyName}</p> : null}
         </div>
-      </header>
-
-      <div className="app-main">
-        <div className="container">{children}</div>
-      </div>
-
-      {showCustomerNav && (
-        <nav className="app-bottom-nav" aria-label="Navegação principal">
-          {CUSTOMER_NAV.map((item) => {
-            const active =
-              activePath === item.href ||
-              (item.href !== "/cliente" && activePath?.startsWith(item.href));
+        <div className="sidebar-space">
+          <SpaceSwitcher space={space} />
+        </div>
+        <nav className="sidebar-nav" aria-label="Principal">
+          {NAV.map((item) => {
+            const active = pathname?.startsWith(item.href);
             return (
-              <Link key={item.href} href={item.href as "/cliente"} className={active ? "active" : ""}>
-                <span className="app-bottom-nav-icon" aria-hidden>
-                  {item.icon}
-                </span>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn("nav-link", active && "active")}
+              >
                 {item.label}
+                {item.href.includes("alertas") && unreadAlerts > 0 ? (
+                  <span className="nav-badge">{unreadAlerts}</span>
+                ) : null}
               </Link>
             );
           })}
         </nav>
-      )}
+        <div className="sidebar-foot">
+          <p className="muted small">Olá, {userName.split(" ")[0]}</p>
+          <div className="theme-toggle" role="group" aria-label="Tema">
+            {(["light", "dark", "blue", "system"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={cn("theme-btn", theme === t && "active")}
+                onClick={() => setTheme(t)}
+              >
+                {t === "light" ? "Claro" : t === "dark" ? "Escuro" : t === "blue" ? "Azul" : "Auto"}
+              </button>
+            ))}
+          </div>
+          <SignOutButton />
+        </div>
+      </aside>
+      <div className="app-main">
+        <header className="app-topbar">
+          <div className="topbar-brand-mobile">
+            <BrandLogo href="/pt/dashboard" size="sm" />
+            {familyName ? <span className="topbar-family">{familyName}</span> : null}
+          </div>
+          <div className="topbar-space-mobile">
+            <SpaceSwitcher space={space} />
+          </div>
+          <div className="topbar-actions">
+            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary btn-sm">
+              Falar
+            </Link>
+            <Link href="/pt/captura?mode=photo&auto=1" className="btn btn-ghost btn-sm">
+              Fatura
+            </Link>
+          </div>
+        </header>
+        <main className="app-content">{children}</main>
+      </div>
+      <Link
+        href="/pt/captura?mode=voice&auto=1"
+        className="captura-fab"
+        aria-label="Falar com a MEL — captura por voz"
+      >
+        +
+      </Link>
+      <nav className="mobile-nav" aria-label="Mobile">
+        {MOBILE.map((item) => {
+          const match = "match" in item && item.match ? item.match : item.href;
+          const active = pathname?.startsWith(match);
+          const isCaptura = match.includes("captura");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn("mobile-nav-link", isCaptura && "is-captura", active && "active")}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

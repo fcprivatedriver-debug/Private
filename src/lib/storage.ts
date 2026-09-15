@@ -10,16 +10,16 @@ export type StoredFile = {
   sizeBytes: number;
 };
 
-export async function storeDriverFile(input: {
-  driverUserId: string;
+export async function storeFamilyFile(input: {
+  familyId: string;
   fileName: string;
   mimeType: string;
   bytes: Buffer;
 }): Promise<StoredFile> {
   const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
   const storageKey = path.join(
-    "drivers",
-    input.driverUserId,
+    "families",
+    input.familyId,
     `${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`,
   );
   const abs = path.join(UPLOAD_ROOT, storageKey);
@@ -38,19 +38,17 @@ export async function readStoredFile(storageKey: string): Promise<Buffer> {
 }
 
 export async function deleteStoredFile(storageKey: string): Promise<void> {
-  try {
-    await unlink(path.join(UPLOAD_ROOT, storageKey));
-  } catch {
-    // ignore missing
-  }
+  const abs = path.join(UPLOAD_ROOT, storageKey);
+  await unlink(abs).catch(() => undefined);
 }
 
-export function assertSafeStorageKey(storageKey: string): string {
-  const normalized = storageKey.replace(/\\/g, "/");
+export function assertSafeStorageKey(key: string): string {
+  const normalized = key.replace(/\\/g, "/");
   if (
+    !normalized ||
     normalized.includes("..") ||
     normalized.startsWith("/") ||
-    !normalized.startsWith("drivers/")
+    normalized.includes("\0")
   ) {
     throw new Error("Invalid storage key");
   }

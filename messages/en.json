@@ -1,127 +1,22 @@
 {
-  "meta": {
-    "appName": "FC Private Driver",
-    "tagline": "Your private driver, whenever you need."
-  },
-  "nav": {
-    "plans": "Plans",
-    "howItWorks": "How it works",
-    "contact": "Contact",
-    "dashboard": "Dashboard",
-    "admin": "Admin",
-    "login": "Log in",
-    "register": "Create account",
-    "logout": "Log out"
-  },
-  "footer": {
-    "tagline": "Private chauffeur by subscription — discretion, punctuality and comfort.",
-    "contactTitle": "Contact",
-    "legalTitle": "Legal",
-    "terms": "Terms",
-    "privacy": "Privacy",
-    "rights": "All rights reserved."
-  },
-  "home": {
-    "eyebrow": "Private chauffeur · Premium",
-    "ctaPlans": "View plans",
-    "ctaRegister": "Create account",
-    "ctaWhatsapp": "Chat on WhatsApp",
-    "stepsTitle": "How it works",
-    "stepsLead": "Three simple steps to have your driver always available.",
-    "step1Title": "Choose your plan",
-    "step1Body": "Select the monthly minute package that best fits your routine.",
-    "step2Title": "Book your trips",
-    "step2Body": "Schedule pickups in advance — airport, meetings, events or daily errands.",
-    "step3Title": "Travel with peace of mind",
-    "step3Body": "Your dedicated driver handles the rest. No surprises, no surge pricing.",
-    "advantagesTitle": "Benefits",
-    "advantagesLead": "A private chauffeur service designed for those who value time and comfort.",
-    "advantage1": "Dedicated private driver — not a random ride marketplace.",
-    "advantage2": "Fixed monthly price — no dynamic fares or billing surprises.",
-    "advantage3": "Advance booking aligned with your schedule.",
-    "advantage4": "Premium vehicle, discretion and punctuality on every trip.",
-    "advantage5": "Direct phone and WhatsApp support when you need it.",
-    "plansTitle": "Monthly plans",
-    "plansLead": "Included minutes every month. Choose the pace that makes sense for you.",
-    "plansNote": "Unused minutes do not roll over to the next month.",
-    "rulesTitle": "Important information",
-    "rule1": "Plan minutes are valid during the subscription month and do not automatically carry over.",
-    "rule2": "We do not use dynamic pricing — the monthly fee is always as stated.",
-    "rule3": "Tolls, parking and airport fees are not included in the minutes.",
-    "rule4": "Service depends on advance booking and confirmed availability.",
-    "contactTitle": "Contact",
-    "contactLead": "We are available to answer questions or help you choose a plan."
+  "app": {
+    "name": "AddYnow",
+    "tagline": "Know where your money goes. Now."
   },
   "auth": {
-    "loginTitle": "Log in",
-    "loginHint": "Access your account to manage plans and trips.",
+    "loginTitle": "Welcome back",
+    "loginHint": "Continue on AddYnow with MEL.",
     "email": "Email",
     "password": "Password",
-    "submitLogin": "Log in",
-    "loggingIn": "Signing in…",
+    "submitLogin": "Sign in",
+    "loggingIn": "One moment…",
     "invalidCredentials": "Incorrect email or password.",
-    "noAccount": "Don't have an account yet?",
-    "registerLink": "Create account",
-    "forgotPassword": "Forgot your password?",
-    "registerTitle": "Create account",
-    "registerLead": "Register to subscribe to a plan and book trips with your private driver.",
-    "name": "Full name",
-    "phone": "Phone",
-    "confirmPassword": "Confirm password",
-    "acceptTerms": "I accept the",
-    "acceptPrivacy": "I accept the",
-    "termsLink": "terms and conditions",
-    "privacyLink": "privacy policy",
-    "createAccount": "Create account",
-    "creating": "Creating…",
-    "hasAccount": "Already have an account?",
-    "loginLink": "Log in",
-    "activateTitle": "Activate account",
-    "activateMissing": "Use the link sent by email to activate your account, or request a new activation email below.",
-    "activateSuccess": "Your email was confirmed successfully. You can now sign in and choose a plan.",
-    "resendActivation": "Resend activation email",
-    "recoverTitle": "Recover password",
-    "recoverLead": "Enter your email and we will send reset instructions.",
-    "resetTitle": "New password",
-    "resetLead": "Set a new password for your account.",
-    "sendReset": "Send instructions",
-    "sending": "Sending…",
-    "newPassword": "New password",
-    "resetPassword": "Save password",
-    "saving": "Saving…"
+    "noAccount": "No AddYnow account yet?",
+    "registerLink": "Create account"
   },
-  "plans": {
-    "title": "Plans",
-    "lead": "Choose your monthly minute plan. Auto-renewal, cancel anytime.",
-    "rulesTitle": "Service rules",
-    "rule1": "Included minutes are valid in the current month and do not roll over.",
-    "rule2": "No dynamic pricing — the monthly fee is fixed per plan.",
-    "rule3": "Each trip consumes minutes based on actual duration (minimum charge applies).",
-    "rule4": "Tolls, parking and airport entries are charged separately.",
-    "rule5": "Email confirmation and a complete profile are required before your first trip.",
-    "loginRequired": "Please log in to subscribe to a plan.",
-    "loginLink": "Log in",
-    "createAccount": "Create account"
-  },
-  "contact": {
-    "title": "Contact",
-    "lead": "Send us a message or reach out directly.",
-    "whatsapp": "Chat on WhatsApp"
-  },
-  "legal": {
-    "termsTitle": "Terms and conditions",
-    "privacyTitle": "Privacy policy",
-    "preliminary": "Document being updated."
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome",
-    "minutes": "Available minutes",
-    "plan": "Current plan",
-    "trips": "Trips",
-    "profile": "Profile"
-  },
-  "common": {
-    "loading": "Loading…"
+  "nav": {
+    "dashboard": "Chat",
+    "incomes": "Income",
+    "expenses": "Expenses"
   }
 }

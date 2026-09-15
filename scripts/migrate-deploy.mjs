@@ -1,24 +1,15 @@
 #!/usr/bin/env node
 /**
- * Sync Prisma schema on Vercel for FC Private Driver rewrite.
- * Always runs `db push` so legacy ZRIK tables are replaced, then optional seed.
+ * Deploy Prisma migrations with recovery for foreign/failed migrations (P3009)
+ * and Nina schema isolation on shared Neon.
  */
 import { spawnSync } from "node:child_process";
+import { applyEnsureEnv } from "./ensure-env.mjs";
 
-if (!process.env.DATABASE_URL) {
-  console.warn("[migrate-deploy] No DATABASE_URL — skipping schema sync");
-  process.exit(0);
-}
+applyEnsureEnv({ exitOnError: true });
 
-if (!process.env.DIRECT_URL) {
-  process.env.DIRECT_URL =
-    process.env.DATABASE_URL_UNPOOLED ||
-    process.env.POSTGRES_URL_NON_POOLING ||
-    process.env.DATABASE_URL;
-}
-
-function run(cmd, args) {
-  const res = spawnSync(cmd, args, {
+function run(args) {
+  const res = spawnSync("npx", ["prisma", ...args], {
     encoding: "utf8",
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
@@ -27,36 +18,54 @@ function run(cmd, args) {
   return { code: res.status ?? 1, out };
 }
 
-console.log("[migrate-deploy] Syncing schema with prisma db push…");
-const pushed = run("npx", ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"]);
-process.stdout.write(pushed.out);
-if (pushed.code !== 0) {
-  console.warn("[migrate-deploy] db push failed — trying migrate deploy as fallback");
-  const migrated = run("npx", ["prisma", "migrate", "deploy"]);
-  process.stdout.write(migrated.out);
-  if (migrated.code !== 0) {
-    console.warn("[migrate-deploy] schema sync failed (non-fatal for compile)");
-    process.exit(0);
+/** Ensure isolated Postgres schema exists (Nina on shared Neon with Zrik). */
+function ensureSchema() {
+  if (!process.env.VERCEL && process.env.FORCE_NINA_SCHEMA !== "true") {
+    if (process.env.NINA_PG_SCHEMA !== "nina") return;
   }
-} else {
-  console.log("[migrate-deploy] db push succeeded");
-}
-
-// Seed when DEMO_MODE/SEED_ON_DEPLOY or when SiteSettings missing (best-effort)
-const shouldSeed =
-  process.env.DEMO_MODE === "true" ||
-  process.env.SEED_ON_DEPLOY === "true" ||
-  process.env.VERCEL === "1";
-
-if (shouldSeed) {
-  console.log("[migrate-deploy] Seeding demo data…");
-  const seed = run("npx", ["tsx", "prisma/seed.ts"]);
-  process.stdout.write(seed.out);
-  if (seed.code !== 0) {
-    console.warn("[migrate-deploy] seed failed (non-fatal)");
-  } else {
-    console.log("[migrate-deploy] seed complete");
+  const schema = process.env.NINA_PG_SCHEMA || "nina";
+  console.log(`[migrate-deploy] Ensuring PostgreSQL schema "${schema}"…`);
+  const sql = `CREATE SCHEMA IF NOT EXISTS "${schema}";`;
+  const res = spawnSync("npx", ["prisma", "db", "execute", "--stdin"], {
+    encoding: "utf8",
+    env: process.env,
+    input: sql,
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+  const out = `${res.stdout || ""}${res.stderr || ""}`;
+  process.stdout.write(out);
+  if ((res.status ?? 1) !== 0) {
+    console.warn(
+      "[migrate-deploy] schema ensure warned (continuing):",
+      out.slice(0, 400),
+    );
   }
 }
 
-console.log("[migrate-deploy] OK");
+ensureSchema();
+
+let result = run(["migrate", "deploy"]);
+process.stdout.write(result.out);
+
+if (result.code !== 0 && result.out.includes("20260723160000_mafil_init")) {
+  console.log("[migrate-deploy] Resolving foreign failed migration mafil_init…");
+  const rolled = run(["migrate", "resolve", "--rolled-back", "20260723160000_mafil_init"]);
+  process.stdout.write(rolled.out);
+  result = run(["migrate", "deploy"]);
+  process.stdout.write(result.out);
+}
+
+if (result.code !== 0 && /P3009|migrate found failed migrations/i.test(result.out)) {
+  const match = result.out.match(/`?(20\d{12}_[a-z0-9_]+)`?/i);
+  if (match?.[1]) {
+    console.log(`[migrate-deploy] Resolving failed migration ${match[1]}…`);
+    const rolled = run(["migrate", "resolve", "--rolled-back", match[1]]);
+    process.stdout.write(rolled.out);
+    result = run(["migrate", "deploy"]);
+    process.stdout.write(result.out);
+  }
+}
+
+if (result.code !== 0) {
+  process.exit(result.code);
+}

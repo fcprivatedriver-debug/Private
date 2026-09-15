@@ -1,14 +1,22 @@
-# Agent notes — FC Private Driver (marketing site)
+# Agent notes — Nina
 
-Website de apresentação e contacto. Sem autenticação, planos, Stripe ou Maps.
+## PR completion gate (mandatory)
 
-## PR completion gate
+After every Pull Request, **before finishing**, automatically generate and attach:
 
-Após cada PR, gerar provas visuais:
+1. Changelog (`docs/changelogs/pr-<N>.md`)
+2. List of new features (same file)
+3. Screenshots of every new/changed screen
+4. Short video or GIF of the complete flow
+
+Never mark a PR complete without this visual proof. See `docs/PR_VISUAL_PROOF.md`.
 
 ```bash
+npm run db:demo
 npm run build && npm run start -- -p 3000
-npm run pr:proof
+npm i -D playwright@1.61.1
+npx playwright install chromium
+npm run pr:proof -- --pr <N>
 ```
 
-Embed artifacts under `/opt/cursor/artifacts/…`.
+Embed artifacts in the PR body with absolute paths under `/opt/cursor/artifacts/…`.

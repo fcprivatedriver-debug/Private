@@ -1,33 +1,53 @@
-# FC Private Driver — website de apresentação
+# AddYnow — Sabe onde vai o teu dinheiro. Agora.
 
-Website premium de contacto direto com a FC Private Driver.
+Aplicação de organização pessoal e financeira com a **MEL**, assistente inteligente.
 
-Não inclui contas, pagamentos online, planos de minutos nem Google Maps.
+**Marca:** AddYnow · **Assistente:** MEL · **Moeda:** EUR · **Idioma:** Português (EN disponível)
 
-## Contactos
+> Identidade: AddYnow = app / produto · MEL = assistente de IA  
+> Domínio técnico temporário: `ninapp.pt` (não inventar domínio novo nesta fase)
 
-- WhatsApp / Telefone: **933 239 595** (`+351 933 239 595`)
-- Email: **fcprivatedriver@gmail.com**
+## Stack
 
-## Desenvolvimento
+- Next.js 15 (App Router) · TypeScript · Tailwind CSS v4
+- Auth.js · Prisma · PostgreSQL
+- next-intl (`/pt`, `/en`)
+- Módulos: OCR, importações, IA, exportação, ligações opcionais
+
+## Arranque local
 
 ```bash
+cp .env.example .env
 npm install
+npx prisma migrate deploy
+# demo só em desenvolvimento:
+DEMO_MODE=true npm run db:demo
 npm run dev
 ```
 
-Abrir [http://localhost:3000](http://localhost:3000).
+### Contas de desenvolvimento (nunca em produção)
 
-```bash
-npm run build && npm run start
-npm test
-npm run typecheck
-```
+| Pessoa | Email | Password |
+|--------|-------|----------|
+| Família (vazia) | `familia@nina.app` | `nina123` |
+| Demo seed | `demo@nina.app` | `nina123` |
 
-## Páginas
+Em produção, `DEMO_MODE` fica forçado a `false`.
 
-- `/` — Homepage
-- `/servicos` — Categorias de serviço
-- `/sobre` — Sobre a FC Private Driver
-- `/contactos` — Pedido de serviço (WhatsApp / email)
-- `/privacidade` — Política de Privacidade
+## Produção
+
+Ver `docs/DEPLOY_VERCEL.md`. Variáveis críticas:
+
+| Variável | Notas |
+|----------|-------|
+| `DATABASE_URL` / `DIRECT_URL` | Neon, schema `nina` (legado técnico) |
+| `AUTH_SECRET` | Obrigatório |
+| `RESEND_API_KEY` | Obrigatório para emails reais |
+| `EMAIL_FROM` | `AddYnow <no-reply@ninapp.pt>` |
+| `DEMO_MODE` | `false` |
+| `NEXT_PUBLIC_APP_NAME` | `AddYnow` |
+
+## Separação de marca
+
+- UI / PWA / emails visíveis → **AddYnow** + **MEL**
+- Schema Postgres, modelos Prisma `Nina*`, emails `@nina.app`, cookie `nina_space`, domínio `ninapp.pt` → legado técnico preservado de propósito

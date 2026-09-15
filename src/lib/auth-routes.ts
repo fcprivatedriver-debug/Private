@@ -1,12 +1,42 @@
-import type { Role } from "@prisma/client";
+/** Rotas protegidas da Nina */
+export const APP_PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/captura",
+  "/lista",
+  "/receitas",
+  "/despesas",
+  "/orcamentos",
+  "/poupancas",
+  "/objetivos",
+  "/estatisticas",
+  "/pesquisa",
+  "/familia",
+  "/ligacoes",
+  "/memoria",
+  "/perfil",
+  "/recorrentes",
+  "/importacoes",
+  "/alertas",
+  "/definicoes",
+  "/ocr",
+  "/ia",
+] as const;
 
-/** Home path after login for each role (Cliente + Administrador only). */
-export function dashboardPathForRole(role: Role | string): string {
-  switch (role) {
-    case "ADMIN":
-      return "/admin";
-    case "CUSTOMER":
-    default:
-      return "/cliente";
+export function dashboardPathForRole(role?: string): string {
+  void role;
+  return "/dashboard";
+}
+
+export function safePostLoginPath(
+  _role: string | null | undefined,
+  callbackUrl: string | null,
+  locale: string,
+): string {
+  if (callbackUrl && callbackUrl.startsWith(`/${locale}/`)) {
+    const path = callbackUrl.slice(locale.length + 1);
+    if (APP_PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`))) {
+      return callbackUrl;
+    }
   }
+  return `/${locale}/dashboard`;
 }

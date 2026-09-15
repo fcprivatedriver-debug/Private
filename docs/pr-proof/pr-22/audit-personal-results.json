@@ -1,0 +1,34 @@
+{
+  "all": true,
+  "results": [
+    {
+      "n": "receita: datas",
+      "p": true
+    },
+    {
+      "n": "receita: sem por",
+      "p": true
+    },
+    {
+      "n": "receita após edit: datas",
+      "p": true
+    },
+    {
+      "n": "receita após edit: sem por",
+      "p": true
+    },
+    {
+      "n": "timeline após edit (ação+data, sem nome)",
+      "p": true,
+      "d": "Alterado · 25/07/2026, 09:29"
+    },
+    {
+      "n": "despesa: datas",
+      "p": true
+    },
+    {
+      "n": "despesa: sem por",
+      "p": true
+    }
+  ]
+}
