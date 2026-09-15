@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Nina — azul-marinho, branco, cinzento claro; verde receitas; vermelho despesas */
+/* add&know — azul-marinho, branco, cinzento claro; verde receitas; vermelho despesas */
 
 :root {
   --navy: #234a78;
@@ -116,6 +116,7 @@ html.dark .brand-mark { color: #2a4a73; }
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 /* Buttons */
@@ -869,7 +870,7 @@ html.dark .btn-primary { background: #3d6aa3; }
   .dash-grid, .two-col, .feature-grid { grid-template-columns: 1fr; }
 }
 
-/* ——— Nina chat & home ——— */
+/* ——— MEL chat & home ——— */
 .hero-promise {
   margin-top: 1.5rem;
   font-family: var(--font-display);
@@ -1137,7 +1138,7 @@ html.dark .nina-bubble.user .nina-bubble-body {
   font-size: 0.85rem;
 }
 
-/* ——— Espaços Nina + convite + memória ——— */
+/* ——— Espaços MEL + convite + memória ——— */
 .sidebar-space {
   padding: 0 0.85rem 1rem;
 }
@@ -1476,7 +1477,7 @@ a.tx-row:focus-visible {
   .section-adaptive h2 { max-width: none; }
 }
 
-/* ——— Ligações da Nina ——— */
+/* ——— Ligações ——— */
 .automation-levels {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

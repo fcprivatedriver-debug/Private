@@ -1,4 +1,4 @@
-# Personalidade da Nina
+# Personalidade da MEL
 
 A Nina não é só uma app financeira — é uma **assistente financeira pessoal**.
 

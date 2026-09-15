@@ -1,4 +1,4 @@
-/* AddYnow service worker — network-first; never trap users on Offline.html for dead tunnels */
+/* add&know service worker — network-first; never trap users on Offline.html for dead tunnels */
 const CACHE_VERSION = "nina-v1-2-stable";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
@@ -89,7 +89,7 @@ self.addEventListener("fetch", (event) => {
       fetch(request).catch(
         () =>
           new Response(
-            "<!doctype html><meta charset=utf-8><title>AddYnow</title><p>Servidor indisponível. Atualiza a página ou usa o URL estável da Vercel.</p><p><a href='/pt/login'>Tentar login</a></p>",
+            "<!doctype html><meta charset=utf-8><title>add&know</title><p>Servidor indisponível. Atualiza a página ou usa o URL estável da Vercel.</p><p><a href='/pt/login'>Tentar login</a></p>",
             { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } },
           ),
       ),
@@ -132,7 +132,7 @@ self.addEventListener("fetch", (event) => {
           if (cached) return cached;
           return (
             (await caches.match(OFFLINE_URL)) ||
-            new Response("AddYnow indisponível", { status: 503 })
+            new Response("add&know indisponível", { status: 503 })
           );
         }
       })(),

@@ -58,7 +58,7 @@ export async function exportAllPersonalData() {
 
   return {
     ok: true as const,
-    filename: `nina-dados-${new Date().toISOString().slice(0, 10)}.json`,
+    filename: `addknow-dados-${new Date().toISOString().slice(0, 10)}.json`,
     json: JSON.stringify(payload, null, 2),
   };
 }

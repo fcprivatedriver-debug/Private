@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "AddYnow",
-    short_name: "AddYnow",
+    name: "add&know",
+    short_name: "add&know",
     description:
-      "AddYnow — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
+      "add&know — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
     start_url: "/pt/dashboard",
     scope: "/",
     display: "standalone",
@@ -53,7 +53,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Dashboard",
         short_name: "Dashboard",
-        description: "Abrir o painel AddYnow e falar com a MEL",
+        description: "Abrir o painel add&know e falar com a MEL",
         url: "/pt/dashboard?utm_source=pwa_shortcut&utm_medium=dashboard",
         icons: [{ src: "/icons/shortcut-dashboard.png", sizes: "96x96", type: "image/png" }],
       },
