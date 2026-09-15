@@ -147,7 +147,7 @@ export async function instantCaptureSpeak(utterance: string) {
       return {
         ok: true as const,
         reply: r.reply,
-        detail: "Poupanças AddYnow",
+        detail: "Poupanças add&know",
         kind: "assistant" as const,
         scope: "PERSONAL" as const,
       };

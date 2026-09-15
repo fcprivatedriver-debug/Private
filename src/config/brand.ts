@@ -1,14 +1,14 @@
 /**
  * Identidade final de produção.
  *
- * AddYnow = aplicação / produto / marca (grafia exacta)
- * MEL     = assistente pessoal inteligente dentro da AddYnow
+ * add&know = aplicação / produto / marca (grafia exacta)
+ * MEL      = assistente pessoal inteligente dentro da add&know
  *
- * Nunca chamar AddYnow à assistente.
- * Nunca substituir MEL por AddYnow.
+ * Nunca chamar add&know à assistente.
+ * Nunca substituir MEL por add&know.
  */
 
-export const APP_NAME = "AddYnow";
+export const APP_NAME = "add&know";
 export const ASSISTANT_NAME = "MEL";
 
 /** Assinatura principal */

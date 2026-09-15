@@ -107,7 +107,7 @@ export default async function DashboardPage() {
       ) : null}
 
       {isEmpty ? (
-        <Panel title="Começar na AddYnow">
+        <Panel title="Começar na add&know">
           <EmptyState
             title="Tudo a zeros"
             body="Ainda não registaste nenhuma despesa. Diz-me quanto gastaste — ou o que precisas nas compras."

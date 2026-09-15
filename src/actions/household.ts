@@ -290,8 +290,8 @@ export async function inviteMemberByEmail(formData: FormData) {
   const url = `${appBaseUrl()}${invitePath}`;
   const mail = await sendAppEmail({
     to: email,
-    subject: `Convite para ${family.name} — AddYnow`,
-    text: `Olá ${name},\n\nFoste convidado(a) para a família «${family.name}» na AddYnow.\n\nAceita aqui (só precisas de criar a tua palavra-passe):\n${url}\n\n— AddYnow`,
+    subject: `Convite para ${family.name} — add&know`,
+    text: `Olá ${name},\n\nFoste convidado(a) para a família «${family.name}» na add&know.\n\nAceita aqui (só precisas de criar a tua palavra-passe):\n${url}\n\n— add&know`,
   });
 
   revalidateAll();

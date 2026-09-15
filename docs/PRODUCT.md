@@ -1,4 +1,4 @@
-# Melhoria da Experiência do Utilizador e Inteligência Adaptativa da Nina
+# Melhoria da Experiência do Utilizador e Inteligência Adaptativa da MEL
 
 A Nina une simplicidade de adesão e inteligência financeira num único fluxo contínuo: quanto mais a utilizas, menos trabalho tens.
 
@@ -58,9 +58,9 @@ Documento canónico: [`docs/MISSION.md`](./MISSION.md).
 
 A Nina deixa cada pessoa escolher o nível de automatização. **Nunca obriga** acessos a serviços externos — tudo funciona por módulos opcionais, reversíveis e com autorização explícita.
 
-### Centro «Ligações da Nina»
+### Centro «Ligações»
 
-No menu **Ligações da Nina** o utilizador adiciona, pausa ou remove ligações quando quiser. Cada módulo é independente (ex.: Gmail e Continente ativos; Pingo Doce e eletricidade desligados).
+No menu **Ligações** o utilizador adiciona, pausa ou remove ligações quando quiser. Cada módulo é independente (ex.: Gmail e Continente ativos; Pingo Doce e eletricidade desligados).
 
 Arquitetura preparada para: Open Banking, cartões, Revolut, MB Way, PayPal, email (Gmail/Outlook), Autoridade Tributária (quando possível), Via Verde, supermercados, fidelização, combustível, Tesla e outras marcas, água, luz, gás, telecomunicações, seguradoras, investimentos e novos serviços.
 

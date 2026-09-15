@@ -18,15 +18,15 @@ const body = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "AddYnow",
-    template: "%s · AddYnow",
+    default: "add&know",
+    template: "%s · add&know",
   },
   description:
-    "AddYnow — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
-  applicationName: "AddYnow",
+    "add&know — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
+  applicationName: "add&know",
   appleWebApp: {
     capable: true,
-    title: "AddYnow",
+    title: "add&know",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/splash/apple-splash-1284x2778.png"
           media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)"
         />
-        <meta name="apple-mobile-web-app-title" content="AddYnow" />
+        <meta name="apple-mobile-web-app-title" content="add&know" />
       </head>
       <body className={`${display.variable} ${body.variable}`}>
         <PwaSplashHide />

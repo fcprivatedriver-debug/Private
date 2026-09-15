@@ -904,16 +904,16 @@ export async function exportFamilyData(format: "csv" | "excel" | "pdf") {
   ];
 
   if (format === "csv") {
-    return { ok: true as const, filename: "nina-export.csv", content: toCSV(rows, columns), mime: "text/csv;charset=utf-8" };
+    return { ok: true as const, filename: "addknow-export.csv", content: toCSV(rows, columns), mime: "text/csv;charset=utf-8" };
   }
   if (format === "excel") {
-    return { ok: true as const, filename: "nina-export.xls", content: toExcelTSV(rows, columns), mime: "application/vnd.ms-excel" };
+    return { ok: true as const, filename: "addknow-export.xls", content: toExcelTSV(rows, columns), mime: "application/vnd.ms-excel" };
   }
   const pdf = toSimplePdfText(
-    "AddYnow Export",
+    "add&know Export",
     rows.slice(0, 40).map((r) => `${r.data} ${r.tipo} ${r.descricao} ${r.valor}€`),
   );
-  return { ok: true as const, filename: "nina-export.pdf", content: pdf, mime: "application/pdf" };
+  return { ok: true as const, filename: "addknow-export.pdf", content: pdf, mime: "application/pdf" };
 }
 
 export async function updateTheme(theme: "light" | "dark" | "system") {

@@ -1,10 +1,10 @@
-# AddYnow — Sabe onde vai o teu dinheiro. Agora.
+# add&know — Sabe onde vai o teu dinheiro. Agora.
 
 Aplicação de organização pessoal e financeira com a **MEL**, assistente inteligente.
 
-**Marca:** AddYnow · **Assistente:** MEL · **Moeda:** EUR · **Idioma:** Português (EN disponível)
+**Marca:** add&know · **Assistente:** MEL · **Moeda:** EUR · **Idioma:** Português (EN disponível)
 
-> Identidade: AddYnow = app / produto · MEL = assistente de IA  
+> Identidade: add&know = app / produto · MEL = assistente de IA  
 > Domínio técnico temporário: `ninapp.pt` (não inventar domínio novo nesta fase)
 
 ## Stack
@@ -43,11 +43,11 @@ Ver `docs/DEPLOY_VERCEL.md`. Variáveis críticas:
 | `DATABASE_URL` / `DIRECT_URL` | Neon, schema `nina` (legado técnico) |
 | `AUTH_SECRET` | Obrigatório |
 | `RESEND_API_KEY` | Obrigatório para emails reais |
-| `EMAIL_FROM` | `AddYnow <no-reply@ninapp.pt>` |
+| `EMAIL_FROM` | `add&know <no-reply@ninapp.pt>` |
 | `DEMO_MODE` | `false` |
-| `NEXT_PUBLIC_APP_NAME` | `AddYnow` |
+| `NEXT_PUBLIC_APP_NAME` | `add&know` |
 
 ## Separação de marca
 
-- UI / PWA / emails visíveis → **AddYnow** + **MEL**
+- UI / PWA / emails visíveis → **add&know** + **MEL**
 - Schema Postgres, modelos Prisma `Nina*`, emails `@nina.app`, cookie `nina_space`, domínio `ninapp.pt` → legado técnico preservado de propósito
