@@ -11,7 +11,13 @@ import {
   NINA_CAPABILITIES,
   NINA_INPUT_CHANNELS,
 } from "@/lib/ai/mission";
-import { NATURAL_EXAMPLES } from "@/lib/ai/personality";
+
+const EXPENSE_EXAMPLES = [
+  "Gasóleo 20 €",
+  "Supermercado 17,80 €",
+  "Farmácia 12,50 €",
+  "Restaurante 25 €",
+] as const;
 
 export default function LandingPage() {
   return (
@@ -66,14 +72,15 @@ export default function LandingPage() {
             </article>
           ))}
         </div>
-        <div className="feature-grid nina-examples" style={{ marginTop: "1.5rem" }}>
-          {NATURAL_EXAMPLES.map((q) => (
-            <article key={q} className="feature nina-example">
-              <p>
-                “{/[.!?…]$/.test(q) ? q : `${q}.`}”
-              </p>
-            </article>
-          ))}
+        <div className="landing-examples">
+          <p className="landing-examples-label">Exemplos:</p>
+          <ul className="landing-examples-list" aria-label="Exemplos de despesas">
+            {EXPENSE_EXAMPLES.map((ex) => (
+              <li key={ex}>
+                <span className="landing-example-chip">“{ex}”</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
