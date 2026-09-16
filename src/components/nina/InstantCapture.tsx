@@ -164,11 +164,13 @@ export function InstantCapture({
     fd.set("file", file);
     start(async () => {
       const res = await instantCapturePhoto(fd);
-      if (res.ok) {
-        setResult({ reply: res.reply, detail: res.detail });
-        router.refresh();
-      } else {
-        setError(res.error);
+      if (res.ok === false) {
+        setError(
+          res.receiptUrl
+            ? `${res.error} Podes registar o valor em Despesas e anexar a fatura aí.`
+            : res.error,
+        );
+        return;
       }
     });
   }
