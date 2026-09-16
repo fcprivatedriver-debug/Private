@@ -83,16 +83,6 @@ export async function runMelConversation(opts: {
     };
   }
 
-  const limit = await checkMelRateLimit(opts.auth.userId);
-  if (!limit.ok) {
-    return {
-      text: RATE_LIMIT_MSG,
-      tone: "careful",
-      source: "rate_limit",
-      suggestions: ["Quanto gastei este mês?"],
-    };
-  }
-
   if (!isOpenAiConfigured()) {
     const fb = await opts.fallback();
     return {
@@ -100,6 +90,16 @@ export async function runMelConversation(opts: {
       tone: fb.tone,
       suggestions: fb.suggestions ?? DEFAULT_SUGGESTIONS,
       source: "fallback",
+    };
+  }
+
+  const limit = await checkMelRateLimit(opts.auth.userId);
+  if (!limit.ok) {
+    return {
+      text: RATE_LIMIT_MSG,
+      tone: "careful",
+      source: "rate_limit",
+      suggestions: ["Quanto gastei este mês?"],
     };
   }
 
