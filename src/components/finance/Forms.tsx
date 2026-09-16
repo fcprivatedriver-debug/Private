@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   createIncome,
@@ -16,6 +16,7 @@ import {
 } from "@/actions/finance";
 import { PAYMENT_METHOD_LABELS, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from "@/domain/categories";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { ReceiptAttachField } from "@/components/finance/ReceiptAttachField";
 
 type Cat = { id: string; name: string; kind: string; slug?: string };
 type Acc = { id: string; name: string };
@@ -209,13 +210,18 @@ export function ExpenseForm({
   const expenseCats = categories.filter((c) => c.kind === "EXPENSE");
   const options = expenseOptions(categories);
   const editing = Boolean(initial?.id);
+  const receiptFileRef = useRef<File | null>(null);
 
   return (
     <form
       className="form-grid"
       onSubmit={(e) => {
         e.preventDefault();
+        setError(null);
         const fd = new FormData(e.currentTarget);
+        if (receiptFileRef.current) {
+          fd.set("receiptFile", receiptFileRef.current);
+        }
         start(async () => {
           const res = editing ? await updateExpense(fd) : await createExpense(fd);
           if (!res.ok) setError(res.error);
@@ -327,16 +333,13 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
-      <Field label="URL fotografia fatura">
-        <input
-          name="receiptImageUrl"
-          placeholder="https://…"
-          defaultValue={initial?.receiptImageUrl ?? ""}
-        />
-      </Field>
-      <Field label="URL PDF fatura">
-        <input name="receiptPdfUrl" placeholder="https://…" defaultValue={initial?.receiptPdfUrl ?? ""} />
-      </Field>
+      <ReceiptAttachField
+        existingImageUrl={initial?.receiptImageUrl}
+        existingPdfUrl={initial?.receiptPdfUrl}
+        onFileChange={(f) => {
+          receiptFileRef.current = f;
+        }}
+      />
       <Field label="Observações">
         <textarea name="notes" rows={3} defaultValue={initial?.notes ?? ""} />
       </Field>
