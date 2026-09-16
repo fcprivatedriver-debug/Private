@@ -1,5 +1,4 @@
 import type {
-  CalendarEvent,
   CalendarEventDraft,
   CalendarProvider,
   CalendarSlot,
@@ -20,25 +19,10 @@ export const googleCalendarPrototype: CalendarProvider = {
   authUrl() {
     return "https://calendar.google.com/";
   },
-  async listEvents(from, to) {
-    const day = startOfDay(from);
-    const busy: CalendarEvent[] = [
-      {
-        id: "busy-am",
-        provider: "google",
-        title: "Foco / trabalho",
-        start: new Date(day.getTime() + 9 * 3600_000),
-        end: new Date(day.getTime() + 12 * 3600_000),
-      },
-      {
-        id: "busy-pm",
-        provider: "google",
-        title: "Reunião",
-        start: new Date(day.getTime() + 14 * 3600_000),
-        end: new Date(day.getTime() + 15 * 3600_000),
-      },
-    ];
-    return busy.filter((e) => e.start < to && e.end > from);
+  async listEvents() {
+    // Sem OAuth real: nunca inventar eventos para contas reais.
+    if (!(await this.isConnected())) return [];
+    return [];
   },
   async findFreeSlots(day, durationMinutes) {
     const base = startOfDay(day);
@@ -79,7 +63,7 @@ export const googleCalendarPrototype: CalendarProvider = {
       action: "TEMPLATE",
       text: draft.title,
       dates: `${fmt(draft.start)}/${fmt(draft.end)}`,
-      details: draft.notes || "Criado com a add&know",
+      details: draft.notes || "Criado com a addYknow",
       location: draft.location || "",
     });
     const deepLink = `https://calendar.google.com/calendar/render?${params.toString()}`;

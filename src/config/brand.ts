@@ -1,14 +1,14 @@
 /**
  * Identidade final de produção.
  *
- * add&know = aplicação / produto / marca (grafia exacta)
- * MEL      = assistente pessoal inteligente dentro da add&know
+ * addYknow = aplicação / produto / marca (grafia exacta)
+ * MEL      = assistente pessoal inteligente dentro da addYknow
  *
- * Nunca chamar add&know à assistente.
- * Nunca substituir MEL por add&know.
+ * Nunca chamar addYknow à assistente.
+ * Nunca substituir MEL por addYknow.
  */
 
-export const APP_NAME = "add&know";
+export const APP_NAME = "addYknow";
 export const ASSISTANT_NAME = "MEL";
 
 /** Assinatura principal */
@@ -30,7 +30,7 @@ export const ASSISTANT_SYSTEM_IDENTITY = `Tu és a ${ASSISTANT_NAME}, a assisten
 /** Conceito de marca (interno / docs de produto) */
 export const BRAND_CONCEPT = "SABER AGORA.";
 
-/** Domínio técnico actual — não inventar domínio novo */
-export const TECHNICAL_DOMAIN = "ninapp.pt";
+/** Domínio de produção */
+export const TECHNICAL_DOMAIN = "addandknow.pt";
 
 export const EMAIL_FROM_DEFAULT = `${APP_NAME} <no-reply@${TECHNICAL_DOMAIN}>`;

@@ -6,6 +6,7 @@ import { updateNinaPersonalization } from "@/actions/household";
 import { changePassword } from "@/actions/auth-account";
 import { PASSWORD_HINT } from "@/lib/auth/password-rules";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 const AVATARS = [
   { id: "classic", label: "Clássico", emoji: "✦" },
@@ -81,7 +82,7 @@ export function PersonalizeNinaForm({
   function previewVoice() {
     if (!voice || typeof window === "undefined") return;
     const u = new SpeechSynthesisUtterance(
-      "Olá. Sou a MEL — a assistente inteligente da add&know.",
+      "Olá. Sou a MEL — a assistente inteligente da addYknow.",
     );
     u.lang = "pt-PT";
     const match = voices.find((v) => v.voiceURI === voice);
@@ -192,15 +193,20 @@ export function PersonalizeNinaForm({
             });
           }}
         >
-          <label className="field">
-            <span>Actual</span>
-            <input name="currentPassword" type="password" required autoComplete="current-password" />
-          </label>
-          <label className="field">
-            <span>Nova</span>
-            <input name="newPassword" type="password" required minLength={8} autoComplete="new-password" />
-            <span className="muted small">{PASSWORD_HINT}</span>
-          </label>
+          <PasswordField
+            label="Actual"
+            name="currentPassword"
+            required
+            autoComplete="current-password"
+          />
+          <PasswordField
+            label="Nova"
+            name="newPassword"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            hint={PASSWORD_HINT}
+          />
           <button className="btn btn-ghost" type="submit" disabled={pending}>
             Actualizar palavra-passe
           </button>

@@ -131,7 +131,7 @@ export async function registerFamily(formData: FormData) {
     const mail = await sendAppEmail({
       to: email,
       subject: "Confirma o teu email na MEL",
-      text: `Olá ${parsed.data.name.split(" ")[0]},\n\nConfirma o teu email para activar a tua conta add&know:\n${verifyUrl}\n\nO link é válido por ${VERIFY_HOURS} horas.\n\n— add&know`,
+      text: `Olá ${parsed.data.name.split(" ")[0]},\n\nConfirma o teu email para activar a tua conta addYknow:\n${verifyUrl}\n\nO link é válido por ${VERIFY_HOURS} horas.\n\n— addYknow`,
     });
 
     return {
@@ -173,7 +173,7 @@ export async function resendVerificationEmail(emailRaw: string) {
   const mail = await sendAppEmail({
     to: email,
     subject: "Confirma o teu email na MEL",
-    text: `Confirma o teu email:\n${verifyUrl}\n\n— add&know`,
+    text: `Confirma o teu email:\n${verifyUrl}\n\n— addYknow`,
   });
   return {
     ok: true as const,
@@ -192,8 +192,8 @@ export async function requestPasswordReset(emailRaw: string) {
   const url = `${appBaseUrl()}/pt/recuperar/${raw}`;
   const mail = await sendAppEmail({
     to: email,
-    subject: "Recuperar palavra-passe — add&know",
-    text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— add&know`,
+    subject: "Recuperar palavra-passe — addYknow",
+    text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— addYknow`,
   });
   return {
     ok: true as const,

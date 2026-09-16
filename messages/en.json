@@ -1,17 +1,17 @@
 {
   "app": {
-    "name": "add&know",
+    "name": "addYknow",
     "tagline": "Know where your money goes. Now."
   },
   "auth": {
     "loginTitle": "Welcome back",
-    "loginHint": "Continue on add&know with MEL.",
+    "loginHint": "Continue on addYknow with MEL.",
     "email": "Email",
     "password": "Password",
     "submitLogin": "Sign in",
     "loggingIn": "One moment…",
     "invalidCredentials": "Incorrect email or password.",
-    "noAccount": "No add&know account yet?",
+    "noAccount": "No addYknow account yet?",
     "registerLink": "Create account"
   },
   "nav": {

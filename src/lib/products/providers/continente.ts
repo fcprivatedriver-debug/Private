@@ -12,7 +12,7 @@ async function tryFetchContinente(query: string): Promise<ProductMatch[]> {
     const res = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; NinaProductBot/1.0; +https://ninapp.pt)",
+          "Mozilla/5.0 (compatible; NinaProductBot/1.0; +https://addandknow.pt)",
         Accept: "text/html",
       },
       signal: AbortSignal.timeout(4000),

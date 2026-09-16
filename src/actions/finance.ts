@@ -910,7 +910,7 @@ export async function exportFamilyData(format: "csv" | "excel" | "pdf") {
     return { ok: true as const, filename: "addknow-export.xls", content: toExcelTSV(rows, columns), mime: "application/vnd.ms-excel" };
   }
   const pdf = toSimplePdfText(
-    "add&know Export",
+    "addYknow Export",
     rows.slice(0, 40).map((r) => `${r.data} ${r.tipo} ${r.descricao} ${r.valor}€`),
   );
   return { ok: true as const, filename: "addknow-export.pdf", content: pdf, mime: "application/pdf" };
@@ -933,7 +933,10 @@ export async function addFamilyMember(formData: FormData) {
   }
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim().toLowerCase();
-  const password = String(formData.get("password") || "nina123");
+  const password = String(formData.get("password") || "");
+  if (!password || password.length < 8) {
+    return { ok: false as const, error: "Indica uma palavra-passe com pelo menos 8 caracteres." };
+  }
   if (!name || !email) return { ok: false as const, error: "Nome e email obrigatórios" };
 
   let user = await prisma.user.findUnique({ where: { email } });

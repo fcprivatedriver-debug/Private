@@ -13,6 +13,7 @@ import {
 import {
   updateHouseholdSettings,
   updateMemberRole,
+  removeFamilyMember,
 } from "@/actions/household";
 import { InviteShare } from "@/components/nina/InviteShare";
 
@@ -24,6 +25,16 @@ type Member = {
   user: { email: string };
 };
 
+type PendingInvite = {
+  id: string;
+  channel: string;
+  email: string | null;
+  phone: string | null;
+  inviteeName: string | null;
+  expiresAt: string;
+  path: string;
+};
+
 export function HouseholdManager({
   familyName,
   kind,
@@ -31,6 +42,7 @@ export function HouseholdManager({
   members,
   latestInvitePath,
   allowMembersEditOthers = false,
+  pendingInvites = [],
 }: {
   familyName: string;
   kind: HouseholdKind;
@@ -38,6 +50,7 @@ export function HouseholdManager({
   members: Member[];
   latestInvitePath?: string | null;
   allowMembersEditOthers?: boolean;
+  pendingInvites?: PendingInvite[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -47,12 +60,16 @@ export function HouseholdManager({
 
   return (
     <div className="stack-lg">
-      <section className="panel">
+      <section className="panel" id="gerir-familia">
         <header className="panel-head">
-          <h2>{isIndividual ? "Criar Conta Familiar" : "Convidar em segundos"}</h2>
+          <h2>{isIndividual ? "Criar Família" : "Gerir Família — Convidar"}</h2>
         </header>
         <div className="panel-body">
-          <InviteShare isIndividual={isIndividual} initialInvitePath={latestInvitePath} />
+          <InviteShare
+            isIndividual={isIndividual}
+            initialInvitePath={latestInvitePath}
+            pendingInvites={admin ? pendingInvites : []}
+          />
         </div>
       </section>
 
@@ -138,22 +155,40 @@ export function HouseholdManager({
                 <strong>{m.displayName}</strong>
                 <p className="muted small">{m.user.email}</p>
                 {admin && m.role !== "OWNER" ? (
-                  <select
-                    className="role-select"
-                    defaultValue={m.role}
-                    disabled={pending}
-                    onChange={(e) => {
-                      const role = e.target.value as FamilyRole;
-                      start(async () => {
-                        await updateMemberRole(m.id, role);
-                        router.refresh();
-                      });
-                    }}
-                  >
-                    <option value="ADMIN">Administrador</option>
-                    <option value="MEMBER">Editor</option>
-                    <option value="VIEWER">Apenas consulta</option>
-                  </select>
+                  <>
+                    <select
+                      className="role-select"
+                      defaultValue={m.role}
+                      disabled={pending}
+                      aria-label={`Permissão de ${m.displayName}`}
+                      onChange={(e) => {
+                        const role = e.target.value as FamilyRole;
+                        start(async () => {
+                          await updateMemberRole(m.id, role);
+                          router.refresh();
+                        });
+                      }}
+                    >
+                      <option value="ADMIN">Administrador</option>
+                      <option value="MEMBER">Editor</option>
+                      <option value="VIEWER">Apenas consulta</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="btn btn-danger-outline btn-sm"
+                      disabled={pending}
+                      aria-label={`Remover ${m.displayName} da família`}
+                      onClick={() =>
+                        start(async () => {
+                          const res = await removeFamilyMember(m.id);
+                          setMessage(res.ok ? "Membro removido da família." : res.error);
+                          router.refresh();
+                        })
+                      }
+                    >
+                      Remover
+                    </button>
+                  </>
                 ) : (
                   <p className="small">{PERMISSION_LABELS[m.role]}</p>
                 )}

@@ -189,6 +189,9 @@ model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
+  /// Telemóvel E.164 (opcional) — preparado para OTP/SMS futuros
+  phone         String?   @unique
+  phoneVerified DateTime?
   emailVerified DateTime?
   image         String?
   passwordHash  String?
@@ -330,12 +333,17 @@ model FamilyInvite {
   token        String    @unique
   createdById  String
   label        String?
+  /// EMAIL | PHONE | LINK — canal de entrega (token é sempre o mecanismo central)
+  channel      String    @default("LINK")
   /// Convite por email (opcional — link/QR continua a funcionar)
   email        String?
+  /// Telemóvel E.164 do destinatário (SMS futuro)
+  phone        String?
   inviteeName  String?
   expiresAt    DateTime
   acceptedAt   DateTime?
   acceptedById String?
+  revokedAt    DateTime?
   createdAt    DateTime  @default(now())
 
   family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -344,6 +352,7 @@ model FamilyInvite {
   @@index([familyId])
   @@index([token])
   @@index([email])
+  @@index([phone])
 }
 
 model NinaMemoryRule {

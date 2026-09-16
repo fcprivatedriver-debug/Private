@@ -15,6 +15,7 @@ import {
   addFamilyMember,
 } from "@/actions/finance";
 import { PAYMENT_METHOD_LABELS, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from "@/domain/categories";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 type Cat = { id: string; name: string; kind: string; slug?: string };
 type Acc = { id: string; name: string };
@@ -578,7 +579,13 @@ export function MemberForm() {
         <input name="email" type="email" required />
       </Field>
       <Field label="Password inicial">
-        <input name="password" type="password" defaultValue="nina123" />
+        <PasswordField
+          name="password"
+          required
+          minLength={8}
+          autoComplete="new-password"
+          aria-label="Password inicial"
+        />
       </Field>
       <button className="btn btn-primary" disabled={pending} type="submit">
         Adicionar membro

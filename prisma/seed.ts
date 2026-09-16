@@ -69,7 +69,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("🌱 A preparar dados demo add&know…");
+  console.log("🌱 A preparar dados demo addYknow…");
 
   await prisma.expenseLineItem.deleteMany();
   await prisma.goalItem.deleteMany();
@@ -818,7 +818,7 @@ async function main() {
   // Atualizar saldo poupança account reference
   void poupanca;
 
-  console.log("✅ Demo add&know pronta (modo Demo separado)");
+  console.log("✅ Demo addYknow pronta (modo Demo separado)");
   console.log("   Demo:  demo@nina.app / " + DEMO_PASSWORD);
   console.log("   Ana:   nina@nina.app / " + DEMO_PASSWORD);
   console.log("   Conta de teste REAL (vazia): familia@nina.app — usar ensure-test-users");
