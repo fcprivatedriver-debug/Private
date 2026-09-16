@@ -618,7 +618,30 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
     userId: session.user.id,
     recentQuestion: question,
   });
-  const reply = answerNina(question, ctx);
+
+  // Perguntas livres: OpenAI + tools (dados reais) com fallback rule-based.
+  const { runMelConversation } = await import("@/lib/mel/orchestrator");
+  const mel = await runMelConversation({
+    auth: {
+      userId: session.user.id,
+      memberId: membership.id,
+      familyId: family.id,
+      role: membership.role,
+      space,
+      displayName,
+      familyName: family.name,
+    },
+    question,
+    fallback: () => answerNina(question, ctx),
+  });
+
+  const reply: NinaReply = {
+    text: mel.text,
+    tone: mel.tone,
+    suggestions: mel.suggestions,
+    didMutate: false,
+  };
+
   await prisma.aiInsight.create({
     data: {
       familyId: family.id,
@@ -629,7 +652,7 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
       severity: "info",
     },
   });
-  return { ok: true as const, reply, mutated: false };
+  return { ok: true as const, reply, mutated: false, melSource: mel.source };
 }
 
 export async function confirmPendingExpense(

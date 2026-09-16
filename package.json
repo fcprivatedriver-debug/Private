@@ -7,6 +7,8 @@
     "build": "node scripts/vercel-build.mjs",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:mel": "tsx --test src/lib/mel/mel.test.ts",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "node scripts/migrate-deploy.mjs",
     "db:seed": "DEMO_MODE=true tsx prisma/seed.ts && node scripts/ensure-test-users.mjs",
@@ -31,6 +33,7 @@
     "next": "15.5.21",
     "next-auth": "^5.0.0-beta.32",
     "next-intl": "^4.13.3",
+    "openai": "^4.104.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "zod": "^3.25.76"

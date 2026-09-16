@@ -224,6 +224,7 @@ model User {
   alerts        Alert[]
   aiInsights    AiInsight[]
   ninaImpacts   NinaImpact[]
+  melUsages     MelUsage[]
   memoryRules   NinaMemoryRule[]
   habitStats    NinaHabitStat[]
   invitesCreated FamilyInvite[] @relation("InviteCreator")
@@ -294,6 +295,7 @@ model Family {
   importJobs         ImportJob[]
   aiInsights         AiInsight[]
   ninaImpacts        NinaImpact[]
+  melUsages          MelUsage[]
   stores             Store[]
   invites            FamilyInvite[]
   memoryRules        NinaMemoryRule[]
@@ -865,6 +867,28 @@ model AiInsight {
   user   User?  @relation(fields: [userId], references: [id])
 
   @@index([familyId, createdAt])
+}
+
+/// Controlo de utilização da MEL (OpenAI) — sem conteúdo financeiro sensível.
+model MelUsage {
+  id               String   @id @default(cuid())
+  userId           String
+  familyId         String?
+  model            String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  /// Custo estimado em micros de USD (1 USD = 1_000_000) — opcional
+  estimatedCostMicros Int?
+  success          Boolean  @default(true)
+  errorCode        String?
+  createdAt        DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family? @relation(fields: [familyId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([familyId, createdAt])
+  @@index([createdAt])
 }
 
 /// Poupança / impacto gerado pelas recomendações da Nina (Saving Engine ledger).
