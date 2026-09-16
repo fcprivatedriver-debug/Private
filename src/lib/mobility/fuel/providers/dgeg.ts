@@ -1,16 +1,12 @@
 /**
- * Provider combustível — estado honesto.
+ * Provider combustível — lê cache addYknow (ExtFuel*).
  *
- * DGEG / Preços dos Combustíveis Online:
- * - Portal: https://precoscombustiveis.dgeg.gov.pt/
- * - Utilização comercial dos dados do portal: NÃO autorizada nos termos públicos.
- * - Acesso legítimo: pedido “Partilha de Informação” a precoscombustiveis@dgeg.gov.pt
- *
- * Até haver credencial/acordo: devolve lista vazia (Informação indisponível).
- * NÃO usa postos/preços hardcoded.
+ * Sync DGEG só com Partilha confirmada (ver sync/dgeg-fuel.ts).
+ * Zero postos inventados.
  */
 
-import type { FuelProvider, FuelQuoteContext, FuelStation } from "../types";
+import type { FuelProvider, FuelQuoteContext, FuelStation, FuelType } from "../types";
+import { searchCachedFuel } from "@/lib/external-data/query/fuel";
 
 export type FuelProviderStatus = {
   id: string;
@@ -21,26 +17,53 @@ export type FuelProviderStatus = {
 
 export const DGEG_PROVIDER_STATUS: FuelProviderStatus = {
   id: "dgeg",
-  available: false,
+  available: false, // actualizado dinamicamente via hasCachedFuelData
   reason:
-    "Preços de combustível indisponíveis. É necessário acordo de Partilha de Informação com a DGEG para utilização autorizada.",
+    "Preços de combustível indisponíveis. É necessário acordo de Partilha de Informação com a DGEG e sincronização activa.",
   licenseNote:
     "O portal DGEG proíbe utilização comercial sem parceria. Não fazer scraping nem apresentar dados fictícios.",
 };
 
-/**
- * Quando `DGEG_FUEL_ENABLED=true` e existir integração autorizada,
- * este provider será ligado. Por agora: sempre vazio.
- */
+function mapAppFuelType(t: FuelType): string {
+  if (t === "diesel") return "diesel";
+  if (t === "lpg") return "lpg";
+  return "petrol";
+}
+
 export const dgegFuelProvider: FuelProvider = {
   id: "dgeg",
-  label: "DGEG",
+  label: "DGEG (cache addYknow)",
   async search(ctx: FuelQuoteContext): Promise<FuelStation[]> {
-    void ctx;
-    if (process.env.DGEG_FUEL_ENABLED === "true" && process.env.DGEG_FUEL_API_URL) {
-      // Integração autorizada ainda não configurada — nunca inventar.
-      console.warn("[fuel] DGEG_FUEL_ENABLED sem implementação autorizada activa");
-    }
-    return [];
+    if (ctx.lat == null || ctx.lng == null) return [];
+
+    const { stations } = await searchCachedFuel({
+      lat: ctx.lat,
+      lng: ctx.lng,
+      fuelType: mapAppFuelType(ctx.fuelType),
+      radiusKm: 30,
+      limit: 20,
+    });
+
+    return stations.map((s) => ({
+      id: s.id,
+      name: s.name,
+      brand: s.brand,
+      fuelType: ctx.fuelType,
+      // Engine espera milésimos (documentado como pricePerLitreCents historicamente)
+      pricePerLitreCents: s.priceMilli,
+      lat: s.lat,
+      lng: s.lng,
+      distanceKm: s.distanceKm,
+      address: s.address,
+      cardsAccepted: [],
+      mapsUrl: s.mapsUrl,
+      // Extensões usadas pela MEL (cast-friendly)
+      ...( {
+        updatedLabel: s.freshness.label,
+        stale: s.freshness.stale,
+        source: s.freshness.source,
+        fuelLabel: s.fuelLabel,
+      } as object),
+    }));
   },
 };

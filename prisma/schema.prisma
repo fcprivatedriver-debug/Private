@@ -959,3 +959,165 @@ model NinaImpact {
   @@index([familyId, category, createdAt])
   @@index([familyId, sourceEngine])
 }
+
+
+// ——— Dados externos (cache / sincronização) ———
+// Regra: só dados reais com fonte + timestamp, ou ausência.
+
+enum ExternalDataSource {
+  DGEG_FUEL
+  DADOS_GOV_FUEL_LOCATIONS
+  MOBIE_LISBOA
+  MOBIE_DATEX
+  CONTINENTE
+  PINGO_DOCE
+  AUCHAN
+  MANUAL_IMPORT
+}
+
+enum ExternalSyncStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+model ExternalDataSync {
+  id              String             @id @default(cuid())
+  source          ExternalDataSource
+  status          ExternalSyncStatus @default(RUNNING)
+  startedAt       DateTime           @default(now())
+  finishedAt      DateTime?
+  recordsUpserted Int                @default(0)
+  recordsSeen     Int                @default(0)
+  errorSummary    String?
+  metaJson        String?            @db.Text
+  triggeredBy     String?            // cron | admin | import
+  createdAt       DateTime           @default(now())
+
+  @@index([source, startedAt])
+  @@index([status, startedAt])
+}
+
+model ExtFuelStation {
+  id            String   @id @default(cuid())
+  source        ExternalDataSource @default(DGEG_FUEL)
+  externalId    String
+  name          String
+  brand         String?
+  address       String?
+  locality      String?
+  municipality  String?
+  district      String?
+  postalCode    String?
+  lat           Float
+  lng           Float
+  stationKind   String?
+  fetchedAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  prices        ExtFuelPrice[]
+
+  @@unique([source, externalId])
+  @@index([lat, lng])
+  @@index([brand])
+  @@index([fetchedAt])
+}
+
+model ExtFuelPrice {
+  id              String   @id @default(cuid())
+  stationId       String
+  /// Código DGEG ou slug: gasoleo_simples, gasolina_95, ...
+  fuelType        String
+  fuelLabel       String
+  /// Preço em décimos de cêntimo por litro (1,899 € → 1899)
+  priceMilli      Int
+  /// Data/hora reportada pela fonte (DataAtualizacao)
+  sourceUpdatedAt DateTime?
+  fetchedAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  station         ExtFuelStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, fuelType])
+  @@index([fuelType, priceMilli])
+  @@index([fetchedAt])
+}
+
+model ExtChargingStation {
+  id              String   @id @default(cuid())
+  source          ExternalDataSource
+  externalId      String
+  name            String
+  address         String?
+  operator        String?
+  network         String?
+  lat             Float
+  lng             Float
+  /// Potência máxima conhecida (kW) — null se desconhecida
+  powerKw         Float?
+  connectorCount  Int?
+  connectorTypes  String?
+  /// available | occupied | unknown | null
+  availability    String?
+  /// JSON de componentes tarifários reais quando existirem
+  tariffJson      String?  @db.Text
+  /// static | dynamic snapshot
+  dataKind        String   @default("static")
+  sourceUpdatedAt DateTime?
+  fetchedAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([lat, lng])
+  @@index([fetchedAt])
+  @@index([availability])
+}
+
+model ExtProduct {
+  id              String   @id @default(cuid())
+  source          ExternalDataSource
+  /// Sempre preenchido (id da fonte ou hash estável nome+embalagem)
+  externalId      String
+  store           String
+  storeLocationId String?
+  name            String
+  brand           String?
+  packageLabel    String?
+  quantityValue   Float?
+  quantityUnit    String?
+  categoryKey     String?
+  productUrl      String?
+  imageUrl        String?
+  fetchedAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  prices          ExtProductPrice[]
+
+  @@index([source, store])
+  @@index([categoryKey])
+  @@index([name])
+  @@unique([source, store, externalId])
+}
+
+model ExtProductPrice {
+  id               String   @id @default(cuid())
+  productId        String
+  regularPriceCents Int?
+  promoPriceCents   Int?
+  /// Preço efectivo (promo se existir, senão regular)
+  priceCents        Int
+  unitPriceCents    Int?
+  unitLabel         String?
+  currency          String  @default("EUR")
+  available         Boolean?
+  sourceUpdatedAt   DateTime?
+  fetchedAt         DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  product           ExtProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, fetchedAt])
+  @@index([fetchedAt])
+}

@@ -1,32 +1,60 @@
 /**
- * Providers de supermercado — sem scraping frágil nem catálogo como “preço actual”.
- * Activar só com fonte autorizada via env (não contratar automaticamente).
+ * Providers de supermercado — leem cache ExtProduct (importação manual).
+ * Sem scraping; sem catálogo hardcoded como preço actual.
  */
 
-import type { ProductMatch, StoreProductProvider } from "../types";
+import type { ProductMatch, StoreProductProvider, StoreProviderId } from "../types";
+import { searchCachedProducts, quoteCachedProduct } from "@/lib/external-data/query/products";
 
-async function emptySearch(query: string): Promise<ProductMatch[]> {
-  void query;
-  return [];
+function storeIdToLabel(id: StoreProviderId): string {
+  switch (id) {
+    case "continente":
+      return "Continente";
+    case "pingo_doce":
+      return "Pingo Doce";
+    case "auchan":
+      return "Auchan";
+    default:
+      return id;
+  }
 }
 
-function makeStub(id: StoreProductProvider["id"], label: string, envFlag: string): StoreProductProvider {
+function toMatch(hit: Awaited<ReturnType<typeof searchCachedProducts>>[number]): ProductMatch {
+  return {
+    id: hit.id,
+    name: hit.name,
+    brand: hit.brand,
+    weight: hit.packageLabel,
+    categorySlug: null,
+    priceCents: hit.priceCents,
+    pricePerUnitCents: hit.unitPriceCents,
+    unitLabel: hit.unitLabel,
+    imageUrl: null,
+    storeName: storeIdToLabel(hit.store as StoreProviderId),
+    storeId: hit.store as StoreProviderId,
+    productUrl: hit.productUrl,
+    regularPriceCents: hit.regularPriceCents,
+    promoPriceCents: hit.promoPriceCents,
+    updatedAt: hit.freshness.fetchedAt,
+    source: hit.freshness.source,
+  };
+}
+
+function makeDbProvider(id: StoreProviderId): StoreProductProvider {
   return {
     id,
-    label,
+    label: storeIdToLabel(id),
     async search(query: string) {
-      if (process.env[envFlag] === "true") {
-        console.warn(`[products] ${label}: ${envFlag} sem implementação autorizada activa`);
-      }
-      return emptySearch(query);
+      const hits = await searchCachedProducts({ query, store: id, limit: 12 });
+      return hits.map(toMatch);
     },
     async quote(productName: string) {
-      const hits = await this.search(productName);
-      return hits.find((h) => h.priceCents != null) ?? null;
+      const hit = await quoteCachedProduct(id, productName);
+      return hit ? toMatch(hit) : null;
     },
   };
 }
 
-export const continenteProvider = makeStub("continente", "Continente", "CONTINENTE_PRICES_ENABLED");
-export const pingoDoceProvider = makeStub("pingo_doce", "Pingo Doce", "PINGO_DOCE_PRICES_ENABLED");
-export const auchanProvider = makeStub("auchan", "Auchan", "AUCHAN_PRICES_ENABLED");
+export const continenteProvider = makeDbProvider("continente");
+export const pingoDoceProvider = makeDbProvider("pingo_doce");
+export const auchanProvider = makeDbProvider("auchan");

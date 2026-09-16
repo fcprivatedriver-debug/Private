@@ -135,6 +135,73 @@ export const MEL_TOOL_DEFINITIONS: ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "find_nearby_fuel",
+      description:
+        "Procura postos de combustível na cache addYknow (dados reais DGEG sincronizados). Requer latitude/longitude do utilizador. Devolve preço, distância e frescura. Nunca inventa preços.",
+      parameters: {
+        type: "object",
+        properties: {
+          lat: { type: "number", description: "Latitude do utilizador" },
+          lng: { type: "number", description: "Longitude do utilizador" },
+          fuelType: {
+            type: "string",
+            enum: [
+              "gasoleo_simples",
+              "gasoleo_especial",
+              "gasolina_95",
+              "gasolina_98",
+              "gpl",
+              "diesel",
+              "petrol",
+            ],
+            description: "Tipo de combustível (default gasoleo_simples)",
+          },
+          radiusKm: { type: "number", description: "Raio em km (default 25)" },
+        },
+        required: ["lat", "lng"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_nearby_chargers",
+      description:
+        "Procura carregadores eléctricos na cache addYknow (ex.: MOBI.E Lisboa CC0). Requer lat/lng. Preço só se existir na cache — senão indica indisponível.",
+      parameters: {
+        type: "object",
+        properties: {
+          lat: { type: "number" },
+          lng: { type: "number" },
+          radiusKm: { type: "number" },
+          minPowerKw: { type: "number", description: "Potência mínima kW se conhecida" },
+        },
+        required: ["lat", "lng"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "compare_shopping_basket",
+      description:
+        "Compara uma lista de produtos na cache de supermercados (Continente, Pingo Doce, Auchan). Só usa preços reais importados/sincronizados.",
+      parameters: {
+        type: "object",
+        properties: {
+          items: {
+            type: "array",
+            items: { type: "string" },
+            description: "Nomes dos produtos a comparar",
+          },
+        },
+        required: ["items"],
+      },
+    },
+  },
 ];
 
 export async function executeMelTool(
@@ -176,9 +243,142 @@ export async function executeMelTool(
       return getSavingsAndGoals(auth, String(args.scope || "auto"));
     case "get_family_financial_summary":
       return getFinancialSummary(auth, offset, "family");
+    case "find_nearby_fuel":
+      return findNearbyFuel(args);
+    case "find_nearby_chargers":
+      return findNearbyChargers(args);
+    case "compare_shopping_basket":
+      return compareShoppingBasketTool(args);
     default:
       return { error: "Ferramenta desconhecida." };
   }
+}
+
+async function findNearbyFuel(args: Record<string, unknown>) {
+  const lat = Number(args.lat);
+  const lng = Number(args.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return {
+      unavailable: true,
+      note: "Precisamos da localização (lat/lng) para procurar postos próximos.",
+    };
+  }
+  const fuelType = typeof args.fuelType === "string" ? args.fuelType : "gasoleo_simples";
+  const radiusKm = Number(args.radiusKm);
+  const { searchCachedFuel } = await import("@/lib/external-data/query/fuel");
+  const { stations, unavailableReason } = await searchCachedFuel({
+    lat,
+    lng,
+    fuelType,
+    radiusKm: Number.isFinite(radiusKm) && radiusKm > 0 ? radiusKm : 25,
+    limit: 8,
+  });
+  if (stations.length === 0) {
+    return { unavailable: true, note: unavailableReason || "Sem postos na cache." };
+  }
+  return {
+    fuelType,
+    count: stations.length,
+    stations: stations.map((s) => ({
+      name: s.name,
+      brand: s.brand,
+      address: s.address,
+      distanceKm: s.distanceKm,
+      fuelLabel: s.fuelLabel,
+      priceEuroPerLitre: (s.priceMilli / 1000).toFixed(3).replace(".", ",") + " €/L",
+      priceMilli: s.priceMilli,
+      updated: s.freshness.label,
+      stale: s.freshness.stale,
+      source: s.freshness.source,
+      mapsUrl: s.mapsUrl,
+      note: s.freshness.stale
+        ? `Preço em cache (${s.freshness.label}) — pode estar desatualizado.`
+        : undefined,
+    })),
+  };
+}
+
+async function findNearbyChargers(args: Record<string, unknown>) {
+  const lat = Number(args.lat);
+  const lng = Number(args.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return {
+      unavailable: true,
+      note: "Precisamos da localização (lat/lng) para procurar carregadores.",
+    };
+  }
+  const radiusKm = Number(args.radiusKm);
+  const minPowerKw = Number(args.minPowerKw);
+  const { searchCachedChargers } = await import("@/lib/external-data/query/ev");
+  const { stations, unavailableReason } = await searchCachedChargers({
+    lat,
+    lng,
+    radiusKm: Number.isFinite(radiusKm) && radiusKm > 0 ? radiusKm : 15,
+    minPowerKw: Number.isFinite(minPowerKw) && minPowerKw > 0 ? minPowerKw : undefined,
+    limit: 8,
+  });
+  if (stations.length === 0) {
+    return { unavailable: true, note: unavailableReason || "Sem carregadores na cache." };
+  }
+  return {
+    count: stations.length,
+    stations: stations.map((s) => ({
+      name: s.name,
+      network: s.network,
+      operator: s.operator,
+      address: s.address,
+      distanceKm: s.distanceKm,
+      powerKw: s.powerKw,
+      connectors: s.connectorCount,
+      availability: s.availability ?? "desconhecida",
+      price: s.priceNote === "indisponivel" ? "Preço indisponível" : s.tariff,
+      updated: s.freshness.label,
+      stale: s.freshness.stale,
+      source: s.freshness.source,
+      mapsUrl: s.mapsUrl,
+      dataKind: s.dataKind,
+    })),
+  };
+}
+
+async function compareShoppingBasketTool(args: Record<string, unknown>) {
+  const items = Array.isArray(args.items)
+    ? args.items.filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+    : [];
+  if (items.length === 0) {
+    return { unavailable: true, note: "Indica pelo menos um produto para comparar." };
+  }
+  const { compareBasket } = await import("@/lib/products");
+  const result = await compareBasket(items);
+  if (!result.best) {
+    return {
+      unavailable: true,
+      note: result.unavailableReason || "Sem preços reais na cache para comparar.",
+      quotes: result.quotes.map((q) => ({
+        store: q.storeName,
+        missing: q.missing,
+        source: q.source,
+      })),
+    };
+  }
+  return {
+    bestStore: result.best.storeName,
+    bestTotal: formatEUR(result.best.totalCents),
+    savingsVsNext: result.savingsCents > 0 ? formatEUR(result.savingsCents) : null,
+    quotes: result.quotes.map((q) => ({
+      store: q.storeName,
+      total: q.complete ? formatEUR(q.totalCents) : null,
+      complete: q.complete,
+      missing: q.missing,
+      updatedAt: q.updatedAt,
+      source: q.source,
+      lines: q.lines.map((l) => ({
+        name: l.name,
+        price: l.found && l.priceCents != null ? formatEUR(l.priceCents) : "indisponível",
+        found: l.found,
+      })),
+    })),
+  };
 }
 
 async function getFinancialSummary(auth: MelAuthContext, monthOffset: number, scopeArg: string) {

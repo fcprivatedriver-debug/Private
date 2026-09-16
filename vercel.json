@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/external-data",
+      "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/cron/external-data",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}
