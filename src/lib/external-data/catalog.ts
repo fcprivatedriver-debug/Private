@@ -65,7 +65,7 @@ export const SOURCE_CATALOG: SourceDescriptor[] = [
     access: "sim",
     automation: "possivel",
     commercial: "requer_autorizacao",
-    frequency: "a cada 6h (quando DGEG_FUEL_ENABLED + DGEG_PARTILHA_ACK)",
+    frequency: "diária via cron (admin pode forçar; >1×/dia requer plano Vercel adequado)",
     restrictions:
       "Portal: «proibida a sua utilização para fins comerciais». Partilha de Informação: precoscombustiveis@dgeg.gov.pt",
     autoSyncEnabledEnv: "DGEG_FUEL_ENABLED",

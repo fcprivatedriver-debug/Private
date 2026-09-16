@@ -12,7 +12,7 @@ Aplicação: addYknow · Assistente: MEL · Domínio: addandknow.pt
 | Continente | Sem API pública; robots.txt bloqueia pesquisa (`*q=*`). | Não possível | Manual (CSV/JSON) | Nenhum via auto; import preparado | Requer autorização | Importação manual pronta |
 | Pingo Doce | Sem API pública; SFCC/Demandware bloqueado em robots | Não possível | Manual (CSV/JSON) | Nenhum via auto; import preparado | Requer autorização | Importação manual pronta |
 | Auchan | Sem API/dataset público de preços encontrado | Não possível | Manual (CSV/JSON) | Nenhum via auto; import preparado | Requer autorização | Importação manual pronta |
-| Combustíveis (DGEG) | API portal `/api/PrecoComb/PesquisarPostos` (live 200) | Possível (gated) | 6h quando autorizado | Syncer implementado; **0 postos em cache** até Partilha | **Proibida** sem Partilha | Código pronto; sync OFF |
+| Combustíveis (DGEG) | API portal `/api/PrecoComb/PesquisarPostos` (live 200) | Possível (gated) | diária via cron (+ admin) | Syncer implementado; **0 postos em cache** até Partilha | **Proibida** sem Partilha | Código pronto; sync OFF |
 | MOBI.E / MOBI.Data Lisboa | GeoJSON CC0 ArcGIS `POITransportes` layer 2 + dados.gov | Possível | Diária (+ cron 04:30 UTC) | **157 estações reais** sincronizadas nos testes | Permitida (CC0) | **Activo** |
 | miio | Sem via pública legítima encontrada | Não | — | — | — | Indisponível |
 | DATEX / NAP AFIR | Endpoint pesado (~192MB); timeout | Incerta | — | Não sincronizado | Incerta | Preparado como futuro |

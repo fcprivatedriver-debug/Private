@@ -23,9 +23,10 @@ export const TTL = {
 } as const;
 
 export const SYNC_SCHEDULE = {
-  DGEG_FUEL: "0 */6 * * *", // a cada 6h (quando habilitado)
-  MOBIE_LISBOA: "30 4 * * *", // diário 04:30 UTC
-  PRODUCTS: "manual", // só import / admin — sem auto scrape
+  /** Cron Vercel diário (Hobby). Admin pode forçar mais vezes. */
+  DGEG_FUEL: "30 4 * * *",
+  MOBIE_LISBOA: "30 4 * * *",
+  PRODUCTS: "manual",
 } as const;
 
 export function isStale(fetchedAt: Date | null | undefined, staleMs: number, now = new Date()): boolean {

@@ -83,7 +83,11 @@ export async function syncSource(
   }
 }
 
-/** Cron: só fontes com sync automático permitido. */
+/**
+ * Cron diário (Hobby-compatible: 1×/dia).
+ * DGEG, quando autorizado, corre no mesmo job; para frequência >1×/dia
+ * usar admin «Atualizar agora» ou plano Vercel com crons mais frequentes.
+ */
 export async function runScheduledSyncs(triggeredBy: SyncTrigger = "cron"): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
   // MOBI Lisboa — CC0, seguro por omissão
