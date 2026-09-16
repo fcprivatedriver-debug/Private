@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { AcceptInviteButton } from "@/components/nina/AcceptInviteButton";
+import { hashInviteToken } from "@/lib/invites/tokens";
+import { resolveInviteLifecycle } from "@/lib/invites/lifecycle";
 
 export default async function ConvitePage({
   params,
@@ -13,7 +15,7 @@ export default async function ConvitePage({
   const session = await auth();
 
   const invite = await prisma.familyInvite.findUnique({
-    where: { token },
+    where: { token: hashInviteToken(token) },
     include: { family: true, createdBy: { select: { name: true } } },
   });
 
@@ -32,46 +34,50 @@ export default async function ConvitePage({
     );
   }
 
-  const expired = invite.expiresAt < new Date();
-  const used = Boolean(invite.acceptedAt);
-  const revoked = Boolean(invite.revokedAt);
+  const sessionEmail = (session?.user?.email || "").toLowerCase() || null;
+  const life = resolveInviteLifecycle({
+    acceptedAt: invite.acceptedAt,
+    revokedAt: invite.revokedAt,
+    expiresAt: invite.expiresAt,
+    inviteEmail: invite.email,
+    sessionEmail,
+  });
+  const inviterFirst = invite.createdBy.name?.split(" ")[0] ?? "Alguém";
 
   return (
     <div className="auth-shell">
       <BrandLogo href="/pt" />
       <div className="auth-card">
-        <p className="nina-kicker">Convite seguro</p>
-        <h1>Junta-te a {invite.family.name}</h1>
+        <p className="nina-kicker">Convite seguro · addYknow</p>
+        <h1>
+          {inviterFirst} convidou-te para fazeres parte da Família {invite.family.name}.
+        </h1>
         <p className="muted">
-          {invite.createdBy.name?.split(" ")[0] ?? "Alguém"} convidou-te para a Família.
           Aceitas com a tua própria conta — nunca partilhas a palavra-passe de outra pessoa.
+          O teu espaço Pessoal continua só teu; o Familiar é partilhado.
         </p>
-        {expired || used || revoked ? (
-          <p className="text-expense">
-            {revoked
-              ? "Este convite foi cancelado."
-              : used
-                ? "Este convite já foi usado."
-                : "Este convite expirou. Pede um novo."}
-          </p>
-        ) : (
+        {life.status === "ok" ? (
           <AcceptInviteButton
             token={token}
             familyName={invite.family.name}
+            inviterName={inviterFirst}
             loggedIn={Boolean(session?.user)}
             inviteEmail={invite.email}
             invitePhone={invite.phone}
             inviteeName={invite.inviteeName}
           />
-        )}
-        {!session?.user && !invite.email ? (
-          <p className="muted small" style={{ marginTop: "1rem" }}>
-            Ainda não tens conta?{" "}
-            <Link href={`/pt/registo?callbackUrl=${encodeURIComponent(`/pt/convite/${token}`)}`}>
-              Regista-te em segundos
+        ) : life.status === "wrong_email" ? (
+          <div>
+            <p className="text-expense">{life.message}</p>
+            <Link className="btn btn-primary" href="/pt/definicoes">
+              Ir às definições / terminar sessão
             </Link>
-          </p>
-        ) : null}
+          </div>
+        ) : life.status === "invalid" ? (
+          <p className="text-expense">Este convite já não é válido.</p>
+        ) : (
+          <p className="text-expense">{life.message}</p>
+        )}
       </div>
     </div>
   );

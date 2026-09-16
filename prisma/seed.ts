@@ -632,13 +632,17 @@ async function main() {
   // Convite seguro demo + memória + hábitos
   const inviteExpires = new Date();
   inviteExpires.setDate(inviteExpires.getDate() + 30);
+  const { hashToken } = await import("@/lib/auth/security");
+  const demoInviteRaw = "nina-demo-invite-token-seguro";
   await prisma.familyInvite.create({
     data: {
       familyId: family.id,
-      token: "nina-demo-invite-token-seguro",
+      token: hashToken(demoInviteRaw),
       createdById: filipe.id,
       label: "Convite demo",
+      channel: "LINK",
       expiresAt: inviteExpires,
+      lastSentAt: new Date(),
     },
   });
 

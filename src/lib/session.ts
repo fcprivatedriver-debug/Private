@@ -10,7 +10,7 @@ export async function requireSession() {
 }
 
 export async function getActiveFamilyForUser(userId: string) {
-  const membership = await prisma.familyMember.findFirst({
+  const memberships = await prisma.familyMember.findMany({
     where: { userId },
     include: {
       family: true,
@@ -18,7 +18,10 @@ export async function getActiveFamilyForUser(userId: string) {
     },
     orderBy: { createdAt: "asc" },
   });
-  return membership;
+  if (!memberships.length) return null;
+  // Preferir Família partilhada (não a individual criada no registo) quando existir.
+  const shared = memberships.find((m) => m.family.kind !== "INDIVIDUAL");
+  return shared ?? memberships[0];
 }
 
 export async function requireFamilyContext() {

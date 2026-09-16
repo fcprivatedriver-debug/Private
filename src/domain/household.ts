@@ -16,17 +16,17 @@ export const HOUSEHOLD_KIND_HINTS: Record<HouseholdKind, string> = {
 
 /** Papéis amigáveis (UI) mapeados para FamilyRole */
 export const PERMISSION_LABELS: Record<FamilyRole, string> = {
-  OWNER: "Administrador",
+  OWNER: "Proprietário",
   ADMIN: "Administrador",
-  MEMBER: "Editor",
+  MEMBER: "Membro",
   VIEWER: "Apenas consulta",
 };
 
 export const PERMISSION_HINTS: Record<FamilyRole, string> = {
-  OWNER: "Gere membros, permissões e a conta.",
-  ADMIN: "Gere membros e permissões.",
-  MEMBER: "Pode registar gastos e entradas.",
-  VIEWER: "Vê tudo, mas não altera.",
+  OWNER: "Gere membros, convites, permissões e a Família.",
+  ADMIN: "Gere membros, convites e permissões.",
+  MEMBER: "Pode registar gastos e entradas familiares (não vê o Pessoal dos outros).",
+  VIEWER: "Vê dados familiares permitidos, mas não altera.",
 };
 
 export function canEditFinances(role: FamilyRole): boolean {

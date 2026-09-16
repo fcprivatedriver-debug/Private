@@ -26,7 +26,7 @@ const NAV = [
   { href: "/pt/personalizar", label: "Personalizar a MEL" },
   { href: "/pt/orcamentos", label: "Limites" },
   { href: "/pt/estatisticas", label: "Resumo" },
-  { href: "/pt/familia", label: "Conta" },
+  { href: "/pt/familia", label: "Família" },
   { href: "/pt/ligacoes", label: "Ligações" },
   { href: "/pt/memoria", label: "Memória" },
   { href: "/pt/perfil", label: "Perfil" },

@@ -3,8 +3,8 @@
  * Resend = email. SMS fica preparado sem fornecedor ativo.
  */
 
-import { sendAppEmail, appBaseUrl } from "@/lib/auth/security";
-import { APP_NAME } from "@/config/brand";
+import { appBaseUrl } from "@/lib/auth/security";
+import { sendFamilyInviteEmail } from "@/lib/invites/email";
 
 export type InviteDeliveryChannel = "EMAIL" | "PHONE" | "LINK";
 
@@ -17,6 +17,7 @@ export async function deliverFamilyInvite(opts: {
   toEmail?: string | null;
   toPhone?: string | null;
   inviteeName: string;
+  inviterName: string;
   familyName: string;
   invitePath: string;
 }): Promise<InviteDeliveryResult> {
@@ -26,10 +27,12 @@ export async function deliverFamilyInvite(opts: {
     if (!opts.toEmail) {
       return { ok: false, error: "Email do destinatário em falta.", channel: "EMAIL" };
     }
-    const mail = await sendAppEmail({
-      to: opts.toEmail,
-      subject: `Convite para ${opts.familyName} — ${APP_NAME}`,
-      text: `Olá ${opts.inviteeName},\n\nFoste convidado(a) para a família «${opts.familyName}» na ${APP_NAME}.\n\nAceita aqui (cria a tua própria conta se ainda não tiveres):\n${url}\n\n— ${APP_NAME}`,
+    const mail = await sendFamilyInviteEmail({
+      toEmail: opts.toEmail,
+      inviterName: opts.inviterName,
+      inviteeName: opts.inviteeName,
+      familyName: opts.familyName,
+      invitePath: opts.invitePath,
     });
     if (!mail.ok) {
       return { ok: false, error: mail.error, channel: "EMAIL" };

@@ -332,6 +332,7 @@ model FamilyMember {
 model FamilyInvite {
   id           String    @id @default(cuid())
   familyId     String
+  /// SHA-256 do token raw (o raw só viaja no link do email)
   token        String    @unique
   createdById  String
   label        String?
@@ -342,10 +343,14 @@ model FamilyInvite {
   /// Telemóvel E.164 do destinatário (SMS futuro)
   phone        String?
   inviteeName  String?
+  /// Role inicial ao aceitar (default MEMBER)
+  inviteRole   FamilyRole @default(MEMBER)
   expiresAt    DateTime
   acceptedAt   DateTime?
   acceptedById String?
   revokedAt    DateTime?
+  /// Último envio (email/SMS) — rate limit de reenvio
+  lastSentAt   DateTime?
   createdAt    DateTime  @default(now())
 
   family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)

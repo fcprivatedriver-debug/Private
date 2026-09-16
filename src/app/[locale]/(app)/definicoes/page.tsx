@@ -55,8 +55,8 @@ export default async function DefinicoesPage() {
               <span className="muted small">Automatização opcional — bancos, email, supermercados…</span>
             </Link>
             <Link href="/pt/familia">
-              <strong>Conta Familiar</strong>
-              <span className="muted small">Criar, convidar com link/QR, perfis</span>
+              <strong>Família</strong>
+              <span className="muted small">Membros, convidar por email, convites pendentes</span>
             </Link>
             <Link href="/pt/memoria">
               <strong>Memória da MEL</strong>
