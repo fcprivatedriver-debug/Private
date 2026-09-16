@@ -55,6 +55,9 @@ export function OcrClient({
                 const cat = categories.find((c) => c.slug === res.result.suggestedCategorySlug);
                 if (cat) setCategoryId(cat.id);
                 setMessage(`Confiança OCR: ${Math.round(res.result.confidence * 100)}% — confirme os dados.`);
+              } else {
+                setPreview(null);
+                setMessage(res.error || "A leitura automática de faturas ainda não está disponível.");
               }
             });
           }}
