@@ -84,8 +84,8 @@ export function PwaRegister() {
     }, 60_000);
 
     const onControllerChange = () => {
-      if (sessionStorage.getItem("nina-sw-reloading")) return;
-      sessionStorage.setItem("nina-sw-reloading", "1");
+      if (sessionStorage.getItem("addyknow-sw-reloading") || sessionStorage.getItem("nina-sw-reloading")) return;
+      sessionStorage.setItem("addyknow-sw-reloading", "1"); sessionStorage.setItem("nina-sw-reloading", "1");
       window.location.reload();
     };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
@@ -109,7 +109,7 @@ export function PwaRegister() {
     if (isIos()) {
       const path = window.location.pathname;
       const onAuth = /\/(login|registo)\/?$/.test(path);
-      const dismissed = localStorage.getItem("nina-ios-install-dismissed");
+      const dismissed = localStorage.getItem("addyknow-ios-install-dismissed") || localStorage.getItem("nina-ios-install-dismissed");
       // Never cover the login/register form on iPhone (toast intercepts taps).
       if (!dismissed && !onAuth) setShowIosTip(true);
     }
@@ -185,7 +185,7 @@ export function PwaRegister() {
             type="button"
             className="btn btn-sm btn-ghost"
             onClick={() => {
-              localStorage.setItem("nina-ios-install-dismissed", "1");
+              localStorage.setItem("addyknow-ios-install-dismissed", "1"); localStorage.setItem("nina-ios-install-dismissed", "1");
               setShowIosTip(false);
             }}
           >

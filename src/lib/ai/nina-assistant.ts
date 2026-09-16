@@ -464,3 +464,9 @@ export function buildNinaContextFromRaw(input: {
 }
 
 export { SUGGESTIONS as NINA_SUGGESTIONS, resolveVoicePrefs };
+
+
+/** Alias MEL — mesma função, nomenclatura de produto. */
+export const answerMel = answerNina;
+export type MelReply = NinaReply;
+export type MelContext = NinaContext;

@@ -455,7 +455,10 @@ export async function deleteExpense(id: string) {
 }
 
 export async function createBudget(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar orçamentos" };
+  }
   const parsed = budgetSchema.safeParse({
     categoryId: formData.get("categoryId"),
     limit: formData.get("limit"),
@@ -490,6 +493,9 @@ export async function createBudget(formData: FormData) {
 
 export async function createGoal(formData: FormData) {
   const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const parsed = goalSchema.safeParse({
     name: formData.get("name"),
     type: formData.get("type") || "CUSTOM",
@@ -529,7 +535,10 @@ export async function createGoal(formData: FormData) {
 }
 
 export async function contributeToGoal(goalId: string, amountRaw: string) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const cents = parseEURInput(amountRaw);
   if (cents == null || cents <= 0) return { ok: false as const, error: "Valor inválido" };
   const goal = await prisma.savingsGoal.findFirst({ where: { id: goalId, familyId: family.id } });
@@ -547,7 +556,10 @@ export async function contributeToGoal(goalId: string, amountRaw: string) {
 }
 
 export async function createRecurring(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar recorrentes" };
+  }
   const parsed = recurringSchema.safeParse({
     name: formData.get("name"),
     amount: formData.get("amount"),
@@ -582,7 +594,10 @@ export async function createRecurring(formData: FormData) {
 }
 
 export async function createCategory(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar categorias" };
+  }
   const parsed = categorySchema.safeParse({
     name: formData.get("name"),
     kind: formData.get("kind") || "EXPENSE",
@@ -625,6 +640,15 @@ export async function markAlertRead(alertId: string) {
 export async function runOcrPreview(fileName: string) {
   await requireFamilyContext();
   const result = await recognizeReceipt({ fileName });
+  if (!result.available) {
+    return {
+      ok: false as const,
+      error:
+        result.unavailableReason ||
+        "A leitura automática de faturas ainda não está disponível.",
+      result,
+    };
+  }
   return { ok: true as const, result };
 }
 
@@ -639,48 +663,25 @@ export async function confirmOcrExpense(input: {
   accountId?: string | null;
   items?: { name: string; quantity: number; unitCents: number; totalCents: number; vatRate?: number }[];
 }) {
-  const { session, family, membership } = await requireFamilyContext();
-  let storeId: string | undefined;
-  if (input.storeName) {
-    const normalized = input.storeName.trim().toLowerCase();
-    const store = await prisma.store.upsert({
-      where: { familyId_normalizedName: { familyId: family.id, normalizedName: normalized } },
-      create: { familyId: family.id, name: input.storeName.trim(), normalizedName: normalized },
-      update: {},
-    });
-    storeId = store.id;
+  const { membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para registar despesas" };
   }
-
-  const expense = await prisma.expense.create({
-    data: {
-      familyId: family.id,
-      memberId: membership.id,
-      createdById: session.user.id,
-      categoryId: input.categoryId,
-      accountId: input.accountId || null,
-      storeId,
-      amountCents: input.totalCents,
-      vatCents: input.vatCents,
-      date: new Date(input.date),
-      description: input.description,
-      storeName: input.storeName,
-      paymentMethod: input.paymentMethod,
-      ocrRawJson: JSON.stringify(input),
-      lineItems: input.items?.length
-        ? {
-            create: input.items.map((i) => ({
-              name: i.name,
-              quantity: i.quantity,
-              unitCents: i.unitCents,
-              totalCents: i.totalCents,
-              vatRate: i.vatRate,
-            })),
-          }
-        : undefined,
-    },
-  });
-  revalidateApp();
-  return { ok: true as const, id: expense.id };
+  // OCR real ainda não activo — nunca gravar a partir de preview fictício
+  const preview = await recognizeReceipt({});
+  if (!preview.available) {
+    return {
+      ok: false as const,
+      error:
+        preview.unavailableReason ||
+        "A leitura automática de faturas ainda não está disponível. Regista a despesa manualmente.",
+    };
+  }
+  void input;
+  return {
+    ok: false as const,
+    error: "A confirmação OCR ainda não está ligada a um motor real.",
+  };
 }
 
 export async function startImport(provider: ImportProvider) {

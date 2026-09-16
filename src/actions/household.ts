@@ -13,23 +13,41 @@ function revalidateAll() {
   revalidatePath("/", "layout");
 }
 
-export type NinaSpace = "personal" | "family";
+export type MelSpace = "personal" | "family";
+/** @deprecated Use MelSpace — alias de compatibilidade */
+export type NinaSpace = MelSpace;
 
-export async function setNinaSpace(space: NinaSpace) {
+const SPACE_COOKIE = "mel_space";
+const LEGACY_SPACE_COOKIE = "nina_space";
+
+export async function setMelSpace(space: MelSpace) {
   const jar = await cookies();
-  jar.set("nina_space", space, {
+  const opts = {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
+    sameSite: "lax" as const,
+  };
+  jar.set(SPACE_COOKIE, space, opts);
+  // Compatibilidade com sessões antigas
+  jar.set(LEGACY_SPACE_COOKIE, space, opts);
   revalidateAll();
   return { ok: true as const, space };
 }
 
-export async function getNinaSpace(): Promise<NinaSpace> {
+/** @deprecated Use setMelSpace */
+export async function setNinaSpace(space: MelSpace) {
+  return setMelSpace(space);
+}
+
+export async function getMelSpace(): Promise<MelSpace> {
   const jar = await cookies();
-  const v = jar.get("nina_space")?.value;
+  const v = jar.get(SPACE_COOKIE)?.value ?? jar.get(LEGACY_SPACE_COOKIE)?.value;
   return v === "family" ? "family" : "personal";
+}
+
+/** @deprecated Use getMelSpace */
+export async function getNinaSpace(): Promise<MelSpace> {
+  return getMelSpace();
 }
 
 /** Um único botão: transforma a conta em Familiar e gera convite seguro. */

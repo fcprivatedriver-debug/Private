@@ -164,12 +164,15 @@ export function InstantCapture({
     fd.set("file", file);
     start(async () => {
       const res = await instantCapturePhoto(fd);
-      if (res.ok) {
-        setResult({ reply: res.reply, detail: res.detail });
-        router.refresh();
-      } else {
+      if (!res.ok) {
         setError(res.error);
+        return;
       }
+      // OCR real ainda não activo — ramo reservado para motor futuro
+      setResult({
+        reply: "Fotografia recebida.",
+        detail: "A leitura automática ainda não está disponível.",
+      });
     });
   }
 

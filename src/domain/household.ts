@@ -52,7 +52,7 @@ export function canEditTransaction(opts: {
 
 export function makeInviteCode(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "NINA-";
+  let out = "ADDY-";
   for (let i = 0; i < 6; i++) {
     out += alphabet[Math.floor(Math.random() * alphabet.length)];
   }

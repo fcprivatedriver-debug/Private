@@ -393,7 +393,7 @@ export async function instantCaptureSpeak(utterance: string) {
  * Captura Instantânea por fotografia — OCR + arquivo associado ao movimento.
  */
 export async function instantCapturePhoto(formData: FormData) {
-  const { session, membership, family } = await requireFamilyContext();
+  const { membership, family } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
     return { ok: false as const, error: "Sem permissão para registar." };
   }
@@ -416,84 +416,21 @@ export async function instantCapturePhoto(formData: FormData) {
     hintText: String(formData.get("hint") || ""),
   });
 
-  const cat = await resolveCategoryId(family.id, ocr.suggestedCategorySlug, "EXPENSE");
-  const scope = await spaceFallbackScope();
-  const now = new Date();
-  const isPdf = (file.type || "").includes("pdf") || /\.pdf$/i.test(file.name);
-
-  let storeId: string | undefined;
-  if (ocr.storeName) {
-    const normalized = ocr.storeName.trim().toLowerCase();
-    const store = await prisma.store.upsert({
-      where: {
-        familyId_normalizedName: { familyId: family.id, normalizedName: normalized },
-      },
-      create: { familyId: family.id, name: ocr.storeName, normalizedName: normalized },
-      update: {},
-    });
-    storeId = store.id;
+  if (!ocr.available) {
+    return {
+      ok: false as const,
+      error:
+        ocr.unavailableReason ||
+        "A leitura automática de faturas ainda não está disponível. Diz-me o valor por voz ou regista manualmente.",
+      receiptUrl: stored.url,
+      kind: "ocr_unavailable" as const,
+    };
   }
 
-  const expense = await prisma.expense.create({
-    data: {
-      familyId: family.id,
-      memberId: membership.id,
-      createdById: session.user.id,
-      updatedById: session.user.id,
-      categoryId: cat.id,
-      storeId,
-      scope,
-      amountCents: ocr.totalCents,
-      vatCents: ocr.vatCents,
-      date: new Date(ocr.date),
-      time: now.toTimeString().slice(0, 5),
-      description: ocr.storeName,
-      storeName: ocr.storeName,
-      paymentMethod: "OTHER",
-      receiptImageUrl: isPdf ? null : stored.url,
-      receiptPdfUrl: isPdf ? stored.url : null,
-      ocrRawJson: JSON.stringify({ ...ocr, storageKey: stored.storageKey }),
-      notes: "Captura Instantânea · fotografia",
-      lineItems: ocr.items.length
-        ? {
-            create: ocr.items.map((i) => ({
-              name: i.name,
-              quantity: i.quantity,
-              unitCents: i.unitCents,
-              totalCents: i.totalCents,
-              vatRate: i.vatRate,
-            })),
-          }
-        : undefined,
-    },
-  });
-  await logTransactionAudit({
-    familyId: family.id,
-    kind: "EXPENSE",
-    recordId: expense.id,
-    action: "CREATE",
-    actorUserId: session.user.id,
-    actorDisplayName: membership.displayName,
-    summary: `Criou despesa «${expense.description}» (fotografia)`,
-  });
-
-  await learnScopeHabit({
-    userId: session.user.id,
-    familyId: family.id,
-    storeName: ocr.storeName,
-    categoryHint: ocr.suggestedCategorySlug,
-    scope,
-  });
-
-  revalidateAll();
   return {
-    ok: true as const,
-    reply: replyForScope(scope, ocr.storeName),
-    detail: `${formatEUR(ocr.totalCents)} · ${ocr.storeName} · ${cat.name} · foto arquivada`,
-    expenseId: expense.id,
+    ok: false as const,
+    error: "A leitura automática de faturas ainda não está ligada a um motor real.",
     receiptUrl: stored.url,
-    confidence: ocr.confidence,
-    kind: "expense" as const,
-    scope,
+    kind: "ocr_unavailable" as const,
   };
 }

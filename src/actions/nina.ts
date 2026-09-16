@@ -894,3 +894,9 @@ export async function getHouseholdSyncSnapshot() {
     },
   };
 }
+
+
+/** Alias MEL — preferir estes nomes em código novo. */
+export const askMel = askNina;
+export const getMelGreeting = getNinaGreeting;
+export type MelPendingScopeAction = PendingScopeAction;

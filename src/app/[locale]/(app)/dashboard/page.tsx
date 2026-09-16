@@ -13,7 +13,7 @@ import {
   CategoryBars,
   EmptyState,
 } from "@/components/ui/FinanceUI";
-import { NinaChat } from "@/components/nina/NinaChat";
+import { MelChat } from "@/components/nina/MelChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
 import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
 import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
 
       <div className="nina-home-grid">
         <Panel title="Fala comigo" className="nina-chat-panel">
-          <NinaChat />
+          <MelChat />
         </Panel>
 
         <div className="stack-lg">

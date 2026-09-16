@@ -76,6 +76,7 @@ export function IncomeForm({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const options = incomeOptions(categories);
   const editing = Boolean(initial?.id);
 
@@ -90,7 +91,8 @@ export function IncomeForm({
           if (!res.ok) setError(res.error);
           else {
             router.push(editing ? "/pt/transacoes" : "/pt/receitas");
-            router.refresh();
+            setSaved(true);
+        router.refresh();
           }
         });
       }}
@@ -161,8 +163,9 @@ export function IncomeForm({
         <textarea name="notes" rows={3} placeholder="Opcional" defaultValue={initial?.notes ?? ""} />
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
+      {saved && !error ? <p className="muted small" aria-live="polite">Guardado</p> : null}
       <button className="btn btn-success" disabled={pending} type="submit">
-        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar receita"}
+        {pending ? "A guardar…" : saved ? "Guardado" : editing ? "Guardar alterações" : "Guardar receita"}
       </button>
     </form>
   );
@@ -206,6 +209,7 @@ export function ExpenseForm({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const expenseCats = categories.filter((c) => c.kind === "EXPENSE");
   const options = expenseOptions(categories);
   const editing = Boolean(initial?.id);
@@ -221,7 +225,8 @@ export function ExpenseForm({
           if (!res.ok) setError(res.error);
           else {
             router.push(editing ? "/pt/transacoes" : "/pt/despesas");
-            router.refresh();
+            setSaved(true);
+        router.refresh();
           }
         });
       }}
@@ -341,8 +346,9 @@ export function ExpenseForm({
         <textarea name="notes" rows={3} defaultValue={initial?.notes ?? ""} />
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
+      {saved && !error ? <p className="muted small" aria-live="polite">Guardado</p> : null}
       <button className="btn btn-primary" disabled={pending} type="submit">
-        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar despesa"}
+        {pending ? "A guardar…" : saved ? "Guardado" : editing ? "Guardar alterações" : "Guardar despesa"}
       </button>
     </form>
   );

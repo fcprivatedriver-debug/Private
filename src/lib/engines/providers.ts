@@ -1,6 +1,5 @@
 /**
  * Provider registry — Engines comunicam só com Providers.
- * Trocar um fornecedor não altera a lógica dos engines.
  */
 
 export type ProviderKind =
@@ -20,18 +19,19 @@ export type ProviderDescriptor = {
   health: "ready" | "prototype" | "needs_auth" | "unavailable";
 };
 
-/** Catálogo estático dos providers activos (extensível). */
+/** Catálogo estático dos providers (estado honesto). */
 export function listProviders(): ProviderDescriptor[] {
   return [
-    { kind: "shopping", id: "continente", label: "Continente", health: "prototype" },
-    { kind: "shopping", id: "pingo_doce", label: "Pingo Doce", health: "prototype" },
-    { kind: "fuel", id: "fuel_prototype_pt", label: "Postos PT (protótipo)", health: "prototype" },
-    { kind: "ev", id: "ev_prototype_pt", label: "Carregadores PT (protótipo)", health: "prototype" },
+    { kind: "shopping", id: "continente", label: "Continente", health: "unavailable" },
+    { kind: "shopping", id: "pingo_doce", label: "Pingo Doce", health: "unavailable" },
+    { kind: "shopping", id: "auchan", label: "Auchan", health: "unavailable" },
+    { kind: "fuel", id: "dgeg", label: "DGEG combustíveis", health: "unavailable" },
+    { kind: "ev", id: "mobie", label: "MOBI.E", health: "unavailable" },
     { kind: "calendar", id: "google", label: "Google Calendar", health: "needs_auth" },
     { kind: "navigation", id: "google_maps", label: "Google Maps", health: "ready" },
     { kind: "navigation", id: "waze", label: "Waze", health: "ready" },
     { kind: "navigation", id: "apple_maps", label: "Apple Maps", health: "ready" },
-    { kind: "reminders", id: "system", label: "Lembretes do sistema", health: "prototype" },
+    { kind: "reminders", id: "system", label: "Lembretes (deep-link)", health: "needs_auth" },
     { kind: "weather", id: "weather_future", label: "Meteorologia", health: "unavailable" },
     { kind: "traffic", id: "traffic_future", label: "Trânsito", health: "unavailable" },
   ];

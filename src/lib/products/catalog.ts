@@ -1,3 +1,8 @@
+/**
+ * CATÁLOGO LEGADO — NÃO usar como preços actuais.
+ * Mantido só para referência de desenvolvimento.
+ * O Product Service activo NÃO importa este ficheiro.
+ */
 import type { ProductMatch, StoreProviderId } from "./types";
 
 /**
@@ -284,7 +289,8 @@ export function searchCatalog(
     if (hits === 0) continue;
     const score = hits / Math.max(tokens.length, 1);
     if (score < 0.35) continue;
-    const { keywords: _k, ...product } = entry;
+    const { keywords: _keywords, ...product } = entry;
+    void _keywords;
     results.push({ ...product, score });
   }
 

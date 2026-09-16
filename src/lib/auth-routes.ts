@@ -1,4 +1,4 @@
-/** Rotas protegidas da Nina */
+/** Rotas autenticadas da addYknow (middleware). */
 export const APP_PROTECTED_PREFIXES = [
   "/dashboard",
   "/captura",
@@ -20,6 +20,12 @@ export const APP_PROTECTED_PREFIXES = [
   "/definicoes",
   "/ocr",
   "/ia",
+  "/mobilidade",
+  "/calendario",
+  "/guia",
+  "/transacoes",
+  "/personalizar",
+  "/privacidade-dados",
 ] as const;
 
 export function dashboardPathForRole(role?: string): string {
