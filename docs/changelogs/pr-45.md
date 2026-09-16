@@ -1,0 +1,46 @@
+# PR #45 — Convites de membros por email
+
+## Changelog
+
+- Completou o fluxo **Mais → Família → Convidar membro** por email, reutilizando `FamilyInvite` (sem segundo sistema de Família).
+- Email via **Resend** com branding addYknow, assunto «Foste convidado…» e botão «Aceitar convite».
+- Tokens de convite passam a ser **hashed (SHA-256)** na BD; raw só no link.
+- Convites pendentes com **Reenviar** (rate limit 2 min) e **Cancelar**; validação de email, anti-duplicados e «já é membro».
+- Aceitar / Recusar no link `/pt/convite/[token]`; utilizador sem conta cria a própria; com conta faz login; email da sessão tem de corresponder.
+- Separação **Pessoal / Familiar** reforçada (filtros de scope + anexos PERSONAL só do próprio membro).
+- Roles: novo convidado entra como **MEMBER** (OWNER pode escolher VIEWER/ADMIN); labels Proprietário / Membro.
+- Migration `20260916210000_family_invite_hash_resend` (`inviteRole`, `lastSentAt`, hash de tokens legados).
+
+## New features
+
+- Botão **+ Convidar membro** na área Família
+- Formulário «Convidar para a Família» (email + papel inicial)
+- Feedback mascarado: «Convite enviado para jo***@…»
+- Lista de **Convites pendentes** com Reenviar / Cancelar
+- Página de convite com estados claros (expirado / utilizado / inválido / email errado)
+- Email de convite HTML com botão CTA
+
+## Visual proof
+
+Ver `docs/pr-proof/pr-45/` e `/opt/cursor/artifacts/screenshots/pr-45/`.
+
+## Env vars
+
+- `RESEND_API_KEY` (já existente)
+- `EMAIL_FROM` (já existente; default `addYknow <no-reply@addandknow.pt>`)
+- Opcional: `APP_CANONICAL_URL=https://addandknow.pt` (links em emails de produção)
+- `AUTH_URL` / `NEXT_PUBLIC_APP_URL` para ambientes não-prod
+
+## Testes
+
+- `npm run test:invites` — 18 testes OK (casos F–N, C/D/E, tokens, roles)
+- `npm run typecheck` — OK
+- `npm run lint` — 0 errors
+- `npm run build` — OK
+
+## Notas / acções manuais antes do próximo deploy
+
+1. Confirmar `RESEND_API_KEY` e `EMAIL_FROM` em produção.
+2. Definir `APP_CANONICAL_URL=https://addandknow.pt` (ou `AUTH_URL` canónico).
+3. Correr migrations (`prisma migrate deploy`) — inclui hash dos tokens de convite existentes (links antigos em plaintext deixam de funcionar após a migration; reenviar convites pendentes).
+4. **Não fazer deploy automático** neste PR (pedido explícito).

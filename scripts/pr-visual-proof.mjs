@@ -76,6 +76,11 @@ async function captureStills() {
   await page.getByRole("button", { name: /Café/i }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   await gotoShot(page, "/pt/familia", "10c-conta-familiar");
+  await page.getByRole("button", { name: /Criar Família/i }).first().click().catch(() => {});
+  await page.waitForTimeout(800);
+  await page.getByRole("button", { name: /Convidar membro/i }).first().click().catch(() => {});
+  await page.waitForTimeout(500);
+  await shot(page, "10c2-convidar-membro");
   await gotoShot(page, "/pt/ligacoes", "10g-ligacoes");
   await gotoShot(page, "/pt/memoria", "10d-memoria");
   await gotoShot(page, "/pt/perfil", "10e-perfil");
@@ -154,6 +159,12 @@ async function captureFlowVideo() {
   await page.waitForTimeout(600);
   await page.goto(`${BASE}/pt/familia`, { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
+  await page.getByRole("button", { name: /Criar Família/i }).first().click().catch(() => {});
+  await page.waitForTimeout(800);
+  await page.getByRole("button", { name: /Convidar membro/i }).first().click().catch(() => {});
+  await page.waitForTimeout(500);
+  await page.locator('input[name="email"]').fill("joao.convite@example.pt").catch(() => {});
+  await page.waitForTimeout(700);
   await page.goto(`${BASE}/pt/ligacoes`, { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
   await page.goto(`${BASE}/pt/memoria`, { waitUntil: "networkidle" });
