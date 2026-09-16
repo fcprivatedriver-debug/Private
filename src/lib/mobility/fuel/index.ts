@@ -1,5 +1,6 @@
 import type { FuelQuoteContext, FuelRecommendation, FuelService } from "./types";
 import { dgegFuelProvider, DGEG_PROVIDER_STATUS } from "./providers/dgeg";
+import { prisma } from "@/lib/db";
 
 export function createFuelService(): FuelService {
   const providers = [dgegFuelProvider];
@@ -8,8 +9,8 @@ export function createFuelService(): FuelService {
     meta: {
       id: "fuel",
       label: "Combustível",
-      health: DGEG_PROVIDER_STATUS.available ? "ready" : "unavailable",
-      external: "DGEG (requer Partilha de Informação)",
+      health: "needs_auth",
+      external: "DGEG via cache addYknow (requer Partilha para sync)",
     },
     async recommend(ctx: FuelQuoteContext): Promise<FuelRecommendation | null> {
       if (ctx.lat == null || ctx.lng == null) {
@@ -55,6 +56,11 @@ export function createFuelService(): FuelService {
 }
 
 export const fuelService = createFuelService();
+
+export async function hasFuelCacheData(): Promise<boolean> {
+  const n = await prisma.extFuelStation.count({ where: { source: "DGEG_FUEL" } });
+  return n > 0;
+}
 
 export function getFuelUnavailableMessage(hasLocation: boolean): string {
   if (!hasLocation) {

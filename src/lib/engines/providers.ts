@@ -22,11 +22,11 @@ export type ProviderDescriptor = {
 /** Catálogo estático dos providers (estado honesto). */
 export function listProviders(): ProviderDescriptor[] {
   return [
-    { kind: "shopping", id: "continente", label: "Continente", health: "unavailable" },
-    { kind: "shopping", id: "pingo_doce", label: "Pingo Doce", health: "unavailable" },
-    { kind: "shopping", id: "auchan", label: "Auchan", health: "unavailable" },
-    { kind: "fuel", id: "dgeg", label: "DGEG combustíveis", health: "unavailable" },
-    { kind: "ev", id: "mobie", label: "MOBI.E", health: "unavailable" },
+    { kind: "shopping", id: "continente", label: "Continente", health: "needs_auth" },
+    { kind: "shopping", id: "pingo_doce", label: "Pingo Doce", health: "needs_auth" },
+    { kind: "shopping", id: "auchan", label: "Auchan", health: "needs_auth" },
+    { kind: "fuel", id: "dgeg", label: "DGEG combustíveis", health: "needs_auth" },
+    { kind: "ev", id: "mobie", label: "MOBI.E Lisboa (CC0 cache)", health: "prototype" },
     { kind: "calendar", id: "google", label: "Google Calendar", health: "needs_auth" },
     { kind: "navigation", id: "google_maps", label: "Google Maps", health: "ready" },
     { kind: "navigation", id: "waze", label: "Waze", health: "ready" },

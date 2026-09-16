@@ -33,7 +33,7 @@ export function getProvider(id: StoreProviderId): StoreProductProvider | null {
 }
 
 export const PRODUCTS_UNAVAILABLE_REASON =
-  "Preços de supermercado indisponíveis. Ainda não há fonte autorizada configurada (Continente, Pingo Doce, Auchan).";
+  "Preços de supermercado indisponíveis. Sem dados importados na cache addYknow (Continente, Pingo Doce, Auchan).";
 
 function dedupe(products: ProductMatch[]): ProductMatch[] {
   const seen = new Set<string>();
@@ -75,12 +75,16 @@ export async function compareBasket(itemNames: string[]): Promise<BasketCompareR
     const lines: StorePriceQuote["lines"] = [];
     let totalCents = 0;
     const missing: string[] = [];
+    let latestUpdated: string | null = null;
 
     for (const name of names) {
       const hit = provider.quote ? await provider.quote(name) : (await provider.search(name))[0];
       if (hit?.priceCents != null && hit.priceCents > 0) {
         lines.push({ name, priceCents: hit.priceCents, found: true });
         totalCents += hit.priceCents;
+        if (hit.updatedAt && (!latestUpdated || hit.updatedAt > latestUpdated)) {
+          latestUpdated = hit.updatedAt;
+        }
       } else {
         lines.push({ name, priceCents: null, found: false });
         missing.push(name);
@@ -93,8 +97,8 @@ export async function compareBasket(itemNames: string[]): Promise<BasketCompareR
       totalCents,
       missing,
       lines,
-      updatedAt: null,
-      source: "unavailable",
+      updatedAt: latestUpdated,
+      source: missing.length === names.length ? "unavailable" : "addyknow-cache",
       complete: missing.length === 0 && names.length > 0,
     });
   }
@@ -106,7 +110,12 @@ export async function compareBasket(itemNames: string[]): Promise<BasketCompareR
   const savingsCents =
     best && second ? Math.max(0, second.totalCents - best.totalCents) : 0;
 
-  return { quotes, best, savingsCents, unavailableReason: complete.length === 0 ? PRODUCTS_UNAVAILABLE_REASON : undefined };
+  return {
+    quotes,
+    best,
+    savingsCents,
+    unavailableReason: complete.length === 0 ? PRODUCTS_UNAVAILABLE_REASON : undefined,
+  };
 }
 
 export function categoryKeyFromQuery(query: string): string {

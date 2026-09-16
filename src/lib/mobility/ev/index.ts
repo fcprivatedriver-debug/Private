@@ -1,5 +1,6 @@
 import type { EvContext, EvRecommendation, EvService } from "./types";
 import { mobieChargingProvider, MOBIE_PROVIDER_STATUS } from "./providers/mobie";
+import { prisma } from "@/lib/db";
 
 export function createEvService(): EvService {
   const providers = [mobieChargingProvider];
@@ -8,8 +9,8 @@ export function createEvService(): EvService {
     meta: {
       id: "ev",
       label: "Carregamento EV",
-      health: MOBIE_PROVIDER_STATUS.available ? "ready" : "unavailable",
-      external: "MOBI.E / NAP AFIR (requer acesso autorizado)",
+      health: "prototype",
+      external: "MOBI.E Lisboa CC0 via cache addYknow",
     },
     async recommend(ctx: EvContext): Promise<EvRecommendation | null> {
       if (ctx.lat == null || ctx.lng == null) return null;
@@ -24,7 +25,8 @@ export function createEvService(): EvService {
 
       const energyKwh = (needPct / 100) * batteryKwh;
       const scored = all.map((s) => {
-        const chargeMinutes = Math.max(5, Math.round((energyKwh / Math.max(s.powerKw, 1)) * 60));
+        const power = Math.max(s.powerKw || 22, 1); // se potência desconhecida, não fingir tarifa
+        const chargeMinutes = Math.max(5, Math.round((energyKwh / power) * 60));
         const etaMinutes = Math.round(s.distanceKm * 2.2);
         const cost =
           s.pricePerKwhCents != null ? Math.round(energyKwh * s.pricePerKwhCents) : null;
@@ -56,6 +58,11 @@ export function createEvService(): EvService {
 }
 
 export const evService = createEvService();
+
+export async function hasEvCacheData(): Promise<boolean> {
+  const n = await prisma.extChargingStation.count();
+  return n > 0;
+}
 
 export function getEvUnavailableMessage(hasLocation: boolean): string {
   if (!hasLocation) {
