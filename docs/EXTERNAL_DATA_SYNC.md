@@ -70,7 +70,7 @@ Aplicação: addYknow · Assistente: MEL · Domínio: addandknow.pt
 | Fonte | Frequência |
 |-------|------------|
 | MOBIE_LISBOA | Diária 04:30 UTC (+ botão admin) |
-| DGEG_FUEL | Cada 6h **se** env autorizado |
+| DGEG_FUEL | Diária 04:30 UTC **se** env autorizado (+ admin; >1×/dia precisa Pro) |
 | Supermercados | Manual only |
 
 ## 6. Cache / TTL
