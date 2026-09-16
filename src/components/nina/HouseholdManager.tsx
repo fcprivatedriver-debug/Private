@@ -32,7 +32,7 @@ type PendingInvite = {
   phone: string | null;
   inviteeName: string | null;
   expiresAt: string;
-  path: string;
+  status: "Pendente";
 };
 
 export function HouseholdManager({
@@ -62,9 +62,14 @@ export function HouseholdManager({
     <div className="stack-lg">
       <section className="panel" id="gerir-familia">
         <header className="panel-head">
-          <h2>{isIndividual ? "Criar Família" : "Gerir Família — Convidar"}</h2>
+          <h2>{isIndividual ? "Criar Família" : "Família"}</h2>
         </header>
         <div className="panel-body">
+          {!isIndividual ? (
+            <p style={{ marginTop: 0 }}>
+              <strong>{familyName}</strong>
+            </p>
+          ) : null}
           <InviteShare
             isIndividual={isIndividual}
             initialInvitePath={latestInvitePath}
@@ -80,7 +85,8 @@ export function HouseholdManager({
           </header>
           <div className="panel-body">
             <p className="muted small" style={{ marginTop: 0 }}>
-              Cada membro tem o seu perfil e autenticação — a Conta Familiar partilha o que é de casa.
+              Cada membro tem o seu perfil e autenticação — a Família partilha o que é de casa.
+              O espaço Pessoal de cada um nunca é misturado.
             </p>
             {admin ? (
               <form
@@ -96,7 +102,7 @@ export function HouseholdManager({
                 }}
               >
                 <label className="field">
-                  <span>Nome da conta</span>
+                  <span>Nome da Família</span>
                   <input name="name" defaultValue={familyName} required />
                 </label>
                 <label className="field">
@@ -121,7 +127,8 @@ export function HouseholdManager({
                 </label>
                 <p className="muted small">
                   Cada um pode sempre editar e eliminar os seus próprios movimentos. Com «Sim»,
-                  qualquer editor pode corrigir os movimentos dos outros.
+                  qualquer membro editor pode corrigir os movimentos familiares dos outros.
+                  Dados Pessoais continuam isolados.
                 </p>
                 <p className="muted small">{HOUSEHOLD_KIND_HINTS[kind]}</p>
                 <button className="btn btn-primary" type="submit" disabled={pending}>
@@ -141,9 +148,9 @@ export function HouseholdManager({
         </section>
       ) : null}
 
-      <section className="panel">
+      <section className="panel" id="membros">
         <header className="panel-head">
-          <h2>Perfis ({members.length})</h2>
+          <h2>Membros ({members.length})</h2>
         </header>
         <div className="panel-body">
           <div className="member-grid">
@@ -153,7 +160,7 @@ export function HouseholdManager({
                   {m.displayName.slice(0, 1).toUpperCase()}
                 </div>
                 <strong>{m.displayName}</strong>
-                <p className="muted small">{m.user.email}</p>
+                <p className="small">{PERMISSION_LABELS[m.role]}</p>
                 {admin && m.role !== "OWNER" ? (
                   <>
                     <select
@@ -170,7 +177,7 @@ export function HouseholdManager({
                       }}
                     >
                       <option value="ADMIN">Administrador</option>
-                      <option value="MEMBER">Editor</option>
+                      <option value="MEMBER">Membro</option>
                       <option value="VIEWER">Apenas consulta</option>
                     </select>
                     <button
@@ -189,9 +196,7 @@ export function HouseholdManager({
                       Remover
                     </button>
                   </>
-                ) : (
-                  <p className="small">{PERMISSION_LABELS[m.role]}</p>
-                )}
+                ) : null}
                 <p className="muted small">{PERMISSION_HINTS[m.role]}</p>
               </div>
             ))}

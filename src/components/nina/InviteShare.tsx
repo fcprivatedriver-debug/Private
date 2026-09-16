@@ -11,6 +11,7 @@ import {
   resendFamilyInvite,
 } from "@/actions/household";
 import { formatPhoneDisplay } from "@/lib/phone";
+import { maskEmail } from "@/lib/invites/mask";
 
 type PendingInvite = {
   id: string;
@@ -19,7 +20,7 @@ type PendingInvite = {
   phone: string | null;
   inviteeName: string | null;
   expiresAt: string;
-  path: string;
+  status: "Pendente";
 };
 
 export function InviteShare({
@@ -35,6 +36,7 @@ export function InviteShare({
   const [pending, start] = useTransition();
   const [invitePath, setInvitePath] = useState(initialInvitePath ?? "");
   const [channel, setChannel] = useState<"EMAIL" | "PHONE">("EMAIL");
+  const [showInviteForm, setShowInviteForm] = useState(!isIndividual);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export function InviteShare({
       const res = await createFamilyAccountSimple();
       if (res.ok) {
         setInvitePath(res.invitePath);
+        setShowInviteForm(true);
         router.refresh();
       }
     });
@@ -87,17 +90,20 @@ export function InviteShare({
         setError(res.error);
         return;
       }
-      setInvitePath(res.invitePath);
+      if (res.invitePath) setInvitePath(res.invitePath);
       if (channel === "PHONE") {
         setInfo(
           "Convite criado. O envio por SMS ainda não está activo — partilha o link abaixo com o familiar.",
         );
       } else if (res.previewUrl && !res.delivered) {
-        setInfo("Convite criado (sem entrega de email configurada — copia o link).");
+        setInfo(
+          `Convite criado para ${res.maskedEmail || "o email"} (sem entrega de email configurada — copia o link).`,
+        );
       } else {
-        setInfo("Convite enviado por email.");
+        setInfo(`Convite enviado para ${res.maskedEmail || "o email"}.`);
       }
       form.reset();
+      setShowInviteForm(false);
       router.refresh();
     });
   }
@@ -118,7 +124,7 @@ export function InviteShare({
       <div className="invite-share">
         <p className="muted" style={{ marginTop: 0 }}>
           Cada pessoa tem a sua própria conta. Ao criares a Família, convidas familiares
-          por email (ou preparas convite por telemóvel) — nunca partilham a tua palavra-passe.
+          por email — nunca partilham a tua palavra-passe.
         </p>
         <button className="btn btn-primary" type="button" disabled={pending} onClick={createFamily}>
           Criar Família
@@ -129,82 +135,123 @@ export function InviteShare({
 
   return (
     <div className="invite-share">
-      <form
-        className="form-grid"
-        onSubmit={(e) => {
-          e.preventDefault();
-          invite(e.currentTarget);
-        }}
-      >
-        <p className="muted" style={{ marginTop: 0 }}>
-          Convidar familiar — cada um cria/usa a sua própria conta addYknow.
-        </p>
-        <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend className="sr-only">Canal do convite</legend>
-          <div className="btn-row" role="group" aria-label="Canal do convite">
-            <button
-              type="button"
-              className={`btn btn-sm ${channel === "EMAIL" ? "btn-primary" : "btn-ghost"}`}
-              aria-pressed={channel === "EMAIL"}
-              onClick={() => setChannel("EMAIL")}
-            >
-              Email
+      {!showInviteForm ? (
+        <button
+          className="btn btn-primary"
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            setShowInviteForm(true);
+            setError(null);
+            setInfo(null);
+          }}
+        >
+          + Convidar membro
+        </button>
+      ) : (
+        <form
+          className="form-grid"
+          onSubmit={(e) => {
+            e.preventDefault();
+            invite(e.currentTarget);
+          }}
+        >
+          <h3 style={{ margin: 0 }}>Convidar para a Família</h3>
+          <p className="muted small" style={{ marginTop: 0 }}>
+            Cada um cria/usa a sua própria conta addYknow.
+          </p>
+          <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend className="sr-only">Canal do convite</legend>
+            <div className="btn-row" role="group" aria-label="Canal do convite">
+              <button
+                type="button"
+                className={`btn btn-sm ${channel === "EMAIL" ? "btn-primary" : "btn-ghost"}`}
+                aria-pressed={channel === "EMAIL"}
+                onClick={() => setChannel("EMAIL")}
+              >
+                Email
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${channel === "PHONE" ? "btn-primary" : "btn-ghost"}`}
+                aria-pressed={channel === "PHONE"}
+                onClick={() => setChannel("PHONE")}
+              >
+                Telemóvel
+              </button>
+            </div>
+          </fieldset>
+          <label className="field">
+            <span>Nome (opcional)</span>
+            <input name="name" placeholder="João" autoComplete="name" />
+          </label>
+          {channel === "EMAIL" ? (
+            <label className="field">
+              <span>Email</span>
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="joao@email.com"
+                autoComplete="email"
+              />
+            </label>
+          ) : (
+            <label className="field">
+              <span>Telemóvel</span>
+              <input
+                name="phone"
+                type="tel"
+                required
+                placeholder="+351 912 345 678"
+                autoComplete="tel"
+                inputMode="tel"
+              />
+              <span className="muted small">
+                SMS ainda não está activo — vais receber um link para partilhar.
+              </span>
+            </label>
+          )}
+          <label className="field">
+            <span>Papel inicial</span>
+            <select name="role" defaultValue="MEMBER">
+              <option value="MEMBER">Membro</option>
+              <option value="VIEWER">Apenas consulta</option>
+              <option value="ADMIN">Administrador</option>
+            </select>
+          </label>
+          <div className="btn-row">
+            <button className="btn btn-primary" type="submit" disabled={pending}>
+              {channel === "EMAIL" ? "Enviar convite" : "Criar convite (telemóvel)"}
             </button>
             <button
+              className="btn btn-ghost"
               type="button"
-              className={`btn btn-sm ${channel === "PHONE" ? "btn-primary" : "btn-ghost"}`}
-              aria-pressed={channel === "PHONE"}
-              onClick={() => setChannel("PHONE")}
+              disabled={pending}
+              onClick={() => setShowInviteForm(false)}
             >
-              Telemóvel
+              Fechar
             </button>
           </div>
-        </fieldset>
-        <label className="field">
-          <span>Nome</span>
-          <input name="name" required placeholder="João" autoComplete="name" />
-        </label>
-        {channel === "EMAIL" ? (
-          <label className="field">
-            <span>Email</span>
-            <input name="email" type="email" required placeholder="joao@email.com" autoComplete="email" />
-          </label>
-        ) : (
-          <label className="field">
-            <span>Telemóvel</span>
-            <input
-              name="phone"
-              type="tel"
-              required
-              placeholder="+351 912 345 678"
-              autoComplete="tel"
-              inputMode="tel"
-            />
-            <span className="muted small">
-              SMS ainda não está activo — vais receber um link para partilhar.
-            </span>
-          </label>
-        )}
-        <button className="btn btn-primary" type="submit" disabled={pending}>
-          {channel === "EMAIL" ? "Enviar convite" : "Criar convite (telemóvel)"}
-        </button>
-      </form>
+        </form>
+      )}
 
       {pendingInvites.length > 0 ? (
         <div style={{ marginTop: "1.25rem" }}>
-          <p className="muted small" style={{ marginTop: 0 }}>
-            Convites pendentes
-          </p>
+          <h3 style={{ margin: "0 0 0.5rem" }}>Convites pendentes</h3>
           <ul className="list-rows" style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {pendingInvites.map((inv) => (
               <li key={inv.id} className="list-row" style={{ alignItems: "flex-start" }}>
                 <div className="list-row-main">
-                  <strong>{inv.inviteeName || "Familiar"}</strong>
-                  <span>
+                  <strong>
                     {inv.channel === "PHONE"
                       ? formatPhoneDisplay(inv.phone)
-                      : inv.email || "Link"}{" "}
-                    · expira {new Date(inv.expiresAt).toLocaleDateString("pt-PT")}
+                      : inv.email
+                        ? maskEmail(inv.email)
+                        : inv.inviteeName || "Link"}
+                  </strong>
+                  <span>
+                    Pendente · expira {new Date(inv.expiresAt).toLocaleDateString("pt-PT")}
                   </span>
                 </div>
                 <div className="btn-row">
@@ -221,7 +268,7 @@ export function InviteShare({
                           setInfo(
                             res.channel === "PHONE" || !res.delivered
                               ? "Convite actualizado — partilha o link."
-                              : "Convite reenviado.",
+                              : `Convite reenviado${res.maskedEmail ? ` para ${res.maskedEmail}` : ""}.`,
                           );
                         }
                         router.refresh();

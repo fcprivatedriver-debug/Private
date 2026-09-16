@@ -2,15 +2,54 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
 import { requireFamilyContext, requireSession } from "@/lib/session";
 import { canManageMembers, makeInviteCode } from "@/domain/household";
-import type { FinanceScope, HouseholdKind } from "@prisma/client";
+import type { FamilyRole, FinanceScope, HouseholdKind } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import {
+  canResendInvite,
+  hashInviteToken,
+  inviteExpiryDate,
+  issueInviteToken,
+  maskEmail,
+  normalizeInviteEmail,
+  resendCooldownSeconds,
+} from "@/lib/invites/tokens";
 
 function revalidateAll() {
   revalidatePath("/", "layout");
+}
+
+async function findInviteByRawToken(raw: string) {
+  const token = hashInviteToken(raw);
+  return prisma.familyInvite.findUnique({
+    where: { token },
+    include: { family: true, createdBy: { select: { name: true, email: true } } },
+  });
+}
+
+/** Remove membership INDIVIDUAL órfã ao aderir a uma Família convidada. */
+async function detachIndividualMembership(userId: string, keepFamilyId: string) {
+  const olds = await prisma.familyMember.findMany({
+    where: { userId, familyId: { not: keepFamilyId } },
+    include: { family: true },
+  });
+  for (const old of olds) {
+    if (old.family.kind === "INDIVIDUAL") {
+      await prisma.familyMember.delete({ where: { id: old.id } }).catch(() => undefined);
+      const remaining = await prisma.familyMember.count({ where: { familyId: old.familyId } });
+      if (remaining === 0) {
+        await prisma.family.delete({ where: { id: old.familyId } }).catch(() => undefined);
+      }
+    }
+  }
+}
+
+function parseInviteRole(raw: FormDataEntryValue | null): FamilyRole {
+  const v = String(raw || "MEMBER").toUpperCase();
+  if (v === "ADMIN" || v === "MEMBER" || v === "VIEWER") return v;
+  return "MEMBER";
 }
 
 export type NinaSpace = "personal" | "family";
@@ -60,18 +99,19 @@ export async function createFamilyAccountSimple(formData?: FormData) {
     });
   }
 
-  const token = randomBytes(24).toString("hex");
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
+  const { raw, hash } = issueInviteToken();
+  const expiresAt = inviteExpiryDate(30);
+  const now = new Date();
 
-  const invite = await prisma.familyInvite.create({
+  await prisma.familyInvite.create({
     data: {
       familyId: family.id,
-      token,
+      token: hash,
       createdById: session.user.id,
       label: "Convite familiar",
       channel: "LINK",
       expiresAt,
+      lastSentAt: now,
     },
   });
 
@@ -80,8 +120,8 @@ export async function createFamilyAccountSimple(formData?: FormData) {
 
   return {
     ok: true as const,
-    inviteToken: invite.token,
-    invitePath: `/pt/convite/${invite.token}`,
+    inviteToken: raw,
+    invitePath: `/pt/convite/${raw}`,
     inviteCode,
   };
 }
@@ -101,47 +141,51 @@ export async function createSecureInvite() {
     });
   }
 
-  const token = randomBytes(24).toString("hex");
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
-  const invite = await prisma.familyInvite.create({
+  const { raw, hash } = issueInviteToken();
+  const expiresAt = inviteExpiryDate(30);
+  await prisma.familyInvite.create({
     data: {
       familyId: family.id,
-      token,
+      token: hash,
       createdById: session.user.id,
       channel: "LINK",
       expiresAt,
+      lastSentAt: new Date(),
     },
   });
 
   revalidateAll();
   return {
     ok: true as const,
-    inviteToken: invite.token,
-    invitePath: `/pt/convite/${invite.token}`,
+    inviteToken: raw,
+    invitePath: `/pt/convite/${raw}`,
   };
 }
 
-export async function acceptFamilyInvite(token: string) {
+export async function acceptFamilyInvite(rawToken: string) {
   const session = await requireSession();
-  const invite = await prisma.familyInvite.findUnique({
-    where: { token },
-    include: { family: true },
-  });
-  if (!invite || invite.acceptedAt || invite.revokedAt) {
+  const invite = await findInviteByRawToken(rawToken);
+  if (!invite) {
     return { ok: false as const, error: "Este convite já não é válido." };
   }
+  if (invite.revokedAt) {
+    return { ok: false as const, error: "Este convite já não é válido." };
+  }
+  if (invite.acceptedAt) {
+    return { ok: false as const, error: "Este convite já foi utilizado." };
+  }
   if (invite.expiresAt < new Date()) {
-    return { ok: false as const, error: "Este convite expirou. Pede um novo." };
+    return { ok: false as const, error: "Este convite expirou." };
   }
 
-  // Se o convite tem email/telefone, garantir que a sessão corresponde ao destinatário
+  // Se o convite tem email, a sessão tem de corresponder ao destinatário
   if (invite.email) {
     const sessionEmail = (session.user.email || "").toLowerCase();
-    if (sessionEmail && sessionEmail !== invite.email.toLowerCase()) {
+    if (!sessionEmail || sessionEmail !== invite.email.toLowerCase()) {
       return {
         ok: false as const,
-        error: "Este convite é para outro email. Entra com a conta correcta ou cria a tua própria conta.",
+        error:
+          "Este convite é para outro email. Entra com a conta correcta ou cria a tua própria conta.",
       };
     }
   }
@@ -152,26 +196,23 @@ export async function acceptFamilyInvite(token: string) {
     },
   });
 
-  if (!existing) {
-    const old = await prisma.familyMember.findFirst({
-      where: { userId: session.user.id },
-      include: { family: true },
-    });
-    if (old && old.familyId !== invite.familyId && old.family.kind === "INDIVIDUAL") {
-      await prisma.familyMember.delete({ where: { id: old.id } }).catch(() => undefined);
-    }
+  const role: FamilyRole =
+    invite.inviteRole === "ADMIN" || invite.inviteRole === "VIEWER" || invite.inviteRole === "MEMBER"
+      ? invite.inviteRole
+      : "MEMBER";
 
+  if (!existing) {
+    await detachIndividualMembership(session.user.id, invite.familyId);
     await prisma.familyMember.create({
       data: {
         familyId: invite.familyId,
         userId: session.user.id,
         displayName: invite.inviteeName || session.user.name || "Membro",
-        role: "MEMBER",
+        role,
       },
     });
   }
 
-  // Ligar telefone do convite ao user se ainda não tiver
   if (invite.phone) {
     const me = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (me && !me.phone) {
@@ -191,8 +232,8 @@ export async function acceptFamilyInvite(token: string) {
       familyId: invite.familyId,
       userId: session.user.id,
       type: "CUSTOM",
-      title: "Bem-vindo à Conta Familiar",
-      message: `Já estás ligado a “${invite.family.name}”. A MEL sincroniza tudo por vocês.`,
+      title: "Bem-vindo à Família",
+      message: `Já estás ligado a “${invite.family.name}”. O espaço Familiar está disponível — o teu Pessoal continua só teu.`,
       level: "success",
     },
   });
@@ -200,6 +241,22 @@ export async function acceptFamilyInvite(token: string) {
   await setNinaSpace("family");
   revalidateAll();
   return { ok: true as const, familyName: invite.family.name };
+}
+
+/** Recusar convite (pelo destinatário). */
+export async function declineFamilyInvite(rawToken: string) {
+  const invite = await findInviteByRawToken(rawToken);
+  if (!invite) return { ok: false as const, error: "Este convite já não é válido." };
+  if (invite.acceptedAt) return { ok: false as const, error: "Este convite já foi utilizado." };
+  if (invite.revokedAt) return { ok: false as const, error: "Este convite já não é válido." };
+  if (invite.expiresAt < new Date()) return { ok: false as const, error: "Este convite expirou." };
+
+  await prisma.familyInvite.update({
+    where: { id: invite.id },
+    data: { revokedAt: new Date() },
+  });
+  revalidateAll();
+  return { ok: true as const };
 }
 
 export async function updateHouseholdSettings(formData: FormData) {
@@ -238,24 +295,23 @@ export async function ensureInviteCode() {
 export async function joinHouseholdByCode(formData: FormData) {
   const code = String(formData.get("code") || "").trim().toUpperCase();
   if (!code) return { ok: false as const, error: "Indica o código." };
-  // Prefer token invites; keep code as fallback via inviteCode on family
   const family = await prisma.family.findUnique({ where: { inviteCode: code } });
   if (!family) return { ok: false as const, error: "Código inválido." };
 
-  // Create a fresh secure invite and accept it for current user
   const { session } = await requireFamilyContext();
-  const token = randomBytes(24).toString("hex");
+  const { raw, hash } = issueInviteToken();
   const expiresAt = new Date();
   expiresAt.setHours(expiresAt.getHours() + 1);
   await prisma.familyInvite.create({
     data: {
       familyId: family.id,
-      token,
+      token: hash,
       createdById: session.user.id,
       expiresAt,
+      lastSentAt: new Date(),
     },
   });
-  return acceptFamilyInvite(token);
+  return acceptFamilyInvite(raw);
 }
 
 export async function updateMemberRole(
@@ -292,15 +348,19 @@ async function inviteFamilyMember(
   if (!canManageMembers(membership.role)) {
     return { ok: false as const, error: "Sem permissão para convidar." };
   }
-  const name = String(formData.get("name") || "").trim();
-  if (!name) return { ok: false as const, error: "Indica o nome do familiar." };
+
+  const name =
+    String(formData.get("name") || "").trim() ||
+    (channel === "EMAIL"
+      ? String(formData.get("email") || "").trim().split("@")[0] || "Familiar"
+      : "Familiar");
 
   let email: string | null = null;
   let phone: string | null = null;
 
   if (channel === "EMAIL") {
-    email = String(formData.get("email") || "").trim().toLowerCase();
-    if (!email) return { ok: false as const, error: "Nome e email necessários." };
+    email = normalizeInviteEmail(String(formData.get("email") || ""));
+    if (!email) return { ok: false as const, error: "Indica um email válido." };
   } else {
     const { normalizePhoneE164 } = await import("@/lib/phone");
     phone = normalizePhoneE164(String(formData.get("phone") || ""));
@@ -312,6 +372,37 @@ async function inviteFamilyMember(
     }
   }
 
+  const inviteRole = parseInviteRole(formData.get("role"));
+  // Nunca convidar directamente como OWNER
+  const safeRole: FamilyRole = inviteRole === "ADMIN" || inviteRole === "VIEWER" ? inviteRole : "MEMBER";
+
+  if (email) {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      const already = await prisma.familyMember.findUnique({
+        where: { familyId_userId: { familyId: family.id, userId: existingUser.id } },
+      });
+      if (already) {
+        return { ok: false as const, error: "Este email já é membro desta Família." };
+      }
+    }
+    const pending = await prisma.familyInvite.findFirst({
+      where: {
+        familyId: family.id,
+        email,
+        acceptedAt: null,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (pending) {
+      return {
+        ok: false as const,
+        error: "Já existe um convite pendente para este email. Reenvia ou cancela o anterior.",
+      };
+    }
+  }
+
   if (family.kind === "INDIVIDUAL") {
     await prisma.family.update({
       where: { id: family.id },
@@ -319,36 +410,45 @@ async function inviteFamilyMember(
     });
   }
 
-  const token = randomBytes(24).toString("hex");
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 14);
-  const invite = await prisma.familyInvite.create({
+  const { raw, hash } = issueInviteToken();
+  const expiresAt = inviteExpiryDate(14);
+  const now = new Date();
+  await prisma.familyInvite.create({
     data: {
       familyId: family.id,
-      token,
+      token: hash,
       createdById: session.user.id,
       channel,
       email,
       phone,
       inviteeName: name,
       label: name,
+      inviteRole: safeRole,
       expiresAt,
+      lastSentAt: now,
     },
   });
 
-  const invitePath = `/pt/convite/${invite.token}`;
+  const invitePath = `/pt/convite/${raw}`;
   const { deliverFamilyInvite } = await import("@/lib/invites/delivery");
   const delivery = await deliverFamilyInvite({
     channel,
     toEmail: email,
     toPhone: phone,
     inviteeName: name,
+    inviterName: session.user.name || membership.displayName || "Alguém",
     familyName: family.name,
     invitePath,
   });
 
   if (!delivery.ok) {
-    return { ok: false as const, error: delivery.error };
+    // Convite ficou criado — OWNER pode reenviar. Não apagar.
+    return {
+      ok: false as const,
+      error: delivery.error,
+      invitePath,
+      maskedEmail: email ? maskEmail(email) : undefined,
+    };
   }
 
   revalidateAll();
@@ -359,6 +459,7 @@ async function inviteFamilyMember(
     delivered: delivery.delivered,
     previewUrl: delivery.previewUrl,
     smsReady: false as const,
+    maskedEmail: email ? maskEmail(email) : undefined,
   };
 }
 
@@ -380,7 +481,7 @@ export async function revokeFamilyInvite(inviteId: string) {
 }
 
 export async function resendFamilyInvite(inviteId: string) {
-  const { membership, family } = await requireFamilyContext();
+  const { session, membership, family } = await requireFamilyContext();
   if (!canManageMembers(membership.role)) {
     return { ok: false as const, error: "Sem permissão." };
   }
@@ -395,17 +496,35 @@ export async function resendFamilyInvite(inviteId: string) {
   });
   if (!invite) return { ok: false as const, error: "Convite não encontrado ou expirado." };
 
+  if (!canResendInvite(invite.lastSentAt)) {
+    const sec = resendCooldownSeconds(invite.lastSentAt || invite.createdAt);
+    return {
+      ok: false as const,
+      error: `Aguarda ${sec}s antes de reenviar para evitar spam.`,
+    };
+  }
+
+  // Rodar token em cada reenvio (one-time semantics + link fresco)
+  const { raw, hash } = issueInviteToken();
+  const expiresAt = inviteExpiryDate(14);
+  const now = new Date();
+  await prisma.familyInvite.update({
+    where: { id: invite.id },
+    data: { token: hash, expiresAt, lastSentAt: now },
+  });
+
   const channel = (invite.channel === "PHONE" ? "PHONE" : invite.email ? "EMAIL" : "LINK") as
     | "EMAIL"
     | "PHONE"
     | "LINK";
-  const invitePath = `/pt/convite/${invite.token}`;
+  const invitePath = `/pt/convite/${raw}`;
   const { deliverFamilyInvite } = await import("@/lib/invites/delivery");
   const delivery = await deliverFamilyInvite({
     channel: channel === "LINK" ? "EMAIL" : channel,
     toEmail: invite.email,
     toPhone: invite.phone,
     inviteeName: invite.inviteeName || "Familiar",
+    inviterName: session.user.name || membership.displayName || "Alguém",
     familyName: family.name,
     invitePath,
   });
@@ -417,6 +536,7 @@ export async function resendFamilyInvite(inviteId: string) {
     delivered: delivery.delivered,
     previewUrl: delivery.previewUrl,
     channel,
+    maskedEmail: invite.email ? maskEmail(invite.email) : undefined,
   };
 }
 
@@ -443,7 +563,7 @@ export async function removeFamilyMember(memberId: string) {
 
 /** Aceitar convite criando a própria conta (palavra-passe + email se necessário). */
 export async function acceptInviteSetPassword(formData: FormData) {
-  const token = String(formData.get("token") || "");
+  const rawToken = String(formData.get("token") || "");
   const password = String(formData.get("password") || "");
   const emailFromForm = String(formData.get("email") || "")
     .trim()
@@ -452,20 +572,21 @@ export async function acceptInviteSetPassword(formData: FormData) {
   const pwd = validatePassword(password);
   if (!pwd.ok) return { ok: false as const, error: pwd.error };
 
-  const invite = await prisma.familyInvite.findUnique({
-    where: { token },
-    include: { family: true },
-  });
-  if (
-    !invite ||
-    invite.acceptedAt ||
-    invite.revokedAt ||
-    invite.expiresAt < new Date()
-  ) {
-    return { ok: false as const, error: "Convite inválido ou expirado." };
+  const invite = await findInviteByRawToken(rawToken);
+  if (!invite) {
+    return { ok: false as const, error: "Este convite já não é válido." };
+  }
+  if (invite.revokedAt) {
+    return { ok: false as const, error: "Este convite já não é válido." };
+  }
+  if (invite.acceptedAt) {
+    return { ok: false as const, error: "Este convite já foi utilizado." };
+  }
+  if (invite.expiresAt < new Date()) {
+    return { ok: false as const, error: "Este convite expirou." };
   }
 
-  const email = (invite.email || emailFromForm || "").toLowerCase();
+  const email = normalizeInviteEmail(invite.email || emailFromForm || "");
   const displayName = invite.inviteeName || "Membro";
   if (!email) {
     return {
@@ -473,9 +594,30 @@ export async function acceptInviteSetPassword(formData: FormData) {
       error: "Indica o teu email para criares a tua própria conta.",
     };
   }
+  if (invite.email && email !== invite.email.toLowerCase()) {
+    return {
+      ok: false as const,
+      error: "Este convite é para outro email.",
+    };
+  }
 
-  let user = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing?.passwordHash) {
+    return {
+      ok: false as const,
+      error: "Já existe uma conta com este email. Entra com as tuas credenciais e aceita o convite.",
+      needsLogin: true as const,
+      email,
+    };
+  }
+
   const passwordHash = await bcrypt.hash(password, 10);
+  const skipVerify =
+    process.env.AUTH_SKIP_EMAIL_VERIFY === "true" &&
+    process.env.VERCEL_ENV !== "production" &&
+    process.env.NODE_ENV !== "production";
+
+  let user = existing;
   if (!user) {
     user = await prisma.user.create({
       data: {
@@ -483,7 +625,7 @@ export async function acceptInviteSetPassword(formData: FormData) {
         email,
         phone: invite.phone || undefined,
         passwordHash,
-        emailVerified: new Date(),
+        emailVerified: skipVerify ? new Date() : null,
       },
     });
   } else {
@@ -491,11 +633,45 @@ export async function acceptInviteSetPassword(formData: FormData) {
       where: { id: user.id },
       data: {
         passwordHash,
-        emailVerified: new Date(),
         ...(invite.phone && !user.phone ? { phone: invite.phone } : {}),
+        ...(skipVerify && !user.emailVerified ? { emailVerified: new Date() } : {}),
       },
     });
   }
+
+  if (!skipVerify && !user.emailVerified) {
+    const { createRawToken, hashToken, sendAppEmail, appBaseUrl } = await import(
+      "@/lib/auth/security"
+    );
+    const raw = createRawToken();
+    const token = hashToken(raw);
+    const expires = new Date(Date.now() + 48 * 3600_000);
+    await prisma.verificationToken.deleteMany({ where: { identifier: `verify:${email}` } });
+    await prisma.verificationToken.create({
+      data: { identifier: `verify:${email}`, token, expires },
+    });
+    const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}?callbackUrl=${encodeURIComponent(`/pt/convite/${rawToken}`)}`;
+    await sendAppEmail({
+      to: email,
+      subject: "Confirma o teu email na addYknow",
+      text: `Olá ${displayName},\n\nConfirma o teu email para aceitares o convite familiar:\n${verifyUrl}\n\n— addYknow`,
+    });
+    revalidateAll();
+    return {
+      ok: true as const,
+      needsVerification: true as const,
+      email,
+      familyName: invite.family.name,
+      invitePath: `/pt/convite/${rawToken}`,
+    };
+  }
+
+  const role: FamilyRole =
+    invite.inviteRole === "ADMIN" || invite.inviteRole === "VIEWER" || invite.inviteRole === "MEMBER"
+      ? invite.inviteRole
+      : "MEMBER";
+
+  await detachIndividualMembership(user.id, invite.familyId);
 
   await prisma.familyMember.upsert({
     where: { familyId_userId: { familyId: invite.familyId, userId: user.id } },
@@ -503,9 +679,9 @@ export async function acceptInviteSetPassword(formData: FormData) {
       familyId: invite.familyId,
       userId: user.id,
       displayName,
-      role: "MEMBER",
+      role,
     },
-    update: { displayName, role: "MEMBER" },
+    update: { displayName },
   });
 
   await prisma.familyInvite.update({
@@ -514,7 +690,12 @@ export async function acceptInviteSetPassword(formData: FormData) {
   });
 
   revalidateAll();
-  return { ok: true as const, email, familyName: invite.family.name };
+  return {
+    ok: true as const,
+    email,
+    familyName: invite.family.name,
+    needsVerification: false as const,
+  };
 }
 
 import { applySavingsTransfer } from "@/lib/savings-transfer";

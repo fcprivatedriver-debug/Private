@@ -14,7 +14,7 @@ export default async function FamiliaPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const [members, recentExpenses, recentIncomes, goals, latestInvite, pendingInvites] =
+  const [members, recentExpenses, recentIncomes, goals, pendingInvites] =
     await Promise.all([
     prisma.familyMember.findMany({
       where: { familyId: membership.familyId },
@@ -36,15 +36,6 @@ export default async function FamiliaPage() {
     prisma.savingsGoal.findMany({
       where: { familyId: membership.familyId, scope: "FAMILY" },
       orderBy: { createdAt: "asc" },
-    }),
-    prisma.familyInvite.findFirst({
-      where: {
-        familyId: membership.familyId,
-        acceptedAt: null,
-        revokedAt: null,
-        expiresAt: { gt: new Date() },
-      },
-      orderBy: { createdAt: "desc" },
     }),
     prisma.familyInvite.findMany({
       where: {
@@ -91,11 +82,11 @@ export default async function FamiliaPage() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
         <div>
-          <h1 className="page-title">Conta Familiar</h1>
+          <h1 className="page-title">Família</h1>
           <p className="page-sub">
             {isIndividual
-              ? "Cria a Conta Familiar com um toque e convida quem quiseres — link ou QR."
-              : `${HOUSEHOLD_KIND_LABELS[membership.family.kind]} · ${membership.family.name}. Cada um com o seu perfil; a casa partilhada.`}
+              ? "Cria a Família e convida membros por email — cada um com a sua própria conta."
+              : `${HOUSEHOLD_KIND_LABELS[membership.family.kind]} · ${membership.family.name}. Membros, convites e espaço Familiar partilhado.`}
           </p>
         </div>
         {!isIndividual ? <HouseholdLiveSync /> : null}
@@ -160,7 +151,7 @@ export default async function FamiliaPage() {
         kind={membership.family.kind}
         myRole={membership.role}
         members={members}
-        latestInvitePath={latestInvite ? `/pt/convite/${latestInvite.token}` : null}
+        latestInvitePath={null}
         allowMembersEditOthers={membership.family.allowMembersEditOthers}
         pendingInvites={pendingInvites.map((i) => ({
           id: i.id,
@@ -169,7 +160,7 @@ export default async function FamiliaPage() {
           phone: i.phone,
           inviteeName: i.inviteeName,
           expiresAt: i.expiresAt.toISOString(),
-          path: `/pt/convite/${i.token}`,
+          status: "Pendente" as const,
         }))}
       />
     </div>

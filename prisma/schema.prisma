@@ -305,6 +305,7 @@ model Family {
   shoppingItems      ShoppingListItem[]
   productPreferences ProductPreference[]
   transactionAudits  TransactionAuditLog[]
+  storedObjects      StoredObject[]
 }
 
 model FamilyMember {
@@ -332,6 +333,7 @@ model FamilyMember {
 model FamilyInvite {
   id           String    @id @default(cuid())
   familyId     String
+  /// SHA-256 do token raw (o raw só viaja no link do email)
   token        String    @unique
   createdById  String
   label        String?
@@ -342,10 +344,14 @@ model FamilyInvite {
   /// Telemóvel E.164 do destinatário (SMS futuro)
   phone        String?
   inviteeName  String?
+  /// Role inicial ao aceitar (default MEMBER)
+  inviteRole   FamilyRole @default(MEMBER)
   expiresAt    DateTime
   acceptedAt   DateTime?
   acceptedById String?
   revokedAt    DateTime?
+  /// Último envio (email/SMS) — rate limit de reenvio
+  lastSentAt   DateTime?
   createdAt    DateTime  @default(now())
 
   family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
@@ -915,4 +921,29 @@ model NinaImpact {
   @@index([familyId, createdAt])
   @@index([familyId, category, createdAt])
   @@index([familyId, sourceEngine])
+}
+
+/// Ficheiros de fatura / anexos — persistência em BD (Neon), não no filesystem Vercel.
+/// Alternativa futura: Vercel Blob quando BLOB_READ_WRITE_TOKEN estiver configurado.
+model StoredObject {
+  id          String   @id @default(cuid())
+  familyId    String
+  /// Chave estável usada em /api/uploads/...
+  storageKey  String   @unique
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  /// local | db | blob
+  backend     String   @default("db")
+  /// Conteúdo quando backend=db (Neon BYTEA)
+  data        Bytes?
+  /// URL externa quando backend=blob
+  externalUrl String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([createdAt])
 }

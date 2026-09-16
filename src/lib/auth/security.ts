@@ -61,10 +61,33 @@ export async function sendAppEmail(opts: {
   return { ok: true, delivered: false };
 }
 
+/**
+ * URL canónica para links em emails.
+ * Em produção usa sempre o domínio público (nunca localhost / preview Vercel).
+ */
 export function appBaseUrl(): string {
-  return (
+  const explicit =
     process.env.AUTH_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    "http://127.0.0.1:3000"
-  ).replace(/\/$/, "");
+    process.env.APP_URL ||
+    "";
+
+  const isProd =
+    process.env.VERCEL_ENV === "production" ||
+    (process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview");
+
+  if (isProd) {
+    const canonical =
+      process.env.APP_CANONICAL_URL ||
+      process.env.AUTH_URL ||
+      "https://addandknow.pt";
+    // Preferir domínio canónico se AUTH_URL apontar para preview/localhost
+    if (/localhost|127\.0\.0\.1|vercel\.app/i.test(canonical) === false) {
+      return canonical.replace(/\/$/, "");
+    }
+    return "https://addandknow.pt";
+  }
+
+  if (explicit) return explicit.replace(/\/$/, "");
+  return "http://127.0.0.1:3000";
 }
