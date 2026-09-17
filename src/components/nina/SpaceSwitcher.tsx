@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setNinaSpace, type NinaSpace } from "@/actions/household";
 import { cn } from "@/lib/utils";
@@ -8,37 +8,44 @@ import { cn } from "@/lib/utils";
 export function SpaceSwitcher({ space }: { space: NinaSpace }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [optimistic, setOptimistic] = useOptimistic(space);
 
   function switchTo(next: NinaSpace) {
-    if (next === space || pending) return;
+    if (next === optimistic || pending) return;
     start(async () => {
+      setOptimistic(next);
       await setNinaSpace(next);
       router.refresh();
     });
   }
 
   return (
-    <div className="space-switcher" role="tablist" aria-label="Espaço financeiro">
+    <div
+      className={cn("space-switcher", pending && "is-pending")}
+      role="tablist"
+      aria-label="Espaço financeiro"
+      aria-busy={pending}
+    >
       <button
         type="button"
         role="tab"
-        aria-selected={space === "personal"}
-        className={cn("space-switch-btn", space === "personal" && "active")}
+        aria-selected={optimistic === "personal"}
+        className={cn("space-switch-btn", optimistic === "personal" && "active")}
         disabled={pending}
         onClick={() => switchTo("personal")}
       >
-        <span className="space-switch-full">As Minhas Finanças</span>
+        <span className="space-switch-full">Pessoal</span>
         <span className="space-switch-short">Pessoal</span>
       </button>
       <button
         type="button"
         role="tab"
-        aria-selected={space === "family"}
-        className={cn("space-switch-btn", space === "family" && "active")}
+        aria-selected={optimistic === "family"}
+        className={cn("space-switch-btn", optimistic === "family" && "active")}
         disabled={pending}
         onClick={() => switchTo("family")}
       >
-        <span className="space-switch-full">Conta Familiar</span>
+        <span className="space-switch-full">Familiar</span>
         <span className="space-switch-short">Familiar</span>
       </button>
     </div>

@@ -6,6 +6,24 @@ import { SettingsClient } from "@/components/finance/SettingsClient";
 import { InstallGuide } from "@/components/pwa/InstallGuide";
 import Link from "next/link";
 
+const LINKS = [
+  { href: "/pt/familia", title: "Família", desc: "Membros, convites e conta familiar" },
+  { href: "/pt/orcamentos", title: "Orçamentos", desc: "Limites por categoria" },
+  { href: "/pt/objetivos", title: "Objetivos", desc: "Metas de poupança" },
+  { href: "/pt/poupancas", title: "Poupança", desc: "Potes e investimentos" },
+  { href: "/pt/transacoes", title: "Contas e movimentos", desc: "Receitas e despesas" },
+  { href: "/pt/estatisticas", title: "Resumo", desc: "Gráficos e evolução" },
+  { href: "/pt/recorrentes", title: "Pagamentos certos", desc: "Renda, luz, subscrições" },
+  { href: "/pt/mobilidade", title: "Mobilidade", desc: "Combustível e carregadores" },
+  { href: "/pt/calendario", title: "Calendário", desc: "Agenda e lembretes" },
+  { href: "/pt/ligacoes", title: "Dados externos", desc: "Bancos, email, supermercados" },
+  { href: "/pt/personalizar", title: "Preferências MEL", desc: "Tom de voz e personalidade" },
+  { href: "/pt/perfil", title: "Conta", desc: "Perfil, PIN e biometria" },
+  { href: "/pt/privacidade-dados", title: "Privacidade", desc: "Os teus dados" },
+  { href: "/pt/guia", title: "Guia", desc: "Como usar a addYknow" },
+  { href: "/pt/alertas", title: "Avisos", desc: "Alertas e notificações" },
+];
+
 export default async function DefinicoesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/pt/login");
@@ -13,91 +31,31 @@ export default async function DefinicoesPage() {
   if (!membership) redirect("/pt/registo");
 
   return (
-    <div>
-      <h1 className="page-title">Mais opções</h1>
-      <p className="page-sub">
-        Tudo o que precisas está aqui — sem complicar. A conversa com a MEL continua a ser o centro.
-      </p>
+    <div className="page-stack mais-page">
+      <h1 className="page-title">Mais</h1>
+      <p className="page-sub">Tudo o que não precisa de estar no ecrã principal.</p>
 
-      <div className="stack-lg">
-        <Panel title="Instalar a MEL (app)">
-          <InstallGuide />
-        </Panel>
+      <nav className="mais-list" aria-label="Mais opções">
+        {LINKS.map((l) => (
+          <Link key={l.href} href={l.href} className="mais-list-item" prefetch>
+            <strong>{l.title}</strong>
+            <span className="muted small">{l.desc}</span>
+          </Link>
+        ))}
+      </nav>
 
-        <Panel title="Atalhos">
-          <div className="mais-links">
-            <Link href="/pt/guia">
-              <strong>Guia da MEL</strong>
-              <span className="muted small">Aprende a usar a app — receita, despesa, voz, compras…</span>
-            </Link>
-            <Link href="/pt/captura?mode=voice&auto=1">
-              <strong>Falar com a MEL</strong>
-              <span className="muted small">Captura por voz imediata</span>
-            </Link>
-            <Link href="/pt/captura?mode=photo&auto=1">
-              <strong>Fotografar fatura</strong>
-              <span className="muted small">Câmara + OCR em segundos</span>
-            </Link>
-            <Link href="/pt/captura">
-              <strong>Captura Instantânea</strong>
-              <span className="muted small">Falar, escrever ou fotografar</span>
-            </Link>
-            <Link href="/pt/transacoes">
-              <strong>Transações</strong>
-              <span className="muted small">Todas as receitas e despesas — editar ou eliminar</span>
-            </Link>
-            <Link href="/pt/lista">
-              <strong>Lista de compras</strong>
-              <span className="muted small">Partilhada na Conta Familiar</span>
-            </Link>
-            <Link href="/pt/ligacoes">
-              <strong>Ligações da MEL</strong>
-              <span className="muted small">Automatização opcional — bancos, email, supermercados…</span>
-            </Link>
-            <Link href="/pt/familia">
-              <strong>Conta Familiar</strong>
-              <span className="muted small">Criar, convidar com link/QR, perfis</span>
-            </Link>
-            <Link href="/pt/memoria">
-              <strong>Memória da MEL</strong>
-              <span className="muted small">Regras que aprendeste — editáveis</span>
-            </Link>
-            <Link href="/pt/perfil">
-              <strong>O teu perfil</strong>
-              <span className="muted small">Nome, PIN, biometria, preferências</span>
-            </Link>
-            <Link href="/pt/pesquisa">
-              <strong>Procurar</strong>
-              <span className="muted small">Encontrar um gasto, loja ou categoria</span>
-            </Link>
-            <Link href="/pt/recorrentes">
-              <strong>Pagamentos certos</strong>
-              <span className="muted small">Renda, luz, Netflix… a MEL lembra-te</span>
-            </Link>
-            <Link href="/pt/importacoes">
-              <strong>Importar automaticamente</strong>
-              <span className="muted small">Continente, Galp, MB Way e mais</span>
-            </Link>
-            <Link href="/pt/ia">
-              <strong>Insights da MEL</strong>
-              <span className="muted small">Sugestões e relatório do mês</span>
-            </Link>
-          </div>
-        </Panel>
+      <Panel title="Instalar app">
+        <InstallGuide />
+      </Panel>
 
-        <Panel title="Preferências">
-          <SettingsClient />
-        </Panel>
+      <Panel title="Preferências">
+        <SettingsClient />
+      </Panel>
 
-        <Panel title="A tua conta">
-          <p className="small">
-            {session.user.email} · {membership.role}
-          </p>
-          <p className="muted small">
-            A MEL está do teu lado 24 horas por dia — com confiança, calma e sem julgamentos.
-          </p>
-        </Panel>
-
+      <section className="mais-account">
+        <p className="small">
+          {session.user.email} · {membership.role}
+        </p>
         <form
           action={async () => {
             "use server";
@@ -105,10 +63,10 @@ export default async function DefinicoesPage() {
           }}
         >
           <button className="btn btn-danger-outline" type="submit">
-            Terminar sessão
+            Sair
           </button>
         </form>
-      </div>
+      </section>
     </div>
   );
 }
