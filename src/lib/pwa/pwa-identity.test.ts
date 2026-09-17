@@ -12,15 +12,17 @@ describe("PWA identity (addYknow)", () => {
 
   it("manifest mantém id/start_url/scope estáveis e nome addYknow", () => {
     const src = readFileSync(path.join(root, "src/app/manifest.ts"), "utf8");
-    assert.match(src, /id:\s*"\/pt\/dashboard"/);
-    assert.match(src, /start_url:\s*"\/pt\/dashboard"/);
-    assert.match(src, /scope:\s*"\/"/);
-    assert.match(src, /name:\s*"addYknow"/);
-    assert.match(src, /short_name:\s*"addYknow"/);
-    assert.match(src, /theme_color:\s*"#39B8B2"/);
-    assert.match(src, /background_color:\s*"#F7FAFA"/);
-    assert.doesNotMatch(src, /id:\s*"\/pt\/hoje"/);
-    assert.doesNotMatch(src, /Nina|ADDYNOW|AddYnow|add&know/i);
+    // Só o objecto de retorno conta (comentários podem mencionar o legado Mel).
+    const body = src.slice(src.indexOf("return {"));
+    assert.match(body, /id:\s*"\/pt\/dashboard"/);
+    assert.match(body, /start_url:\s*"\/pt\/dashboard"/);
+    assert.match(body, /scope:\s*"\/"/);
+    assert.match(body, /name:\s*"addYknow"/);
+    assert.match(body, /short_name:\s*"addYknow"/);
+    assert.match(body, /theme_color:\s*"#39B8B2"/);
+    assert.match(body, /background_color:\s*"#F7FAFA"/);
+    assert.doesNotMatch(body, /id:\s*"\/pt\/hoje"/);
+    assert.doesNotMatch(body, /\bNina\b|ADDYNOW|AddYnow|add&know/);
   });
 
   it("service worker usa cache addyknow e limpa eras legadas", () => {
