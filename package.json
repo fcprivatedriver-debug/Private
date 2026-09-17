@@ -9,6 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:mel": "tsx --test src/lib/mel/mel.test.ts",
+    "test:pwa": "tsx --test src/lib/pwa/pwa-identity.test.ts",
+    "test": "tsx --test src/lib/mel/mel.test.ts src/lib/pwa/pwa-identity.test.ts",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "node scripts/migrate-deploy.mjs",
     "db:seed": "DEMO_MODE=true tsx prisma/seed.ts && node scripts/ensure-test-users.mjs",
