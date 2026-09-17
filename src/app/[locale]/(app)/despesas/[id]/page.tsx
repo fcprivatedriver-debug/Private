@@ -99,6 +99,7 @@ export default async function FichaDespesaPage({
           categories={categories}
           accounts={accounts}
           members={members}
+          space={expense.scope === "FAMILY" ? "family" : "personal"}
           initial={{
             id: expense.id,
             amountCents: expense.amountCents,

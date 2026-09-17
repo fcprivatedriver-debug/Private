@@ -175,6 +175,7 @@ export function ExpenseForm({
   members,
   defaults,
   initial,
+  space = "personal",
 }: {
   categories: Cat[];
   accounts: Acc[];
@@ -203,18 +204,22 @@ export function ExpenseForm({
     receiptPdfUrl: string | null;
     scope?: "PERSONAL" | "FAMILY";
   };
+  /** Espaço activo — esconde campos familiares em Pessoal */
+  space?: "personal" | "family";
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showMore, setShowMore] = useState(Boolean(initial?.id));
   const expenseCats = categories.filter((c) => c.kind === "EXPENSE");
   const options = expenseOptions(categories);
   const editing = Boolean(initial?.id);
   const receiptFileRef = useRef<File | null>(null);
+  const defaultScope = initial?.scope ?? (space === "family" ? "FAMILY" : "PERSONAL");
 
   return (
     <form
-      className="form-grid"
+      className="form-grid expense-form-simple"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
@@ -233,34 +238,22 @@ export function ExpenseForm({
       }}
     >
       {editing ? <input type="hidden" name="id" value={initial!.id} /> : null}
-      <Field label="Valor (€)">
+      <div className="expense-amount-hero">
+        <span className="expense-amount-currency">€</span>
         <input
           name="amount"
           required
+          className="expense-amount-input"
           placeholder="0,00"
           inputMode="decimal"
+          aria-label="Valor em euros"
           defaultValue={
             initial
               ? (initial.amountCents / 100).toFixed(2).replace(".", ",")
               : defaults?.amount
           }
         />
-      </Field>
-      <Field label="Data">
-        <input
-          name="date"
-          type="date"
-          required
-          defaultValue={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
-        />
-      </Field>
-      <Field label="Hora">
-        <input
-          name="time"
-          type="time"
-          defaultValue={initial?.time ?? new Date().toTimeString().slice(0, 5)}
-        />
-      </Field>
+      </div>
       <Field label="Descrição">
         <input
           name="description"
@@ -282,40 +275,8 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
-      <Field label="Subcategoria">
-        <select name="subcategoryId" defaultValue={initial?.subcategoryId ?? ""}>
-          <option value="">—</option>
-          {expenseCats.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Conta (Pessoal / Familiar)">
-        <select name="scope" defaultValue={initial?.scope ?? "PERSONAL"}>
-          <option value="PERSONAL">Pessoal</option>
-          <option value="FAMILY">Familiar</option>
-        </select>
-      </Field>
-      <Field label="Loja">
-        <input
-          name="storeName"
-          placeholder="Ex: Continente"
-          defaultValue={initial?.storeName ?? defaults?.storeName ?? ""}
-        />
-      </Field>
-      <Field label="Método de pagamento">
-        <select name="paymentMethod" defaultValue={initial?.paymentMethod ?? "DEBIT_CARD"}>
-          {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Conta bancária">
-        <select name="accountId" defaultValue={initial?.accountId ?? ""}>
+      <Field label="Conta">
+        <select name="accountId" defaultValue={initial?.accountId ?? accounts[0]?.id ?? ""}>
           <option value="">—</option>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
@@ -324,15 +285,24 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
-      <Field label="Membro">
-        <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.displayName}
-            </option>
-          ))}
-        </select>
-      </Field>
+      {!showMore ? (
+        <>
+          <input type="hidden" name="scope" value={defaultScope} />
+          <input
+            type="hidden"
+            name="date"
+            value={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
+          />
+          <input
+            type="hidden"
+            name="time"
+            value={initial?.time ?? new Date().toTimeString().slice(0, 5)}
+          />
+          <input type="hidden" name="paymentMethod" value={initial?.paymentMethod ?? "DEBIT_CARD"} />
+          <input type="hidden" name="memberId" value={initial?.memberId ?? members[0]?.id ?? ""} />
+        </>
+      ) : null}
+
       <ReceiptAttachField
         existingImageUrl={initial?.receiptImageUrl}
         existingPdfUrl={initial?.receiptPdfUrl}
@@ -340,12 +310,87 @@ export function ExpenseForm({
           receiptFileRef.current = f;
         }}
       />
-      <Field label="Observações">
-        <textarea name="notes" rows={3} defaultValue={initial?.notes ?? ""} />
-      </Field>
+
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm expense-more-toggle"
+        aria-expanded={showMore}
+        onClick={() => setShowMore((v) => !v)}
+      >
+        {showMore ? "Menos detalhes" : "Mais detalhes"}
+      </button>
+
+      {showMore ? (
+        <div className="expense-more-fields">
+          <Field label="Data">
+            <input
+              name="date"
+              type="date"
+              required
+              defaultValue={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
+            />
+          </Field>
+          <Field label="Hora">
+            <input
+              name="time"
+              type="time"
+              defaultValue={initial?.time ?? new Date().toTimeString().slice(0, 5)}
+            />
+          </Field>
+          <Field label="Subcategoria">
+            <select name="subcategoryId" defaultValue={initial?.subcategoryId ?? ""}>
+              <option value="">—</option>
+              {expenseCats.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Espaço">
+            <select name="scope" defaultValue={defaultScope}>
+              <option value="PERSONAL">Pessoal</option>
+              <option value="FAMILY">Familiar</option>
+            </select>
+          </Field>
+          <Field label="Loja">
+            <input
+              name="storeName"
+              placeholder="Ex: Continente"
+              defaultValue={initial?.storeName ?? defaults?.storeName ?? ""}
+            />
+          </Field>
+          <Field label="Método de pagamento">
+            <select name="paymentMethod" defaultValue={initial?.paymentMethod ?? "DEBIT_CARD"}>
+              {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {space === "family" || editing ? (
+            <Field label="Membro">
+              <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.displayName}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : (
+            <input type="hidden" name="memberId" value={initial?.memberId ?? members[0]?.id ?? ""} />
+          )}
+          <Field label="Observações">
+            <textarea name="notes" rows={2} defaultValue={initial?.notes ?? ""} />
+          </Field>
+        </div>
+      ) : null}
+
       {error ? <p className="form-error">{error}</p> : null}
-      <button className="btn btn-primary" disabled={pending} type="submit">
-        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar despesa"}
+      <button className="btn btn-primary w-full" disabled={pending} type="submit">
+        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar"}
       </button>
     </form>
   );
