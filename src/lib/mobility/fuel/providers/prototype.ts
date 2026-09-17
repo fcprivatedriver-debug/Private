@@ -1,3 +1,4 @@
+/** @deprecated LEGACY MOCK — não importar. Usar dgeg.ts / mobie.ts (honest unavailable). */
 import type { FuelProvider, FuelStation, FuelQuoteContext } from "../types";
 
 /** Protótipo PT — substituível por API DGEG / redes oficiais. */

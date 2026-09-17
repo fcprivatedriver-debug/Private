@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireFamilyContext } from "@/lib/session";
+import { canEditFinances } from "@/domain/household";
 import { parseEURInput } from "@/lib/money";
 import {
   savingPotSchema,
@@ -30,6 +31,9 @@ async function scopeFromSpace() {
 
 export async function createSavingPot(formData: FormData) {
   const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar poupanças" };
+  }
   const parsed = savingPotSchema.safeParse({
     name: formData.get("name"),
     kind: formData.get("kind") || "CUSTOM",
@@ -65,7 +69,10 @@ export async function createSavingPot(formData: FormData) {
 }
 
 export async function contributeToPot(potId: string, amountRaw: string) {
-  const { family } = await requireFamilyContext();
+  const {family, membership} = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar poupanças" };
+  }
   const cents = parseEURInput(amountRaw);
   if (cents == null || cents === 0) return { ok: false as const, error: "Valor inválido" };
   const pot = await prisma.savingPot.findFirst({ where: { id: potId, familyId: family.id } });
@@ -104,7 +111,10 @@ export async function contributeToPot(potId: string, amountRaw: string) {
 }
 
 export async function setPotInvestment(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const {family, membership} = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar poupanças" };
+  }
   const parsed = investmentSchema.safeParse({
     potId: formData.get("potId"),
     investmentVehicle: formData.get("investmentVehicle"),
@@ -144,7 +154,10 @@ export async function setPotInvestment(formData: FormData) {
 }
 
 export async function clearPotInvestment(potId: string) {
-  const { family } = await requireFamilyContext();
+  const {family, membership} = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar poupanças" };
+  }
   const pot = await prisma.savingPot.findFirst({ where: { id: potId, familyId: family.id } });
   if (!pot) return { ok: false as const, error: "Poupança não encontrada" };
   await prisma.savingPot.update({
@@ -165,6 +178,9 @@ export async function clearPotInvestment(potId: string) {
 
 export async function createLifeGoal(formData: FormData) {
   const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const parsed = goalSchema.safeParse({
     name: formData.get("name"),
     type: formData.get("type") || "CUSTOM",
@@ -234,7 +250,10 @@ export async function createLifeGoal(formData: FormData) {
 }
 
 export async function addGoalItem(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const {family, membership} = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const parsed = goalItemSchema.safeParse({
     goalId: formData.get("goalId"),
     name: formData.get("name"),
@@ -272,7 +291,10 @@ export async function addGoalItem(formData: FormData) {
 }
 
 export async function removeGoalItem(itemId: string) {
-  const { family } = await requireFamilyContext();
+  const {family, membership} = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const item = await prisma.goalItem.findFirst({
     where: { id: itemId, goal: { familyId: family.id } },
     include: { goal: { include: { items: true } } },
@@ -297,7 +319,10 @@ export async function removeGoalItem(itemId: string) {
 }
 
 export async function transferToSavings(hint: string, amountRaw: string) {
-  const { family } = await requireFamilyContext();
+  const {family, membership} = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar poupanças" };
+  }
   const cents = parseEURInput(amountRaw);
   if (cents == null || cents <= 0) return { ok: false as const, error: "Valor inválido" };
   const result = await applySavingsTransfer(family.id, cents, hint);

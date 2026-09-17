@@ -91,9 +91,11 @@ export async function optimizeBasket(items: ShoppingListLine[]): Promise<EngineR
       ok: true,
       recommendation: buildRecommendation({
         engine: "shopping",
-        bestLabel: "sem cotação",
-        opener: "Ainda não consegui comparar preços para estes artigos.",
-        reason: "Tenta mais tarde ou adiciona marcas específicas.",
+        bestLabel: "informação indisponível",
+        opener:
+          analysis.comparison.unavailableReason ||
+          "Não consegui obter preços fiáveis dos supermercados neste momento.",
+        reason: "Sem fonte autorizada de preços configurada — não apresento valores inventados.",
       }),
       recordImpact: false,
     };

@@ -18,6 +18,8 @@ export async function handleMobilityIntent(opts: {
   utterance: string;
   batteryPercent?: number;
   budgetEuros?: number;
+  lat?: number;
+  lng?: number;
 }) {
   const { session, membership, family } = await requireFamilyContext();
   const utterance =
@@ -28,11 +30,22 @@ export async function handleMobilityIntent(opts: {
         ? `onde compensa colocar ${opts.budgetEuros}€`
         : "onde abasteço");
 
+  if (opts.lat == null || opts.lng == null) {
+    return {
+      ok: true as const,
+      reply:
+        "Precisamos da tua localização para procurar postos ou carregadores próximos. Activa a localização no browser e tenta outra vez.",
+      deepLink: undefined as string | undefined,
+    };
+  }
+
   const outcome = await runIntelligence({
     familyId: family.id,
     userId: session.user.id,
     memberId: membership.id,
     utterance,
+    lat: opts.lat,
+    lng: opts.lng,
   });
 
   if (!outcome.passthrough && (outcome.engine === "fuel" || outcome.engine === "ev")) {
@@ -58,11 +71,15 @@ export async function handleMobilityIntent(opts: {
           familyId: family.id,
           userId: session.user.id,
           utterance: `tenho ${opts.batteryPercent ?? 30}% de bateria`,
+          lat: opts.lat,
+          lng: opts.lng,
         })
       : await runIntelligence({
           familyId: family.id,
           userId: session.user.id,
           utterance: "onde abasteço",
+          lat: opts.lat,
+          lng: opts.lng,
         });
 
   if (forced.engineResult) {

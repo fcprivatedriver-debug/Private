@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   createIncome,
@@ -16,6 +16,7 @@ import {
 } from "@/actions/finance";
 import { PAYMENT_METHOD_LABELS, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES } from "@/domain/categories";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { ReceiptAttachField } from "@/components/finance/ReceiptAttachField";
 
 type Cat = { id: string; name: string; kind: string; slug?: string };
 type Acc = { id: string; name: string };
@@ -76,6 +77,7 @@ export function IncomeForm({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const options = incomeOptions(categories);
   const editing = Boolean(initial?.id);
 
@@ -90,7 +92,8 @@ export function IncomeForm({
           if (!res.ok) setError(res.error);
           else {
             router.push(editing ? "/pt/transacoes" : "/pt/receitas");
-            router.refresh();
+            setSaved(true);
+        router.refresh();
           }
         });
       }}
@@ -161,8 +164,9 @@ export function IncomeForm({
         <textarea name="notes" rows={3} placeholder="Opcional" defaultValue={initial?.notes ?? ""} />
       </Field>
       {error ? <p className="form-error">{error}</p> : null}
+      {saved && !error ? <p className="muted small" aria-live="polite">Guardado</p> : null}
       <button className="btn btn-success" disabled={pending} type="submit">
-        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar receita"}
+        {pending ? "A guardar…" : saved ? "Guardado" : editing ? "Guardar alterações" : "Guardar receita"}
       </button>
     </form>
   );
@@ -174,6 +178,7 @@ export function ExpenseForm({
   members,
   defaults,
   initial,
+  space = "personal",
 }: {
   categories: Cat[];
   accounts: Acc[];
@@ -202,59 +207,58 @@ export function ExpenseForm({
     receiptPdfUrl: string | null;
     scope?: "PERSONAL" | "FAMILY";
   };
+  /** Espaço activo — esconde campos familiares em Pessoal */
+  space?: "personal" | "family";
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [showMore, setShowMore] = useState(Boolean(initial?.id));
   const expenseCats = categories.filter((c) => c.kind === "EXPENSE");
   const options = expenseOptions(categories);
   const editing = Boolean(initial?.id);
+  const receiptFileRef = useRef<File | null>(null);
+  const defaultScope = initial?.scope ?? (space === "family" ? "FAMILY" : "PERSONAL");
 
   return (
     <form
-      className="form-grid"
+      className="form-grid expense-form-simple"
       onSubmit={(e) => {
         e.preventDefault();
+        setError(null);
         const fd = new FormData(e.currentTarget);
+        if (receiptFileRef.current) {
+          fd.set("receiptFile", receiptFileRef.current);
+        }
         start(async () => {
           const res = editing ? await updateExpense(fd) : await createExpense(fd);
           if (!res.ok) setError(res.error);
           else {
             router.push(editing ? "/pt/transacoes" : "/pt/despesas");
-            router.refresh();
+            setSaved(true);
+        router.refresh();
           }
         });
       }}
     >
       {editing ? <input type="hidden" name="id" value={initial!.id} /> : null}
-      <Field label="Valor (€)">
+      <div className="expense-amount-hero">
+        <span className="expense-amount-currency">€</span>
         <input
           name="amount"
           required
+          className="expense-amount-input"
           placeholder="0,00"
           inputMode="decimal"
+          aria-label="Valor em euros"
           defaultValue={
             initial
               ? (initial.amountCents / 100).toFixed(2).replace(".", ",")
               : defaults?.amount
           }
         />
-      </Field>
-      <Field label="Data">
-        <input
-          name="date"
-          type="date"
-          required
-          defaultValue={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
-        />
-      </Field>
-      <Field label="Hora">
-        <input
-          name="time"
-          type="time"
-          defaultValue={initial?.time ?? new Date().toTimeString().slice(0, 5)}
-        />
-      </Field>
+      </div>
       <Field label="Descrição">
         <input
           name="description"
@@ -276,40 +280,8 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
-      <Field label="Subcategoria">
-        <select name="subcategoryId" defaultValue={initial?.subcategoryId ?? ""}>
-          <option value="">—</option>
-          {expenseCats.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Conta (Pessoal / Familiar)">
-        <select name="scope" defaultValue={initial?.scope ?? "PERSONAL"}>
-          <option value="PERSONAL">Pessoal</option>
-          <option value="FAMILY">Familiar</option>
-        </select>
-      </Field>
-      <Field label="Loja">
-        <input
-          name="storeName"
-          placeholder="Ex: Continente"
-          defaultValue={initial?.storeName ?? defaults?.storeName ?? ""}
-        />
-      </Field>
-      <Field label="Método de pagamento">
-        <select name="paymentMethod" defaultValue={initial?.paymentMethod ?? "DEBIT_CARD"}>
-          {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Conta bancária">
-        <select name="accountId" defaultValue={initial?.accountId ?? ""}>
+      <Field label="Conta">
+        <select name="accountId" defaultValue={initial?.accountId ?? accounts[0]?.id ?? ""}>
           <option value="">—</option>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>
@@ -318,31 +290,113 @@ export function ExpenseForm({
           ))}
         </select>
       </Field>
-      <Field label="Membro">
-        <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.displayName}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="URL fotografia fatura">
-        <input
-          name="receiptImageUrl"
-          placeholder="https://…"
-          defaultValue={initial?.receiptImageUrl ?? ""}
-        />
-      </Field>
-      <Field label="URL PDF fatura">
-        <input name="receiptPdfUrl" placeholder="https://…" defaultValue={initial?.receiptPdfUrl ?? ""} />
-      </Field>
-      <Field label="Observações">
-        <textarea name="notes" rows={3} defaultValue={initial?.notes ?? ""} />
-      </Field>
+      {!showMore ? (
+        <>
+          <input type="hidden" name="scope" value={defaultScope} />
+          <input
+            type="hidden"
+            name="date"
+            value={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
+          />
+          <input
+            type="hidden"
+            name="time"
+            value={initial?.time ?? new Date().toTimeString().slice(0, 5)}
+          />
+          <input type="hidden" name="paymentMethod" value={initial?.paymentMethod ?? "DEBIT_CARD"} />
+          <input type="hidden" name="memberId" value={initial?.memberId ?? members[0]?.id ?? ""} />
+        </>
+      ) : null}
+
+      <ReceiptAttachField
+        existingImageUrl={initial?.receiptImageUrl}
+        existingPdfUrl={initial?.receiptPdfUrl}
+        onFileChange={(f) => {
+          receiptFileRef.current = f;
+        }}
+      />
+
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm expense-more-toggle"
+        aria-expanded={showMore}
+        onClick={() => setShowMore((v) => !v)}
+      >
+        {showMore ? "Menos detalhes" : "Mais detalhes"}
+      </button>
+
+      {showMore ? (
+        <div className="expense-more-fields">
+          <Field label="Data">
+            <input
+              name="date"
+              type="date"
+              required
+              defaultValue={initial?.date ?? defaults?.date ?? new Date().toISOString().slice(0, 10)}
+            />
+          </Field>
+          <Field label="Hora">
+            <input
+              name="time"
+              type="time"
+              defaultValue={initial?.time ?? new Date().toTimeString().slice(0, 5)}
+            />
+          </Field>
+          <Field label="Subcategoria">
+            <select name="subcategoryId" defaultValue={initial?.subcategoryId ?? ""}>
+              <option value="">—</option>
+              {expenseCats.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Espaço">
+            <select name="scope" defaultValue={defaultScope}>
+              <option value="PERSONAL">Pessoal</option>
+              <option value="FAMILY">Familiar</option>
+            </select>
+          </Field>
+          <Field label="Loja">
+            <input
+              name="storeName"
+              placeholder="Ex: Continente"
+              defaultValue={initial?.storeName ?? defaults?.storeName ?? ""}
+            />
+          </Field>
+          <Field label="Método de pagamento">
+            <select name="paymentMethod" defaultValue={initial?.paymentMethod ?? "DEBIT_CARD"}>
+              {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {space === "family" || editing ? (
+            <Field label="Membro">
+              <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.displayName}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : (
+            <input type="hidden" name="memberId" value={initial?.memberId ?? members[0]?.id ?? ""} />
+          )}
+          <Field label="Observações">
+            <textarea name="notes" rows={2} defaultValue={initial?.notes ?? ""} />
+          </Field>
+        </div>
+      ) : null}
+
       {error ? <p className="form-error">{error}</p> : null}
-      <button className="btn btn-primary" disabled={pending} type="submit">
-        {pending ? "A guardar…" : editing ? "Guardar alterações" : "Guardar despesa"}
+      {saved && !error ? <p className="muted small" aria-live="polite">Guardado</p> : null}
+      <button className="btn btn-primary w-full" disabled={pending} type="submit">
+        {pending ? "A guardar…" : saved ? "Guardado" : editing ? "Guardar alterações" : "Guardar"}
       </button>
     </form>
   );

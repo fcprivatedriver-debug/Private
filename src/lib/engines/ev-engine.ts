@@ -6,7 +6,7 @@
  */
 
 import { evService } from "@/lib/mobility/ev";
-import { navigationService } from "@/lib/navigation";
+import { createNavigationService } from "@/lib/navigation";
 import { formatEUR } from "@/lib/money";
 import { cacheGet, cacheSet, cacheKey } from "./cache";
 import { assertJustified, buildRecommendation } from "./recommendation";
@@ -22,6 +22,7 @@ export type EvEngineInput = {
   waitingByNetwork?: Record<string, number>;
   lat?: number;
   lng?: number;
+  navigationApp?: "google_maps" | "waze" | "apple_maps";
 };
 
 export function predictRangeKm(batteryPercent: number, usableKwh = 55, whPerKm = 160): number {
@@ -64,13 +65,15 @@ export async function recommendCharge(input: EvEngineInput): Promise<EngineResul
   }
 
   if (!base) {
+    const { getEvUnavailableMessage } = await import("@/lib/mobility/ev");
+    const hasLocation = input.lat != null && input.lng != null;
     return {
       ok: true,
       recommendation: buildRecommendation({
         engine: "ev",
-        bestLabel: "sem carregadores",
-        opener: "Não encontrei carregadores adequados agora.",
-        reason: "Tenta outra localização ou daqui a pouco.",
+        bestLabel: "informação indisponível",
+        opener: getEvUnavailableMessage(hasLocation),
+        reason: "Sem dados reais de carregadores configurados.",
       }),
       recordImpact: false,
     };
@@ -82,10 +85,12 @@ export async function recommendCharge(input: EvEngineInput): Promise<EngineResul
   const scored = stations.map((s) => {
     const chargeMinutes = Math.max(5, Math.round((energyKwh / Math.max(s.powerKw, 1)) * 60));
     const etaMinutes = Math.round(s.distanceKm * 2.2);
-    const wait = input.waitingByNetwork?.[s.network] ?? (s.powerKw >= 150 ? 5 : 0);
-    const cost = Math.round(energyKwh * s.pricePerKwhCents);
+    const wait = input.waitingByNetwork?.[s.network] ?? 0;
+    const cost =
+      s.pricePerKwhCents != null ? Math.round(energyKwh * s.pricePerKwhCents) : null;
     const totalTime = etaMinutes + chargeMinutes + wait;
-    let score = 800 - cost / 8 - totalTime * 1.2 - s.distanceKm * 12;
+    let score = 800 - totalTime * 1.2 - s.distanceKm * 12;
+    if (cost != null) score -= cost / 8;
     if (input.preferredNetworks?.some((n) => s.network.toLowerCase().includes(n.toLowerCase()))) {
       score += 60;
     }
@@ -96,14 +101,16 @@ export async function recommendCharge(input: EvEngineInput): Promise<EngineResul
       label: s.name,
       savingsCents: 0,
       timeMinutes: totalTime,
-      why: `Chegas em ~${etaMinutes} min · ~${chargeMinutes} min até ${target}% · ~${formatEUR(cost)}${
-        wait ? ` · espera ~${wait} min` : ""
-      }`,
-      cost,
+      why:
+        cost != null
+          ? `Chegas em ~${etaMinutes} min · ~${chargeMinutes} min até ${target}% · estimativa ~${formatEUR(cost)}`
+          : `Chegas em ~${etaMinutes} min · ~${chargeMinutes} min até ${target}% · preço indisponível`,
+      cost: cost ?? 0,
       chargeMinutes,
       etaMinutes,
       wait,
       totalTime,
+      priceKnown: cost != null,
     };
   });
 
@@ -138,7 +145,7 @@ export async function recommendCharge(input: EvEngineInput): Promise<EngineResul
         }.`
       : " É a melhor opção para continuares o teu dia.";
 
-  const nav = navigationService.open({
+  const nav = createNavigationService(input.navigationApp ?? "google_maps").open({
     label: best.item.name,
     lat: best.item.lat,
     lng: best.item.lng,
