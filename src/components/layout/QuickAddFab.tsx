@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const ACTIONS = [
   { href: "/pt/despesas/nova", label: "Despesa", hint: "Registar um gasto" },
@@ -13,9 +14,15 @@ const ACTIONS = [
  * FAB + — menu compacto com feedback imediato ao toque.
  */
 export function QuickAddFab() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+
+  // Evitar sobrepor o botão Guardar em formulários de criação
+  const hideOnForm =
+    Boolean(pathname?.includes("/nova")) ||
+    Boolean(pathname?.match(/\/(despesas|receitas)\/[^/]+$/));
 
   useEffect(() => {
     if (!open) return;
@@ -32,6 +39,8 @@ export function QuickAddFab() {
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  if (hideOnForm) return null;
 
   return (
     <div className={`quick-add ${open ? "is-open" : ""}`} ref={rootRef}>

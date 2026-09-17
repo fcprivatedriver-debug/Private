@@ -1995,10 +1995,8 @@ html[data-theme="purple"] {
   font-size: var(--text-xs);
   color: var(--fg-muted);
 }
-.hoje-summary-item strong {
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
-}
+.hoje-summary-item strong.text-expense { color: var(--expense); }
+.hoje-summary-item strong.text-income { color: var(--income); }
 .hoje-section-head {
   display: flex;
   align-items: baseline;
