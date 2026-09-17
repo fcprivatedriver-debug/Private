@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
-import { APP_NAME, ASSISTANT_NAME, APP_HERO_SUPPORT, ASSISTANT_LINE } from "@/config/brand";
+import {
+  APP_NAME,
+  ASSISTANT_NAME,
+  APP_HERO_SUPPORT,
+  ASSISTANT_LINE,
+} from "@/config/brand";
 
 /** Valores apenas demonstrativos na landing — nunca dados reais do utilizador. */
 const DEMO_CARDS = [
-  { title: "O que tenho", value: "1.240,00 €", hint: "Disponível este mês" },
-  { title: "Quanto gastei", value: "386,40 €", hint: "Despesas do mês" },
-  { title: "Quanto poupei", value: "210,00 €", hint: "Para objetivos" },
+  { title: "Saldo", value: "1.240,00 €", hint: "Disponível este mês" },
+  { title: "Despesas", value: "386,40 €", hint: "Deste mês" },
+  { title: "Poupança", value: "210,00 €", hint: "Para objetivos" },
 ] as const;
 
 export default function LandingPage() {
@@ -18,6 +23,9 @@ export default function LandingPage() {
           <Link href="/pt/login" className="btn btn-ghost btn-sm">
             Entrar
           </Link>
+          <Link href="/pt/registo" className="btn btn-primary btn-sm">
+            Começar
+          </Link>
         </div>
       </nav>
 
@@ -26,12 +34,17 @@ export default function LandingPage() {
           Sabe onde vai
           <br />
           o teu dinheiro.
+          <br />
+          Agora.
         </h1>
         <p className="landing-hero-lead">{APP_HERO_SUPPORT}</p>
         <p className="landing-hero-mel">{ASSISTANT_LINE}</p>
         <div className="landing-hero-cta">
           <Link href="/pt/registo" className="btn btn-primary">
             Começar
+          </Link>
+          <Link href="/pt/login" className="btn btn-ghost">
+            Já tenho conta
           </Link>
         </div>
       </section>

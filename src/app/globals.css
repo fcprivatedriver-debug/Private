@@ -385,7 +385,12 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   color: var(--landing-teal);
   font-weight: 600;
 }
-.landing-hero-cta { display: flex; }
+.landing-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
 
 .landing-glance {
   max-width: 720px;

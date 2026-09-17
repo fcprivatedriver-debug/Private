@@ -407,7 +407,7 @@ export async function instantCapturePhoto(formData: FormData) {
 
   const storedRes = await storeReceiptFromFormFile({
     familyId: family.id,
-    userId: session.user.id,
+    userId: membership.userId,
     file,
   });
   if (!storedRes.ok) {
