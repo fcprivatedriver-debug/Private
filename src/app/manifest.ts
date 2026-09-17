@@ -1,5 +1,13 @@
 import type { MetadataRoute } from "next";
 
+/**
+ * Identidade estável da PWA (Chrome WebAPK / Android):
+ * - `id` + origem definem se é a MESMA app ou uma app nova.
+ * - Histórico: Mel usava `id: "/pt/hoje"` → Chrome tratava Nina/addYknow
+ *   (`id: "/pt/dashboard"`) como aplicação diferente → aviso a substituir/instalar.
+ * - NÃO alterar `id` / `start_url` / `scope` sem necessidade: quem já tem
+ *   addYknow (ou Nina/AddYnow com este id) deve receber update in-place.
+ */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "addYknow",
@@ -11,8 +19,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     display_override: ["standalone", "fullscreen", "minimal-ui"],
     orientation: "portrait-primary",
-    background_color: "#1e3a5f",
-    theme_color: "#1e3a5f",
+    background_color: "#F7FAFA",
+    theme_color: "#39B8B2",
     lang: "pt-PT",
     dir: "ltr",
     categories: ["finance", "productivity", "lifestyle"],
@@ -90,5 +98,3 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: false,
   };
 }
-
-/** Used only when generating absolute URLs externally */

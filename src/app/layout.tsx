@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "addYknow",
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
   },
   formatDetection: {
     telephone: false,
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#3db8b0" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c1a1a" },
+    { media: "(prefers-color-scheme: light)", color: "#39B8B2" },
+    { media: "(prefers-color-scheme: dark)", color: "#173B5E" },
   ],
   width: "device-width",
   initialScale: 1,
