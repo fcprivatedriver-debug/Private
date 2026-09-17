@@ -42,6 +42,16 @@ Não é um segundo bug independente: é a **mesma arquitectura de storage local*
 - `/api/uploads` devolve 404 tipado em vez de excepção não tratada
 - Isolamento Pessoal: só o próprio membro vê anexos PERSONAL
 
+### Follow-up (InvalidArg / Bytes + Neon adapter)
+
+Em produção, após o ENOENT estar resolvido, `prisma.storedObject.create({ data: Uint8Array })`
+falhava com `Raw query failed` / `InvalidArg` / `JS functions cannot be represented…`
+(driver adapter Neon a serializar `Bytes`).
+
+Correção: gravar/ler BYTEA via SQL `decode(base64)` / `encode(..., 'base64')`
+(parâmetros só TEXT). Erros de UI nunca expõem mensagens Prisma/Neon.
+Adapter alinhado: `@prisma/adapter-neon@6.19.3` (= client).
+
 ## Migration
 
 `prisma/migrations/20260916190000_stored_object_receipts`  
