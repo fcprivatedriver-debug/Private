@@ -178,6 +178,7 @@ export function ExpenseForm({
   members,
   defaults,
   initial,
+  attachedReceipt,
   space = "personal",
 }: {
   categories: Cat[];
@@ -206,6 +207,11 @@ export function ExpenseForm({
     receiptImageUrl: string | null;
     receiptPdfUrl: string | null;
     scope?: "PERSONAL" | "FAMILY";
+  };
+  /** Fatura já persistida (ex.: captura instantânea → ?receipt=) */
+  attachedReceipt?: {
+    receiptImageUrl: string | null;
+    receiptPdfUrl: string | null;
   };
   /** Espaço activo — esconde campos familiares em Pessoal */
   space?: "personal" | "family";
@@ -309,8 +315,8 @@ export function ExpenseForm({
       ) : null}
 
       <ReceiptAttachField
-        existingImageUrl={initial?.receiptImageUrl}
-        existingPdfUrl={initial?.receiptPdfUrl}
+        existingImageUrl={initial?.receiptImageUrl ?? attachedReceipt?.receiptImageUrl}
+        existingPdfUrl={initial?.receiptPdfUrl ?? attachedReceipt?.receiptPdfUrl}
         onFileChange={(f) => {
           receiptFileRef.current = f;
         }}
