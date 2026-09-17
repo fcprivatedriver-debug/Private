@@ -6,41 +6,39 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { SpaceSwitcher } from "@/components/nina/SpaceSwitcher";
+import { QuickAddFab } from "@/components/layout/QuickAddFab";
 import type { NinaSpace } from "@/actions/household";
 import { cn } from "@/lib/utils";
 import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 
-/** Navegação simples — captura e conversa no centro. */
+/** Sidebar completa — secundário fica em Mais no mobile. */
 const NAV = [
-  { href: "/pt/captura", label: "Captura" },
-  { href: "/pt/dashboard", label: "Hoje" },
-  { href: "/pt/guia", label: "Guia" },
-  { href: "/pt/transacoes", label: "Transações" },
-  { href: "/pt/receitas", label: "Receitas" },
-  { href: "/pt/despesas", label: "Despesas" },
-  { href: "/pt/lista", label: "Compras" },
-  { href: "/pt/mobilidade", label: "Mobilidade" },
-  { href: "/pt/calendario", label: "Calendário" },
-  { href: "/pt/poupancas", label: "Poupanças" },
-  { href: "/pt/objetivos", label: "Objetivos" },
-  { href: "/pt/personalizar", label: "Personalizar a MEL" },
-  { href: "/pt/orcamentos", label: "Limites" },
-  { href: "/pt/estatisticas", label: "Resumo" },
-  { href: "/pt/familia", label: "Conta" },
-  { href: "/pt/ligacoes", label: "Ligações" },
-  { href: "/pt/memoria", label: "Memória" },
-  { href: "/pt/perfil", label: "Perfil" },
-  { href: "/pt/privacidade-dados", label: "Privacidade" },
-  { href: "/pt/alertas", label: "Avisos" },
-  { href: "/pt/definicoes", label: "Mais" },
-];
-
-const MOBILE = [
   { href: "/pt/dashboard", label: "Hoje" },
   { href: "/pt/guia", label: "Guia" },
   { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura" },
   { href: "/pt/lista", label: "Compras" },
+  { href: "/pt/transacoes", label: "Transações" },
+  { href: "/pt/despesas", label: "Despesas" },
+  { href: "/pt/receitas", label: "Receitas" },
+  { href: "/pt/familia", label: "Família" },
+  { href: "/pt/orcamentos", label: "Orçamentos" },
+  { href: "/pt/objetivos", label: "Objetivos" },
+  { href: "/pt/poupancas", label: "Poupança" },
+  { href: "/pt/estatisticas", label: "Resumo" },
+  { href: "/pt/mobilidade", label: "Mobilidade" },
+  { href: "/pt/calendario", label: "Calendário" },
+  { href: "/pt/ligacoes", label: "Ligações" },
+  { href: "/pt/personalizar", label: "Personalizar MEL" },
+  { href: "/pt/perfil", label: "Perfil" },
   { href: "/pt/definicoes", label: "Mais" },
+];
+
+const MOBILE = [
+  { href: "/pt/dashboard", label: "Hoje", icon: "⌂" },
+  { href: "/pt/guia", label: "Guia", icon: "◎" },
+  { href: "/pt/captura?mode=voice&auto=1", label: "Falar", match: "/pt/captura", icon: "◉" },
+  { href: "/pt/lista", label: "Compras", icon: "☰" },
+  { href: "/pt/definicoes", label: "Mais", icon: "⋯" },
 ];
 
 export function AppShell({
@@ -72,11 +70,13 @@ export function AppShell({
         </div>
         <nav className="sidebar-nav" aria-label="Principal">
           {NAV.map((item) => {
-            const active = pathname?.startsWith(item.href);
+            const match = "match" in item && item.match ? item.match : item.href;
+            const active = pathname?.startsWith(match);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
                 className={cn("nav-link", active && "active")}
               >
                 {item.label}
@@ -113,24 +113,18 @@ export function AppShell({
           <div className="topbar-space-mobile">
             <SpaceSwitcher space={space} />
           </div>
-          <div className="topbar-actions">
-            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary btn-sm">
+          <div className="topbar-actions topbar-actions-desktop">
+            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary btn-sm" prefetch>
               Falar
             </Link>
-            <Link href="/pt/captura?mode=photo&auto=1" className="btn btn-ghost btn-sm">
-              Fatura
+            <Link href="/pt/despesas/nova" className="btn btn-ghost btn-sm" prefetch>
+              Despesa
             </Link>
           </div>
         </header>
         <main className="app-content">{children}</main>
       </div>
-      <Link
-        href="/pt/captura?mode=voice&auto=1"
-        className="captura-fab"
-        aria-label="Falar com a MEL — captura por voz"
-      >
-        +
-      </Link>
+      <QuickAddFab />
       <nav className="mobile-nav" aria-label="Mobile">
         {MOBILE.map((item) => {
           const match = "match" in item && item.match ? item.match : item.href;
@@ -140,9 +134,13 @@ export function AppShell({
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               className={cn("mobile-nav-link", isCaptura && "is-captura", active && "active")}
             >
-              {item.label}
+              <span className="mobile-nav-icon" aria-hidden>
+                {item.icon}
+              </span>
+              <span className="mobile-nav-label">{item.label}</span>
             </Link>
           );
         })}

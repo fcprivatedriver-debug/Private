@@ -13,23 +13,41 @@ function revalidateAll() {
   revalidatePath("/", "layout");
 }
 
-export type NinaSpace = "personal" | "family";
+export type MelSpace = "personal" | "family";
+/** @deprecated Use MelSpace — alias de compatibilidade */
+export type NinaSpace = MelSpace;
 
-export async function setNinaSpace(space: NinaSpace) {
+const SPACE_COOKIE = "mel_space";
+const LEGACY_SPACE_COOKIE = "nina_space";
+
+export async function setMelSpace(space: MelSpace) {
   const jar = await cookies();
-  jar.set("nina_space", space, {
+  const opts = {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-  });
+    sameSite: "lax" as const,
+  };
+  jar.set(SPACE_COOKIE, space, opts);
+  // Compatibilidade com sessões antigas
+  jar.set(LEGACY_SPACE_COOKIE, space, opts);
   revalidateAll();
   return { ok: true as const, space };
 }
 
-export async function getNinaSpace(): Promise<NinaSpace> {
+/** @deprecated Use setMelSpace */
+export async function setNinaSpace(space: MelSpace) {
+  return setMelSpace(space);
+}
+
+export async function getMelSpace(): Promise<MelSpace> {
   const jar = await cookies();
-  const v = jar.get("nina_space")?.value;
+  const v = jar.get(SPACE_COOKIE)?.value ?? jar.get(LEGACY_SPACE_COOKIE)?.value;
   return v === "family" ? "family" : "personal";
+}
+
+/** @deprecated Use getMelSpace */
+export async function getNinaSpace(): Promise<MelSpace> {
+  return getMelSpace();
 }
 
 /** Um único botão: transforma a conta em Familiar e gera convite seguro. */
@@ -70,6 +88,7 @@ export async function createFamilyAccountSimple(formData?: FormData) {
       token,
       createdById: session.user.id,
       label: "Convite familiar",
+      channel: "LINK",
       expiresAt,
     },
   });
@@ -108,6 +127,7 @@ export async function createSecureInvite() {
       familyId: family.id,
       token,
       createdById: session.user.id,
+      channel: "LINK",
       expiresAt,
     },
   });
@@ -126,11 +146,22 @@ export async function acceptFamilyInvite(token: string) {
     where: { token },
     include: { family: true },
   });
-  if (!invite || invite.acceptedAt) {
+  if (!invite || invite.acceptedAt || invite.revokedAt) {
     return { ok: false as const, error: "Este convite já não é válido." };
   }
   if (invite.expiresAt < new Date()) {
     return { ok: false as const, error: "Este convite expirou. Pede um novo." };
+  }
+
+  // Se o convite tem email/telefone, garantir que a sessão corresponde ao destinatário
+  if (invite.email) {
+    const sessionEmail = (session.user.email || "").toLowerCase();
+    if (sessionEmail && sessionEmail !== invite.email.toLowerCase()) {
+      return {
+        ok: false as const,
+        error: "Este convite é para outro email. Entra com a conta correcta ou cria a tua própria conta.",
+      };
+    }
   }
 
   const existing = await prisma.familyMember.findUnique({
@@ -140,13 +171,11 @@ export async function acceptFamilyInvite(token: string) {
   });
 
   if (!existing) {
-    // Remover membership solo anterior para focar na conta familiar
     const old = await prisma.familyMember.findFirst({
       where: { userId: session.user.id },
       include: { family: true },
     });
     if (old && old.familyId !== invite.familyId && old.family.kind === "INDIVIDUAL") {
-      // se era conta individual só com este user, pode manter — mas preferimos a familiar
       await prisma.familyMember.delete({ where: { id: old.id } }).catch(() => undefined);
     }
 
@@ -154,10 +183,20 @@ export async function acceptFamilyInvite(token: string) {
       data: {
         familyId: invite.familyId,
         userId: session.user.id,
-        displayName: session.user.name || "Membro",
+        displayName: invite.inviteeName || session.user.name || "Membro",
         role: "MEMBER",
       },
     });
+  }
+
+  // Ligar telefone do convite ao user se ainda não tiver
+  if (invite.phone) {
+    const me = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (me && !me.phone) {
+      await prisma.user
+        .update({ where: { id: me.id }, data: { phone: invite.phone } })
+        .catch(() => undefined);
+    }
   }
 
   await prisma.familyInvite.update({
@@ -255,13 +294,41 @@ export async function updateMemberRole(
 }
 
 export async function inviteMemberByEmail(formData: FormData) {
+  return inviteFamilyMember(formData, "EMAIL");
+}
+
+/** Convite por telemóvel — cria o mesmo token; SMS só quando houver fornecedor. */
+export async function inviteMemberByPhone(formData: FormData) {
+  return inviteFamilyMember(formData, "PHONE");
+}
+
+async function inviteFamilyMember(
+  formData: FormData,
+  channel: "EMAIL" | "PHONE",
+) {
   const { session, membership, family } = await requireFamilyContext();
   if (!canManageMembers(membership.role)) {
     return { ok: false as const, error: "Sem permissão para convidar." };
   }
   const name = String(formData.get("name") || "").trim();
-  const email = String(formData.get("email") || "").trim().toLowerCase();
-  if (!name || !email) return { ok: false as const, error: "Nome e email necessários." };
+  if (!name) return { ok: false as const, error: "Indica o nome do familiar." };
+
+  let email: string | null = null;
+  let phone: string | null = null;
+
+  if (channel === "EMAIL") {
+    email = String(formData.get("email") || "").trim().toLowerCase();
+    if (!email) return { ok: false as const, error: "Nome e email necessários." };
+  } else {
+    const { normalizePhoneE164 } = await import("@/lib/phone");
+    phone = normalizePhoneE164(String(formData.get("phone") || ""));
+    if (!phone) {
+      return {
+        ok: false as const,
+        error: "Indica um telemóvel válido (ex.: +351912345678).",
+      };
+    }
+  }
 
   if (family.kind === "INDIVIDUAL") {
     await prisma.family.update({
@@ -278,34 +345,127 @@ export async function inviteMemberByEmail(formData: FormData) {
       familyId: family.id,
       token,
       createdById: session.user.id,
+      channel,
       email,
+      phone,
       inviteeName: name,
       label: name,
       expiresAt,
     },
   });
 
-  const { appBaseUrl, sendAppEmail } = await import("@/lib/auth/security");
   const invitePath = `/pt/convite/${invite.token}`;
-  const url = `${appBaseUrl()}${invitePath}`;
-  const mail = await sendAppEmail({
-    to: email,
-    subject: `Convite para ${family.name} — AddYnow`,
-    text: `Olá ${name},\n\nFoste convidado(a) para a família «${family.name}» na AddYnow.\n\nAceita aqui (só precisas de criar a tua palavra-passe):\n${url}\n\n— AddYnow`,
+  const { deliverFamilyInvite } = await import("@/lib/invites/delivery");
+  const delivery = await deliverFamilyInvite({
+    channel,
+    toEmail: email,
+    toPhone: phone,
+    inviteeName: name,
+    familyName: family.name,
+    invitePath,
   });
+
+  if (!delivery.ok) {
+    return { ok: false as const, error: delivery.error };
+  }
 
   revalidateAll();
   return {
     ok: true as const,
     invitePath,
-    previewUrl: mail.ok && !mail.delivered ? url : undefined,
+    channel,
+    delivered: delivery.delivered,
+    previewUrl: delivery.previewUrl,
+    smsReady: false as const,
   };
 }
 
-/** Aceitar convite criando só a palavra-passe (membro novo). */
+export async function revokeFamilyInvite(inviteId: string) {
+  const { membership, family } = await requireFamilyContext();
+  if (!canManageMembers(membership.role)) {
+    return { ok: false as const, error: "Sem permissão." };
+  }
+  const invite = await prisma.familyInvite.findFirst({
+    where: { id: inviteId, familyId: family.id, acceptedAt: null },
+  });
+  if (!invite) return { ok: false as const, error: "Convite não encontrado." };
+  await prisma.familyInvite.update({
+    where: { id: invite.id },
+    data: { revokedAt: new Date() },
+  });
+  revalidateAll();
+  return { ok: true as const };
+}
+
+export async function resendFamilyInvite(inviteId: string) {
+  const { membership, family } = await requireFamilyContext();
+  if (!canManageMembers(membership.role)) {
+    return { ok: false as const, error: "Sem permissão." };
+  }
+  const invite = await prisma.familyInvite.findFirst({
+    where: {
+      id: inviteId,
+      familyId: family.id,
+      acceptedAt: null,
+      revokedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+  });
+  if (!invite) return { ok: false as const, error: "Convite não encontrado ou expirado." };
+
+  const channel = (invite.channel === "PHONE" ? "PHONE" : invite.email ? "EMAIL" : "LINK") as
+    | "EMAIL"
+    | "PHONE"
+    | "LINK";
+  const invitePath = `/pt/convite/${invite.token}`;
+  const { deliverFamilyInvite } = await import("@/lib/invites/delivery");
+  const delivery = await deliverFamilyInvite({
+    channel: channel === "LINK" ? "EMAIL" : channel,
+    toEmail: invite.email,
+    toPhone: invite.phone,
+    inviteeName: invite.inviteeName || "Familiar",
+    familyName: family.name,
+    invitePath,
+  });
+  if (!delivery.ok) return { ok: false as const, error: delivery.error };
+  revalidateAll();
+  return {
+    ok: true as const,
+    invitePath,
+    delivered: delivery.delivered,
+    previewUrl: delivery.previewUrl,
+    channel,
+  };
+}
+
+/** Remover membro da família (não remove a conta individual do utilizador). */
+export async function removeFamilyMember(memberId: string) {
+  const { session, membership, family } = await requireFamilyContext();
+  if (!canManageMembers(membership.role)) {
+    return { ok: false as const, error: "Sem permissão." };
+  }
+  const target = await prisma.familyMember.findFirst({
+    where: { id: memberId, familyId: family.id },
+  });
+  if (!target) return { ok: false as const, error: "Membro não encontrado." };
+  if (target.role === "OWNER") {
+    return { ok: false as const, error: "Não é possível remover o proprietário." };
+  }
+  if (target.userId === session.user.id) {
+    return { ok: false as const, error: "Não podes remover-te a ti próprio aqui." };
+  }
+  await prisma.familyMember.delete({ where: { id: target.id } });
+  revalidateAll();
+  return { ok: true as const };
+}
+
+/** Aceitar convite criando a própria conta (palavra-passe + email se necessário). */
 export async function acceptInviteSetPassword(formData: FormData) {
   const token = String(formData.get("token") || "");
   const password = String(formData.get("password") || "");
+  const emailFromForm = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
   const { validatePassword } = await import("@/lib/auth/password-rules");
   const pwd = validatePassword(password);
   if (!pwd.ok) return { ok: false as const, error: pwd.error };
@@ -314,14 +474,22 @@ export async function acceptInviteSetPassword(formData: FormData) {
     where: { token },
     include: { family: true },
   });
-  if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) {
+  if (
+    !invite ||
+    invite.acceptedAt ||
+    invite.revokedAt ||
+    invite.expiresAt < new Date()
+  ) {
     return { ok: false as const, error: "Convite inválido ou expirado." };
   }
 
-  const email = (invite.email || "").toLowerCase();
+  const email = (invite.email || emailFromForm || "").toLowerCase();
   const displayName = invite.inviteeName || "Membro";
   if (!email) {
-    return { ok: false as const, error: "Este convite não tem email. Usa o registo normal." };
+    return {
+      ok: false as const,
+      error: "Indica o teu email para criares a tua própria conta.",
+    };
   }
 
   let user = await prisma.user.findUnique({ where: { email } });
@@ -331,6 +499,7 @@ export async function acceptInviteSetPassword(formData: FormData) {
       data: {
         name: displayName,
         email,
+        phone: invite.phone || undefined,
         passwordHash,
         emailVerified: new Date(),
       },
@@ -338,7 +507,11 @@ export async function acceptInviteSetPassword(formData: FormData) {
   } else {
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash, emailVerified: new Date() },
+      data: {
+        passwordHash,
+        emailVerified: new Date(),
+        ...(invite.phone && !user.phone ? { phone: invite.phone } : {}),
+      },
     });
   }
 

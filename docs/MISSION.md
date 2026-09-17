@@ -1,4 +1,4 @@
-# Missão e filosofia final da Nina
+# Missão e filosofia final da MEL
 
 > **A vida é para ser vivida.**  
 > **A Nina trata das contas.**
@@ -47,7 +47,7 @@ Sempre que possível, usa Inteligência Artificial para reduzir cliques e formul
 
 ## Antecipação
 
-| Situação | Resposta da Nina |
+| Situação | Resposta da MEL |
 |----------|------------------|
 | Tarefa repetitiva | Sugere automatizá-la |
 | Dinheiro disponível | Sugere reforçar poupanças ou objetivos |

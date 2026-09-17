@@ -34,6 +34,7 @@ export default async function ConvitePage({
 
   const expired = invite.expiresAt < new Date();
   const used = Boolean(invite.acceptedAt);
+  const revoked = Boolean(invite.revokedAt);
 
   return (
     <div className="auth-shell">
@@ -42,12 +43,16 @@ export default async function ConvitePage({
         <p className="nina-kicker">Convite seguro</p>
         <h1>Junta-te a {invite.family.name}</h1>
         <p className="muted">
-          {invite.createdBy.name?.split(" ")[0] ?? "Alguém"} convidou-te para a Conta Familiar.
-          Aceitas e ficas logo ligado — sem códigos complicados.
+          {invite.createdBy.name?.split(" ")[0] ?? "Alguém"} convidou-te para a Família.
+          Aceitas com a tua própria conta — nunca partilhas a palavra-passe de outra pessoa.
         </p>
-        {expired || used ? (
+        {expired || used || revoked ? (
           <p className="text-expense">
-            {used ? "Este convite já foi usado." : "Este convite expirou. Pede um novo."}
+            {revoked
+              ? "Este convite foi cancelado."
+              : used
+                ? "Este convite já foi usado."
+                : "Este convite expirou. Pede um novo."}
           </p>
         ) : (
           <AcceptInviteButton
@@ -55,6 +60,7 @@ export default async function ConvitePage({
             familyName={invite.family.name}
             loggedIn={Boolean(session?.user)}
             inviteEmail={invite.email}
+            invitePhone={invite.phone}
             inviteeName={invite.inviteeName}
           />
         )}

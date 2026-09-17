@@ -17,6 +17,7 @@ type Msg = {
   text: string;
   suggestions?: string[];
   pendingScope?: PendingScopeAction;
+  isError?: boolean;
 };
 
 export function NinaChat({ compact = false }: { compact?: boolean }) {
@@ -26,17 +27,31 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
   const [pendingScope, setPendingScope] = useState<PendingScopeAction | null>(null);
   const [pending, start] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const sendingRef = useRef(false);
 
   useEffect(() => {
     start(async () => {
-      const res = await getNinaGreeting();
-      if (res.ok) {
+      try {
+        const res = await getNinaGreeting();
+        if (res.ok) {
+          setMessages([
+            {
+              id: "greet",
+              role: "nina",
+              text: res.reply.text.replace(/\*\*/g, ""),
+              suggestions: res.reply.suggestions,
+            },
+          ]);
+        }
+      } catch {
         setMessages([
           {
-            id: "greet",
+            id: "greet-err",
             role: "nina",
-            text: res.reply.text.replace(/\*\*/g, ""),
-            suggestions: res.reply.suggestions,
+            text: "Olá! Sou a MEL. Neste momento não consegui carregar o teu resumo — podes perguntar na mesma.",
+            suggestions: NINA_SUGGESTIONS.slice(0, 3),
+            isError: true,
           },
         ]);
       }
@@ -47,11 +62,36 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, pending]);
 
+  function pushMelReply(text: string, suggestions?: string[], pendingNext?: PendingScopeAction | null) {
+    setMessages((m) => [
+      ...m,
+      {
+        id: `n-${Date.now()}`,
+        role: "nina",
+        text,
+        suggestions,
+        pendingScope: pendingNext ?? undefined,
+      },
+    ]);
+  }
+
+  function pushError() {
+    setMessages((m) => [
+      ...m,
+      {
+        id: `n-err-${Date.now()}`,
+        role: "nina",
+        text: "A MEL está temporariamente indisponível. Tenta novamente dentro de alguns instantes.",
+        isError: true,
+        suggestions: ["Quanto gastei este mês?", "Onde posso poupar?"],
+      },
+    ]);
+  }
+
   function send(question: string) {
     const q = question.trim();
-    if (!q || pending) return;
+    if (!q || pending || sendingRef.current) return;
 
-    // Atalhos de confirmação de espaço
     if (pendingScope && /^(pessoal|familiar)$/i.test(q)) {
       const scope: FinanceScope = /^familiar$/i.test(q) ? "FAMILY" : "PERSONAL";
       confirmScope(scope);
@@ -60,69 +100,72 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
 
     setInput("");
     setMessages((m) => [...m, { id: `u-${Date.now()}`, role: "user", text: q }]);
+    sendingRef.current = true;
     start(async () => {
-      const res = await askNina(q);
-      if (res.ok) {
-        const nextPending =
-          "pendingScope" in res && res.pendingScope ? res.pendingScope : null;
-        setPendingScope(nextPending);
-        setMessages((m) => [
-          ...m,
-          {
-            id: `n-${Date.now()}`,
-            role: "nina",
-            text: res.reply.text,
-            suggestions: res.reply.suggestions,
-            pendingScope: nextPending ?? undefined,
-          },
-        ]);
-        if ("deepLink" in res && res.deepLink && typeof window !== "undefined") {
-          window.open(res.deepLink, "_blank", "noopener,noreferrer");
+      try {
+        const res = await askNina(q);
+        if (res.ok) {
+          const nextPending =
+            "pendingScope" in res && res.pendingScope ? res.pendingScope : null;
+          setPendingScope(nextPending);
+          pushMelReply(res.reply.text, res.reply.suggestions, nextPending);
+          if ("deepLink" in res && res.deepLink && typeof window !== "undefined") {
+            window.open(res.deepLink, "_blank", "noopener,noreferrer");
+          }
+          if (res.mutated) router.refresh();
+        } else {
+          pushError();
         }
-        if (res.mutated) router.refresh();
+      } catch {
+        pushError();
+      } finally {
+        sendingRef.current = false;
+        inputRef.current?.focus();
       }
     });
   }
 
   function confirmScope(scope: FinanceScope) {
-    if (!pendingScope || pending) return;
+    if (!pendingScope || pending || sendingRef.current) return;
     const label = scope === "FAMILY" ? "Conta Familiar" : "Finanças pessoais";
     setInput("");
     setMessages((m) => [...m, { id: `u-${Date.now()}`, role: "user", text: label }]);
     const snapshot = pendingScope;
     setPendingScope(null);
+    sendingRef.current = true;
     start(async () => {
-      const res = await confirmPendingExpense(snapshot, scope);
-      if (res.ok) {
-        setMessages((m) => [
-          ...m,
-          {
-            id: `n-${Date.now()}`,
-            role: "nina",
-            text: res.reply.text,
-            suggestions: res.reply.suggestions,
-          },
-        ]);
-        if (res.mutated) router.refresh();
+      try {
+        const res = await confirmPendingExpense(snapshot, scope);
+        if (res.ok) {
+          pushMelReply(res.reply.text, res.reply.suggestions);
+          if (res.mutated) router.refresh();
+        } else {
+          pushError();
+        }
+      } catch {
+        pushError();
+      } finally {
+        sendingRef.current = false;
+        inputRef.current?.focus();
       }
     });
   }
 
   return (
-    <div className={`nina-chat ${compact ? "is-compact" : ""}`}>
-      <div className="nina-chat-messages" aria-live="polite">
+    <div className={`nina-chat ${compact ? "is-compact" : ""}`} aria-busy={pending}>
+      <div className="nina-chat-messages" aria-live="polite" role="log" aria-label="Conversa com a MEL">
         {messages.map((m) => (
-          <div key={m.id} className={`nina-bubble ${m.role}`}>
+          <div key={m.id} className={`nina-bubble ${m.role}${m.isError ? " is-error" : ""}`}>
             {m.role === "nina" ? (
               <span className="nina-avatar" aria-hidden>
-                N
+                M
               </span>
             ) : null}
             <div className="nina-bubble-body">
               {m.role === "nina" ? <strong className="nina-name">MEL</strong> : null}
               <p>{m.text}</p>
               {m.pendingScope ? (
-                <div className="nina-scope-actions">
+                <div className="nina-scope-actions" role="group" aria-label="Escolher espaço financeiro">
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
@@ -143,7 +186,13 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
               ) : m.suggestions?.length ? (
                 <div className="nina-suggestions">
                   {m.suggestions.map((s) => (
-                    <button key={s} type="button" className="nina-chip" onClick={() => send(s)}>
+                    <button
+                      key={s}
+                      type="button"
+                      className="nina-chip"
+                      disabled={pending}
+                      onClick={() => send(s)}
+                    >
                       {s}
                     </button>
                   ))}
@@ -153,13 +202,13 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
           </div>
         ))}
         {pending ? (
-          <div className="nina-bubble nina">
+          <div className="nina-bubble nina" aria-live="polite">
             <span className="nina-avatar" aria-hidden>
-              N
+              M
             </span>
             <div className="nina-bubble-body">
               <strong className="nina-name">MEL</strong>
-              <p className="nina-typing">A pensar…</p>
+              <p className="nina-typing">A MEL está a responder…</p>
             </div>
           </div>
         ) : null}
@@ -174,21 +223,42 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
         }}
       >
         <input
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder='Ex: "Gastei 35 € no Continente para casa"'
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send(input);
+            }
+          }}
+          placeholder='Ex: "Quanto gastei este mês?"'
           aria-label="Mensagem para a MEL"
+          autoComplete="off"
+          enterKeyHint="send"
           disabled={pending}
+          maxLength={1200}
         />
-        <button className="btn btn-primary" type="submit" disabled={pending || !input.trim()}>
-          Enviar
+        <button
+          className="btn btn-primary"
+          type="submit"
+          disabled={pending || !input.trim()}
+          aria-label="Enviar mensagem para a MEL"
+        >
+          {pending ? "…" : "Enviar"}
         </button>
       </form>
 
       {!compact ? (
-        <div className="nina-quick">
+        <div className="nina-quick" aria-label="Sugestões rápidas">
           {NINA_SUGGESTIONS.slice(0, 4).map((s) => (
-            <button key={s} type="button" className="nina-chip" onClick={() => send(s)}>
+            <button
+              key={s}
+              type="button"
+              className="nina-chip"
+              disabled={pending}
+              onClick={() => send(s)}
+            >
               {s}
             </button>
           ))}

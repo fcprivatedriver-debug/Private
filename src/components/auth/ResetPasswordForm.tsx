@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { resetPasswordWithToken } from "@/actions/auth-account";
 import { PASSWORD_HINT } from "@/lib/auth/password-rules";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
@@ -39,15 +40,21 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <p className="lead">Escolhe uma palavra-passe forte e segura.</p>
         {error ? <p className="form-error">{error}</p> : null}
         <form onSubmit={onSubmit} className="form-grid">
-          <label className="field">
-            <span>Nova palavra-passe</span>
-            <input name="password" type="password" required minLength={8} autoComplete="new-password" />
-            <span className="muted small">{PASSWORD_HINT}</span>
-          </label>
-          <label className="field">
-            <span>Confirmar</span>
-            <input name="confirm" type="password" required minLength={8} autoComplete="new-password" />
-          </label>
+          <PasswordField
+            label="Nova palavra-passe"
+            name="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            hint={PASSWORD_HINT}
+          />
+          <PasswordField
+            label="Confirmar"
+            name="confirm"
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
           <button className="btn btn-primary" type="submit" disabled={pending}>
             Guardar
           </button>

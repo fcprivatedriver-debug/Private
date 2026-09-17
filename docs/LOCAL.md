@@ -23,7 +23,7 @@ DATABASE_URL="postgresql://mafil:mafil@127.0.0.1:5432/mafil?schema=public"
 DIRECT_URL="postgresql://mafil:mafil@127.0.0.1:5432/mafil?schema=public"
 AUTH_SECRET="nina-demo-auth-secret-do-not-use-in-real-prod-32b"
 AUTH_TRUST_HOST="true"
-NEXT_PUBLIC_APP_NAME="Nina"
+NEXT_PUBLIC_APP_NAME="addYknow"
 DEMO_MODE="true"
 ```
 

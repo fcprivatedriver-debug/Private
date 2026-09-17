@@ -7,6 +7,7 @@ import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { safePostLoginPath } from "@/lib/auth-routes";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { checkEmailVerified } from "@/actions/auth-account";
 
 function LoginFormInner({ demoMode }: { demoMode: boolean }) {
@@ -92,16 +93,13 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
             <span>Email</span>
             <input name="email" type="email" required autoComplete="email" placeholder="o.teu@email.com" />
           </label>
-          <label className="field">
-            <span>Palavra-passe</span>
-            <input
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-            />
-          </label>
+          <PasswordField
+            label="Palavra-passe"
+            name="password"
+            required
+            autoComplete="current-password"
+            placeholder="••••••••"
+          />
           <button className="btn btn-primary" type="submit" disabled={loading}>
             Entrar
           </button>

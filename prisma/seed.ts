@@ -69,7 +69,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("🌱 A preparar dados demo Nina…");
+  console.log("🌱 A preparar dados demo addYknow…");
 
   await prisma.expenseLineItem.deleteMany();
   await prisma.goalItem.deleteMany();
@@ -113,7 +113,7 @@ async function main() {
 
   const ana = await prisma.user.create({
     data: {
-      name: "Nina Assistente",
+      name: "Ana Demo",
       email: "nina@nina.app",
       passwordHash,
       theme: "light",
@@ -147,7 +147,7 @@ async function main() {
     data: {
       familyId: family.id,
       userId: ana.id,
-      displayName: "Nina",
+      displayName: "Ana",
       role: "ADMIN",
       color: "#0f7a4a",
     },
@@ -245,7 +245,7 @@ async function main() {
         scope: "PERSONAL",
         amountCents: 160000,
         date: daysAgo(19),
-        description: "Salário Nina",
+        description: "Salário Ana",
       },
       {
         familyId: family.id,
@@ -695,7 +695,7 @@ async function main() {
         status: "AUTHORIZED",
         autoImport: true,
         importProvider: "EMAIL",
-        lastMessage: "Autorizado — a Nina pode ler faturas neste email.",
+        lastMessage: "Autorizado — a MEL pode ler faturas neste email.",
       },
       {
         familyId: family.id,
@@ -818,9 +818,9 @@ async function main() {
   // Atualizar saldo poupança account reference
   void poupanca;
 
-  console.log("✅ Demo Nina pronta (modo Demo separado)");
+  console.log("✅ Demo addYknow pronta (modo Demo separado)");
   console.log("   Demo:  demo@nina.app / " + DEMO_PASSWORD);
-  console.log("   Nina:  nina@nina.app / " + DEMO_PASSWORD);
+  console.log("   Ana:   nina@nina.app / " + DEMO_PASSWORD);
   console.log("   Conta de teste REAL (vazia): familia@nina.app — usar ensure-test-users");
   console.log("   Convite: /pt/convite/nina-demo-invite-token-seguro");
   console.log("   Abre: http://localhost:3000/pt/login");

@@ -41,15 +41,15 @@ Alias do branch `cursor/nina-stable-c6cd`:
 
 `https://private-duur-git-cursor-nina-stable-c6cd-fc-private-driver.vercel.app`
 
-## Domínio de produção — ninapp.pt
+## Domínio de produção — addandknow.pt
 
 O agente **não tem** `VERCEL_TOKEN` neste ambiente; a API Vercel não pode ser chamada sozinha.
 
 ### 1) Adicionar o domínio na Vercel (dono)
 
 1. Abre [Vercel → private-duur → Domains](https://vercel.com/fc-private-driver/private-duur/settings/domains)
-2. Adiciona `ninapp.pt` (produção / primary)
-3. Adiciona `www.ninapp.pt` e configura redirect → `ninapp.pt`
+2. Adiciona `addandknow.pt` (produção / primary)
+3. Adiciona `www.addandknow.pt` e configura redirect → `addandknow.pt`
 4. Desativa **Vercel Authentication** em [Deployment Protection](https://vercel.com/fc-private-driver/private-duur/settings/deployment-protection)
 
 Ou com token:
@@ -67,25 +67,25 @@ Confirma sempre os valores exactos no ecrã Domains da Vercel após adicionar o 
 | **A** | `@` (raiz)  | `76.76.21.21`         | 300 / Auto |
 | **CNAME** | `www`   | `cname.vercel-dns.com` | 300 / Auto |
 
-- Remove o **A** actual de `ninapp.pt` (hoje aponta para `193.29.59.104`).
+- Remove o **A** actual de `addandknow.pt` (hoje aponta para `193.29.59.104`).
 - Se a Vercel pedir um **TXT** de verificação (domínio já usado noutro projeto), cria-o exactamente como mostrado.
 - Alguns planos mostram um CNAME de projeto (ex. `….vercel-dns-0.com`) em vez de `cname.vercel-dns.com` — usa o valor do dashboard.
 
 ### 3) Variáveis de ambiente (Production)
 
 ```
-AUTH_URL=https://ninapp.pt
-NEXT_PUBLIC_APP_URL=https://ninapp.pt
-EMAIL_FROM=Nina <no-reply@ninapp.pt>
+AUTH_URL=https://addandknow.pt
+NEXT_PUBLIC_APP_URL=https://addandknow.pt
+EMAIL_FROM=Nina <no-reply@addandknow.pt>
 RESEND_API_KEY=<chave>
 DEMO_MODE=false
 ```
 
 Depois **Redeploy** do deployment de produção.
 
-### 4) Resend — emails de `no-reply@ninapp.pt`
+### 4) Resend — emails de `no-reply@addandknow.pt`
 
-1. Em [resend.com/domains](https://resend.com/domains) adiciona o domínio **`ninapp.pt`**.
+1. Em [resend.com/domains](https://resend.com/domains) adiciona o domínio **`addandknow.pt`**.
 2. Publica **exactamente** os registos que o Resend mostrar (valores únicos por conta). Modelo típico:
 
 | Tipo | Nome/Host | Valor (modelo — copia do Resend) | TTL |
@@ -93,23 +93,23 @@ Depois **Redeploy** do deployment de produção.
 | **TXT** (DKIM) | `resend._domainkey` | *(chave pública longa do dashboard Resend)* | 300 |
 | **TXT** (SPF envio) | `send` | `v=spf1 include:amazonses.com ~all` | 300 |
 | **MX** (retorno/bounces) | `send` | `feedback-smtp.<região>.amazonses.com` (prioridade **10**) | 300 |
-| **TXT** (DMARC, recomendado) | `_dmarc` | `v=DMARC1; p=none; rua=mailto:admin@ninapp.pt` | 300 |
+| **TXT** (DMARC, recomendado) | `_dmarc` | `v=DMARC1; p=none; rua=mailto:admin@addandknow.pt` | 300 |
 
 Notas importantes:
 
-- O Resend usa o subdomínio **`send.ninapp.pt`** para SPF/MX — **não** substituas o MX raiz `mail.ninapp.pt` (receção) se quiseres manter email de caixa no domínio.
+- O Resend usa o subdomínio **`send.addandknow.pt`** para SPF/MX — **não** substituas o MX raiz `mail.addandknow.pt` (receção) se quiseres manter email de caixa no domínio.
 - Já existe SPF na raiz (`v=spf1 a mx ip4:193.29.59.104 …`). Se precisares de enviar também pela raiz, funde num único TXT SPF (só pode haver **um** SPF por host). Com o modelo Resend em `send.`, podes deixar o SPF da raiz para a caixa actual.
-- Após Verified no Resend: `EMAIL_FROM=Nina <no-reply@ninapp.pt>` + `RESEND_API_KEY` na Vercel → Redeploy.
+- Após Verified no Resend: `EMAIL_FROM=Nina <no-reply@addandknow.pt>` + `RESEND_API_KEY` na Vercel → Redeploy.
 
 ### 5) Verificar
 
 ```bash
-dig +short ninapp.pt A        # deve ser 76.76.21.21
-dig +short www.ninapp.pt CNAME
-curl -sI https://ninapp.pt | head
-dig +short TXT resend._domainkey.ninapp.pt
-dig +short TXT send.ninapp.pt
-dig +short MX send.ninapp.pt
+dig +short addandknow.pt A        # deve ser 76.76.21.21
+dig +short www.addandknow.pt CNAME
+curl -sI https://addandknow.pt | head
+dig +short TXT resend._domainkey.addandknow.pt
+dig +short TXT send.addandknow.pt
+dig +short MX send.addandknow.pt
 ```
 
 ### 6) Checklist go-live
@@ -117,8 +117,8 @@ dig +short MX send.ninapp.pt
 ```
 □ Domínio ligado
 □ SSL ativo
-□ Produção em ninapp.pt
-□ www redireciona para ninapp.pt
+□ Produção em addandknow.pt
+□ www redireciona para addandknow.pt
 □ Resend configurado
 □ Email de confirmação funciona
 □ Recuperação de password funciona

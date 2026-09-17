@@ -15,6 +15,7 @@ import {
 } from "@/lib/validators";
 import bcrypt from "bcryptjs";
 import { recognizeReceipt } from "@/lib/ocr";
+import { storeReceiptFromFormFile, clearReceiptUrl } from "@/lib/receipts";
 import { getImportAdapter } from "@/lib/imports";
 import { generateInsights, buildMonthlyReport } from "@/lib/ai/finance-insights";
 import { toCSV, toExcelTSV, toSimplePdfText } from "@/lib/export";
@@ -152,12 +153,33 @@ export async function createExpense(formData: FormData) {
     accountId: formData.get("accountId") || null,
     notes: formData.get("notes") || null,
     memberId: formData.get("memberId") || membership.id,
+    // Campos internos — preenchidos pelo upload, nunca pelo utilizador como URL manual
     receiptImageUrl: formData.get("receiptImageUrl") || null,
     receiptPdfUrl: formData.get("receiptPdfUrl") || null,
   });
   if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
   const amountCents = parseEURInput(parsed.data.amount);
   if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
+
+  let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl);
+  let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl);
+
+  const receiptFile = formData.get("receiptFile");
+  if (receiptFile instanceof File && receiptFile.size > 0) {
+    const up = await storeReceiptFromFormFile({
+      familyId: family.id,
+      userId: session.user.id,
+      file: receiptFile,
+    });
+    if (!up.ok) return { ok: false as const, error: up.error };
+    if (up.kind === "pdf") {
+      receiptPdfUrl = up.stored.url;
+      receiptImageUrl = null;
+    } else {
+      receiptImageUrl = up.stored.url;
+      receiptPdfUrl = null;
+    }
+  }
 
   let storeId: string | undefined;
   if (parsed.data.storeName) {
@@ -195,8 +217,8 @@ export async function createExpense(formData: FormData) {
       storeName: parsed.data.storeName || null,
       paymentMethod: parsed.data.paymentMethod as PaymentMethod,
       notes: parsed.data.notes || null,
-      receiptImageUrl: parsed.data.receiptImageUrl || null,
-      receiptPdfUrl: parsed.data.receiptPdfUrl || null,
+      receiptImageUrl,
+      receiptPdfUrl,
     },
   });
   await logTransactionAudit({
@@ -210,6 +232,12 @@ export async function createExpense(formData: FormData) {
   });
   revalidateApp();
   return { ok: true as const };
+}
+
+function emptyToNull(v: string | null | undefined): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s ? s : null;
 }
 
 export async function updateIncome(formData: FormData) {
@@ -378,6 +406,38 @@ export async function updateExpense(formData: FormData) {
   }
 
   const scope = parseScope(formData.get("scope"), existing.scope);
+
+  let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl) ?? existing.receiptImageUrl;
+  let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl) ?? existing.receiptPdfUrl;
+
+  const removeReceipt = String(formData.get("removeReceipt") || "") === "1";
+  if (removeReceipt) {
+    await clearReceiptUrl(existing.receiptImageUrl);
+    await clearReceiptUrl(existing.receiptPdfUrl);
+    receiptImageUrl = null;
+    receiptPdfUrl = null;
+  }
+
+  const receiptFile = formData.get("receiptFile");
+  if (receiptFile instanceof File && receiptFile.size > 0) {
+    const up = await storeReceiptFromFormFile({
+      familyId: family.id,
+      userId: session.user.id,
+      file: receiptFile,
+    });
+    if (!up.ok) return { ok: false as const, error: up.error };
+    // substituir: limpar anterior
+    await clearReceiptUrl(existing.receiptImageUrl);
+    await clearReceiptUrl(existing.receiptPdfUrl);
+    if (up.kind === "pdf") {
+      receiptPdfUrl = up.stored.url;
+      receiptImageUrl = null;
+    } else {
+      receiptImageUrl = up.stored.url;
+      receiptPdfUrl = null;
+    }
+  }
+
   await prisma.expense.update({
     where: { id },
     data: {
@@ -395,8 +455,8 @@ export async function updateExpense(formData: FormData) {
       storeName: parsed.data.storeName || null,
       paymentMethod: parsed.data.paymentMethod as PaymentMethod,
       notes: parsed.data.notes || null,
-      receiptImageUrl: parsed.data.receiptImageUrl || null,
-      receiptPdfUrl: parsed.data.receiptPdfUrl || null,
+      receiptImageUrl,
+      receiptPdfUrl,
     },
   });
   await logTransactionAudit({
@@ -455,7 +515,10 @@ export async function deleteExpense(id: string) {
 }
 
 export async function createBudget(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar orçamentos" };
+  }
   const parsed = budgetSchema.safeParse({
     categoryId: formData.get("categoryId"),
     limit: formData.get("limit"),
@@ -490,6 +553,9 @@ export async function createBudget(formData: FormData) {
 
 export async function createGoal(formData: FormData) {
   const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const parsed = goalSchema.safeParse({
     name: formData.get("name"),
     type: formData.get("type") || "CUSTOM",
@@ -529,7 +595,10 @@ export async function createGoal(formData: FormData) {
 }
 
 export async function contributeToGoal(goalId: string, amountRaw: string) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const cents = parseEURInput(amountRaw);
   if (cents == null || cents <= 0) return { ok: false as const, error: "Valor inválido" };
   const goal = await prisma.savingsGoal.findFirst({ where: { id: goalId, familyId: family.id } });
@@ -547,7 +616,10 @@ export async function contributeToGoal(goalId: string, amountRaw: string) {
 }
 
 export async function createRecurring(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar recorrentes" };
+  }
   const parsed = recurringSchema.safeParse({
     name: formData.get("name"),
     amount: formData.get("amount"),
@@ -582,7 +654,10 @@ export async function createRecurring(formData: FormData) {
 }
 
 export async function createCategory(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar categorias" };
+  }
   const parsed = categorySchema.safeParse({
     name: formData.get("name"),
     kind: formData.get("kind") || "EXPENSE",
@@ -625,6 +700,15 @@ export async function markAlertRead(alertId: string) {
 export async function runOcrPreview(fileName: string) {
   await requireFamilyContext();
   const result = await recognizeReceipt({ fileName });
+  if (!result.available) {
+    return {
+      ok: false as const,
+      error:
+        result.unavailableReason ||
+        "A leitura automática de faturas ainda não está disponível.",
+      result,
+    };
+  }
   return { ok: true as const, result };
 }
 
@@ -639,48 +723,25 @@ export async function confirmOcrExpense(input: {
   accountId?: string | null;
   items?: { name: string; quantity: number; unitCents: number; totalCents: number; vatRate?: number }[];
 }) {
-  const { session, family, membership } = await requireFamilyContext();
-  let storeId: string | undefined;
-  if (input.storeName) {
-    const normalized = input.storeName.trim().toLowerCase();
-    const store = await prisma.store.upsert({
-      where: { familyId_normalizedName: { familyId: family.id, normalizedName: normalized } },
-      create: { familyId: family.id, name: input.storeName.trim(), normalizedName: normalized },
-      update: {},
-    });
-    storeId = store.id;
+  const { membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para registar despesas" };
   }
-
-  const expense = await prisma.expense.create({
-    data: {
-      familyId: family.id,
-      memberId: membership.id,
-      createdById: session.user.id,
-      categoryId: input.categoryId,
-      accountId: input.accountId || null,
-      storeId,
-      amountCents: input.totalCents,
-      vatCents: input.vatCents,
-      date: new Date(input.date),
-      description: input.description,
-      storeName: input.storeName,
-      paymentMethod: input.paymentMethod,
-      ocrRawJson: JSON.stringify(input),
-      lineItems: input.items?.length
-        ? {
-            create: input.items.map((i) => ({
-              name: i.name,
-              quantity: i.quantity,
-              unitCents: i.unitCents,
-              totalCents: i.totalCents,
-              vatRate: i.vatRate,
-            })),
-          }
-        : undefined,
-    },
-  });
-  revalidateApp();
-  return { ok: true as const, id: expense.id };
+  // OCR real ainda não activo — nunca gravar a partir de preview fictício
+  const preview = await recognizeReceipt({});
+  if (!preview.available) {
+    return {
+      ok: false as const,
+      error:
+        preview.unavailableReason ||
+        "A leitura automática de faturas ainda não está disponível. Regista a despesa manualmente.",
+    };
+  }
+  void input;
+  return {
+    ok: false as const,
+    error: "A confirmação OCR ainda não está ligada a um motor real.",
+  };
 }
 
 export async function startImport(provider: ImportProvider) {
@@ -904,16 +965,16 @@ export async function exportFamilyData(format: "csv" | "excel" | "pdf") {
   ];
 
   if (format === "csv") {
-    return { ok: true as const, filename: "nina-export.csv", content: toCSV(rows, columns), mime: "text/csv;charset=utf-8" };
+    return { ok: true as const, filename: "addknow-export.csv", content: toCSV(rows, columns), mime: "text/csv;charset=utf-8" };
   }
   if (format === "excel") {
-    return { ok: true as const, filename: "nina-export.xls", content: toExcelTSV(rows, columns), mime: "application/vnd.ms-excel" };
+    return { ok: true as const, filename: "addknow-export.xls", content: toExcelTSV(rows, columns), mime: "application/vnd.ms-excel" };
   }
   const pdf = toSimplePdfText(
-    "AddYnow Export",
+    "addYknow Export",
     rows.slice(0, 40).map((r) => `${r.data} ${r.tipo} ${r.descricao} ${r.valor}€`),
   );
-  return { ok: true as const, filename: "nina-export.pdf", content: pdf, mime: "application/pdf" };
+  return { ok: true as const, filename: "addknow-export.pdf", content: pdf, mime: "application/pdf" };
 }
 
 export async function updateTheme(theme: "light" | "dark" | "system") {
@@ -933,7 +994,10 @@ export async function addFamilyMember(formData: FormData) {
   }
   const name = String(formData.get("name") || "").trim();
   const email = String(formData.get("email") || "").trim().toLowerCase();
-  const password = String(formData.get("password") || "nina123");
+  const password = String(formData.get("password") || "");
+  if (!password || password.length < 8) {
+    return { ok: false as const, error: "Indica uma palavra-passe com pelo menos 8 caracteres." };
+  }
   if (!name || !email) return { ok: false as const, error: "Nome e email obrigatórios" };
 
   let user = await prisma.user.findUnique({ where: { email } });

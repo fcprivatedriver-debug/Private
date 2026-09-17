@@ -13,6 +13,13 @@ type CaptureResult = {
 };
 
 const VOICE_EXAMPLES = [
+  "Quanto gastei este mês?",
+  "Onde posso poupar?",
+  "Combustível mais barato perto de mim?",
+  "Compara a minha lista.",
+];
+
+const VOICE_EXAMPLES_FULL = [
   "Gastei 24 euros na BP",
   "Adiciona leite Mimosa",
   "Onde abasteço?",
@@ -49,9 +56,12 @@ function getSpeechRecognition(): (new () => SpeechRecognitionLike) | undefined {
 export function InstantCapture({
   initialMode = "voice",
   autoStart = false,
+  compact = false,
 }: {
   initialMode?: Mode;
   autoStart?: boolean;
+  /** UI enxuta para ecrã Falar */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -164,12 +174,19 @@ export function InstantCapture({
     fd.set("file", file);
     start(async () => {
       const res = await instantCapturePhoto(fd);
-      if (res.ok) {
-        setResult({ reply: res.reply, detail: res.detail });
-        router.refresh();
-      } else {
-        setError(res.error);
+      if (res.ok === false) {
+        setError(
+          res.receiptUrl
+            ? `${res.error} Podes registar o valor em Despesas e anexar a fatura aí.`
+            : res.error,
+        );
+        return;
       }
+      // OCR real ainda não activo — ramo reservado para motor futuro
+      setResult({
+        reply: "Fotografia recebida.",
+        detail: "A leitura automática ainda não está disponível.",
+      });
     });
   }
 
@@ -186,39 +203,68 @@ export function InstantCapture({
     }
   }, [autoStart, initialMode, startListening]);
 
+  const examples = compact ? VOICE_EXAMPLES : VOICE_EXAMPLES_FULL;
+
   return (
-    <div className={`captura stack-lg ${listening ? "is-listening-mode" : ""}`}>
-      <div className="captura-modes" role="tablist" aria-label="Método de captura">
-        {(
-          [
-            ["voice", "Falar"],
-            ["photo", "Fotografar"],
-            ["write", "Escrever"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={mode === id}
-            className={`captura-mode ${mode === id ? "active" : ""}`}
-            onClick={() => {
-              setMode(id);
-              setNeedsTap(false);
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    <div className={`captura stack-lg ${listening ? "is-listening-mode" : ""} ${compact ? "captura-compact" : ""}`}>
+      {!compact ? (
+        <div className="captura-modes" role="tablist" aria-label="Método de captura">
+          {(
+            [
+              ["voice", "Falar"],
+              ["photo", "Fotografar"],
+              ["write", "Escrever"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={mode === id}
+              className={`captura-mode ${mode === id ? "active" : ""}`}
+              onClick={() => {
+                setMode(id);
+                setNeedsTap(false);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : mode === "voice" ? (
+        <div className="captura-modes captura-modes-compact" role="tablist" aria-label="Método">
+          {(
+            [
+              ["voice", "Voz"],
+              ["write", "Texto"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={mode === id}
+              className={`captura-mode ${mode === id ? "active" : ""}`}
+              onClick={() => {
+                setMode(id);
+                setNeedsTap(false);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {mode === "voice" ? (
-        <section className="captura-panel captura-voice-fast">
-          <p className="muted" style={{ marginTop: 0 }}>
-            {autoStart
-              ? "Diz o gasto agora — a MEL regista sozinha."
-              : "Um toque e fala. Exemplos: «BP 20 euros», «Continente 58 euros»."}
-          </p>
+        <section className={`captura-panel captura-voice-fast ${compact ? "is-flat" : ""}`}>
+          {!compact ? (
+            <p className="muted" style={{ marginTop: 0 }}>
+              {autoStart
+                ? "Diz o gasto agora — a MEL regista sozinha."
+                : "Um toque e fala. Exemplos: «BP 20 euros», «Continente 58 euros»."}
+            </p>
+          ) : null}
           <button
             type="button"
             className={`captura-mic ${listening ? "is-listening" : ""} ${needsTap ? "needs-tap" : ""}`}
@@ -233,11 +279,13 @@ export function InstantCapture({
                 ? "A registar…"
                 : needsTap
                   ? "Toca para falar"
-                  : "Falar com a MEL"}
+                  : compact
+                    ? "Falar"
+                    : "Falar com a MEL"}
           </button>
           {text ? <p className="captura-transcript">«{text}»</p> : null}
           <div className="nina-quick">
-            {VOICE_EXAMPLES.map((ex) => (
+            {examples.map((ex) => (
               <button
                 key={ex}
                 type="button"
@@ -253,7 +301,7 @@ export function InstantCapture({
       ) : null}
 
       {mode === "write" ? (
-        <section className="captura-panel">
+        <section className={`captura-panel ${compact ? "is-flat" : ""}`}>
           <form
             className="nina-composer"
             onSubmit={(e) => {
@@ -264,24 +312,25 @@ export function InstantCapture({
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder='Ex: "gastei 24 euros na BP" ou "adiciona leite Vigor"'
-              aria-label="Texto para registar"
+              placeholder={compact ? "Escreve a tua pergunta…" : 'Ex: "gastei 24 euros na BP"'}
+              aria-label="Texto para a MEL"
               disabled={pending}
               autoFocus
             />
             <button className="btn btn-primary" type="submit" disabled={pending || !text.trim()}>
-              Registar
+              Enviar
             </button>
           </form>
         </section>
       ) : null}
 
       {mode === "photo" ? (
-        <section className="captura-panel">
-          <p className="muted" style={{ marginTop: 0 }}>
-            Fotografa faturas, talões ou contas. A MEL lê com OCR, classifica e arquiva a imagem no
-            movimento.
-          </p>
+        <section className={`captura-panel ${compact ? "is-flat" : ""}`}>
+          {!compact ? (
+            <p className="muted" style={{ marginTop: 0 }}>
+              Fotografa faturas, talões ou contas.
+            </p>
+          ) : null}
           <input
             ref={fileRef}
             type="file"
@@ -296,7 +345,7 @@ export function InstantCapture({
             disabled={pending}
             onClick={() => fileRef.current?.click()}
           >
-            {pending ? "A ler a fatura…" : "Abrir câmara / galeria"}
+            {pending ? "A processar…" : "Anexar fatura"}
           </button>
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -313,26 +362,24 @@ export function InstantCapture({
       ) : null}
       {error ? <p className="text-expense">{error}</p> : null}
 
-      <section className="captura-alt panel">
-        <div className="panel-body">
-          <h2 style={{ marginTop: 0, fontSize: "1.05rem" }}>Outras formas — o mesmo resultado</h2>
-          <ul className="captura-alt-list">
-            <li>
-              <Link href="/pt/ligacoes">Importação automática</Link> via Ligações (email, banco,
-              supermercados…)
-            </li>
-            <li>
-              <Link href="/pt/ocr">OCR clássico</Link> com revisão manual dos campos
-            </li>
-            <li>
-              <Link href="/pt/dashboard">Conversar</Link> quando quiseres uma resposta mais longa
-            </li>
-          </ul>
-          <p className="muted small" style={{ marginBottom: 0 }}>
-            A vida é para ser vivida. A MEL trata das contas.
-          </p>
-        </div>
-      </section>
+      {!compact ? (
+        <section className="captura-alt panel">
+          <div className="panel-body">
+            <h2 style={{ marginTop: 0, fontSize: "1.05rem" }}>Outras formas</h2>
+            <ul className="captura-alt-list">
+              <li>
+                <Link href="/pt/ligacoes">Importação automática</Link>
+              </li>
+              <li>
+                <Link href="/pt/ocr">OCR clássico</Link>
+              </li>
+              <li>
+                <Link href="/pt/despesas/nova">Nova despesa</Link>
+              </li>
+            </ul>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

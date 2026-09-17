@@ -3,14 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#1e3a5f" />
-    <title>AddYnow — Sem ligação</title>
+    <meta name="theme-color" content="#39B8B2" />
+    <title>addYknow — Sem ligação</title>
     <style>
       :root {
-        color-scheme: light dark;
-        --bg: #1e3a5f;
-        --fg: #f4f7fb;
-        --muted: #c5d0de;
+        color-scheme: light;
+        --bg: #f7fafa;
+        --fg: #17252d;
+        --muted: #5a6b73;
+        --teal: #39b8b2;
+        --navy: #173b5e;
+        --soft: #ddf5f3;
       }
       * { box-sizing: border-box; }
       body {
@@ -20,7 +23,9 @@
         place-items: center;
         padding: 1.5rem;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at 30% 20%, #2a4d7a, var(--bg) 55%);
+        background:
+          radial-gradient(ellipse at 20% 0%, var(--soft), transparent 55%),
+          var(--bg);
         color: var(--fg);
         text-align: center;
       }
@@ -28,19 +33,20 @@
         max-width: 24rem;
         padding: 1.75rem 1.5rem;
         border-radius: 1.25rem;
-        background: color-mix(in srgb, #fff 8%, transparent);
-        backdrop-filter: blur(8px);
+        background: #fff;
+        border: 1px solid color-mix(in srgb, var(--navy) 8%, transparent);
+        box-shadow: 0 1px 2px rgba(23, 59, 94, 0.04);
       }
-      h1 { font-size: 1.6rem; margin: 0 0 0.5rem; }
+      h1 { font-size: 1.6rem; margin: 0 0 0.5rem; color: var(--navy); }
       p { margin: 0 0 1rem; color: var(--muted); line-height: 1.45; font-size: 0.95rem; }
       button, a.btn {
         appearance: none;
         border: 0;
-        border-radius: 999px;
+        border-radius: 12px;
         padding: 0.75rem 1.25rem;
         font-weight: 650;
-        background: #fff;
-        color: #1e3a5f;
+        background: var(--teal);
+        color: #fff;
         cursor: pointer;
         text-decoration: none;
         display: inline-block;
@@ -48,19 +54,19 @@
       }
       button.ghost {
         background: transparent;
-        color: #fff;
-        border: 1px solid color-mix(in srgb, #fff 40%, transparent);
+        color: var(--navy);
+        border: 1px solid color-mix(in srgb, var(--navy) 18%, transparent);
       }
     </style>
   </head>
   <body>
     <div class="card">
-      <h1>AddYnow</h1>
+      <h1>addYknow</h1>
       <p>
         Não foi possível contactar o servidor. Isto acontece quando um link temporário expirou
-        ou quando estás sem rede — não significa que a MEL esteja avariada.
+        ou quando estás sem rede — não significa que a addYknow esteja avariada.
       </p>
-      <p>Usa o URL estável da Vercel (não links trycloudflare) e limpa o cache abaixo.</p>
+      <p>Usa https://www.addandknow.pt e limpa o cache abaixo se precisares.</p>
       <button type="button" id="retry">Limpar cache e tentar de novo</button>
       <button type="button" class="ghost" id="nuke">Remover app em cache</button>
     </div>
@@ -86,7 +92,7 @@
       });
       document.getElementById("nuke").addEventListener("click", async function () {
         await clearAll();
-        alert("Cache da MEL removido. Abre o URL estável da Vercel.");
+        alert("Cache da addYknow removido. Abre https://www.addandknow.pt");
         location.replace("/pt/login?nocache=" + Date.now());
       });
     </script>

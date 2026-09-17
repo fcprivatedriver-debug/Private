@@ -22,6 +22,9 @@ export type IntelligenceContext = {
   memberId?: string;
   utterance: string;
   shoppingItems?: { name: string; brand?: string | null; quantity?: string | null }[];
+  /** Coordenadas reais do utilizador — nunca inventar Lisboa */
+  lat?: number;
+  lng?: number;
 };
 
 export type IntelligenceOutcome = {
@@ -60,7 +63,7 @@ export async function runIntelligence(
   // ——— Saving Engine ———
   if (
     intent?.kind === "savings_query" ||
-    /(quanto poupei|quanto poupamos|poupanca da nina|poupança da nina|graças à nina|gracas a nina)/.test(
+    /(quanto poupei|quanto poupamos|poupanca da mel|poupança da mel|gracas a mel|graças à mel|poupanca da nina|poupança da nina)/.test(
       n,
     )
   ) {
@@ -127,6 +130,9 @@ export async function runIntelligence(
     const result = await evEngine.recommendCharge({
       batteryPercent: intent.batteryPercent ?? prefs.typicalBatteryPct ?? 30,
       preferredNetworks: prefs.evNetwork ? [prefs.evNetwork] : undefined,
+      lat: ctx.lat,
+      lng: ctx.lng,
+      navigationApp: prefs.navigationApp ?? undefined,
     });
     const network =
       result.recommendation.data &&
@@ -162,6 +168,9 @@ export async function runIntelligence(
       fuelType: detectFuelType(n),
       budgetEuros: intent.budgetEuros,
       preferredBrands: prefs.fuelBrand ? [prefs.fuelBrand] : undefined,
+      lat: ctx.lat,
+      lng: ctx.lng,
+      navigationApp: prefs.navigationApp ?? undefined,
     });
     const brand =
       result.recommendation.data &&

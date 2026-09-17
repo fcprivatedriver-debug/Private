@@ -1,10 +1,12 @@
-/**
- * Product Service — camada isolada entre a Nina e os supermercados.
- * A UI e as actions NUNCA falam diretamente com Continente/Pingo Doce.
- * Trocar o provider (scraping → API oficial) não muda a lógica de negócio.
- */
-
-export type StoreProviderId = "continente" | "pingo_doce" | "lidl" | "aldi";
+export type StoreProviderId =
+  | "continente"
+  | "pingo_doce"
+  | "auchan"
+  | "lidl"
+  | "aldi"
+  | "froiz"
+  | "intermarche"
+  | "mercadona";
 
 export type ProductMatch = {
   id: string;
@@ -13,11 +15,18 @@ export type ProductMatch = {
   weight: string | null;
   categorySlug: string | null;
   priceCents: number | null;
+  /** Preço por unidade normalizado quando disponível (cêntimos / kg|L|un) */
+  pricePerUnitCents?: number | null;
+  unitLabel?: string | null;
   imageUrl: string | null;
   storeName: string;
   storeId: StoreProviderId;
   productUrl: string | null;
-  /** Score interno 0–1 para escolher o melhor match */
+  storeLocationId?: string | null;
+  regularPriceCents?: number | null;
+  promoPriceCents?: number | null;
+  updatedAt?: string | null;
+  source?: string | null;
   score?: number;
 };
 
@@ -32,19 +41,21 @@ export type StorePriceQuote = {
   totalCents: number;
   missing: string[];
   lines: { name: string; priceCents: number | null; found: boolean }[];
+  updatedAt?: string | null;
+  source?: string | null;
+  complete?: boolean;
 };
 
 export type BasketCompareResult = {
   quotes: StorePriceQuote[];
   best: StorePriceQuote | null;
   savingsCents: number;
+  unavailableReason?: string;
 };
 
 export interface StoreProductProvider {
   id: StoreProviderId;
   label: string;
-  /** Pesquisa produtos — pode usar web, API ou catálogo local. */
   search(query: string): Promise<ProductMatch[]>;
-  /** Cotação aproximada para um nome de produto (lista de compras). */
   quote?(productName: string): Promise<ProductMatch | null>;
 }

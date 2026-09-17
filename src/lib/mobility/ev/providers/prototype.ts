@@ -1,3 +1,4 @@
+/** @deprecated LEGACY MOCK — não importar. Usar mobie.ts (honest unavailable). */
 import type { ChargingProvider, ChargingStation, EvContext } from "../types";
 
 const STATIONS: Omit<ChargingStation, "distanceKm">[] = [

@@ -9,7 +9,7 @@ export const systemReminderPrototype: ReminderProvider = {
     const fmt = (d: Date) =>
       d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     const end = new Date(draft.when.getTime() + 15 * 60_000);
-    const deepLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(draft.title)}&dates=${fmt(draft.when)}/${fmt(end)}&details=${encodeURIComponent("Lembrete AddYnow")}`;
+    const deepLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(draft.title)}&dates=${fmt(draft.when)}/${fmt(end)}&details=${encodeURIComponent("Lembrete addYknow")}`;
     return { ok: true as const, deepLink };
   },
 };

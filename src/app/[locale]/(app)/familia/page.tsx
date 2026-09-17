@@ -14,7 +14,8 @@ export default async function FamiliaPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const [members, recentExpenses, recentIncomes, goals, latestInvite] = await Promise.all([
+  const [members, recentExpenses, recentIncomes, goals, latestInvite, pendingInvites] =
+    await Promise.all([
     prisma.familyMember.findMany({
       where: { familyId: membership.familyId },
       include: { user: { select: { email: true, image: true } } },
@@ -40,9 +41,20 @@ export default async function FamiliaPage() {
       where: {
         familyId: membership.familyId,
         acceptedAt: null,
+        revokedAt: null,
         expiresAt: { gt: new Date() },
       },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.familyInvite.findMany({
+      where: {
+        familyId: membership.familyId,
+        acceptedAt: null,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 20,
     }),
   ]);
 
@@ -150,6 +162,15 @@ export default async function FamiliaPage() {
         members={members}
         latestInvitePath={latestInvite ? `/pt/convite/${latestInvite.token}` : null}
         allowMembersEditOthers={membership.family.allowMembersEditOthers}
+        pendingInvites={pendingInvites.map((i) => ({
+          id: i.id,
+          channel: i.channel,
+          email: i.email,
+          phone: i.phone,
+          inviteeName: i.inviteeName,
+          expiresAt: i.expiresAt.toISOString(),
+          path: `/pt/convite/${i.token}`,
+        }))}
       />
     </div>
   );

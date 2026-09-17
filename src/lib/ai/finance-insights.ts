@@ -142,7 +142,7 @@ export function generateInsights(
 
 export function buildMonthlyReport(snap: FinanceSnapshot): string {
   const lines = [
-    "Resumo do mês · AddYnow",
+    "Resumo do mês · addYknow",
     `Receitas: ${formatEUR(snap.incomeCents)}`,
     `Despesas: ${formatEUR(snap.expenseCents)}`,
     `Saldo: ${formatEUR(snap.incomeCents - snap.expenseCents)}`,
