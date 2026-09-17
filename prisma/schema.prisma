@@ -306,6 +306,7 @@ model Family {
   shoppingItems      ShoppingListItem[]
   productPreferences ProductPreference[]
   transactionAudits  TransactionAuditLog[]
+  storedObjects      StoredObject[]
 }
 
 model FamilyMember {
@@ -960,6 +961,25 @@ model NinaImpact {
   @@index([familyId, sourceEngine])
 }
 
+/// Ficheiros de fatura / anexos — persistência em BD (Neon), não no filesystem Vercel.
+model StoredObject {
+  id          String   @id @default(cuid())
+  familyId    String
+  storageKey  String   @unique
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  backend     String   @default("db")
+  data        Bytes?
+  externalUrl String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([createdAt])
+}
 
 // ——— Dados externos (cache / sincronização) ———
 // Regra: só dados reais com fonte + timestamp, ou ausência.
@@ -1121,3 +1141,4 @@ model ExtProductPrice {
   @@index([productId, fetchedAt])
   @@index([fetchedAt])
 }
+

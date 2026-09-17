@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
-import { EmptyState, Panel } from "@/components/ui/FinanceUI";
+import { EmptyState } from "@/components/ui/FinanceUI";
 import { ShoppingListClient } from "@/components/nina/ShoppingListClient";
 
 export default async function ListaPage({
@@ -46,39 +46,36 @@ export default async function ListaPage({
     lists.find((l) => l.id === activeListId)?.items.filter((i) => !i.isChecked).length ?? 0;
 
   return (
-    <div className="page-stack">
-      <h1 className="page-title">Lista de compras</h1>
-      <p className="page-sub">
-        Diz ou escreve o produto — a MEL pesquisa no Continente e no Pingo Doce, mostra preços
-        quando disponíveis e, com «Comparar Continente / Pingo Doce», compara o total entre lojas.
-      </p>
-      <Panel title={`${openCount} por comprar`}>
-        {lists.length === 0 ? (
-          <EmptyState title="Sem listas" body="Cria a primeira lista para começar." />
-        ) : (
-          <ShoppingListClient
-            lists={lists.map((l) => ({
-              id: l.id,
-              name: l.name,
-              isShared: l.isShared,
-              items: l.items.map((i) => ({
-                id: i.id,
-                name: i.name,
-                quantity: i.quantity,
-                categorySlug: i.categorySlug,
-                isChecked: i.isChecked,
-                brand: i.brand,
-                weight: i.weight,
-                priceCents: i.priceCents,
-                imageUrl: i.imageUrl,
-                storeName: i.storeName,
-                productUrl: i.productUrl,
-              })),
-            }))}
-            activeListId={activeListId}
-          />
-        )}
-      </Panel>
+    <div className="page-stack compras-page">
+      <header className="compras-header">
+        <h1 className="page-title">Compras</h1>
+        <p className="page-sub">{openCount} por comprar</p>
+      </header>
+      {lists.length === 0 ? (
+        <EmptyState title="Sem listas" body="Cria a primeira lista para começar." />
+      ) : (
+        <ShoppingListClient
+          lists={lists.map((l) => ({
+            id: l.id,
+            name: l.name,
+            isShared: l.isShared,
+            items: l.items.map((i) => ({
+              id: i.id,
+              name: i.name,
+              quantity: i.quantity,
+              categorySlug: i.categorySlug,
+              isChecked: i.isChecked,
+              brand: i.brand,
+              weight: i.weight,
+              priceCents: i.priceCents,
+              imageUrl: i.imageUrl,
+              storeName: i.storeName,
+              productUrl: i.productUrl,
+            })),
+          }))}
+          activeListId={activeListId}
+        />
+      )}
     </div>
   );
 }

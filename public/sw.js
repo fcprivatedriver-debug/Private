@@ -1,5 +1,5 @@
 /* addYknow service worker — network-first; never trap users on Offline.html for dead tunnels */
-const CACHE_VERSION = "nina-v1-2-stable";
+const CACHE_VERSION = "addyknow-v1";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const OFFLINE_URL = "/offline.html";
@@ -16,6 +16,16 @@ function isEphemeralHost(hostname) {
     hostname.endsWith(".serveousercontent.com") ||
     hostname === "localhost" ||
     hostname === "127.0.0.1"
+  );
+}
+
+/** Legacy product eras (Mel / Nina) + previous addYknow bumps — purge on activate. */
+function isStaleCache(key) {
+  if (key === SHELL_CACHE || key === RUNTIME_CACHE) return false;
+  return (
+    key.startsWith("mel-") ||
+    key.startsWith("nina-") ||
+    key.startsWith("addyknow-")
   );
 }
 
@@ -36,14 +46,19 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((k) => k.startsWith("nina-") && k !== SHELL_CACHE && k !== RUNTIME_CACHE)
-          .map((k) => caches.delete(k)),
-      );
-      // Ephemeral hosts: drop ALL nina caches so a dead tunnel cannot show Offline forever
+      await Promise.all(keys.filter(isStaleCache).map((k) => caches.delete(k)));
+      // Ephemeral hosts: drop ALL app caches so a dead tunnel cannot show Offline forever
       if (isEphemeralHost(self.location.hostname)) {
-        await Promise.all(keys.filter((k) => k.startsWith("nina-")).map((k) => caches.delete(k)));
+        await Promise.all(
+          keys
+            .filter(
+              (k) =>
+                k.startsWith("mel-") ||
+                k.startsWith("nina-") ||
+                k.startsWith("addyknow-"),
+            )
+            .map((k) => caches.delete(k)),
+        );
       }
       await self.clients.claim();
     })(),
@@ -89,7 +104,7 @@ self.addEventListener("fetch", (event) => {
       fetch(request).catch(
         () =>
           new Response(
-            "<!doctype html><meta charset=utf-8><title>addYknow</title><p>Servidor indisponível. Atualiza a página ou usa o URL estável da Vercel.</p><p><a href='/pt/login'>Tentar login</a></p>",
+            "<!doctype html><meta charset=utf-8><title>addYknow</title><p>Servidor indisponível. Atualiza a página ou usa o URL estável https://www.addandknow.pt.</p><p><a href='/pt/login'>Tentar login</a></p>",
             { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } },
           ),
       ),

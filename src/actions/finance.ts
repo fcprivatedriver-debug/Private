@@ -15,6 +15,7 @@ import {
 } from "@/lib/validators";
 import bcrypt from "bcryptjs";
 import { recognizeReceipt } from "@/lib/ocr";
+import { storeReceiptFromFormFile, clearReceiptUrl } from "@/lib/receipts";
 import { getImportAdapter } from "@/lib/imports";
 import { generateInsights, buildMonthlyReport } from "@/lib/ai/finance-insights";
 import { toCSV, toExcelTSV, toSimplePdfText } from "@/lib/export";
@@ -152,12 +153,33 @@ export async function createExpense(formData: FormData) {
     accountId: formData.get("accountId") || null,
     notes: formData.get("notes") || null,
     memberId: formData.get("memberId") || membership.id,
+    // Campos internos — preenchidos pelo upload, nunca pelo utilizador como URL manual
     receiptImageUrl: formData.get("receiptImageUrl") || null,
     receiptPdfUrl: formData.get("receiptPdfUrl") || null,
   });
   if (!parsed.success) return { ok: false as const, error: "Dados inválidos" };
   const amountCents = parseEURInput(parsed.data.amount);
   if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
+
+  let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl);
+  let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl);
+
+  const receiptFile = formData.get("receiptFile");
+  if (receiptFile instanceof File && receiptFile.size > 0) {
+    const up = await storeReceiptFromFormFile({
+      familyId: family.id,
+      userId: session.user.id,
+      file: receiptFile,
+    });
+    if (!up.ok) return { ok: false as const, error: up.error };
+    if (up.kind === "pdf") {
+      receiptPdfUrl = up.stored.url;
+      receiptImageUrl = null;
+    } else {
+      receiptImageUrl = up.stored.url;
+      receiptPdfUrl = null;
+    }
+  }
 
   let storeId: string | undefined;
   if (parsed.data.storeName) {
@@ -195,8 +217,8 @@ export async function createExpense(formData: FormData) {
       storeName: parsed.data.storeName || null,
       paymentMethod: parsed.data.paymentMethod as PaymentMethod,
       notes: parsed.data.notes || null,
-      receiptImageUrl: parsed.data.receiptImageUrl || null,
-      receiptPdfUrl: parsed.data.receiptPdfUrl || null,
+      receiptImageUrl,
+      receiptPdfUrl,
     },
   });
   await logTransactionAudit({
@@ -210,6 +232,12 @@ export async function createExpense(formData: FormData) {
   });
   revalidateApp();
   return { ok: true as const };
+}
+
+function emptyToNull(v: string | null | undefined): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s ? s : null;
 }
 
 export async function updateIncome(formData: FormData) {
@@ -378,6 +406,38 @@ export async function updateExpense(formData: FormData) {
   }
 
   const scope = parseScope(formData.get("scope"), existing.scope);
+
+  let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl) ?? existing.receiptImageUrl;
+  let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl) ?? existing.receiptPdfUrl;
+
+  const removeReceipt = String(formData.get("removeReceipt") || "") === "1";
+  if (removeReceipt) {
+    await clearReceiptUrl(existing.receiptImageUrl);
+    await clearReceiptUrl(existing.receiptPdfUrl);
+    receiptImageUrl = null;
+    receiptPdfUrl = null;
+  }
+
+  const receiptFile = formData.get("receiptFile");
+  if (receiptFile instanceof File && receiptFile.size > 0) {
+    const up = await storeReceiptFromFormFile({
+      familyId: family.id,
+      userId: session.user.id,
+      file: receiptFile,
+    });
+    if (!up.ok) return { ok: false as const, error: up.error };
+    // substituir: limpar anterior
+    await clearReceiptUrl(existing.receiptImageUrl);
+    await clearReceiptUrl(existing.receiptPdfUrl);
+    if (up.kind === "pdf") {
+      receiptPdfUrl = up.stored.url;
+      receiptImageUrl = null;
+    } else {
+      receiptImageUrl = up.stored.url;
+      receiptPdfUrl = null;
+    }
+  }
+
   await prisma.expense.update({
     where: { id },
     data: {
@@ -395,8 +455,8 @@ export async function updateExpense(formData: FormData) {
       storeName: parsed.data.storeName || null,
       paymentMethod: parsed.data.paymentMethod as PaymentMethod,
       notes: parsed.data.notes || null,
-      receiptImageUrl: parsed.data.receiptImageUrl || null,
-      receiptPdfUrl: parsed.data.receiptPdfUrl || null,
+      receiptImageUrl,
+      receiptPdfUrl,
     },
   });
   await logTransactionAudit({

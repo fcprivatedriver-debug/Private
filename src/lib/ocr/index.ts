@@ -1,9 +1,6 @@
 /**
  * OCR de faturas — arquitectura preparada para Vision / Tesseract / API real.
- *
- * IMPORTANTE: o motor fictício anterior (totalCents: 2487) foi DESACTIVADO.
- * Até haver um motor real configurado, recognizeReceipt devolve unavailable
- * e NÃO devem ser gravadas despesas a partir destes dados.
+ * Sem motor real: devolve indisponível. ZERO totais/produtos inventados.
  */
 
 export type OcrLineItem = {
@@ -15,6 +12,8 @@ export type OcrLineItem = {
 };
 
 export type OcrResult = {
+  available: boolean;
+  unavailableReason?: string;
   storeName: string;
   date: string;
   totalCents: number;
@@ -23,28 +22,25 @@ export type OcrResult = {
   items: OcrLineItem[];
   confidence: number;
   rawText: string;
-  /** false até existir motor real */
-  available: boolean;
-  unavailableReason?: string;
 };
 
-export async function recognizeReceipt(input: {
+export async function recognizeReceipt(_input?: {
   fileName?: string;
   hintText?: string;
 }): Promise<OcrResult> {
-  void input;
+  void _input;
   return {
-    storeName: "",
-    date: new Date().toISOString().slice(0, 10),
-    totalCents: 0,
-    vatCents: 0,
-    suggestedCategorySlug: "outros",
-    confidence: 0,
-    rawText: "",
-    items: [],
     available: false,
     unavailableReason:
       "A leitura automática de faturas ainda não está disponível. Regista a despesa manualmente ou por voz.",
+    storeName: "",
+    date: "",
+    totalCents: 0,
+    vatCents: 0,
+    suggestedCategorySlug: "outros",
+    items: [],
+    confidence: 0,
+    rawText: "",
   };
 }
 

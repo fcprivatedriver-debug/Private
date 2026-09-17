@@ -33,11 +33,29 @@ export async function getDashboardData(
   ] = await Promise.all([
     prisma.income.findMany({
       where: { familyId, date: { gte: start, lte: end }, ...incWhere },
-      include: { category: true, member: true },
+      select: {
+        id: true,
+        amountCents: true,
+        date: true,
+        description: true,
+        category: { select: { name: true, color: true } },
+        member: { select: { displayName: true } },
+      },
     }),
     prisma.expense.findMany({
       where: { familyId, date: { gte: start, lte: end }, ...expWhere },
-      include: { category: true, member: true, account: true },
+      select: {
+        id: true,
+        amountCents: true,
+        date: true,
+        description: true,
+        storeName: true,
+        paymentMethod: true,
+        categoryId: true,
+        category: { select: { name: true, color: true } },
+        member: { select: { displayName: true } },
+        account: { select: { name: true } },
+      },
       orderBy: { date: "desc" },
     }),
     prisma.budget.findMany({
@@ -68,8 +86,14 @@ export async function getDashboardData(
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
-    prisma.familyMember.findMany({ where: { familyId } }),
-    prisma.financeAccount.findMany({ where: { familyId, isActive: true } }),
+    prisma.familyMember.findMany({
+      where: { familyId },
+      select: { id: true, displayName: true, role: true },
+    }),
+    prisma.financeAccount.findMany({
+      where: { familyId, isActive: true },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const incomeCents = incomes.reduce((s, i) => s + i.amountCents, 0);
@@ -85,28 +109,34 @@ export async function getDashboardData(
     })),
   );
 
-  const evolution = [];
-  for (let i = 5; i >= 0; i--) {
+  // Evolução 6 meses em paralelo (evita waterfall sequencial)
+  const evolutionMonths = Array.from({ length: 6 }, (_, idx) => {
+    const i = 5 - idx;
     const d = new Date(year, month - 1 - i, 1);
     const y = d.getFullYear();
     const m = d.getMonth() + 1;
-    const b = monthBounds(y, m);
-    const [inc, exp] = await Promise.all([
-      prisma.income.aggregate({
-        where: { familyId, date: { gte: b.start, lte: b.end }, ...incWhere },
-        _sum: { amountCents: true },
-      }),
-      prisma.expense.aggregate({
-        where: { familyId, date: { gte: b.start, lte: b.end }, ...expWhere },
-        _sum: { amountCents: true },
-      }),
-    ]);
-    evolution.push({
-      label: monthLabel(y, m).replace(/ de /i, " ").slice(0, 3) + " " + String(y).slice(2),
-      incomeCents: inc._sum.amountCents ?? 0,
-      expenseCents: exp._sum.amountCents ?? 0,
-    });
-  }
+    return { y, m, b: monthBounds(y, m) };
+  });
+  const evolutionParts = await Promise.all(
+    evolutionMonths.map(async ({ y, m, b }) => {
+      const [inc, exp] = await Promise.all([
+        prisma.income.aggregate({
+          where: { familyId, date: { gte: b.start, lte: b.end }, ...incWhere },
+          _sum: { amountCents: true },
+        }),
+        prisma.expense.aggregate({
+          where: { familyId, date: { gte: b.start, lte: b.end }, ...expWhere },
+          _sum: { amountCents: true },
+        }),
+      ]);
+      return {
+        label: monthLabel(y, m).replace(/ de /i, " ").slice(0, 3) + " " + String(y).slice(2),
+        incomeCents: inc._sum.amountCents ?? 0,
+        expenseCents: exp._sum.amountCents ?? 0,
+      };
+    }),
+  );
+  const evolution = evolutionParts;
 
   const budgetRows = budgets.map((b) => {
     const used = expenses
@@ -275,35 +305,37 @@ export async function getStatsData(
     byMethod.set(e.paymentMethod, (byMethod.get(e.paymentMethod) ?? 0) + e.amountCents);
   }
 
-  const weekly = [];
-  for (let i = 3; i >= 0; i--) {
-    const end = new Date();
-    end.setDate(end.getDate() - i * 7);
-    const start = new Date(end);
-    start.setDate(start.getDate() - 6);
-    start.setHours(0, 0, 0, 0);
-    const sum = await prisma.expense.aggregate({
-      where: { familyId, date: { gte: start, lte: end }, ...expWhere },
-      _sum: { amountCents: true },
-    });
-    weekly.push({
-      label: `S${4 - i}`,
-      expenseCents: sum._sum.amountCents ?? 0,
-    });
-  }
+  const weekly = await Promise.all(
+    [3, 2, 1, 0].map(async (i) => {
+      const end = new Date();
+      end.setDate(end.getDate() - i * 7);
+      const start = new Date(end);
+      start.setDate(start.getDate() - 6);
+      start.setHours(0, 0, 0, 0);
+      const sum = await prisma.expense.aggregate({
+        where: { familyId, date: { gte: start, lte: end }, ...expWhere },
+        _sum: { amountCents: true },
+      });
+      return {
+        label: `S${4 - i}`,
+        expenseCents: sum._sum.amountCents ?? 0,
+      };
+    }),
+  );
 
-  const annual = [];
-  for (let m = 1; m <= 12; m++) {
-    const b = monthBounds(year, m);
-    const sum = await prisma.expense.aggregate({
-      where: { familyId, date: { gte: b.start, lte: b.end }, ...expWhere },
-      _sum: { amountCents: true },
-    });
-    annual.push({
-      label: monthLabel(year, m).slice(0, 3),
-      expenseCents: sum._sum.amountCents ?? 0,
-    });
-  }
+  const annual = await Promise.all(
+    Array.from({ length: 12 }, (_, idx) => idx + 1).map(async (m) => {
+      const b = monthBounds(year, m);
+      const sum = await prisma.expense.aggregate({
+        where: { familyId, date: { gte: b.start, lte: b.end }, ...expWhere },
+        _sum: { amountCents: true },
+      });
+      return {
+        label: monthLabel(year, m).slice(0, 3),
+        expenseCents: sum._sum.amountCents ?? 0,
+      };
+    }),
+  );
 
   return {
     ...data,

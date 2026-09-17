@@ -8,7 +8,7 @@ import { resolveScope, learnScopeHabit } from "@/lib/ai/learning";
 import { getNinaSpace } from "@/actions/household";
 import { applySavingsTransfer } from "@/lib/savings-transfer";
 import { recognizeReceipt } from "@/lib/ocr";
-import { storeFamilyFile } from "@/lib/storage";
+import { storeReceiptFromFormFile } from "@/lib/receipts";
 import { formatEUR } from "@/lib/money";
 import { canEditFinances } from "@/domain/household";
 import { logTransactionAudit } from "@/lib/transaction-audit";
@@ -390,7 +390,9 @@ export async function instantCaptureSpeak(utterance: string) {
 }
 
 /**
- * Captura Instantânea por fotografia — OCR + arquivo associado ao movimento.
+ * Captura Instantânea por fotografia.
+ * Guarda o ficheiro de forma persistente (Neon) mas NÃO inventa OCR nem cria despesa fictícia.
+ * O utilizador regista o valor por voz/manual; a foto fica disponível para anexar/consultar.
  */
 export async function instantCapturePhoto(formData: FormData) {
   const { membership, family } = await requireFamilyContext();
@@ -403,34 +405,28 @@ export async function instantCapturePhoto(formData: FormData) {
     return { ok: false as const, error: "Escolhe ou tira uma fotografia." };
   }
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const stored = await storeFamilyFile({
+  const storedRes = await storeReceiptFromFormFile({
     familyId: family.id,
-    fileName: file.name || "fatura.jpg",
-    mimeType: file.type || "image/jpeg",
-    bytes,
+    userId: session.user.id,
+    file,
   });
+  if (!storedRes.ok) {
+    return { ok: false as const, error: storedRes.error };
+  }
 
   const ocr = await recognizeReceipt({
     fileName: file.name,
     hintText: String(formData.get("hint") || ""),
   });
 
-  if (!ocr.available) {
-    return {
-      ok: false as const,
-      error:
-        ocr.unavailableReason ||
-        "A leitura automática de faturas ainda não está disponível. Diz-me o valor por voz ou regista manualmente.",
-      receiptUrl: stored.url,
-      kind: "ocr_unavailable" as const,
-    };
-  }
-
+  // Sem motor OCR real: não criar despesa com valores inventados.
+  // A foto ficou persistida em Neon (StoredObject) — o utilizador anexa-a na despesa.
   return {
     ok: false as const,
-    error: "A leitura automática de faturas ainda não está ligada a um motor real.",
-    receiptUrl: stored.url,
+    error:
+      ocr.unavailableReason ||
+      "A leitura automática de faturas ainda não está disponível. Diz-me o valor por voz ou regista manualmente em Despesas e anexa a fatura.",
+    receiptUrl: storedRes.stored.url,
     kind: "ocr_unavailable" as const,
   };
 }
