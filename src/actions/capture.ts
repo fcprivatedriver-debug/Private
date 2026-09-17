@@ -419,14 +419,30 @@ export async function instantCapturePhoto(formData: FormData) {
     hintText: String(formData.get("hint") || ""),
   });
 
-  // Sem motor OCR real: não criar despesa com valores inventados.
-  // A foto ficou persistida em Neon (StoredObject) — o utilizador anexa-a na despesa.
+  // Ficheiro persistido em Neon (StoredObject). Sem motor OCR real: nunca inventar totais/produtos.
+  if (!ocr.available) {
+    return {
+      ok: true as const,
+      reply: "Fatura guardada.",
+      detail:
+        ocr.unavailableReason ||
+        "A leitura automática ainda não está disponível. Regista o valor manualmente em Despesas — a fatura já está anexável.",
+      receiptUrl: storedRes.stored.url,
+      receiptKind: storedRes.kind,
+      ocrAvailable: false as const,
+      kind: "receipt_stored" as const,
+    };
+  }
+
+  // Motor OCR real futuro: ainda assim NÃO criar despesa automaticamente —
+  // o utilizador confirma os valores lidos.
   return {
-    ok: false as const,
-    error:
-      ocr.unavailableReason ||
-      "A leitura automática de faturas ainda não está disponível. Diz-me o valor por voz ou regista manualmente em Despesas e anexa a fatura.",
+    ok: true as const,
+    reply: "Fatura guardada.",
+    detail: "Confirma os dados lidos antes de registar a despesa.",
     receiptUrl: storedRes.stored.url,
-    kind: "ocr_unavailable" as const,
+    receiptKind: storedRes.kind,
+    ocrAvailable: true as const,
+    kind: "receipt_stored" as const,
   };
 }

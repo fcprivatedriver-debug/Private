@@ -15,7 +15,12 @@ import {
 } from "@/lib/validators";
 import bcrypt from "bcryptjs";
 import { recognizeReceipt } from "@/lib/ocr";
-import { storeReceiptFromFormFile, clearReceiptUrl } from "@/lib/receipts";
+import {
+  storeReceiptFromFormFile,
+  clearReceiptUrl,
+  familyOwnsReceiptUrl,
+  resolveFamilyReceiptAttachment,
+} from "@/lib/receipts";
 import { getImportAdapter } from "@/lib/imports";
 import { generateInsights, buildMonthlyReport } from "@/lib/ai/finance-insights";
 import { toCSV, toExcelTSV, toSimplePdfText } from "@/lib/export";
@@ -163,6 +168,14 @@ export async function createExpense(formData: FormData) {
 
   let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl);
   let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl);
+
+  // URLs vindas do FormData só são aceites se o StoredObject for da família.
+  if (receiptImageUrl && !(await familyOwnsReceiptUrl(family.id, receiptImageUrl))) {
+    receiptImageUrl = null;
+  }
+  if (receiptPdfUrl && !(await familyOwnsReceiptUrl(family.id, receiptPdfUrl))) {
+    receiptPdfUrl = null;
+  }
 
   const receiptFile = formData.get("receiptFile");
   if (receiptFile instanceof File && receiptFile.size > 0) {
@@ -409,6 +422,21 @@ export async function updateExpense(formData: FormData) {
 
   let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl) ?? existing.receiptImageUrl;
   let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl) ?? existing.receiptPdfUrl;
+
+  if (
+    receiptImageUrl &&
+    receiptImageUrl !== existing.receiptImageUrl &&
+    !(await familyOwnsReceiptUrl(family.id, receiptImageUrl))
+  ) {
+    receiptImageUrl = existing.receiptImageUrl;
+  }
+  if (
+    receiptPdfUrl &&
+    receiptPdfUrl !== existing.receiptPdfUrl &&
+    !(await familyOwnsReceiptUrl(family.id, receiptPdfUrl))
+  ) {
+    receiptPdfUrl = existing.receiptPdfUrl;
+  }
 
   const removeReceipt = String(formData.get("removeReceipt") || "") === "1";
   if (removeReceipt) {
@@ -697,21 +725,52 @@ export async function markAlertRead(alertId: string) {
   return { ok: true as const };
 }
 
-export async function runOcrPreview(fileName: string) {
-  await requireFamilyContext();
-  const result = await recognizeReceipt({ fileName });
+export async function runOcrPreview(formData: FormData) {
+  const { session, membership, family } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para registar despesas" };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false as const, error: "Escolhe ou tira uma fotografia da fatura." };
+  }
+
+  const stored = await storeReceiptFromFormFile({
+    familyId: family.id,
+    userId: session.user.id,
+    file,
+  });
+  if (!stored.ok) {
+    return { ok: false as const, error: stored.error };
+  }
+
+  const result = await recognizeReceipt({ fileName: file.name });
   if (!result.available) {
     return {
       ok: false as const,
       error:
         result.unavailableReason ||
         "A leitura automática de faturas ainda não está disponível.",
-      result,
+      receiptUrl: stored.stored.url,
+      receiptKind: stored.kind,
+      // Nunca devolver totais/produtos inventados ao cliente
+      result: null,
     };
   }
-  return { ok: true as const, result };
+
+  return {
+    ok: true as const,
+    result,
+    receiptUrl: stored.stored.url,
+    receiptKind: stored.kind,
+  };
 }
 
+/**
+ * Guarda despesa a partir de dados introduzidos pelo utilizador + fatura já persistida.
+ * Nunca usa valores OCR inventados — só o que o utilizador confirma no formulário.
+ */
 export async function confirmOcrExpense(input: {
   storeName: string;
   date: string;
@@ -721,27 +780,98 @@ export async function confirmOcrExpense(input: {
   description: string;
   paymentMethod: PaymentMethod;
   accountId?: string | null;
+  receiptUrl?: string | null;
   items?: { name: string; quantity: number; unitCents: number; totalCents: number; vatRate?: number }[];
 }) {
-  const { membership } = await requireFamilyContext();
+  const { session, membership, family } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
     return { ok: false as const, error: "Sem permissão para registar despesas" };
   }
-  // OCR real ainda não activo — nunca gravar a partir de preview fictício
-  const preview = await recognizeReceipt({});
-  if (!preview.available) {
-    return {
-      ok: false as const,
-      error:
-        preview.unavailableReason ||
-        "A leitura automática de faturas ainda não está disponível. Regista a despesa manualmente.",
-    };
+
+  if (!input.totalCents || input.totalCents <= 0) {
+    return { ok: false as const, error: "Indica o valor total da fatura." };
   }
-  void input;
-  return {
-    ok: false as const,
-    error: "A confirmação OCR ainda não está ligada a um motor real.",
-  };
+  if (!input.categoryId) {
+    return { ok: false as const, error: "Escolhe uma categoria." };
+  }
+  if (!input.date) {
+    return { ok: false as const, error: "Indica a data." };
+  }
+
+  let receiptImageUrl: string | null = null;
+  let receiptPdfUrl: string | null = null;
+  if (input.receiptUrl) {
+    if (!(await familyOwnsReceiptUrl(family.id, input.receiptUrl))) {
+      return { ok: false as const, error: "Fatura inválida ou expirada. Volta a fotografar." };
+    }
+    const attached = await resolveFamilyReceiptAttachment(family.id, input.receiptUrl);
+    if (attached) {
+      receiptImageUrl = attached.receiptImageUrl;
+      receiptPdfUrl = attached.receiptPdfUrl;
+    }
+  }
+
+  let storeId: string | undefined;
+  const storeName = (input.storeName || "").trim();
+  if (storeName) {
+    const normalized = storeName.toLowerCase();
+    const store = await prisma.store.upsert({
+      where: {
+        familyId_normalizedName: { familyId: family.id, normalizedName: normalized },
+      },
+      create: {
+        familyId: family.id,
+        name: storeName,
+        normalizedName: normalized,
+      },
+      update: {},
+    });
+    storeId = store.id;
+  }
+
+  const description =
+    (input.description || "").trim() ||
+    (storeName ? `Fatura ${storeName}` : "Fatura");
+
+  const notesParts = ["Fatura fotografada"];
+  if (input.vatCents > 0) notesParts.push(`IVA ${(input.vatCents / 100).toFixed(2)} €`);
+  // items só se o utilizador os tiver introduzido — nunca inventados pelo OCR stub
+  if (input.items && input.items.length > 0) {
+    notesParts.push(`${input.items.length} linha(s) confirmada(s)`);
+  }
+
+  const created = await prisma.expense.create({
+    data: {
+      familyId: family.id,
+      categoryId: input.categoryId,
+      accountId: input.accountId || null,
+      memberId: membership.id,
+      createdById: session.user.id,
+      updatedById: session.user.id,
+      storeId,
+      scope: "PERSONAL",
+      amountCents: input.totalCents,
+      date: new Date(input.date),
+      description,
+      storeName: storeName || null,
+      paymentMethod: input.paymentMethod,
+      notes: notesParts.join(" · "),
+      receiptImageUrl,
+      receiptPdfUrl,
+    },
+  });
+
+  await logTransactionAudit({
+    familyId: family.id,
+    kind: "EXPENSE",
+    recordId: created.id,
+    action: "CREATE",
+    actorUserId: session.user.id,
+    actorDisplayName: membership.displayName,
+    summary: `Criou despesa «${description}» com fatura (${(input.totalCents / 100).toFixed(2)} €)`,
+  });
+  revalidateApp();
+  return { ok: true as const, id: created.id };
 }
 
 export async function startImport(provider: ImportProvider) {
