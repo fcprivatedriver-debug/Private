@@ -41,10 +41,11 @@ export async function storeReceiptFromFormFile(opts: {
     return { ok: true, stored, kind };
   } catch (err) {
     if (err instanceof StorageError) {
+      // Mensagens já são seguras (sem Prisma/Neon)
       return { ok: false, error: err.message };
     }
     console.error("[receipt] store failed", err);
-    return { ok: false, error: "Não foi possível enviar a fatura." };
+    return { ok: false, error: "Não foi possível guardar a fatura. Tenta outra vez." };
   }
 }
 
