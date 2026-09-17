@@ -21,21 +21,16 @@ export default async function CapturaPage({
   const autoStart = sp.auto === "1" || sp.auto === "true";
 
   return (
-    <div className={`captura-page ${autoStart ? "captura-fast" : ""}`}>
-      <p className="nina-kicker">{autoStart ? "Captura rápida" : "Funcionalidade principal"}</p>
+    <div className={`captura-page falar-page ${autoStart ? "captura-fast" : ""}`}>
       <h1 className="page-title">
-        {mode === "photo"
-          ? "Fotografar fatura"
-          : autoStart
-            ? "Falar com a MEL"
-            : "Captura Instantânea"}
+        {mode === "photo" ? "Fatura" : "MEL"}
       </h1>
-      <p className="page-sub">
-        {autoStart && mode === "voice"
-          ? "Diz o valor e o sítio. A MEL interpreta a intenção, categoriza e atualiza tudo — tu continua a viver."
-          : "Fala, escreve ou fotografa a fatura. A MEL interpreta e executa — sem menus, sem formulários, sem burocracia."}
+      <p className="page-sub falar-prompt">
+        {mode === "photo"
+          ? "Anexa a fatura — fotografia ou PDF."
+          : "Como posso ajudar?"}
       </p>
-      <InstantCapture initialMode={mode} autoStart={autoStart} />
+      <InstantCapture initialMode={mode} autoStart={autoStart} compact />
     </div>
   );
 }
