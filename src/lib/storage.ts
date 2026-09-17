@@ -50,7 +50,7 @@ export class StorageError extends Error {
 
 /** Mensagens seguras para o utilizador — nunca expor Prisma/Neon/stack. */
 export const STORAGE_USER_ERRORS = {
-  WRITE_FAILED: "Não foi possível guardar a fatura. Tenta outra vez.",
+  WRITE_FAILED: "Não foi possível guardar a fatura. Tenta novamente.",
   READ_FAILED: "Não foi possível ler a fatura.",
   NOT_FOUND: "Ficheiro não encontrado.",
   TOO_LARGE: `Ficheiro demasiado grande (máx. ${Math.round(MAX_RECEIPT_BYTES / (1024 * 1024))} MB).`,

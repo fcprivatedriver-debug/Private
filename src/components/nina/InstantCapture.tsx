@@ -182,6 +182,11 @@ export function InstantCapture({
         );
         return;
       }
+      // OCR real ainda não activo — ramo reservado para motor futuro
+      setResult({
+        reply: "Fotografia recebida.",
+        detail: "A leitura automática ainda não está disponível.",
+      });
     });
   }
 

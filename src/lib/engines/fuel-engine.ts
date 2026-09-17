@@ -7,7 +7,7 @@
 
 import { fuelService } from "@/lib/mobility/fuel";
 import type { FuelType } from "@/lib/mobility/fuel/types";
-import { navigationService } from "@/lib/navigation";
+import { createNavigationService } from "@/lib/navigation";
 import { formatEUR } from "@/lib/money";
 import { cacheGet, cacheSet, cacheKey } from "./cache";
 import { assertJustified, buildRecommendation } from "./recommendation";
@@ -23,6 +23,7 @@ export type FuelEngineInput = {
   preferredCards?: string[];
   lat?: number;
   lng?: number;
+  navigationApp?: "google_maps" | "waze" | "apple_maps";
 };
 
 /** Preços do provider estão em milésimos de euro (1699 → 1,699 €/L). */
@@ -77,13 +78,15 @@ export async function recommendFuel(input: FuelEngineInput): Promise<EngineResul
   }
 
   if (!rec) {
+    const { getFuelUnavailableMessage } = await import("@/lib/mobility/fuel");
+    const hasLocation = input.lat != null && input.lng != null;
     return {
       ok: true,
       recommendation: buildRecommendation({
         engine: "fuel",
-        bestLabel: "sem postos",
-        opener: "Não encontrei postos adequados agora.",
-        reason: "Tenta daqui a pouco — os preços mudam ao longo do dia.",
+        bestLabel: "informação indisponível",
+        opener: getFuelUnavailableMessage(hasLocation),
+        reason: "Sem dados reais de postos/preços configurados.",
       }),
       recordImpact: false,
     };
@@ -166,7 +169,7 @@ export async function recommendFuel(input: FuelEngineInput): Promise<EngineResul
       ? ` Aceita o teu cartão de desconto.`
       : "";
 
-  const nav = navigationService.open({
+  const nav = createNavigationService(input.navigationApp ?? "google_maps").open({
     label: best.item.name,
     lat: best.item.lat,
     lng: best.item.lng,

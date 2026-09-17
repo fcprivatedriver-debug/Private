@@ -45,7 +45,7 @@ export async function storeReceiptFromFormFile(opts: {
       return { ok: false, error: err.message };
     }
     console.error("[receipt] store failed", err);
-    return { ok: false, error: "Não foi possível guardar a fatura. Tenta outra vez." };
+    return { ok: false, error: "Não foi possível guardar a fatura. Tenta novamente." };
   }
 }
 

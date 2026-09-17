@@ -74,6 +74,9 @@ describe("MEL tools security", () => {
       t.type === "function" ? t.function.name : "",
     ).filter(Boolean);
     assert.deepEqual(names.sort(), [
+      "compare_shopping_basket",
+      "find_nearby_chargers",
+      "find_nearby_fuel",
       "get_budget_status",
       "get_expenses_by_category",
       "get_family_financial_summary",

@@ -515,7 +515,10 @@ export async function deleteExpense(id: string) {
 }
 
 export async function createBudget(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar orçamentos" };
+  }
   const parsed = budgetSchema.safeParse({
     categoryId: formData.get("categoryId"),
     limit: formData.get("limit"),
@@ -550,6 +553,9 @@ export async function createBudget(formData: FormData) {
 
 export async function createGoal(formData: FormData) {
   const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const parsed = goalSchema.safeParse({
     name: formData.get("name"),
     type: formData.get("type") || "CUSTOM",
@@ -589,7 +595,10 @@ export async function createGoal(formData: FormData) {
 }
 
 export async function contributeToGoal(goalId: string, amountRaw: string) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar objetivos" };
+  }
   const cents = parseEURInput(amountRaw);
   if (cents == null || cents <= 0) return { ok: false as const, error: "Valor inválido" };
   const goal = await prisma.savingsGoal.findFirst({ where: { id: goalId, familyId: family.id } });
@@ -607,7 +616,10 @@ export async function contributeToGoal(goalId: string, amountRaw: string) {
 }
 
 export async function createRecurring(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar recorrentes" };
+  }
   const parsed = recurringSchema.safeParse({
     name: formData.get("name"),
     amount: formData.get("amount"),
@@ -642,7 +654,10 @@ export async function createRecurring(formData: FormData) {
 }
 
 export async function createCategory(formData: FormData) {
-  const { family } = await requireFamilyContext();
+  const { family, membership } = await requireFamilyContext();
+  if (!canEditFinances(membership.role)) {
+    return { ok: false as const, error: "Sem permissão para alterar categorias" };
+  }
   const parsed = categorySchema.safeParse({
     name: formData.get("name"),
     kind: formData.get("kind") || "EXPENSE",

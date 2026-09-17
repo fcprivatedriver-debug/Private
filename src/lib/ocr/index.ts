@@ -43,3 +43,7 @@ export async function recognizeReceipt(_input?: {
     rawText: "",
   };
 }
+
+export function isOcrAvailable(): boolean {
+  return false;
+}

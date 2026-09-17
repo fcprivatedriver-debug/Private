@@ -395,7 +395,7 @@ export async function instantCaptureSpeak(utterance: string) {
  * O utilizador regista o valor por voz/manual; a foto fica disponível para anexar/consultar.
  */
 export async function instantCapturePhoto(formData: FormData) {
-  const { session, membership, family } = await requireFamilyContext();
+  const { membership, family } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
     return { ok: false as const, error: "Sem permissão para registar." };
   }
@@ -407,7 +407,7 @@ export async function instantCapturePhoto(formData: FormData) {
 
   const storedRes = await storeReceiptFromFormFile({
     familyId: family.id,
-    userId: session.user.id,
+    userId: membership.userId,
     file,
   });
   if (!storedRes.ok) {

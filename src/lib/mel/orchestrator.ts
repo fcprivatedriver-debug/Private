@@ -64,6 +64,16 @@ async function loadRecentChatHistory(
   return messages;
 }
 
+function needsFinancialTools(question: string): boolean {
+  const q = question
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return /(quanto|saldo|gastei|gastamos|gaste|recebi|receita|despesa|orcamento|orçamento|poup|objetivo|meta|categoria|restaurante|supermercado|mes passado|mês passado|este mes|este mês|familia|família|disponivel|disponível)/.test(
+    q,
+  );
+}
+
 /**
  * Orquestra a conversa MEL com OpenAI + tools seguras.
  * Em falha ou sem chave → fallback rule-based (sem inventar no LLM).
@@ -117,6 +127,7 @@ export async function runMelConversation(opts: {
   const model = resolveMelModel();
   let promptTokens = 0;
   let completionTokens = 0;
+  const forceTools = needsFinancialTools(question);
 
   try {
     const history = await loadRecentChatHistory(opts.auth.userId, opts.auth.familyId);
@@ -127,6 +138,7 @@ export async function runMelConversation(opts: {
     ];
 
     let finalText: string | null = null;
+    let usedTool = false;
 
     for (let round = 0; round < MEL_CONFIG.maxToolRounds; round++) {
       const completion = await client.chat.completions.create({
@@ -135,7 +147,10 @@ export async function runMelConversation(opts: {
         max_tokens: MEL_CONFIG.maxOutputTokens,
         messages,
         tools: MEL_TOOL_DEFINITIONS,
-        tool_choice: round === 0 ? "auto" : "auto",
+        tool_choice:
+          forceTools && round === 0 && !usedTool
+            ? "required"
+            : "auto",
       });
 
       promptTokens += completion.usage?.prompt_tokens ?? 0;
@@ -145,6 +160,7 @@ export async function runMelConversation(opts: {
       if (!choice) break;
 
       if (choice.tool_calls?.length) {
+        usedTool = true;
         messages.push({
           role: "assistant",
           content: choice.content,
@@ -169,6 +185,26 @@ export async function runMelConversation(opts: {
 
       finalText = (choice.content || "").trim();
       break;
+    }
+
+    if (forceTools && !usedTool) {
+      // Segurança: perguntas financeiras sem tool → fallback com dados reais Prisma
+      const fb = await opts.fallback();
+      await logMelUsage({
+        userId: opts.auth.userId,
+        familyId: opts.auth.familyId,
+        model,
+        promptTokens,
+        completionTokens,
+        success: false,
+        errorCode: "financial_without_tool",
+      });
+      return {
+        text: fb.text,
+        tone: fb.tone,
+        suggestions: fb.suggestions ?? DEFAULT_SUGGESTIONS,
+        source: "fallback",
+      };
     }
 
     await logMelUsage({

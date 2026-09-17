@@ -1,3 +1,11 @@
+/**
+ * Product Service — camada entre a MEL e os supermercados.
+ * Sem catálogo hardcoded apresentado como preços actuais.
+ *
+ * Continente / Pingo Doce / Auchan: sem API pública oficial autorizada.
+ * Providers devolvem vazio até existir fonte licenciada (env + implementação).
+ */
+
 import type {
   BasketCompareResult,
   ProductMatch,
@@ -8,12 +16,12 @@ import type {
 } from "./types";
 import { continenteProvider } from "./providers/continente";
 import { pingoDoceProvider } from "./providers/pingo-doce";
-import { searchCatalog } from "./catalog";
+import { auchanProvider } from "./providers/auchan";
 
 const PROVIDERS: StoreProductProvider[] = [
   continenteProvider,
   pingoDoceProvider,
-  // Futuro: lidlProvider, aldiProvider
+  auchanProvider,
 ];
 
 export function getProductProviders(): StoreProductProvider[] {
@@ -23,6 +31,9 @@ export function getProductProviders(): StoreProductProvider[] {
 export function getProvider(id: StoreProviderId): StoreProductProvider | null {
   return PROVIDERS.find((p) => p.id === id) ?? null;
 }
+
+export const PRODUCTS_UNAVAILABLE_REASON =
+  "Preços de supermercado indisponíveis. Sem dados importados na cache addYknow (Continente, Pingo Doce, Auchan).";
 
 function dedupe(products: ProductMatch[]): ProductMatch[] {
   const seen = new Set<string>();
@@ -36,79 +47,47 @@ function dedupe(products: ProductMatch[]): ProductMatch[] {
   return out;
 }
 
-/**
- * Pesquisa em todos os providers activos + catálogo.
- * Se um match claro → exact; se vários → choices; senão none.
- */
 export async function searchProducts(query: string): Promise<ProductSearchResult> {
   const q = query.trim();
   if (!q) return { status: "none", query: q };
 
-  const settled = await Promise.all(
-    PROVIDERS.map(async (p) => {
-      try {
-        return await p.search(q);
-      } catch {
-        return [] as ProductMatch[];
-      }
-    }),
-  );
+  const lists = await Promise.all(PROVIDERS.map((p) => p.search(q)));
+  const products = dedupe(lists.flat()).filter((p) => p.priceCents != null && p.priceCents > 0);
 
-  let products = dedupe(settled.flat());
   if (products.length === 0) {
-    products = searchCatalog(q);
+    return { status: "none", query: q };
   }
-
-  products.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-
-  if (products.length === 0) return { status: "none", query: q };
-
-  const top = products[0];
-  const close = products.filter((p) => (p.score ?? 0) >= (top.score ?? 0) * 0.85);
-
-  // Marca específica (ex. Milhafre) → auto se um claro vencedor
-  if (close.length === 1 || (top.score ?? 0) >= 0.9) {
-    return { status: "exact", product: top };
+  if (products.length === 1) {
+    return { status: "exact", product: products[0] };
   }
-
-  // Mesmo produto em lojas diferentes com score alto → escolhe o mais barato
-  const sameName = close.filter(
-    (p) => p.name.split(" ").slice(0, 2).join(" ").toLowerCase() ===
-      top.name.split(" ").slice(0, 2).join(" ").toLowerCase(),
-  );
-  if (sameName.length > 1 && (top.brand || q.split(" ").length >= 2)) {
-    const cheapest = [...sameName].sort(
-      (a, b) => (a.priceCents ?? 99999) - (b.priceCents ?? 99999),
-    )[0];
-    return { status: "exact", product: cheapest };
-  }
-
-  if (close.length > 1) {
-    return { status: "choices", products: close.slice(0, 5), query: q };
-  }
-
-  return { status: "exact", product: top };
+  return { status: "choices", products: products.slice(0, 8), query: q };
 }
 
-/** Compara o custo estimado da lista entre supermercados. */
-export async function compareBasket(
-  itemNames: string[],
-): Promise<BasketCompareResult> {
+/**
+ * Compara um cesto. Só devolve totais quando há preços reais.
+ * Sem dados: quotes com missing=todos e best=null.
+ */
+export async function compareBasket(itemNames: string[]): Promise<BasketCompareResult> {
+  const names = itemNames.map((n) => n.trim()).filter(Boolean);
   const quotes: StorePriceQuote[] = [];
 
   for (const provider of PROVIDERS) {
     const lines: StorePriceQuote["lines"] = [];
-    const missing: string[] = [];
     let totalCents = 0;
+    const missing: string[] = [];
+    let latestUpdated: string | null = null;
 
-    for (const name of itemNames) {
-      const match = (await provider.quote?.(name)) ?? (await provider.search(name))[0] ?? null;
-      if (match?.priceCents != null) {
-        totalCents += match.priceCents;
-        lines.push({ name, priceCents: match.priceCents, found: true });
+    for (const name of names) {
+      const hit = provider.quote ? await provider.quote(name) : (await provider.search(name))[0];
+      if (hit?.priceCents != null && hit.priceCents > 0) {
+        lines.push({ name, priceCents: hit.priceCents, found: true });
+        totalCents += hit.priceCents;
+        if (hit.updatedAt && (!latestUpdated || hit.updatedAt > latestUpdated)) {
+          latestUpdated = hit.updatedAt;
+        }
       } else {
-        missing.push(name);
         lines.push({ name, priceCents: null, found: false });
+        missing.push(name);
       }
     }
 
@@ -118,17 +97,25 @@ export async function compareBasket(
       totalCents,
       missing,
       lines,
+      updatedAt: latestUpdated,
+      source: missing.length === names.length ? "unavailable" : "addyknow-cache",
+      complete: missing.length === 0 && names.length > 0,
     });
   }
 
-  const usable = quotes.filter((q) => q.lines.some((l) => l.found));
-  usable.sort((a, b) => a.totalCents - b.totalCents);
-  const best = usable[0] ?? null;
-  const second = usable[1];
+  const complete = quotes.filter((q) => q.complete && q.totalCents > 0);
+  complete.sort((a, b) => a.totalCents - b.totalCents);
+  const best = complete[0] ?? null;
+  const second = complete[1];
   const savingsCents =
     best && second ? Math.max(0, second.totalCents - best.totalCents) : 0;
 
-  return { quotes, best, savingsCents };
+  return {
+    quotes,
+    best,
+    savingsCents,
+    unavailableReason: complete.length === 0 ? PRODUCTS_UNAVAILABLE_REASON : undefined,
+  };
 }
 
 export function categoryKeyFromQuery(query: string): string {

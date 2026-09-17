@@ -11,7 +11,7 @@ export type ChargingStation = {
   distanceKm: number;
   powerKw: number;
   connector: EvConnector;
-  pricePerKwhCents: number;
+  pricePerKwhCents: number | null;
   address: string;
   mapsUrl: string;
   cardsAccepted: string[];

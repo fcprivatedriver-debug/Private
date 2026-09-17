@@ -120,7 +120,7 @@ export function ShoppingListClient({
             });
           }}
         >
-          Comparar Continente / Pingo Doce
+          Comparar supermercados
         </button>
         <button
           type="button"
@@ -213,7 +213,7 @@ export function ShoppingListClient({
 
       <p className="muted small" style={{ margin: 0 }}>
         Preços via Product Service (Continente e Pingo Doce). Se o site da loja não responder,
-        a MEL usa um catálogo de referência sincronizado com a tua lista familiar.
+        quando existir uma fonte de preços autorizada. Sem fonte configurada, mostramos «Preço indisponível» — nunca valores inventados.
       </p>
 
       {voiceHint ? (

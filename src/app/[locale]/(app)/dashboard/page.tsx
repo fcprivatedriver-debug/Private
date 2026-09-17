@@ -6,8 +6,19 @@ import { getDashboardData } from "@/lib/queries";
 import { getNinaSpace } from "@/actions/household";
 import { formatEUR } from "@/lib/money";
 import { spaceLabel } from "@/lib/scope";
-import { EmptyState, EvolutionChart } from "@/components/ui/FinanceUI";
+import {
+  StatCard,
+  Panel,
+  ProgressBar,
+  CategoryBars,
+  EmptyState,
+} from "@/components/ui/FinanceUI";
+import { MelChat } from "@/components/nina/MelChat";
 import { HouseholdLiveSync } from "@/components/nina/HouseholdLiveSync";
+import { SmartSuggestions } from "@/components/nina/SmartSuggestions";
+import { HOUSEHOLD_KIND_LABELS } from "@/domain/household";
+import { NINA_SLOGAN, NINA_SUBTITLE } from "@/lib/ai/mission";
+import { buildTodayBriefing } from "@/lib/ai/today";
 import { isDemoEmail } from "@/lib/demo-mode";
 
 export default async function DashboardPage() {
@@ -21,110 +32,179 @@ export default async function DashboardPage() {
     space,
     memberId: membership.id,
   });
-  const name = membership.displayName.split(" ")[0];
+  const name = membership.displayName;
   const label = spaceLabel(space);
   const isEmpty =
     data.totals.incomeCents === 0 &&
     data.totals.expenseCents === 0 &&
     (data.goals?.length ?? 0) === 0;
   const demo = isDemoEmail(session.user.email);
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Olá" : hour < 19 ? "Olá" : "Olá";
+
+  const today = await buildTodayBriefing(membership.familyId, session.user.id);
 
   return (
-    <div className="hoje page-stack">
-      <header className="hoje-header">
-        <div className="hoje-hello">
-          <p className="hoje-kicker">
-            {label}
-            {demo ? " · Demo" : ""}
-          </p>
-          <h1 className="page-title hoje-title">
-            {greeting}, {name}
-          </h1>
+    <div className="nina-home page-stack">
+      <header className="nina-home-intro">
+        <div className="page-header-row">
+          <div>
+            <p className="nina-kicker">
+              {label} · {HOUSEHOLD_KIND_LABELS[membership.family.kind]}
+              {demo ? " · Demo" : ""}
+            </p>
+            <h1 className="page-title">
+              {today.greeting.replace(/\.$/, "")}, {name.split(" ")[0]}
+            </h1>
+            <p className="page-sub">{today.headline}</p>
+            <p className="mission-whisper muted small">
+              {NINA_SLOGAN} — {NINA_SUBTITLE}
+            </p>
+          </div>
+          {space === "family" ? <HouseholdLiveSync /> : null}
         </div>
-        {space === "family" ? <HouseholdLiveSync /> : null}
       </header>
 
-      <section className="hoje-balance" aria-label="Saldo disponível">
-        <p className="hoje-balance-label">Disponível este mês</p>
-        <p className="hoje-balance-value">{formatEUR(data.totals.balanceCents)}</p>
-        <p className="hoje-balance-hint muted small">{data.monthLabel}</p>
-      </section>
+      <Panel title={today.headline} className="today-panel">
+        <ul className="today-insight-list">
+          {today.insights.map((insight, i) => (
+            <li key={i} className={`today-insight kind-${insight.kind}`}>
+              {insight.href ? (
+                <Link href={insight.href}>{insight.text}</Link>
+              ) : (
+                <span>{insight.text}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+        <div className="btn-row" style={{ marginTop: "1rem" }}>
+          <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
+            🎤 Falar com a MEL
+          </Link>
+          <Link href="/pt/mobilidade" className="btn btn-ghost btn-sm">
+            Mobilidade
+          </Link>
+          <Link href="/pt/calendario" className="btn btn-ghost btn-sm">
+            Calendário
+          </Link>
+          <Link href="/pt/lista" className="btn btn-ghost btn-sm">
+            Compras
+          </Link>
+        </div>
+      </Panel>
+
+      {!isEmpty ? <SmartSuggestions /> : null}
 
       {!isEmpty ? (
-        <section className="hoje-summary" aria-label="Resumo">
-          <div className="hoje-summary-item">
-            <span className="hoje-summary-label">Entradas</span>
-            <strong className="text-income">{formatEUR(data.totals.incomeCents)}</strong>
-          </div>
-          <div className="hoje-summary-item">
-            <span className="hoje-summary-label">Despesas</span>
-            <strong className="text-expense">{formatEUR(data.totals.expenseCents)}</strong>
-          </div>
-          <div className="hoje-summary-item">
-            <span className="hoje-summary-label">Poupança</span>
-            <strong className="text-income">
-              {formatEUR(data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents)}
-            </strong>
-          </div>
-        </section>
+        <div className="stats-grid nina-glance">
+          <StatCard label="Saldo este mês" valueCents={data.totals.balanceCents} tone="neutral" />
+          <StatCard label="Receitas" valueCents={data.totals.incomeCents} tone="income" />
+          <StatCard label="Despesas" valueCents={data.totals.expenseCents} tone="expense" />
+          <StatCard
+            label="Poupanças"
+            valueCents={data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents}
+            tone="savings"
+          />
+        </div>
       ) : null}
 
       {isEmpty ? (
-        <section className="hoje-empty">
+        <Panel title="Começar na addYknow">
           <EmptyState
             title="Tudo a zeros"
-            body="Regista a primeira despesa ou fala com a MEL."
+            body="Ainda não registaste nenhuma despesa. Diz-me quanto gastaste — ou o que precisas nas compras."
           />
-          <div className="btn-row" style={{ marginTop: "0.75rem" }}>
-            <Link href="/pt/despesas/nova" className="btn btn-primary btn-sm">
-              Nova despesa
+          <div className="btn-row" style={{ marginTop: "1rem", justifyContent: "center" }}>
+            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary">
+              🎤 Falar com a MEL
             </Link>
-            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-ghost btn-sm">
-              Falar
+            <Link href="/pt/lista" className="btn btn-ghost">
+              Lista de compras
+            </Link>
+            <Link href="/pt/guia" className="btn btn-ghost">
+              Ver Guia
             </Link>
           </div>
-        </section>
+        </Panel>
       ) : null}
 
-      {!isEmpty && data.evolution?.some((p) => p.incomeCents > 0 || p.expenseCents > 0) ? (
-        <section className="hoje-chart" aria-label="Entradas vs despesas">
-          <div className="hoje-section-head">
-            <h2>Entradas vs despesas</h2>
-          </div>
-          <EvolutionChart points={data.evolution} />
-        </section>
-      ) : null}
+      <div className="nina-home-grid">
+        <Panel title="Fala comigo" className="nina-chat-panel">
+          <MelChat />
+        </Panel>
 
-      <section className="hoje-moves" aria-label="Últimos movimentos">
-        <div className="hoje-section-head">
-          <h2>Últimos movimentos</h2>
-          <Link href="/pt/transacoes" className="muted small">
-            Ver tudo
-          </Link>
-        </div>
-        {data.recentExpenses.length === 0 ? (
-          <p className="muted small">Ainda sem movimentos este mês.</p>
-        ) : (
-          <ul className="hoje-move-list">
-            {data.recentExpenses.slice(0, 6).map((e) => (
-              <li key={e.id}>
-                <Link href={`/pt/despesas/${e.id}`} className="hoje-move-row">
-                  <div className="hoje-move-main">
-                    <strong>{e.description || e.storeName || e.category.name}</strong>
-                    <span className="muted small">
-                      {e.category.name}
-                      {e.storeName ? ` · ${e.storeName}` : ""}
-                    </span>
-                  </div>
-                  <strong className="text-expense">{formatEUR(e.amountCents)}</strong>
+        <div className="stack-lg">
+          <Panel title="Onde está a ir o dinheiro">
+            {data.categoryChart.length === 0 ? (
+              <EmptyState title="Gráficos vazios" body="Quando houver despesas, aparecem aqui." />
+            ) : (
+              <>
+                <CategoryBars items={data.categoryChart.slice(0, 5)} />
+                <Link
+                  href="/pt/estatisticas"
+                  className="muted small"
+                  style={{ display: "inline-block", marginTop: "0.75rem" }}
+                >
+                  Ver resumo completo · {data.monthLabel}
                 </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+              </>
+            )}
+          </Panel>
+
+          <Panel title={space === "family" ? "Poupanças e objetivos" : "As tuas poupanças"}>
+            {(data.goals?.length ?? 0) === 0 ? (
+              <EmptyState
+                title="Sem objetivos ainda"
+                body="Cria o primeiro quando fizer sentido — sem pressa."
+              />
+            ) : (
+              <>
+                <p className="muted small" style={{ marginBottom: "0.5rem" }}>
+                  {formatEUR(data.savingsSummary?.totalSavingsCents ?? data.totals.savedCents)} em
+                  poupanças
+                </p>
+                {data.goals.map((g) => (
+                  <div key={g.id} className="goal-card">
+                    <div className="goal-head">
+                      <strong>{g.name}</strong>
+                      <span className="text-income">{g.progress}%</span>
+                    </div>
+                    <ProgressBar percent={g.progress} color="#0f7a4a" />
+                    <p className="muted small">
+                      {formatEUR(g.currentCents)} de {formatEUR(g.targetCents)}
+                    </p>
+                  </div>
+                ))}
+              </>
+            )}
+            <div className="btn-row" style={{ marginTop: "0.75rem" }}>
+              <Link href="/pt/poupancas" className="btn btn-ghost btn-sm">
+                Poupanças
+              </Link>
+              <Link href="/pt/objetivos" className="btn btn-ghost btn-sm">
+                Objetivos
+              </Link>
+            </div>
+          </Panel>
+
+          {!isEmpty ? (
+            <Panel title="Avisos amigáveis">
+              {data.alerts.length === 0 ? (
+                <p className="muted">Tudo calmo por agora. Eu aviso se algo precisar da tua atenção.</p>
+              ) : (
+                <div className="list-rows">
+                  {data.alerts.slice(0, 4).map((a) => (
+                    <div key={a.id} className="list-row">
+                      <div className="list-row-main">
+                        <strong>{a.title}</strong>
+                        <span>{a.message}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
