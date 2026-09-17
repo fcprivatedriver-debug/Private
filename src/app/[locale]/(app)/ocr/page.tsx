@@ -21,11 +21,12 @@ export default async function OcrPage() {
 
   return (
     <div>
-      <h1 className="page-title">OCR de faturas</h1>
+      <h1 className="page-title">Faturas fotografadas</h1>
       <p className="page-sub">
-        Reconhece automaticamente loja, data, valor, IVA, produtos e categoria sugerida.
+        Fotografa ou carrega a fatura — fica guardada de forma segura. A leitura automática ainda
+        não está disponível: introduz loja, data e valor manualmente.
       </p>
-      <Panel title="Fotografar e confirmar">
+      <Panel title="Fotografar e registar">
         <OcrClient categories={categories} accounts={accounts} />
       </Panel>
     </div>
