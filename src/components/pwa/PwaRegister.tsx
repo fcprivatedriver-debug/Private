@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { APP_NAME } from "@/config/brand";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -20,6 +21,9 @@ function isStandalone() {
     ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
   );
 }
+
+const SW_RELOAD_KEY = "addyknow-sw-reloading";
+const IOS_INSTALL_DISMISSED_KEY = "addyknow-ios-install-dismissed";
 
 export function PwaRegister() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
@@ -84,8 +88,8 @@ export function PwaRegister() {
     }, 60_000);
 
     const onControllerChange = () => {
-      if (sessionStorage.getItem("nina-sw-reloading")) return;
-      sessionStorage.setItem("nina-sw-reloading", "1");
+      if (sessionStorage.getItem(SW_RELOAD_KEY)) return;
+      sessionStorage.setItem(SW_RELOAD_KEY, "1");
       window.location.reload();
     };
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
@@ -97,6 +101,7 @@ export function PwaRegister() {
   }, []);
 
   useEffect(() => {
+    // Já em standalone = app instalada: nunca pedir "Instalar" de novo (evita loop substituir).
     if (isStandalone()) return;
 
     const onBip = (e: Event) => {
@@ -109,7 +114,9 @@ export function PwaRegister() {
     if (isIos()) {
       const path = window.location.pathname;
       const onAuth = /\/(login|registo)\/?$/.test(path);
-      const dismissed = localStorage.getItem("nina-ios-install-dismissed");
+      const dismissed =
+        localStorage.getItem(IOS_INSTALL_DISMISSED_KEY) ||
+        localStorage.getItem("nina-ios-install-dismissed");
       // Never cover the login/register form on iPhone (toast intercepts taps).
       if (!dismissed && !onAuth) setShowIosTip(true);
     }
@@ -130,7 +137,7 @@ export function PwaRegister() {
     setUpdateReady(false);
   }, [waitingWorker]);
 
-  // Auto-apply updates quietly after a short delay (user asked for auto-update)
+  // Auto-apply updates quietly after a short delay (in-place update, not reinstall)
   useEffect(() => {
     if (!updateReady || !waitingWorker) return;
     const t = window.setTimeout(() => {
@@ -142,12 +149,12 @@ export function PwaRegister() {
   return (
     <>
       <div id="nina-pwa-splash" className="nina-pwa-splash" aria-hidden>
-        <div className="nina-pwa-splash-mark">add&know</div>
+        <div className="nina-pwa-splash-mark">{APP_NAME}</div>
       </div>
 
       {updateReady ? (
         <div className="nina-pwa-toast" role="status">
-          <span>Nova versão da MEL disponível.</span>
+          <span>Nova versão da {APP_NAME} disponível.</span>
           <button type="button" className="btn btn-sm btn-primary" onClick={applyUpdate}>
             Atualizar
           </button>
@@ -155,9 +162,13 @@ export function PwaRegister() {
       ) : null}
 
       {showInstall && deferred ? (
-        <div className="nina-pwa-toast nina-pwa-install" role="dialog" aria-label="Instalar add&know">
+        <div
+          className="nina-pwa-toast nina-pwa-install"
+          role="dialog"
+          aria-label={`Instalar ${APP_NAME}`}
+        >
           <div>
-            <strong>Instalar add&know</strong>
+            <strong>Instalar {APP_NAME}</strong>
             <p className="muted small" style={{ margin: "0.15rem 0 0" }}>
               Adiciona ao ecrã principal e usa como app.
             </p>
@@ -178,14 +189,14 @@ export function PwaRegister() {
           <div>
             <strong>Adicionar ao ecrã principal</strong>
             <p className="muted small" style={{ margin: "0.15rem 0 0" }}>
-              No Safari: Partilhar → «Adicionar ao Ecrã Principal».
+              No Safari: Partilhar → «Adicionar ao Ecrã Principal» como {APP_NAME}.
             </p>
           </div>
           <button
             type="button"
             className="btn btn-sm btn-ghost"
             onClick={() => {
-              localStorage.setItem("nina-ios-install-dismissed", "1");
+              localStorage.setItem(IOS_INSTALL_DISMISSED_KEY, "1");
               setShowIosTip(false);
             }}
           >

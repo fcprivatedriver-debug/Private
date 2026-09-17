@@ -54,11 +54,11 @@ export async function buildTodayBriefing(
       });
 
       const prefs = await getMobilityPrefs(familyId, userId);
-      const battery = prefs.typicalBatteryPct ?? (prefs.fuelType === "electric" ? 29 : null);
-      if (battery != null && battery < 40) {
+      // Só mencionar bateria se o utilizador tiver um valor real guardado
+      if (prefs.typicalBatteryPct != null && prefs.typicalBatteryPct < 40) {
         insights.push({
           kind: "mobility",
-          text: `Com a bateria atual (~${battery}%), aconselho um carregamento de 15 minutos antes de saíres.`,
+          text: `Com a bateria actual (~${prefs.typicalBatteryPct}%), aconselho um carregamento de 15 minutos antes de saíres.`,
           href: "/pt/mobilidade",
         });
       }
@@ -74,7 +74,7 @@ export async function buildTodayBriefing(
     } else {
       insights.push({
         kind: "meeting",
-        text: "Agenda livre por agora — liga o Google Calendar para a MEL ver os teus eventos.",
+        text: "Ainda não tens compromissos para hoje. Liga o Google Calendar quando quiseres que a MEL veja a tua agenda.",
         href: "/pt/calendario",
       });
     }

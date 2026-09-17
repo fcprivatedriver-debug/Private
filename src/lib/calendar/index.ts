@@ -63,7 +63,7 @@ export function createCalendarService(): CalendarService {
       const res = await provider.createEvent(draft);
       if (!res.ok) return { reply: res.error };
       return {
-        reply: `Perfeito 😊 Vou abrir o teu calendário com «${draft.title}» às ${formatSlot(draft.start)}. Confirma só o evento — a add&know não guarda uma cópia privada.`,
+        reply: `Perfeito 😊 Vou abrir o teu calendário com «${draft.title}» às ${formatSlot(draft.start)}. Confirma só o evento — a addYknow não guarda uma cópia privada.`,
         deepLink: res.deepLink,
       };
     },

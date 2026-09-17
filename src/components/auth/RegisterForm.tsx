@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { registerFamily } from "@/actions/auth-account";
 import { PASSWORD_HINT } from "@/lib/auth/password-rules";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -43,7 +44,7 @@ export function RegisterForm() {
     <div className="auth-page">
       <div className="auth-card">
         <BrandLogo href="/pt" />
-        <h1>Começar na add&know</h1>
+        <h1>Começar na addYknow</h1>
         <p className="lead">
           Em menos de 3 minutos: conta, família e a tua assistente pessoal.
         </p>
@@ -66,17 +67,14 @@ export function RegisterForm() {
             <span>Email</span>
             <input name="email" type="email" required autoComplete="email" />
           </label>
-          <label className="field">
-            <span>Palavra-passe</span>
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-            />
-            <span className="muted small">{PASSWORD_HINT}</span>
-          </label>
+          <PasswordField
+            label="Palavra-passe"
+            name="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            hint={PASSWORD_HINT}
+          />
           <button className="btn btn-primary" type="submit" disabled={pending}>
             {pending ? "A preparar…" : "Criar conta"}
           </button>

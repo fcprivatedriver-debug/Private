@@ -18,16 +18,16 @@ const body = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "add&know",
-    template: "%s · add&know",
+    default: "addYknow",
+    template: "%s · addYknow",
   },
   description:
-    "add&know — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
-  applicationName: "add&know",
+    "addYknow — Sabe onde vai o teu dinheiro. Agora. Com a MEL, a tua assistente inteligente.",
+  applicationName: "addYknow",
   appleWebApp: {
     capable: true,
-    title: "add&know",
-    statusBarStyle: "black-translucent",
+    title: "addYknow",
+    statusBarStyle: "default",
   },
   formatDetection: {
     telephone: false,
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#1e3a5f" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1c2e" },
+    { media: "(prefers-color-scheme: light)", color: "#39B8B2" },
+    { media: "(prefers-color-scheme: dark)", color: "#173B5E" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="/splash/apple-splash-1284x2778.png"
           media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)"
         />
-        <meta name="apple-mobile-web-app-title" content="add&know" />
+        <meta name="apple-mobile-web-app-title" content="addYknow" />
       </head>
       <body className={`${display.variable} ${body.variable}`}>
         <PwaSplashHide />
