@@ -1,0 +1,9 @@
+{
+  "id": "/pt/dashboard",
+  "name": "addYknow",
+  "short_name": "addYknow",
+  "start_url": "/pt/dashboard",
+  "scope": "/",
+  "theme_color": "#39B8B2",
+  "background_color": "#F7FAFA"
+}
