@@ -2,6 +2,28 @@ import { prisma } from "@/lib/db";
 import { VEHICLE_CLASSES } from "../../prisma/demo-catalog";
 
 /**
+ * Non-destructive column repair for shared Neon drift.
+ * Does NOT drop data or recreate tables.
+ */
+export async function repairCustomerProfileColumns(): Promise<{
+  ok: boolean;
+  detail?: string;
+}> {
+  try {
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "CustomerProfile" ADD COLUMN IF NOT EXISTS "defaultCurrency" TEXT NOT NULL DEFAULT 'EUR'`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "CustomerProfile" ADD COLUMN IF NOT EXISTS "ratingAvg" DOUBLE PRECISION`,
+    );
+    return { ok: true };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message.slice(0, 200) : String(error);
+    return { ok: false, detail };
+  }
+}
+
+/**
  * Create VehicleClass when migrate history drifted on shared Neon and the
  * relation is missing. Seeds the canonical Comfort / Premium / Van catalog.
  *

@@ -27,6 +27,7 @@ import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from 
 import { estimateRoute } from "@/lib/maps/route";
 import { toActionFailure } from "@/lib/action-errors";
 import { notifyAdminNewDriver, notifyAdminNewTrip } from "@/lib/email";
+import { repairCustomerProfileColumns } from "@/lib/db-repair";
 
 function fail(error: unknown) {
   return toActionFailure(error);
@@ -120,6 +121,9 @@ export async function registerAction(formData: FormData) {
     if (!user?.id) {
       throw new Error("USER_CREATE_NO_ID");
     }
+
+    // Heal shared Neon drift before profile inserts (non-destructive).
+    await repairCustomerProfileColumns();
 
     const existingCustomer = await prisma.customerProfile.findUnique({
       where: { userId: user.id },

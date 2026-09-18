@@ -182,6 +182,20 @@ async function seedClasses(prisma) {
   }
 }
 
+async function ensureColumn(prisma, table, column, ddlType) {
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "${table}" ADD COLUMN IF NOT EXISTS "${column}" ${ddlType}`,
+  );
+}
+
+/** Non-destructive repair for schema drift on shared Neon (no DROP). */
+async function repairCoreProfileColumns(prisma) {
+  // CustomerProfile — registration fails without defaultCurrency
+  await ensureColumn(prisma, "CustomerProfile", "defaultCurrency", `TEXT NOT NULL DEFAULT 'EUR'`);
+  await ensureColumn(prisma, "CustomerProfile", "ratingAvg", `DOUBLE PRECISION`);
+  console.log("[ensure-schema] CustomerProfile columns verified");
+}
+
 async function main() {
   const raw = process.env.DATABASE_URL;
   if (!raw) {
@@ -193,6 +207,13 @@ async function main() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     await ensureDriverDocumentEnums(prisma);
+
+    try {
+      await repairCoreProfileColumns(prisma);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn("[ensure-schema] profile column repair skipped:", message.slice(0, 200));
+    }
 
     let needsCreate = false;
     try {
