@@ -61,6 +61,15 @@ export async function sendAppEmail(opts: {
   }
 
   console.info("[mail:dev]", { to: opts.to, subject: opts.subject, text: opts.text });
+  // Em Vercel / production sem chave: falhar claramente — nunca fingir entrega
+  // nem devolver links de preview com fallback localhost.
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") {
+    console.error("[mail] RESEND_API_KEY ausente em ambiente deployed");
+    return {
+      ok: false,
+      error: "Envio de email não configurado neste ambiente.",
+    };
+  }
   return { ok: true, delivered: false };
 }
 

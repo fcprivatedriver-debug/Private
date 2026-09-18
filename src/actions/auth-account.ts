@@ -14,8 +14,14 @@ import {
 import { registerSchema } from "@/lib/validators";
 import { requireSession } from "@/lib/session";
 
-const VERIFY_HOURS = 48;
-const RESET_HOURS = 2;
+function publicLinkMeta(absoluteUrl: string) {
+  try {
+    const u = new URL(absoluteUrl);
+    return { linkHost: u.host, linkOrigin: u.origin };
+  } catch {
+    return { linkHost: "invalid", linkOrigin: "invalid" };
+  }
+}
 
 function isTestEmail(email: string) {
   // Contas técnicas @nina.app (seed/legado) podem saltar verificação.
@@ -129,6 +135,7 @@ export async function registerFamily(formData: FormData) {
     const raw = createRawToken();
     await storeToken(`verify:${email}`, raw, VERIFY_HOURS);
     const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
+    const link = publicLinkMeta(verifyUrl);
     const mail = await sendAppEmail({
       to: email,
       subject: "Confirma o teu email na MEL",
@@ -139,6 +146,7 @@ export async function registerFamily(formData: FormData) {
       ok: true as const,
       needsVerification: true as const,
       email,
+      ...link,
       previewUrl:
         mail.ok && !mail.delivered && allowDevMailPreview() ? verifyUrl : undefined,
       mailDelivered: mail.ok ? mail.delivered : false,
@@ -178,28 +186,20 @@ export async function resendVerificationEmail(emailRaw: string) {
   const raw = createRawToken();
   await storeToken(`verify:${email}`, raw, VERIFY_HOURS);
   const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
-  console.info("[auth] resend verification", {
-    email,
-    base: appBaseUrl(),
-    host: (() => {
-      try {
-        return new URL(verifyUrl).host;
-      } catch {
-        return "invalid";
-      }
-    })(),
-  });
+  const link = publicLinkMeta(verifyUrl);
+  console.info("[auth] resend verification", { email, ...link });
   const mail = await sendAppEmail({
     to: email,
     subject: "Confirma o teu email na MEL",
     text: `Confirma o teu email:\n${verifyUrl}\n\n— addYknow`,
   });
   if (!mail.ok) {
-    return { ok: false as const, error: mail.error };
+    return { ok: false as const, error: mail.error, ...link };
   }
   return {
     ok: true as const,
     delivered: mail.delivered,
+    ...link,
     previewUrl: !mail.delivered && allowDevMailPreview() ? verifyUrl : undefined,
   };
 }
@@ -213,28 +213,20 @@ export async function requestPasswordReset(emailRaw: string) {
   const raw = createRawToken();
   await storeToken(`reset:${email}`, raw, RESET_HOURS);
   const url = `${appBaseUrl()}/pt/recuperar/${raw}`;
-  console.info("[auth] password reset", {
-    email,
-    base: appBaseUrl(),
-    host: (() => {
-      try {
-        return new URL(url).host;
-      } catch {
-        return "invalid";
-      }
-    })(),
-  });
+  const link = publicLinkMeta(url);
+  console.info("[auth] password reset", { email, ...link });
   const mail = await sendAppEmail({
     to: email,
     subject: "Recuperar palavra-passe — addYknow",
     text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— addYknow`,
   });
   if (!mail.ok) {
-    return { ok: false as const, error: mail.error };
+    return { ok: false as const, error: mail.error, ...link };
   }
   return {
     ok: true as const,
     delivered: mail.delivered,
+    ...link,
     previewUrl: !mail.delivered && allowDevMailPreview() ? url : undefined,
   };
 }
