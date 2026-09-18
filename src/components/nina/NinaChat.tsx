@@ -10,6 +10,14 @@ import {
 } from "@/actions/nina";
 import { NINA_SUGGESTIONS } from "@/lib/ai/nina-assistant";
 import type { FinanceScope } from "@prisma/client";
+import { requestUserLocation } from "@/lib/geolocation";
+
+type PendingMobility = {
+  mode: "fuel" | "ev" | "auto";
+  utterance: string;
+  batteryPercent?: number;
+  budgetEuros?: number;
+};
 
 type Msg = {
   id: string;
@@ -17,6 +25,7 @@ type Msg = {
   text: string;
   suggestions?: string[];
   pendingScope?: PendingScopeAction;
+  needsLocation?: boolean;
   isError?: boolean;
 };
 
@@ -25,6 +34,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [pendingScope, setPendingScope] = useState<PendingScopeAction | null>(null);
+  const [pendingMobility, setPendingMobility] = useState<PendingMobility | null>(null);
   const [pending, start] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +72,12 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, pending]);
 
-  function pushMelReply(text: string, suggestions?: string[], pendingNext?: PendingScopeAction | null) {
+  function pushMelReply(
+    text: string,
+    suggestions?: string[],
+    pendingNext?: PendingScopeAction | null,
+    needsLocation?: boolean,
+  ) {
     setMessages((m) => [
       ...m,
       {
@@ -71,6 +86,7 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
         text,
         suggestions,
         pendingScope: pendingNext ?? undefined,
+        needsLocation,
       },
     ]);
   }
@@ -88,9 +104,69 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
     ]);
   }
 
+  function allowLocation() {
+    if (pending || sendingRef.current) return;
+    const mob = pendingMobility;
+    const utterance = mob?.utterance || "onde há carregadores perto de mim?";
+    setMessages((m) => [
+      ...m,
+      { id: `u-${Date.now()}`, role: "user", text: "Permitir localização" },
+    ]);
+    sendingRef.current = true;
+    start(async () => {
+      try {
+        const geo = await requestUserLocation();
+        if (!geo.ok) {
+          pushMelReply(
+            geo.message +
+              (geo.reason === "denied"
+                ? " Se bloqueaste o pedido, podes alterar a permissão nas definições do browser/site e tentar outra vez."
+                : ""),
+            ["Indicar local manualmente", "Quanto gastei este mês?"],
+          );
+          return;
+        }
+        const res = await askNina(utterance, undefined, {
+          lat: geo.position.lat,
+          lng: geo.position.lng,
+        });
+        if (res.ok) {
+          setPendingMobility(null);
+          pushMelReply(res.reply.text, res.reply.suggestions);
+          if ("deepLink" in res && res.deepLink && typeof window !== "undefined") {
+            window.open(res.deepLink, "_blank", "noopener,noreferrer");
+          }
+        } else {
+          pushError();
+        }
+      } catch {
+        pushError();
+      } finally {
+        sendingRef.current = false;
+        inputRef.current?.focus();
+      }
+    });
+  }
+
   function send(question: string) {
     const q = question.trim();
     if (!q || pending || sendingRef.current) return;
+
+    if (/^permitir localiza/i.test(q)) {
+      allowLocation();
+      return;
+    }
+    if (/^indicar local manual/i.test(q)) {
+      setInput("");
+      setMessages((m) => [...m, { id: `u-${Date.now()}`, role: "user", text: q }]);
+      pushMelReply(
+        "Ainda não tenho um mapa manual ligado. Quando os dados reais de postos/carregadores estiverem disponíveis, poderás indicar uma zona. Para já, podes permitir a localização do browser se quiseres tentar a proximidade.",
+        ["Permitir localização", "Quanto gastei este mês?"],
+        null,
+        true,
+      );
+      return;
+    }
 
     if (pendingScope && /^(pessoal|familiar)$/i.test(q)) {
       const scope: FinanceScope = /^familiar$/i.test(q) ? "FAMILY" : "PERSONAL";
@@ -108,7 +184,13 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
           const nextPending =
             "pendingScope" in res && res.pendingScope ? res.pendingScope : null;
           setPendingScope(nextPending);
-          pushMelReply(res.reply.text, res.reply.suggestions, nextPending);
+          const needsLoc = "needsLocation" in res && res.needsLocation === true;
+          if (needsLoc && "pendingMobility" in res && res.pendingMobility) {
+            setPendingMobility(res.pendingMobility as PendingMobility);
+          } else if (!needsLoc) {
+            setPendingMobility(null);
+          }
+          pushMelReply(res.reply.text, res.reply.suggestions, nextPending, needsLoc);
           if ("deepLink" in res && res.deepLink && typeof window !== "undefined") {
             window.open(res.deepLink, "_blank", "noopener,noreferrer");
           }
@@ -181,6 +263,25 @@ export function NinaChat({ compact = false }: { compact?: boolean }) {
                     onClick={() => confirmScope("FAMILY")}
                   >
                     Conta Familiar
+                  </button>
+                </div>
+              ) : m.needsLocation ? (
+                <div className="nina-scope-actions" role="group" aria-label="Localização">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={pending}
+                    onClick={() => allowLocation()}
+                  >
+                    Permitir localização
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    disabled={pending}
+                    onClick={() => send("Indicar local manualmente")}
+                  >
+                    Indicar local manualmente
                   </button>
                 </div>
               ) : m.suggestions?.length ? (

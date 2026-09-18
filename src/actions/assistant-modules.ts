@@ -34,8 +34,9 @@ export async function handleMobilityIntent(opts: {
     return {
       ok: true as const,
       reply:
-        "Precisamos da tua localização para procurar postos ou carregadores próximos. Activa a localização no browser e tenta outra vez.",
+        "Para procurar postos ou carregadores perto de ti, preciso da tua localização. Usa «Permitir localização» para o pedido nativo do browser.",
       deepLink: undefined as string | undefined,
+      needsLocation: true as const,
     };
   }
 

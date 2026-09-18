@@ -290,11 +290,12 @@ export function parseMoneyIntent(raw: string): ParsedMoneyIntent {
   }
 
   // Mobilidade — combustível / EV (antes de compras "onde compensa")
+  // NÃO apanhar "ond"/"onde" sozinhos nem "onde gastei" (finanças).
   if (
-    /(onde abastec|onde (devo |posso )?abastec|posto mais barato|onde compensa colocar|colocar \d+\s*€|gasolina|diesel|gasoleo)/.test(
+    /(onde abastec|onde (devo |posso )?abastec|posto mais barato|onde compensa colocar|colocar \d+\s*€|gasolina|diesel|gasoleo|postos? de combustivel|combustivel perto)/.test(
       n,
     ) ||
-    /(onde (devo |posso )?carregar|tenho \d+\s*%|bateria|carregar ate|carregar até|supercharger|posto de carregamento)/.test(
+    /(onde (devo |posso )?carregar|onde ha carregador|onde há carregador|carregadores? perto|tenho \d+\s*%|bateria|carregar ate|carregar até|supercharger|posto de carregamento)/.test(
       n,
     )
   ) {

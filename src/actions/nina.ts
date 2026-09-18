@@ -227,10 +227,105 @@ async function commitExpense(opts: {
   return { cat, now };
 }
 
-export async function askNina(question: string, confirmScope?: FinanceScope) {
+export async function askNina(
+  question: string,
+  confirmScope?: FinanceScope,
+  geo?: { lat: number; lng: number } | null,
+) {
   const { session, membership, family } = await requireFamilyContext();
   const displayName = membership.displayName || session.user.name || "olá";
   const space = await getNinaSpace();
+
+  // Gate: incompleto / ambíguo — NÃO OpenAI, NÃO mobilidade
+  const { gateMelUtterance } = await import("@/lib/mel/utterance-gate");
+  const gate = gateMelUtterance(question);
+  if (gate.action === "complete") {
+    return {
+      ok: true as const,
+      reply: {
+        text: gate.message,
+        tone: "warm" as const,
+        suggestions: gate.suggestions,
+        didMutate: false,
+      },
+      mutated: false,
+    };
+  }
+  if (gate.action === "finance_where") {
+    // Força caminho financeiro via OpenAI tools (sem GPS)
+    const ctx = await loadNinaRaw(family.id, displayName, {
+      householdName: family.name,
+      memberId: membership.id,
+      space,
+      userId: session.user.id,
+      recentQuestion: question,
+    });
+    const { runMelConversation } = await import("@/lib/mel/orchestrator");
+    const mel = await runMelConversation({
+      auth: {
+        userId: session.user.id,
+        memberId: membership.id,
+        familyId: family.id,
+        role: membership.role,
+        space,
+        displayName,
+        familyName: family.name,
+      },
+      question,
+      fallback: () => answerNina(question, ctx),
+    });
+    return {
+      ok: true as const,
+      reply: {
+        text: mel.text,
+        tone: mel.tone,
+        suggestions: mel.suggestions,
+        didMutate: false,
+      },
+      mutated: false,
+    };
+  }
+  if (gate.action === "mobility") {
+    const { handleMobilityIntent } = await import("@/actions/assistant-modules");
+    if (geo?.lat == null || geo?.lng == null) {
+      return {
+        ok: true as const,
+        reply: {
+          text: "Para procurar postos ou carregadores perto de ti, preciso da tua localização.",
+          tone: "warm" as const,
+          suggestions: ["Permitir localização", "Indicar local manualmente"],
+          didMutate: false,
+        },
+        mutated: false,
+        needsLocation: true as const,
+        pendingMobility: {
+          mode: gate.mode,
+          utterance: question.trim(),
+        },
+      };
+    }
+    const mob = await handleMobilityIntent({
+      mode: gate.mode,
+      utterance: question.trim(),
+      lat: geo.lat,
+      lng: geo.lng,
+    });
+    return {
+      ok: true as const,
+      reply: {
+        text: mob.reply,
+        tone: "warm" as const,
+        suggestions: [
+          "Leva-me ao posto mais barato",
+          "Tenho 30% de bateria",
+          "O que importa hoje?",
+        ],
+        didMutate: false,
+      },
+      mutated: false,
+      deepLink: mob.deepLink,
+    };
+  }
 
   // Memory rule command
   const intent = parseMoneyIntent(question);
@@ -316,11 +411,32 @@ export async function askNina(question: string, confirmScope?: FinanceScope) {
 
   if (intent?.kind === "mobility") {
     const { handleMobilityIntent } = await import("@/actions/assistant-modules");
+    if (geo?.lat == null || geo?.lng == null) {
+      return {
+        ok: true as const,
+        reply: {
+          text: "Para procurar postos ou carregadores perto de ti, preciso da tua localização.",
+          tone: "warm" as const,
+          suggestions: ["Permitir localização", "Indicar local manualmente"],
+          didMutate: false,
+        },
+        mutated: false,
+        needsLocation: true as const,
+        pendingMobility: {
+          mode: intent.mode,
+          utterance: intent.utterance,
+          batteryPercent: intent.batteryPercent,
+          budgetEuros: intent.budgetEuros,
+        },
+      };
+    }
     const mob = await handleMobilityIntent({
       mode: intent.mode,
       utterance: intent.utterance,
       batteryPercent: intent.batteryPercent,
       budgetEuros: intent.budgetEuros,
+      lat: geo.lat,
+      lng: geo.lng,
     });
     return {
       ok: true as const,

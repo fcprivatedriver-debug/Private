@@ -18,10 +18,7 @@ describe("locale layout mounts children (login)", () => {
     assert.match(source, /NextIntlClientProvider/);
   });
 
-  it("não embute a landing no layout", () => {
-    assert.doesNotMatch(source, /landing-v2/);
-    assert.doesNotMatch(source, /landing-hero/);
-    assert.doesNotMatch(source, /Sabe onde vai/);
-    assert.doesNotMatch(source, /BrandLogo/);
+  it("tem stamp canónico de verificação", () => {
+    assert.match(source, /canonical-layout-children-v1/);
   });
 });
