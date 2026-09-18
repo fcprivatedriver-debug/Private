@@ -44,6 +44,7 @@ export function TripvoMark({
 
 /**
  * Typographic Tripvo wordmark — title case brand, display uppercase via CSS.
+ * Keep letters in one inline text run so kerning between T and r stays intact.
  */
 export function TripvoWordmark({
   variant = DEFAULT_TRIPVO_VARIANT,
@@ -75,15 +76,13 @@ export function TripvoWordmark({
       )}
       {variant === "A" && <span className="tripvo-ink">Tripvo</span>}
       {variant === "B" && (
-        <span className="tripvo-letters">
-          <span className="tripvo-accent">T</span>
-          <span className="tripvo-ink">ripvo</span>
+        <span className="tripvo-letters tripvo-ink">
+          <span className="tripvo-accent">T</span>ripvo
         </span>
       )}
       {variant === "C" && (
-        <span className="tripvo-letters">
-          <span className="tripvo-accent">T</span>
-          <span className="tripvo-ink">ripv</span>
+        <span className="tripvo-letters tripvo-ink">
+          <span className="tripvo-accent">T</span>ripv
           <span className="tripvo-accent">o</span>
         </span>
       )}

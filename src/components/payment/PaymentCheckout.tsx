@@ -27,6 +27,8 @@ export function PaymentCheckout({
   const [error, setError] = useState<string | null>(null);
   const fee = platformFeeAmount;
   const net = totalAmount - fee;
+  const feePercent =
+    totalAmount > 0 ? Math.round((fee / totalAmount) * 1000) / 10 : 0;
 
   async function confirmDemo() {
     setLoading(true);
@@ -61,7 +63,9 @@ export function PaymentCheckout({
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
-          <span className="muted">Comissão Tripvo</span>
+          <span className="muted">
+            Comissão Tripvo{feePercent > 0 ? ` (${feePercent}%)` : ""}
+          </span>
           <strong>{formatMoney(fee, currency)}</strong>
         </div>
         <div

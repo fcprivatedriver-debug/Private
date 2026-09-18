@@ -373,8 +373,8 @@ h3,
 }
 
 .tripvo-letters {
-  display: inline-flex;
-  align-items: baseline;
+  display: inline;
+  white-space: nowrap;
 }
 
 .tripvo-mark {

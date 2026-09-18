@@ -1,4 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="5" fill="#111111"/>
-  <text x="16" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="#1F5A96" letter-spacing="-0.04em">Z</text>
+  <rect width="32" height="32" rx="7" fill="#1F4F46"/>
+  <path
+    d="M7 9h18c.55 0 .55.85 0 .85H16.85v13.4c0 .55-.85.55-.85 0V9.85H7c-.55 0-.55-.85 0-.85Z"
+    fill="#F6F7F5"
+  />
 </svg>

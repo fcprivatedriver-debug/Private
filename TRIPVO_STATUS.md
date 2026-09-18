@@ -5,10 +5,22 @@ Base: branch `tripvo` @ marketplace ZELU (`db4c1af` + rebrand FASE 1).
 - Domínio futuro: **https://tripvo.pt**
 - Comissão standard: **5%**
 - Preview Tripvo (Vercel `private-duur`): **https://private-duur-git-tripvo-fc-private-driver.vercel.app**
-- Deploy HEAD `88a4d31`: https://private-duur-4zym62np9-fc-private-driver.vercel.app
 - Draft PR: https://github.com/fcprivatedriver-debug/Private/pull/55 (**não mergear para main**)
 
-Health preview: `vehicleClassCount` inclui classes inativas; API `/api/vehicle-classes` activa: ECONOMY · COMFORT · EXECUTIVO · VAN.
+## Branding
+
+- Wordmark Tipográfico: `TripvoWordmark` (kerning corrigido; T em accent)
+- Favicon / icon: marca T (já não “Z”)
+- Assets `/brand/tripvo-*.svg` + paths legacy `/brand/zelu-*.svg` redireccionados para Tripvo
+- Manifest / metadata / SEO: Tripvo
+
+## Categorias activas
+
+Economy · Comfort · Executivo · Van
+
+## Comissão
+
+`PLATFORM_COMMISSION_PERCENT = 5` → €200 → €10 Tripvo / €190 motorista
 
 ## Fluxos
 
@@ -25,7 +37,7 @@ Health preview: `vehicleClassCount` inclui classes inativas; API `/api/vehicle-c
 | Reservas / Booking | ✅ funciona | Após aceite da proposta |
 | Contactos privados | ✅ funciona | Revelados só após pagamento confirmado (`src/lib/contacts.ts`) |
 | Pagamentos Stripe | 🟡 incompleto | Adapter + checkout demo existem; Stripe real só com `PAYMENTS_ENABLED=true` + chaves |
-| Comissão 5% | ✅ funciona | `PLATFORM_COMMISSION_PERCENT` + `calcPlatformFee` (ex.: €200 → €10 / €190) |
+| Comissão 5% | ✅ funciona | UI checkout mostra Comissão Tripvo + líquido motorista |
 | Avaliações | ✅ funciona | Review após viagem |
 
 ## Legenda
@@ -34,10 +46,7 @@ Health preview: `vehicleClassCount` inclui classes inativas; API `/api/vehicle-c
 - 🟡 incompleto
 - 🔴 não funciona
 
-## Notas FASE 1
+## Notas
 
-- Identidade pública: Tripvo / tripvo.pt
-- Comissão centralizada: `src/config/constants.ts` → `PLATFORM_COMMISSION_PERCENT = 5`
-- Deploy upsert: `scripts/ensure-schema.mjs` força classes MVP + `defaultCommissionPercent = 5`
-- Pagamentos novos: **não** implementados nesta fase
-- Não usar preview `addynow` nem produção ZELU antiga como Tripvo
+- Não usar preview `addynow` nem produção antiga como Tripvo
+- Pagamentos novos: **não** nesta fase
