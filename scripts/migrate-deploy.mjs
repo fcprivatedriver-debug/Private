@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Deploy Prisma migrations for ZELU (public schema).
+ * Deploy Prisma migrations for Tripvo (public schema).
  *
  * Shared Neon may contain failed / foreign migrations from other apps
  * (Mafil, Mel) that block `prisma migrate deploy` with P3009.

@@ -10,7 +10,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[zelu] global error", {
+    console.error("[tripvo] global error", {
       digest: error.digest,
       message: error.message,
     });
@@ -19,7 +19,7 @@ export default function GlobalError({
   return (
     <html lang="pt">
       <body style={{ fontFamily: "system-ui, sans-serif", padding: "2rem" }}>
-        <h1>ZELU</h1>
+        <h1>Tripvo</h1>
         <p>Ocorreu um erro ao carregar a aplicação. Tente novamente.</p>
         {error.digest ? <p style={{ opacity: 0.7 }}>Ref: {error.digest}</p> : null}
         <button type="button" onClick={reset}>

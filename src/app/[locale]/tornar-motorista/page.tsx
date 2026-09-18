@@ -82,7 +82,7 @@ export default function BecomeDriverPage() {
   return (
     <section className="section">
       <div className="container" style={{ maxWidth: 560 }}>
-        <h1 className="page-title">Conduza com a ZELU</h1>
+        <h1 className="page-title">Conduza com a Tripvo</h1>
         <p className="lead">
           Vamos ativar o perfil de motorista na sua conta atual (
           {data.user.email}). Não é necessário criar outra conta.

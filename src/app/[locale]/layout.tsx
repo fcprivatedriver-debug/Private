@@ -24,8 +24,8 @@ export async function generateMetadata({
     },
     description: t("tagline"),
     icons: {
-      icon: [{ url: "/brand/zelu-mark.svg", type: "image/svg+xml" }],
-      apple: [{ url: "/brand/zelu-mark.svg", type: "image/svg+xml" }],
+      icon: [{ url: "/brand/tripvo-mark.svg", type: "image/svg+xml" }],
+      apple: [{ url: "/brand/tripvo-mark.svg", type: "image/svg+xml" }],
     },
     manifest: "/manifest.webmanifest",
     openGraph: {

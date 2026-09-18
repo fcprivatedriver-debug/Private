@@ -9,6 +9,7 @@ export function PaymentCheckout({
   bookingId,
   tripId,
   totalAmount,
+  platformFeeAmount,
   currency,
   stripeReady,
   clientSecret,
@@ -16,6 +17,7 @@ export function PaymentCheckout({
   bookingId: string;
   tripId: string;
   totalAmount: number;
+  platformFeeAmount: number;
   currency: string;
   stripeReady: boolean;
   clientSecret?: string | null;
@@ -23,6 +25,8 @@ export function PaymentCheckout({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fee = platformFeeAmount;
+  const net = totalAmount - fee;
 
   async function confirmDemo() {
     setLoading(true);
@@ -44,6 +48,33 @@ export function PaymentCheckout({
       </div>
       <div className="step-num" style={{ margin: "0 0 1rem" }}>
         {formatMoney(totalAmount, currency)}
+      </div>
+
+      <div
+        style={{
+          border: "1px solid var(--line)",
+          borderRadius: 14,
+          padding: "0.85rem 1rem",
+          marginBottom: "1rem",
+          background: "var(--surface-2)",
+          fontSize: "0.92rem",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
+          <span className="muted">Comissão Tripvo</span>
+          <strong>{formatMoney(fee, currency)}</strong>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "1rem",
+            marginTop: "0.35rem",
+          }}
+        >
+          <span className="muted">Valor líquido motorista</span>
+          <strong>{formatMoney(net, currency)}</strong>
+        </div>
       </div>
 
       <div
@@ -99,12 +130,15 @@ export function PaymentCheckout({
 
       {error && <div className="alert alert-error">{error}</div>}
 
-      <button className="btn btn-primary" type="button" disabled={loading} onClick={confirmDemo}>
+      <button
+        type="button"
+        className="btn btn-primary"
+        style={{ width: "100%" }}
+        disabled={loading}
+        onClick={confirmDemo}
+      >
         {loading ? "A confirmar…" : "Confirmar pagamento"}
       </button>
-      <p className="muted" style={{ fontSize: "0.82rem", marginTop: "0.85rem", marginBottom: 0 }}>
-        Pagamento seguro. A confirmação da reserva aparece de seguida.
-      </p>
     </div>
   );
 }

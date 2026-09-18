@@ -111,6 +111,7 @@ export default async function PaymentPage({ params }: Props) {
               bookingId={trip.booking.id}
               tripId={trip.id}
               totalAmount={trip.booking.totalAmount}
+              platformFeeAmount={trip.booking.platformFeeAmount}
               currency={trip.booking.currency}
               stripeReady={intent.status === "created"}
               clientSecret={intent.clientSecret}

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "appName": "ZELU",
+    "appName": "Tripvo",
     "tagline": "Quiet excellence. Always with you."
   },
   "nav": {
@@ -25,7 +25,7 @@
   },
   "home": {
     "eyebrow": "Private mobility",
-    "headline": "ZELU",
+    "headline": "Tripvo",
     "copy": "Request your trip.",
     "copyLine1": "Request your trip.",
     "copyLine2": "Choose the best driver.",
@@ -40,7 +40,7 @@
     "tabDriver": "Driver",
     "customerTitle": "Request your trip.",
     "customerLead": "Receive offers from verified drivers and choose the best service for you.",
-    "driverTitle": "Drive with ZELU.",
+    "driverTitle": "Drive with Tripvo.",
     "driverLead": "Submit documents, pass validation, and start receiving requests.",
     "stepsTitle": "How it works",
     "stepsLead": "From request to arrival — full control over who drives you.",
@@ -63,7 +63,7 @@
     "invalidCredentials": "Incorrect email or password",
     "noAccount": "Don't have an account yet?",
     "registerLink": "Create account",
-    "registerTitle": "Create your ZELU account",
+    "registerTitle": "Create your Tripvo account",
     "registerLead": "One account. Be a customer, a driver, or both.",
     "accountType": "How would you like to begin?",
     "customer": "I am a customer",
@@ -76,7 +76,7 @@
     "loginLink": "Log in"
   },
   "how": {
-    "title": "How ZELU works",
+    "title": "How Tripvo works",
     "lead": "A private-chauffeur marketplace reduced to the essentials: request, propose, choose."
   },
   "forDrivers": {
@@ -88,7 +88,7 @@
   "legal": {
     "termsTitle": "Terms of use",
     "privacyTitle": "Privacy",
-    "preliminary": "Preliminary version · ZELU"
+    "preliminary": "Preliminary version · Tripvo"
   },
   "common": {
     "loading": "Loading…"

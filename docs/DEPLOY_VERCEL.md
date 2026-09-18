@@ -1,6 +1,6 @@
-# Deploy ZELU to Vercel (phone-friendly)
+# Deploy Tripvo to Vercel (phone-friendly)
 
-ZELU uses **PostgreSQL** (Neon). SQLite is not supported.
+Tripvo uses **PostgreSQL** (Neon). SQLite is not supported.
 
 ## Login on Vercel (important)
 

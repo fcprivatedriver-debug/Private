@@ -1,4 +1,4 @@
-# ZELU PR #10 — Visual proof (phone-ready)
+# Tripvo PR #10 — Visual proof (phone-ready)
 
 ## Download
 

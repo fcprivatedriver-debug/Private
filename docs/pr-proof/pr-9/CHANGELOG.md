@@ -1,4 +1,4 @@
-# Changelog — PR #9 · ZELU Premium Experience
+# Changelog — PR #9 · Tripvo Premium Experience
 
 **Branch:** `cursor/movio-premium-experience-7a79`  
 **Date:** 2026-07-23

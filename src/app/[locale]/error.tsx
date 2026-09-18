@@ -11,7 +11,7 @@ export default function LocaleError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[zelu] route error", {
+    console.error("[tripvo] route error", {
       digest: error.digest,
       message: error.message,
     });

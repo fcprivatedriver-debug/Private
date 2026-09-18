@@ -11,8 +11,9 @@ const prisma = new PrismaClient();
 
 const CLASS_REMAP: Record<string, string> = {
   vc_sedan: "vc_comfort",
-  vc_executive: "vc_premium",
-  vc_luxury: "vc_premium",
+  vc_executive: "vc_executivo",
+  vc_premium: "vc_executivo",
+  vc_luxury: "vc_executivo",
   vc_minibus: "vc_van",
 };
 

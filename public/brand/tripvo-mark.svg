@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tripvo">
+  <rect width="64" height="64" rx="14" fill="#1F4F46"/>
+  <path d="M14 18h36c1.1 0 1.1 1.7 0 1.7H33.7v26.8c0 1.1-1.7 1.1-1.7 0V19.7H14c-1.1 0-1.1-1.7 0-1.7Z" fill="#F6F7F5"/>
+</svg>

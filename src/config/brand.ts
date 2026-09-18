@@ -1,5 +1,5 @@
 /**
- * ZELU brand — production locks only (no lab / A-B / FB variants).
+ * Tripvo brand — production locks only (no lab / A-B / FB variants).
  */
 
 export const BRAND_INK = "#111111";

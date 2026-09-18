@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { getEnv } from "@/config/env";
+import { platformCommissionPercent } from "@/config/env";
+import { PLATFORM_COMMISSION_PERCENT } from "@/config/constants";
 
 export type CommissionContext = {
   countryCode?: string | null;
@@ -9,7 +10,10 @@ export type CommissionContext = {
 
 /**
  * Resolves commission percent for a booking.
- * Priority: matching CommissionRule (highest priority) → PlatformSettings → env default.
+ * Priority: matching CommissionRule (highest priority)
+ *   → PlatformSettings.defaultCommissionPercent
+ *   → env PLATFORM_COMMISSION_PERCENT / PLATFORM_FEE_PERCENT
+ *   → PLATFORM_COMMISSION_PERCENT constant (5)
  */
 export async function resolveCommissionPercent(
   ctx: CommissionContext = {},
@@ -31,7 +35,11 @@ export async function resolveCommissionPercent(
   });
   if (settings) return settings.defaultCommissionPercent;
 
-  return getEnv().PLATFORM_FEE_PERCENT;
+  try {
+    return platformCommissionPercent();
+  } catch {
+    return PLATFORM_COMMISSION_PERCENT;
+  }
 }
 
 export async function getDefaultCurrency(): Promise<string> {

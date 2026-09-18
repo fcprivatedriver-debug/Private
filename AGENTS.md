@@ -1,4 +1,4 @@
-# Agent notes — ZELU
+# Agent notes — Tripvo
 
 ## PR completion gate (mandatory)
 

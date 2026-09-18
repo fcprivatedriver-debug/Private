@@ -1,6 +1,23 @@
-export const APP_NAME = "ZELU";
+/**
+ * Tripvo — public brand & marketplace defaults.
+ * Keep technical identifiers (Prisma models, route segments) stable.
+ */
+
+export const APP_NAME = "Tripvo";
+export const APP_DOMAIN = "tripvo.pt";
+export const APP_URL = "https://tripvo.pt";
+export const SUPPORT_EMAIL = "suporte@tripvo.pt";
+
 export const DEFAULT_CURRENCY = "EUR";
-export const PLATFORM_FEE_PERCENT_DEFAULT = 15;
+
+/**
+ * Canonical default marketplace commission (%).
+ * All fee resolution should fall back to this constant.
+ */
+export const PLATFORM_COMMISSION_PERCENT = 5;
+
+/** @deprecated Prefer PLATFORM_COMMISSION_PERCENT */
+export const PLATFORM_FEE_PERCENT_DEFAULT = PLATFORM_COMMISSION_PERCENT;
 
 export const TRIP_STATUS_LABELS: Record<string, string> = {
   DRAFT: "Rascunho",
@@ -102,7 +119,7 @@ export const VEHICLE_PHOTO_LABELS: Record<string, string> = {
   video: "Vídeo curto (opcional)",
 };
 
-export function isZeluElite(profile: {
+export function isTripvoElite(profile: {
   ratingAvg?: number | null;
   completedTripsCount?: number | null;
   ratingCount?: number | null;
@@ -114,13 +131,15 @@ export function isZeluElite(profile: {
   );
 }
 
-/** @deprecated Use isZeluElite */
-export const isZrikElite = isZeluElite;
-/** @deprecated Use isZeluElite */
-export const isHegosElite = isZeluElite;
-/** @deprecated Use isZeluElite */
-export const isMovioElite = isZeluElite;
+/** @deprecated Use isTripvoElite */
+export const isZeluElite = isTripvoElite;
+/** @deprecated Use isTripvoElite */
+export const isZrikElite = isTripvoElite;
+/** @deprecated Use isTripvoElite */
+export const isHegosElite = isTripvoElite;
+/** @deprecated Use isTripvoElite */
+export const isMovioElite = isTripvoElite;
 
 export function bookingReference(bookingId: string): string {
-  return `ZLU-${bookingId.slice(-8).toUpperCase()}`;
+  return `TRP-${bookingId.slice(-8).toUpperCase()}`;
 }

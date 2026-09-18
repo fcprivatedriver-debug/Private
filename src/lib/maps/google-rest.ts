@@ -145,7 +145,7 @@ export async function nominatimSuggest(input: string): Promise<PlaceSuggestion[]
     url.searchParams.set("countrycodes", "pt");
     const res = await fetch(url.toString(), {
       headers: {
-        "User-Agent": "ZELU/1.0 (private chauffeur marketplace; contact=support@zelu.app)",
+        "User-Agent": "Tripvo/1.0 (private chauffeur marketplace; contact=suporte@tripvo.pt)",
         Accept: "application/json",
       },
       next: { revalidate: 3600 },
@@ -216,7 +216,7 @@ export async function geocodeAddressNominatim(address: string): Promise<{
     url.searchParams.set("countrycodes", "pt");
     const res = await fetch(url.toString(), {
       headers: {
-        "User-Agent": "ZELU/1.0 (private chauffeur marketplace; contact=support@zelu.app)",
+        "User-Agent": "Tripvo/1.0 (private chauffeur marketplace; contact=suporte@tripvo.pt)",
         Accept: "application/json",
       },
       next: { revalidate: 86400 },

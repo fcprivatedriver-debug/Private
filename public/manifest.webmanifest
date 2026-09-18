@@ -1,14 +1,14 @@
 {
-  "name": "ZELU",
-  "short_name": "ZELU",
-  "description": "Excelência discreta. Sempre contigo.",
+  "name": "Tripvo",
+  "short_name": "Tripvo",
+  "description": "Peça a sua viagem. Escolha o melhor motorista.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F6F7F5",
-  "theme_color": "#1F4F46",
+  "theme_color": "#1F5A96",
   "icons": [
     {
-      "src": "/brand/zelu-mark.svg",
+      "src": "/brand/tripvo-mark.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

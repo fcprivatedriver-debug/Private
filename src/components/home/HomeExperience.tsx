@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
-import { ZeluWordmark } from "@/components/layout/BrandLogo";
+import { TripvoWordmark } from "@/components/layout/BrandLogo";
 import { PRODUCTION_HERO, PRODUCTION_OVERLAY } from "@/config/brand";
 
 export type HomeSession = {
@@ -70,7 +70,7 @@ export function HomeExperience({ session }: { session: HomeSession }) {
         <div className="hero-scene-veil" aria-hidden />
         <div className="container hero-scene-content">
           <h1 className="hero-brand fade-up">
-            <ZeluWordmark as="span" variant="B" showMark markSize={48} />
+            <TripvoWordmark as="span" variant="B" showMark markSize={48} />
           </h1>
 
           <div
@@ -125,7 +125,7 @@ export function HomeExperience({ session }: { session: HomeSession }) {
           ) : (
             <div className="home-tab-panel fade-up-delay" role="tabpanel">
               <p className="hero-copy">
-                <span className="hero-copy-line">Conduza com a ZELU.</span>
+                <span className="hero-copy-line">Conduza com a Tripvo.</span>
               </p>
               <p className="home-lead">
                 Junte-se a uma rede de motoristas verificados. Envie os
@@ -182,7 +182,7 @@ export function HomeExperience({ session }: { session: HomeSession }) {
               <div className="section-premium-head">
                 <h2>Como começar a conduzir</h2>
                 <p className="lead">
-                  Quatro passos até estar pronto para receber pedidos ZELU.
+                  Quatro passos até estar pronto para receber pedidos Tripvo.
                 </p>
               </div>
               <div className="steps steps-premium">

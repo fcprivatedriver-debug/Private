@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Ensure critical ZELU tables exist on the target database.
+ * Ensure critical Tripvo tables exist on the target database.
  * Never fails the build: logs warnings and exits 0 so `next build` can proceed.
  * Prefer raw DDL over `prisma db push` — shared Neon often has foreign schemas
  * (Mafil/Mel) that make push fail while SELECT 1 still works.

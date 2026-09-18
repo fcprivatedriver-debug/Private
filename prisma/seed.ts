@@ -12,6 +12,9 @@ import {
   RETIRED_VEHICLE_CLASS_CODES,
 } from "./demo-catalog";
 
+/** Tripvo default commission — keep in sync with PLATFORM_COMMISSION_PERCENT. */
+const PLATFORM_COMMISSION_PERCENT = 5;
+
 const prisma = new PrismaClient();
 
 function daysAgo(d: number, hour = 12, minute = 0) {
@@ -36,7 +39,7 @@ function pick<T>(arr: readonly T[], i: number): T {
   return arr[i % arr.length]!;
 }
 
-function fee(amount: number, percent = 15) {
+function fee(amount: number, percent = PLATFORM_COMMISSION_PERCENT) {
   return Math.round((amount * percent) / 100);
 }
 
@@ -65,20 +68,24 @@ async function seedSettings() {
     create: {
       id: "default",
       defaultCurrency: "EUR",
-      defaultCommissionPercent: 15,
+      defaultCommissionPercent: PLATFORM_COMMISSION_PERCENT,
       supportedCurrencies: JSON.stringify(["EUR"]),
       demoMode: true,
     },
     update: {
       defaultCurrency: "EUR",
-      defaultCommissionPercent: 15,
+      defaultCommissionPercent: PLATFORM_COMMISSION_PERCENT,
       supportedCurrencies: JSON.stringify(["EUR"]),
       demoMode: true,
     },
   });
 
   await prisma.commissionRule.create({
-    data: { name: "Default marketplace", percent: 15, priority: 0 },
+    data: {
+      name: "Default marketplace",
+      percent: PLATFORM_COMMISSION_PERCENT,
+      priority: 0,
+    },
   });
 
   for (const vc of VEHICLE_CLASSES) {
@@ -103,8 +110,9 @@ async function seedSettings() {
   // Remap legacy class FKs (safe no-op when tables were cleared)
   const classRemap: Record<string, string> = {
     vc_sedan: "vc_comfort",
-    vc_executive: "vc_premium",
-    vc_luxury: "vc_premium",
+    vc_executive: "vc_executivo",
+    vc_premium: "vc_executivo",
+    vc_luxury: "vc_executivo",
     vc_minibus: "vc_van",
   };
   for (const [from, to] of Object.entries(classRemap)) {
@@ -330,7 +338,7 @@ async function createCompletedTrip(opts: {
       vehicleId: opts.vehicleId,
       priceAmount: price,
       currency: "EUR",
-      message: "Thank you for choosing ZELU.",
+      message: "Thank you for choosing Tripvo.",
       includesTolls: true,
       includesWaiting: opts.routeIndex % 2 === 0,
       status: "ACCEPTED",
@@ -423,8 +431,8 @@ async function seedLiveMarketplace(
   drivers: DriverBundle[],
   customers: { id: string }[],
 ) {
-  const carlos = drivers.find((d) => d.email === "motorista@movio.app")!;
-  const rita = drivers.find((d) => d.email === "motorista2@movio.app")!;
+  const carlos = drivers.find((d) => d.email === "motorista@tripvo.app")!;
+  const rita = drivers.find((d) => d.email === "motorista2@tripvo.app")!;
   const actives = drivers.filter((d) => d.active);
 
   const openPickup = daysFromNow(3, 10, 30);
@@ -443,7 +451,7 @@ async function seedLiveMarketplace(
       notes: "Arrival flight TP1234. Name board: Ana.",
       flightNumber: "TP1234",
       status: "OPEN",
-      preferredVehicleClassId: "vc_premium",
+      preferredVehicleClassId: "vc_executivo",
       currency: "EUR",
       expiresAt: new Date(openPickup.getTime() - 2 * 60 * 60 * 1000),
       distanceMeters: 9800,
@@ -560,7 +568,7 @@ async function seedLiveMarketplace(
       luggage: 1,
       notes: "Return not needed.",
       status: "CONFIRMED",
-      preferredVehicleClassId: "vc_premium",
+      preferredVehicleClassId: "vc_executivo",
       currency: "EUR",
       expiresAt: confirmedPickup,
       distanceMeters: 26500,
@@ -733,7 +741,7 @@ async function seedNotifications(adminId: string, anaId: string, carlosId: strin
     notes.push({
       userId: i % 2 === 0 ? anaId : carlosId,
       type: i % 3 === 0 ? "OFFER_RECEIVED" : "SYSTEM",
-      title: i % 3 === 0 ? "Offer activity" : "ZELU update",
+      title: i % 3 === 0 ? "Offer activity" : "Tripvo update",
       body: `Demo notification #${i + 1} — marketplace looks active.`,
       readAt: i % 4 === 0 ? hoursFromNow(-i) : null,
       createdAt: hoursFromNow(-i * 3),
@@ -744,16 +752,16 @@ async function seedNotifications(adminId: string, anaId: string, carlosId: strin
 }
 
 async function main() {
-  console.log("Seeding ZELU Demo Mode…");
+  console.log("Seeding Tripvo Demo Mode…");
   await clearDemoData();
   await seedSettings();
 
-  const passwordHash = await bcrypt.hash("movio123", 10);
+  const passwordHash = await bcrypt.hash("tripvo123", 10);
 
   const admin = await prisma.user.create({
     data: {
-      email: "admin@movio.app",
-      name: "Admin ZELU",
+      email: "admin@tripvo.app",
+      name: "Admin Tripvo",
       role: "ADMIN",
       passwordHash,
       phone: "+351900000001",
@@ -764,7 +772,7 @@ async function main() {
   const customers = await seedCustomers(passwordHash);
   const drivers = await seedDrivers(passwordHash);
   const activeDrivers = drivers.filter((d) => d.active);
-  const ana = customers.find((c) => c.email === "cliente@movio.app")!;
+  const ana = customers.find((c) => c.email === "cliente@tripvo.app")!;
 
   // Exactly 50 completed trips
   const COMPLETED = 50;
@@ -821,8 +829,8 @@ async function main() {
 
   console.log("Demo Mode seed complete.");
   console.log(JSON.stringify(counts, null, 2));
-  console.log("Accounts (password: movio123):");
-  console.log("  admin@movio.app / cliente@movio.app / motorista@movio.app");
+  console.log("Accounts (password: tripvo123):");
+  console.log("  admin@tripvo.app / cliente@tripvo.app / motorista@tripvo.app");
   console.log(`  Sample OPEN trip: ${openTripId}`);
   console.log("  PlatformSettings.demoMode = true");
 }

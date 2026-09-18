@@ -1,4 +1,4 @@
-# ZELU PR #8 — Visual proof (phone-ready)
+# Tripvo PR #8 — Visual proof (phone-ready)
 
 ## Download (best on phone)
 
@@ -13,10 +13,10 @@
 
 ## Demo logins
 
-Password: `movio123`
+Password: `tripvo123`
 
 | Role | Email |
 |------|-------|
-| Customer | `cliente@movio.app` |
-| Driver | `motorista@movio.app` |
-| Admin | `admin@movio.app` |
+| Customer | `cliente@tripvo.app` |
+| Driver | `motorista@tripvo.app` |
+| Admin | `admin@tripvo.app` |

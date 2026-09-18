@@ -363,7 +363,7 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
         userId: profile.userId,
         type: "DRIVER_APPROVED",
         title: "Conta aprovada",
-        body: "A análise automática da ZELU aprovou o seu perfil. Já pode receber pedidos.",
+        body: "A análise automática da Tripvo aprovou o seu perfil. Já pode receber pedidos.",
       },
     });
   } else if (verdict === "REJECTED") {
@@ -377,7 +377,7 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
         status: "REJECTED",
         rejectionReason:
           result.findings.find((f) => f.severity === "critical")?.message ||
-          "Documentação ou fotografias não cumprem os critérios ZELU.",
+          "Documentação ou fotografias não cumprem os critérios Tripvo.",
       },
     });
   } else {
@@ -522,7 +522,7 @@ export async function adminDecideVerification(input: {
         userId: profile.userId,
         type: "DRIVER_APPROVED",
         title: "Conta verificada",
-        body: "Parabéns! O seu perfil ZELU foi aprovado. Já pode enviar propostas.",
+        body: "Parabéns! O seu perfil Tripvo foi aprovado. Já pode enviar propostas.",
       },
     });
     return { status: "ACTIVE" as const };

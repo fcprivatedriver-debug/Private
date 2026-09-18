@@ -2,11 +2,11 @@ import { chromium } from "playwright";
 
 const BASE = process.env.BASE_URL || "https://private-duur-p7al89nvl-fc-private-driver.vercel.app";
 
-async function register(role, password = "zelu12345") {
+async function register(role, password = "tripvo12345") {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   const stamp = Date.now();
-  const email = `e2e.${role.toLowerCase()}.${stamp}@zelu.test`;
+  const email = `e2e.${role.toLowerCase()}.${stamp}@tripvo.test`;
 
   await page.goto(`${BASE}/pt/registo?role=${role}`, { waitUntil: "domcontentloaded", timeout: 90000 });
   await page.waitForSelector('select[name="role"]', { timeout: 30000 });
@@ -21,8 +21,8 @@ async function register(role, password = "zelu12345") {
   const url = page.url();
   const alerts = await page.locator(".alert-error, .alert").allTextContents();
   const body = (await page.locator("body").innerText()).slice(0, 250).replace(/\s+/g, " ");
-  const brandHits = (await page.content()).includes("ZELU");
-  const zrikHits = (await page.content()).includes("ZRIK");
+  const brandHits = (await page.content()).includes("Tripvo");
+  const zrikHits = (await page.content()).includes("Tripvo");
 
   let ok = false;
   if (role === "DRIVER") ok = url.includes("/onboarding") || url.includes("/painel");
@@ -59,8 +59,8 @@ async function duplicateError() {
   await page.goto(`${BASE}/pt/registo?role=CUSTOMER`, { waitUntil: "domcontentloaded" });
   await page.waitForSelector('select[name="role"]');
   await page.fill('input[name="name"]', "Dup");
-  await page.fill('input[name="email"]', "cliente@movio.app");
-  await page.fill('input[name="password"]', "zelu12345");
+  await page.fill('input[name="email"]', "cliente@tripvo.app");
+  await page.fill('input[name="password"]', "tripvo12345");
   await page.click('button[type="submit"]');
   await page.waitForTimeout(10000);
   const alerts = await page.locator(".alert-error, .alert").allTextContents();

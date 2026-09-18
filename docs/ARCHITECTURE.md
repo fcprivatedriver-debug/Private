@@ -1,7 +1,7 @@
-# ZELU — Architecture (Phase 0 Foundation)
+# Tripvo — Architecture (Phase 0 Foundation)
 
 > Private-driver marketplace (GetTransfer-style).  
-> **Brand:** ZELU  
+> **Brand:** Tripvo  
 > **Phase in scope:** Phase 0 — Foundation only
 
 ---
@@ -10,9 +10,9 @@
 
 | Decision | Choice |
 |----------|--------|
-| Brand / project name | **ZELU** (repo target: `movio`) |
+| Brand / project name | **Tripvo** (repo target: `tripvo`) |
 | Default currency | **EUR** — multi-currency ready |
-| Platform commission | **15%** default — rates configurable (global + overrides later) |
+| Platform commission | **5%** default — rates configurable (global + overrides later) |
 | Contact visibility | Phone/email **only after payment is successfully confirmed** (`Booking` paid / `Payment` CAPTURED) |
 | Maps | **Google Maps** — Places Autocomplete + Geocoding |
 | i18n | **Portuguese + English** from day one (`next-intl`) |
@@ -22,7 +22,7 @@
 
 ## Phase 0 deliverables
 
-1. Next.js 15 + TypeScript + Tailwind scaffold branded **ZELU**
+1. Next.js 15 + TypeScript + Tailwind scaffold branded **Tripvo**
 2. Prisma schema (multi-currency, commission settings, expanded driver profile)
 3. Auth.js foundation (credentials + optional Google OAuth)
 4. i18n routing (`/pt`, `/en`) with message catalogs
@@ -53,7 +53,7 @@
 ## Folder structure (target)
 
 ```
-movio/
+tripvo/
 ├── prisma/
 │   ├── schema.prisma
 │   ├── migrations/
@@ -170,11 +170,11 @@ Client helper `src/lib/maps/google.ts` remains available for Maps JS embeds when
 
 ## Repository naming
 
-Application and package name: **`movio`**.  
-GitHub repository should be renamed from `Private` → **`movio`** by the org owner (Settings → General → Repository name). Agent environments cannot rename the remote repo via read-only `gh`.
+Application and package name: **`tripvo`**.  
+GitHub repository should be renamed from `Private` → **`tripvo`** by the org owner (Settings → General → Repository name). Agent environments cannot rename the remote repo via read-only `gh`.
 
 ### Owner steps to rename on GitHub
 
 1. Open https://github.com/fcprivatedriver-debug/Private/settings  
-2. Repository name → `movio` → Rename  
-3. Update local remotes: `git remote set-url origin https://github.com/fcprivatedriver-debug/movio.git`
+2. Repository name → `tripvo` → Rename  
+3. Update local remotes: `git remote set-url origin https://github.com/fcprivatedriver-debug/tripvo.git`

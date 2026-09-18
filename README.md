@@ -1,8 +1,8 @@
-# ZELU
+# Tripvo
 
 Private-chauffeur marketplace — choose the best driver, choose the best price.
 
-**Brand:** ZELU · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
+**Brand:** Tripvo · **Default currency:** EUR · **Locales:** Portuguese, English · **Database:** PostgreSQL (Neon)
 
 ## Stack
 
@@ -32,10 +32,10 @@ Logo Option B (Z accent · ELU ink). Compare tones at `/pt/homepage-lab` (intern
 | `DATABASE_URL` | Neon pooled URL |
 | `DIRECT_URL` | Neon unpooled URL |
 | `AUTH_SECRET` | 32+ chars (demo fallback exists) |
-| `NEXT_PUBLIC_APP_NAME` | `ZELU` |
+| `NEXT_PUBLIC_APP_NAME` | `Tripvo` |
 
 See `docs/DEPLOY_VERCEL.md` for phone-friendly Vercel + Neon deploy notes.
 
 ## Package
 
-- Package name: **zelu**
+- Package name: **tripvo**

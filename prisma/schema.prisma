@@ -273,8 +273,8 @@ model VerificationReview {
 model PlatformSettings {
   id                        String   @id @default("default")
   defaultCurrency           String   @default("EUR")
-  /// Default marketplace commission percent (e.g. 15.0)
-  defaultCommissionPercent  Float    @default(15)
+  /// Default marketplace commission percent (Tripvo standard: 5.0)
+  defaultCommissionPercent  Float    @default(5)
   /// JSON array of ISO currencies enabled on the platform
   supportedCurrencies       String   @default("[\"EUR\"]")
   /// When true, UI shows Demo Mode banner and seed accounts apply

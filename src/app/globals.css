@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ——— ZELU design tokens — premium European mobility ——— */
+/* ——— Tripvo design tokens — premium European mobility ——— */
 :root {
   /* Surfaces */
   --bg: #fafafa;
@@ -361,7 +361,7 @@ h3,
   text-decoration: none;
 }
 
-.zelu-wordmark {
+.tripvo-wordmark {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.07em;
@@ -372,39 +372,39 @@ h3,
   gap: 0.45rem;
 }
 
-.zelu-letters {
+.tripvo-letters {
   display: inline-flex;
   align-items: baseline;
 }
 
-.zelu-mark {
+.tripvo-mark {
   flex-shrink: 0;
   color: var(--accent);
 }
 
-.zelu-ink {
+.tripvo-ink {
   color: #111111;
 }
 
-.zelu-accent {
+.tripvo-accent {
   color: var(--accent);
 }
 
-.zelu-wordmark-on-dark .zelu-ink,
-.branding-logo-on-dark .zelu-ink {
+.tripvo-wordmark-on-dark .tripvo-ink,
+.branding-logo-on-dark .tripvo-ink {
   color: #f7f7f8;
 }
 
-.zelu-wordmark-on-dark .zelu-accent,
-.branding-logo-on-dark .zelu-accent {
+.tripvo-wordmark-on-dark .tripvo-accent,
+.branding-logo-on-dark .tripvo-accent {
   color: #a8c9c2;
 }
 
-.zelu-wordmark-on-dark .zelu-mark {
+.tripvo-wordmark-on-dark .tripvo-mark {
   color: #a8c9c2;
 }
 
-.branding-logo-on-dark.zelu-wordmark-A .zelu-ink {
+.branding-logo-on-dark.tripvo-wordmark-A .tripvo-ink {
   color: #f5f5f7;
 }
 
@@ -547,7 +547,7 @@ h3,
   animation: riseIn 0.9s var(--ease-out) 0.1s both;
 }
 
-.hero-brand .zelu-wordmark {
+.hero-brand .tripvo-wordmark {
   font-size: inherit;
 }
 

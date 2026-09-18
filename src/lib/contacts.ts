@@ -2,7 +2,7 @@ import type { Booking, BookingStatus, Payment, PaymentStatus } from "@prisma/cli
 
 /**
  * Contact details (phone/email) are revealed only after payment success.
- * This prevents parties from bypassing the ZELU platform.
+ * This prevents parties from bypassing the Tripvo platform.
  */
 export function isPaymentConfirmed(input: {
   bookingStatus: BookingStatus;

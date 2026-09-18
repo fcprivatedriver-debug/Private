@@ -16,8 +16,8 @@ function expectFail(input: unknown, includes: string) {
 assert.equal(
   registerSchema.safeParse({
     name: "Ana Motorista",
-    email: "ana@zelu.app",
-    password: "zelu1234",
+    email: "ana@tripvo.app",
+    password: "tripvo1234",
     phone: "+351912345678",
     role: "DRIVER",
   }).success,
@@ -27,18 +27,18 @@ assert.equal(
 assert.equal(
   registerSchema.safeParse({
     name: "Cliente",
-    email: "cli@zelu.app",
-    password: "zelu1234",
+    email: "cli@tripvo.app",
+    password: "tripvo1234",
     phone: "",
     role: "CUSTOMER",
   }).success,
   true,
 );
 
-expectFail({ name: "A", email: "a@zelu.app", password: "zelu1234", role: "DRIVER" }, "nome");
-expectFail({ name: "Ana", email: "bad", password: "zelu1234", role: "DRIVER" }, "email");
-expectFail({ name: "Ana", email: "a@zelu.app", password: "123", role: "DRIVER" }, "password|palavra");
-expectFail({ name: "Ana", email: "a@zelu.app", password: "zelu1234", phone: "abc", role: "DRIVER" }, "telefone");
+expectFail({ name: "A", email: "a@tripvo.app", password: "tripvo1234", role: "DRIVER" }, "nome");
+expectFail({ name: "Ana", email: "bad", password: "tripvo1234", role: "DRIVER" }, "email");
+expectFail({ name: "Ana", email: "a@tripvo.app", password: "123", role: "DRIVER" }, "password|palavra");
+expectFail({ name: "Ana", email: "a@tripvo.app", password: "tripvo1234", phone: "abc", role: "DRIVER" }, "telefone");
 
 assert.equal(toActionFailure(new DomainError("X", "Pedido inválido")).error, "Pedido inválido");
 assert.equal(
