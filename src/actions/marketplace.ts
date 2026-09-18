@@ -33,6 +33,28 @@ function fail(error: unknown) {
   return toActionFailure(error);
 }
 
+async function ensureCustomerProfileRow(userId: string) {
+  await repairCustomerProfileColumns();
+  const existing = await prisma.customerProfile.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  if (existing) return existing.id;
+  const profileId = `cp_${userId.slice(-16)}_${Date.now().toString(36)}`;
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO "CustomerProfile" ("id", "userId", "defaultCurrency", "createdAt", "updatedAt")
+    VALUES (
+      ${JSON.stringify(profileId)},
+      ${JSON.stringify(userId)},
+      'EUR',
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP
+    )
+    ON CONFLICT ("userId") DO NOTHING
+  `);
+  return profileId;
+}
+
 export async function registerAction(formData: FormData) {
   try {
     const rawPhone = formData.get("phone");
@@ -72,7 +94,7 @@ export async function registerAction(formData: FormData) {
       }
 
       if (parsed.role === "CUSTOMER" && !exists.customerProfile) {
-        await prisma.customerProfile.create({ data: { userId: exists.id } });
+        await ensureCustomerProfileRow(exists.id);
       }
       if (parsed.role === "DRIVER" && !exists.driverProfile) {
         await prisma.driverProfile.create({
@@ -84,15 +106,19 @@ export async function registerAction(formData: FormData) {
             languagesSpoken: '["pt"]',
           },
         });
-        void notifyAdminNewDriver({
-          userId: exists.id,
-          name: exists.name || parsed.name,
-          email,
-          phone: parsed.phone ?? exists.phone,
-        }).catch((err) => console.error("[notifyAdminNewDriver]", err));
+        try {
+          await notifyAdminNewDriver({
+            userId: exists.id,
+            name: exists.name || parsed.name,
+            email,
+            phone: parsed.phone ?? exists.phone,
+          });
+        } catch (err) {
+          console.error("[notifyAdminNewDriver]", err);
+        }
       }
       if (parsed.role === "DRIVER" && !exists.customerProfile) {
-        await prisma.customerProfile.create({ data: { userId: exists.id } });
+        await ensureCustomerProfileRow(exists.id);
       }
       if (parsed.phone && !exists.phone) {
         await prisma.user.update({
@@ -123,17 +149,7 @@ export async function registerAction(formData: FormData) {
     }
 
     // Heal shared Neon drift before profile inserts (non-destructive).
-    await repairCustomerProfileColumns();
-
-    const existingCustomer = await prisma.customerProfile.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    });
-    if (!existingCustomer) {
-      await prisma.customerProfile.create({
-        data: { userId: user.id },
-      });
-    }
+    await ensureCustomerProfileRow(user.id);
 
     if (parsed.role === "DRIVER") {
       const existingDriver = await prisma.driverProfile.findUnique({
@@ -192,7 +208,7 @@ export async function createTripAction(formData: FormData) {
       where: { userId: session.user.id },
     });
     if (!profile) {
-      await prisma.customerProfile.create({ data: { userId: session.user.id } });
+      await ensureCustomerProfileRow(session.user.id);
     }
   }
 

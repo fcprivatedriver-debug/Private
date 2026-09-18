@@ -190,9 +190,27 @@ async function ensureColumn(prisma, table, column, ddlType) {
 
 /** Non-destructive repair for schema drift on shared Neon (no DROP). */
 async function repairCoreProfileColumns(prisma) {
-  // CustomerProfile — registration fails without defaultCurrency
+  // CustomerProfile — registration fails without defaultCurrency / timestamp defaults
   await ensureColumn(prisma, "CustomerProfile", "defaultCurrency", `TEXT NOT NULL DEFAULT 'EUR'`);
   await ensureColumn(prisma, "CustomerProfile", "ratingAvg", `DOUBLE PRECISION`);
+  await ensureColumn(
+    prisma,
+    "CustomerProfile",
+    "createdAt",
+    `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+  );
+  await ensureColumn(
+    prisma,
+    "CustomerProfile",
+    "updatedAt",
+    `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "CustomerProfile" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP`,
+  );
+  await prisma.$executeRawUnsafe(
+    `ALTER TABLE "CustomerProfile" ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP`,
+  );
   console.log("[ensure-schema] CustomerProfile columns verified");
 }
 

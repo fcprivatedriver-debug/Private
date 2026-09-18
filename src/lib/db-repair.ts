@@ -16,6 +16,20 @@ export async function repairCustomerProfileColumns(): Promise<{
     await prisma.$executeRawUnsafe(
       `ALTER TABLE "CustomerProfile" ADD COLUMN IF NOT EXISTS "ratingAvg" DOUBLE PRECISION`,
     );
+    // Shared Neon drift: updatedAt/createdAt exist as NOT NULL without defaults,
+    // while Prisma schema omits them — inserts then fail.
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "CustomerProfile" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "CustomerProfile" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "CustomerProfile" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "CustomerProfile" ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP`,
+    );
     return { ok: true };
   } catch (error) {
     const detail = error instanceof Error ? error.message.slice(0, 200) : String(error);
