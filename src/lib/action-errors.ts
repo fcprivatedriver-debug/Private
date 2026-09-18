@@ -86,9 +86,11 @@ export function toActionFailure(error: unknown): ActionFailure {
       };
     }
     console.error("[action error]", error);
+    // Surface a short diagnostic for ops (no secrets). Helps Preview debugging.
+    const hint = error.message.replace(/\s+/g, " ").trim().slice(0, 180);
     return {
       ok: false,
-      error: "Ocorreu um erro inesperado. Tente novamente.",
+      error: `Ocorreu um erro inesperado. Tente novamente. (${hint})`,
       code: "INTERNAL",
     };
   }

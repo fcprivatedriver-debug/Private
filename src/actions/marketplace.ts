@@ -114,32 +114,53 @@ export async function registerAction(formData: FormData) {
         phone: parsed.phone ?? null,
         role: parsed.role,
       },
+      select: { id: true, email: true, role: true, name: true },
     });
 
-    await prisma.customerProfile.create({
-      data: { userId: user.id },
+    if (!user?.id) {
+      throw new Error("USER_CREATE_NO_ID");
+    }
+
+    const existingCustomer = await prisma.customerProfile.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
     });
+    if (!existingCustomer) {
+      await prisma.customerProfile.create({
+        data: { userId: user.id },
+      });
+    }
 
     if (parsed.role === "DRIVER") {
-      await prisma.driverProfile.create({
-        data: {
-          userId: user.id,
-          status: "PENDING_VERIFICATION",
-          onboardingStatus: "NOT_STARTED",
-          onboardingStep: "profile",
-          languagesSpoken: '["pt"]',
-        },
+      const existingDriver = await prisma.driverProfile.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
       });
+      if (!existingDriver) {
+        await prisma.driverProfile.create({
+          data: {
+            userId: user.id,
+            status: "PENDING_VERIFICATION",
+            onboardingStatus: "NOT_STARTED",
+            onboardingStep: "profile",
+            languagesSpoken: '["pt"]',
+          },
+        });
+      }
     }
 
     // Fire-and-forget admin notification — never block or roll back registration.
     if (parsed.role === "DRIVER") {
-      void notifyAdminNewDriver({
-        userId: user.id,
-        name: parsed.name,
-        email,
-        phone: parsed.phone ?? null,
-      }).catch((err) => console.error("[notifyAdminNewDriver]", err));
+      try {
+        await notifyAdminNewDriver({
+          userId: user.id,
+          name: parsed.name,
+          email,
+          phone: parsed.phone ?? null,
+        });
+      } catch (err) {
+        console.error("[notifyAdminNewDriver]", err);
+      }
     }
 
     return { ok: true as const, userId: user.id };
