@@ -4,6 +4,8 @@ Base: branch `tripvo` @ marketplace ZELU (`db4c1af` + rebrand FASE 1).
 
 Domínio futuro: **https://tripvo.pt** · Comissão standard: **5%**
 
+Preview (Vercel `private-duur`, branch `tripvo`): ver relatório da última run.
+
 ## Fluxos
 
 | Fluxo | Estado | Notas |
@@ -27,3 +29,10 @@ Domínio futuro: **https://tripvo.pt** · Comissão standard: **5%**
 - ✅ funciona
 - 🟡 incompleto
 - 🔴 não funciona
+
+## Notas FASE 1
+
+- Identidade pública: Tripvo / tripvo.pt
+- Comissão centralizada: `src/config/constants.ts` → `PLATFORM_COMMISSION_PERCENT = 5`
+- Deploy upsert: `scripts/ensure-schema.mjs` força classes MVP + `defaultCommissionPercent = 5`
+- Pagamentos novos: **não** implementados nesta fase

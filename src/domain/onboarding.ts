@@ -324,8 +324,10 @@ export async function runAiVerification(driverProfileId: string, actorUserId?: s
   };
 
   const verdict = mapRecommendationToVerdict(result.recommendation, result.riskScore);
-  const autoApprove =
-    process.env.ZELU_AI_AUTO_APPROVE !== "false" && verdict === "APPROVED";
+  // Prefer TRIPVO_AI_AUTO_APPROVE; keep ZELU_AI_AUTO_APPROVE as legacy alias.
+  const autoApproveEnv =
+    process.env.TRIPVO_AI_AUTO_APPROVE ?? process.env.ZELU_AI_AUTO_APPROVE;
+  const autoApprove = autoApproveEnv !== "false" && verdict === "APPROVED";
 
   await prisma.verificationReview.create({
     data: {

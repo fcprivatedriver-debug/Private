@@ -198,10 +198,23 @@ async function main() {
     try {
       const count = await prisma.vehicleClass.count();
       console.log("[ensure-schema] VehicleClass OK, count=", count);
-      if (count === 0) {
-        await seedClasses(prisma);
-        console.log("[ensure-schema] Default classes seeded");
+      // Always upsert Tripvo MVP classes (ECONOMY/COMFORT/EXECUTIVO/VAN)
+      await seedClasses(prisma);
+      for (const code of RETIRED_CODES) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "VehicleClass" SET "active" = false, "updatedAt" = CURRENT_TIMESTAMP WHERE "code" = ${sqlString(code)}`,
+        );
       }
+      // Align default commission to 5% when settings row exists / create if missing
+      await prisma.$executeRawUnsafe(`
+        INSERT INTO "PlatformSettings" ("id","defaultCurrency","defaultCommissionPercent","supportedCurrencies","demoMode","updatedAt")
+        VALUES ('default','EUR',5,'["EUR"]',false,CURRENT_TIMESTAMP)
+        ON CONFLICT ("id") DO UPDATE SET
+          "defaultCommissionPercent" = 5,
+          "updatedAt" = CURRENT_TIMESTAMP
+      `);
+      const after = await prisma.vehicleClass.count({ where: { active: true } });
+      console.log("[ensure-schema] Tripvo classes upserted, active=", after);
       return;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -217,8 +230,20 @@ async function main() {
     console.log("[ensure-schema] Creating VehicleClass via DDL…");
     await createVehicleClassTable(prisma);
     await seedClasses(prisma);
-    const count = await prisma.vehicleClass.count();
-    console.log("[ensure-schema] VehicleClass repaired, count=", count);
+    for (const code of RETIRED_CODES) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "VehicleClass" SET "active" = false, "updatedAt" = CURRENT_TIMESTAMP WHERE "code" = ${sqlString(code)}`,
+      );
+    }
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO "PlatformSettings" ("id","defaultCurrency","defaultCommissionPercent","supportedCurrencies","demoMode","updatedAt")
+      VALUES ('default','EUR',5,'["EUR"]',false,CURRENT_TIMESTAMP)
+      ON CONFLICT ("id") DO UPDATE SET
+        "defaultCommissionPercent" = 5,
+        "updatedAt" = CURRENT_TIMESTAMP
+    `);
+    const count = await prisma.vehicleClass.count({ where: { active: true } });
+    console.log("[ensure-schema] VehicleClass repaired, active=", count);
   } catch (error) {
     console.warn("[ensure-schema] non-fatal error", error);
   } finally {
