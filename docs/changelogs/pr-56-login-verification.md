@@ -39,6 +39,21 @@ npm run lint        # PASS (0 errors)
 DATABASE_URL=… npm test  # 48 pass (incl. login-credentials + login-verification)
 ```
 
+### Proof Preview (deploy `bb51332`, private-duur)
+
+Base: `https://private-duur-git-cursor-canonical-stable-ec69-fc-private-driver.vercel.app`
+
+| Cenário | Resultado |
+|--------|-----------|
+| A. Já tenho conta → login → `familia@nina.app` | → `/pt/dashboard` |
+| B. Conta nova não verificada + password correcta | Aviso + botão Reenviar na página; resend fica em `/pt/login`; mensagem controlada sem `RESEND_API_KEY` |
+| B. Password errada em não verificada | Erro claro; **sem** botão Reenviar |
+| C. Registo | → `/pt/verificar-email?email=…` |
+| D. Credenciais inválidas | Erro; sem resend |
+| E. URLs | Sem `127.0.0.1` / `localhost` no fluxo |
+
+Artefactos: `/opt/cursor/artifacts/screenshots/pr-56-auth/`, `/opt/cursor/artifacts/pr-56-auth-flow.webm`, `docs/pr-proof/pr-56-auth/`.
+
 ## Não feito (por pedido)
 
 - Sem merge / promote para Production
