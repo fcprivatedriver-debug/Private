@@ -10,7 +10,11 @@ type Mode = "voice" | "photo" | "write";
 type CaptureResult = {
   reply: string;
   detail?: string;
+  receiptUrl?: string;
 };
+
+const OK_RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 
 const VOICE_EXAMPLES = [
   "Quanto gastei este mês?",
@@ -73,7 +77,9 @@ export function InstantCapture({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [needsTap, setNeedsTap] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
   const autoTried = useRef(false);
   const pendingRef = useRef(pending);
   pendingRef.current = pending;
@@ -166,26 +172,34 @@ export function InstantCapture({
 
   function onPhotoSelected(file: File | null) {
     if (!file) return;
+    if (
+      file.type &&
+      !OK_RECEIPT_TYPES.includes(file.type) &&
+      !/\.(jpe?g|png|webp|pdf)$/i.test(file.name)
+    ) {
+      setError("Formato não suportado. Usa JPEG, PNG, WEBP ou PDF.");
+      return;
+    }
+    if (file.size > MAX_RECEIPT_BYTES) {
+      setError("Ficheiro demasiado grande (máx. 5 MB).");
+      return;
+    }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(URL.createObjectURL(file));
+    setPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
     setError(null);
     setResult(null);
     const fd = new FormData();
     fd.set("file", file);
     start(async () => {
       const res = await instantCapturePhoto(fd);
-      if (res.ok === false) {
-        setError(
-          res.receiptUrl
-            ? `${res.error} Podes registar o valor em Despesas e anexar a fatura aí.`
-            : res.error,
-        );
+      if (!res.ok) {
+        setError(res.error);
         return;
       }
-      // OCR real ainda não activo — ramo reservado para motor futuro
       setResult({
-        reply: "Fotografia recebida.",
-        detail: "A leitura automática ainda não está disponível.",
+        reply: res.reply,
+        detail: res.detail,
+        receiptUrl: res.receiptUrl,
       });
     });
   }
@@ -198,7 +212,8 @@ export function InstantCapture({
       return () => window.clearTimeout(t);
     }
     if (initialMode === "photo") {
-      const t = window.setTimeout(() => fileRef.current?.click(), 350);
+      // Câmara nativa no telemóvel — inputs separados evitam botão sem resposta no Android
+      const t = window.setTimeout(() => cameraRef.current?.click(), 350);
       return () => window.clearTimeout(t);
     }
   }, [autoStart, initialMode, startListening]);
@@ -328,25 +343,68 @@ export function InstantCapture({
         <section className={`captura-panel ${compact ? "is-flat" : ""}`}>
           {!compact ? (
             <p className="muted" style={{ marginTop: 0 }}>
-              Fotografa faturas, talões ou contas.
+              Fotografa faturas, talões ou contas. A leitura automática ainda não está disponível —
+              a imagem fica guardada para anexares à despesa.
             </p>
           ) : null}
+          {/* Inputs separados: no Android, capture+PDF no mesmo input fica sem resposta. */}
           <input
-            ref={fileRef}
+            ref={cameraRef}
             type="file"
-            accept="image/*,application/pdf"
+            accept="image/*"
             capture="environment"
             className="sr-only"
-            onChange={(e) => onPhotoSelected(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              onPhotoSelected(e.target.files?.[0] ?? null);
+              e.target.value = "";
+            }}
           />
-          <button
-            type="button"
-            className="btn btn-primary captura-photo-btn"
-            disabled={pending}
-            onClick={() => fileRef.current?.click()}
-          >
-            {pending ? "A processar…" : "Anexar fatura"}
-          </button>
+          <input
+            ref={galleryRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={(e) => {
+              onPhotoSelected(e.target.files?.[0] ?? null);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={pdfRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="sr-only"
+            onChange={(e) => {
+              onPhotoSelected(e.target.files?.[0] ?? null);
+              e.target.value = "";
+            }}
+          />
+          <div className="btn-row" style={{ flexWrap: "wrap", gap: "0.5rem" }}>
+            <button
+              type="button"
+              className="btn btn-primary captura-photo-btn"
+              disabled={pending}
+              onClick={() => cameraRef.current?.click()}
+            >
+              {pending ? "A guardar…" : "Tirar fotografia"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={pending}
+              onClick={() => galleryRef.current?.click()}
+            >
+              Escolher fotografia
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={pending}
+              onClick={() => pdfRef.current?.click()}
+            >
+              Escolher PDF
+            </button>
+          </div>
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewUrl} alt="Pré-visualização da fatura" className="captura-preview" />
@@ -358,6 +416,16 @@ export function InstantCapture({
         <div className="captura-result" role="status">
           <strong>{result.reply}</strong>
           {result.detail ? <span>{result.detail}</span> : null}
+          {result.receiptUrl ? (
+            <span style={{ display: "block", marginTop: "0.5rem" }}>
+              <Link
+                className="btn btn-primary btn-sm"
+                href={`/pt/despesas/nova?receipt=${encodeURIComponent(result.receiptUrl)}`}
+              >
+                Registar valor e anexar fatura
+              </Link>
+            </span>
+          ) : null}
         </div>
       ) : null}
       {error ? <p className="text-expense">{error}</p> : null}
@@ -371,7 +439,7 @@ export function InstantCapture({
                 <Link href="/pt/ligacoes">Importação automática</Link>
               </li>
               <li>
-                <Link href="/pt/ocr">OCR clássico</Link>
+                <Link href="/pt/ocr">Fotografar fatura</Link>
               </li>
               <li>
                 <Link href="/pt/despesas/nova">Nova despesa</Link>

@@ -2,6 +2,7 @@
  * Helpers partilhados para anexar faturas a despesas.
  */
 
+import { prisma } from "@/lib/db";
 import {
   storeFamilyFile,
   deleteStoredFile,
@@ -52,4 +53,37 @@ export async function storeReceiptFromFormFile(opts: {
 export async function clearReceiptUrl(url: string | null | undefined): Promise<void> {
   const key = storageKeyFromUploadUrl(url);
   if (key) await deleteStoredFile(key);
+}
+
+/** Confirma que a URL /api/uploads/... pertence à família (anti-spoofing no FormData). */
+export async function familyOwnsReceiptUrl(
+  familyId: string,
+  url: string | null | undefined,
+): Promise<boolean> {
+  const key = storageKeyFromUploadUrl(url);
+  if (!key) return false;
+  const row = await prisma.storedObject.findFirst({
+    where: { familyId, storageKey: key },
+    select: { id: true },
+  });
+  return Boolean(row);
+}
+
+/** Resolve URL de fatura da família para pré-anexar em Nova despesa. */
+export async function resolveFamilyReceiptAttachment(
+  familyId: string,
+  url: string | null | undefined,
+): Promise<{ receiptImageUrl: string | null; receiptPdfUrl: string | null } | null> {
+  const key = storageKeyFromUploadUrl(url);
+  if (!key) return null;
+  const row = await prisma.storedObject.findFirst({
+    where: { familyId, storageKey: key },
+    select: { storageKey: true, mimeType: true },
+  });
+  if (!row) return null;
+  const resolved = `/api/uploads/${row.storageKey}`;
+  if (isPdfMime(row.mimeType)) {
+    return { receiptImageUrl: null, receiptPdfUrl: resolved };
+  }
+  return { receiptImageUrl: resolved, receiptPdfUrl: null };
 }

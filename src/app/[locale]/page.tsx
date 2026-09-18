@@ -7,13 +7,10 @@ import {
   ASSISTANT_LINE,
 } from "@/config/brand";
 
-/** Valores apenas demonstrativos na landing — nunca dados reais do utilizador. */
-const DEMO_CARDS = [
-  { title: "Saldo", value: "1.240,00 €", hint: "Disponível este mês" },
-  { title: "Despesas", value: "386,40 €", hint: "Deste mês" },
-  { title: "Poupança", value: "210,00 €", hint: "Para objetivos" },
-] as const;
-
+/**
+ * Landing pública — sem saldos/despesas inventados.
+ * O layout locale (`layout.tsx`) renderiza `{children}` para /pt/login funcionar.
+ */
 export default function LandingPage() {
   return (
     <div className="landing landing-v2">
@@ -47,21 +44,6 @@ export default function LandingPage() {
             Já tenho conta
           </Link>
         </div>
-      </section>
-
-      <section className="landing-glance" aria-label="Resumo demonstrativo">
-        <div className="landing-glance-grid">
-          {DEMO_CARDS.map((card) => (
-            <article key={card.title} className="landing-glance-card">
-              <p className="landing-glance-label">{card.title}</p>
-              <p className="landing-glance-value">{card.value}</p>
-              <p className="landing-glance-hint">{card.hint}</p>
-            </article>
-          ))}
-        </div>
-        <p className="landing-demo-note muted small">
-          Exemplos ilustrativos — não são dados da tua conta.
-        </p>
       </section>
 
       <section className="landing-mel" aria-labelledby="landing-mel-title">
