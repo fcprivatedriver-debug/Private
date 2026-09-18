@@ -112,6 +112,11 @@ export default auth(async (req) => {
       return NextResponse.redirect(login);
     }
 
+    // Admin-only surfaces: deny CUSTOMER / DRIVER at the edge (not just UI hide).
+    if (rule.roles.length === 1 && rule.roles[0] === "ADMIN" && role !== "ADMIN") {
+      return NextResponse.redirect(new URL(`/${loc}`, req.url));
+    }
+
     if (role === "ADMIN") {
       return intlMiddleware(req);
     }

@@ -1,11 +1,11 @@
-import { requireRole } from "@/lib/session";
+import { requireAdmin } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { VehicleClassAdminPanel } from "@/components/admin/VehicleClassAdminPanel";
 import { Link } from "@/i18n/navigation";
 import { repairVehicleClassSchema } from "@/lib/db-repair";
 
 export default async function AdminVehicleClassesPage() {
-  await requireRole("ADMIN");
+  await requireAdmin();
 
   let classes;
   try {

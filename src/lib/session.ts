@@ -20,13 +20,26 @@ export async function requireRole(...roles: Role[]) {
     if (roles.includes("DRIVER") && (session.user.hasDriver || session.user.role === "DRIVER")) {
       return session;
     }
-    if (roles.includes("CUSTOMER") && (session.user.hasCustomer || session.user.role === "CUSTOMER")) {
+    if (
+      roles.includes("CUSTOMER") &&
+      !roles.includes("ADMIN") &&
+      (session.user.hasCustomer || session.user.role === "CUSTOMER")
+    ) {
       return session;
     }
     const locale = await getLocale().catch(() => "pt");
+    // Admin-only: never soft-admit via dual-account heuristics.
+    if (roles.length === 1 && roles[0] === "ADMIN") {
+      redirect(`/${locale}`);
+    }
     redirect(`/${locale}`);
   }
   return session;
+}
+
+/** Strict ADMIN gate for /admin pages and server actions. */
+export async function requireAdmin() {
+  return requireRole("ADMIN");
 }
 
 /** Ensure the signed-in user has a driver profile (create path is /tornar-motorista). */

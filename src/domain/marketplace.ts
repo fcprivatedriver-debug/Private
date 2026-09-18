@@ -86,28 +86,27 @@ export async function cancelTrip(tripId: string, userId: string, role: string) {
     throw new DomainError("INVALID_STATE", "Pedido já fechado");
   }
 
-  return prisma.$transaction(async (tx) => {
-    await tx.offer.updateMany({
-      where: { tripRequestId: tripId, status: "PENDING" },
-      data: { status: "EXPIRED" },
-    });
+  // Neon HTTP: no interactive transactions — sequential writes.
+  await prisma.offer.updateMany({
+    where: { tripRequestId: tripId, status: "PENDING" },
+    data: { status: "EXPIRED" },
+  });
 
-    if (trip.acceptedOfferId) {
-      const booking = await tx.booking.findUnique({
-        where: { tripRequestId: tripId },
+  if (trip.acceptedOfferId) {
+    const booking = await prisma.booking.findUnique({
+      where: { tripRequestId: tripId },
+    });
+    if (booking && booking.status !== "CANCELLED") {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: "CANCELLED" },
       });
-      if (booking && booking.status !== "CANCELLED") {
-        await tx.booking.update({
-          where: { id: booking.id },
-          data: { status: "CANCELLED" },
-        });
-      }
     }
+  }
 
-    return tx.tripRequest.update({
-      where: { id: tripId },
-      data: { status: "CANCELLED" },
-    });
+  return prisma.tripRequest.update({
+    where: { id: tripId },
+    data: { status: "CANCELLED" },
   });
 }
 
@@ -203,99 +202,98 @@ export async function withdrawOffer(offerId: string, driverId: string) {
 }
 
 export async function acceptOffer(tripId: string, offerId: string, customerId: string) {
-  return prisma.$transaction(async (tx) => {
-    const trip = await tx.tripRequest.findUnique({ where: { id: tripId } });
-    if (!trip || trip.customerId !== customerId) {
-      throw new DomainError("NOT_FOUND", "Pedido não encontrado");
-    }
-    if (trip.status !== "OPEN") {
-      throw new DomainError("INVALID_STATE", "Pedido não está aberto");
-    }
+  // Neon HTTP: sequential writes (no interactive $transaction).
+  const trip = await prisma.tripRequest.findUnique({ where: { id: tripId } });
+  if (!trip || trip.customerId !== customerId) {
+    throw new DomainError("NOT_FOUND", "Pedido não encontrado");
+  }
+  if (trip.status !== "OPEN") {
+    throw new DomainError("INVALID_STATE", "Pedido não está aberto");
+  }
 
-    const offer = await tx.offer.findUnique({ where: { id: offerId } });
-    if (!offer || offer.tripRequestId !== tripId || offer.status !== "PENDING") {
-      throw new DomainError("INVALID_OFFER", "Proposta inválida");
-    }
-    if (offer.validUntil && offer.validUntil < new Date()) {
-      throw new DomainError("EXPIRED", "Proposta expirada");
-    }
+  const offer = await prisma.offer.findUnique({ where: { id: offerId } });
+  if (!offer || offer.tripRequestId !== tripId || offer.status !== "PENDING") {
+    throw new DomainError("INVALID_OFFER", "Proposta inválida");
+  }
+  if (offer.validUntil && offer.validUntil < new Date()) {
+    throw new DomainError("EXPIRED", "Proposta expirada");
+  }
 
-    await tx.offer.update({
-      where: { id: offerId },
-      data: { status: "ACCEPTED" },
-    });
-    await tx.offer.updateMany({
-      where: {
-        tripRequestId: tripId,
-        status: "PENDING",
-        id: { not: offerId },
-      },
-      data: { status: "REJECTED" },
-    });
+  await prisma.offer.update({
+    where: { id: offerId },
+    data: { status: "ACCEPTED" },
+  });
+  await prisma.offer.updateMany({
+    where: {
+      tripRequestId: tripId,
+      status: "PENDING",
+      id: { not: offerId },
+    },
+    data: { status: "REJECTED" },
+  });
 
-    const vehicle = offer.vehicleId
-      ? await tx.vehicle.findUnique({
-          where: { id: offer.vehicleId },
-          select: { vehicleClassId: true },
-        })
-      : null;
-    const feePercent = await resolveCommissionPercent({
+  const vehicle = offer.vehicleId
+    ? await prisma.vehicle.findUnique({
+        where: { id: offer.vehicleId },
+        select: { vehicleClassId: true },
+      })
+    : null;
+  const feePercent = await resolveCommissionPercent({
+    currency: offer.currency,
+    vehicleClassId: vehicle?.vehicleClassId,
+  });
+  const fee = calcPlatformFee(offer.priceAmount, feePercent);
+
+  const booking = await prisma.booking.create({
+    data: {
+      tripRequestId: tripId,
+      offerId: offer.id,
+      customerId,
+      driverId: offer.driverId,
+      status: "PENDING_PAYMENT",
+      totalAmount: offer.priceAmount,
       currency: offer.currency,
-      vehicleClassId: vehicle?.vehicleClassId,
-    });
-    const fee = calcPlatformFee(offer.priceAmount, feePercent);
+      platformFeeAmount: fee,
+    },
+  });
 
-    const booking = await tx.booking.create({
-      data: {
-        tripRequestId: tripId,
-        offerId: offer.id,
-        customerId,
-        driverId: offer.driverId,
-        status: "PENDING_PAYMENT",
-        totalAmount: offer.priceAmount,
-        currency: offer.currency,
-        platformFeeAmount: fee,
-      },
-    });
-
-    await tx.payment.create({
-      data: {
-        bookingId: booking.id,
-        provider: "NONE",
-        amount: offer.priceAmount,
-        currency: offer.currency,
-        status: "REQUIRES_PAYMENT",
-      },
-    });
-
-    const updatedTrip = await tx.tripRequest.update({
-      where: { id: tripId },
-      data: {
-        status: "OFFER_ACCEPTED",
-        acceptedOfferId: offer.id,
-      },
-    });
-
-    await tx.notification.create({
-      data: {
-        userId: offer.driverId,
-        type: "OFFER_ACCEPTED",
-        title: "Proposta aceite",
-        body: "O cliente aceitou a tua proposta na Tripvo.",
-        meta: JSON.stringify({ tripId, offerId, bookingId: booking.id }),
-      },
-    });
-
-    const paymentResult = await getPaymentProvider().createPaymentIntent({
+  await prisma.payment.create({
+    data: {
       bookingId: booking.id,
+      provider: "NONE",
       amount: offer.priceAmount,
       currency: offer.currency,
-      customerEmail: "",
-      platformFeeAmount: fee,
-    });
-
-    return { trip: updatedTrip, booking, paymentResult };
+      status: "REQUIRES_PAYMENT",
+    },
   });
+
+  const updatedTrip = await prisma.tripRequest.update({
+    where: { id: tripId },
+    data: {
+      status: "OFFER_ACCEPTED",
+      acceptedOfferId: offer.id,
+    },
+  });
+
+  await prisma.notification.create({
+    data: {
+      userId: offer.driverId,
+      type: "OFFER_ACCEPTED",
+      title: "Proposta aceite",
+      body: "O cliente aceitou a tua proposta na Tripvo.",
+      meta: JSON.stringify({ tripId, offerId, bookingId: booking.id }),
+    },
+  });
+
+  const paymentResult = await getPaymentProvider().createPaymentIntent({
+    bookingId: booking.id,
+    amount: offer.priceAmount,
+    currency: offer.currency,
+    customerEmail: "",
+    platformFeeAmount: fee,
+  });
+
+  return { trip: updatedTrip, booking, paymentResult };
 }
 
 export async function confirmBookingWithoutPayment(bookingId: string) {
@@ -316,38 +314,37 @@ export async function confirmBookingPayment(bookingId: string, customerId: strin
     throw new DomainError("INVALID_STATE", "Pagamento já processado");
   }
 
-  return prisma.$transaction(async (tx) => {
-    await tx.booking.update({
-      where: { id: bookingId },
-      data: { status: "PAID", confirmedAt: new Date() },
-    });
-    await tx.payment.update({
-      where: { bookingId },
-      data: {
-        status: "CAPTURED",
-        provider: paymentsEnabled() ? "STRIPE" : "MANUAL",
-        rawPayload: JSON.stringify({
-          demo: !paymentsEnabled(),
-          mode: paymentsEnabled() ? "stripe_ready" : "demo_confirm",
-          at: new Date().toISOString(),
-        }),
-      },
-    });
-    await tx.tripRequest.update({
-      where: { id: booking.tripRequestId },
-      data: { status: "CONFIRMED" },
-    });
-    await tx.notification.create({
-      data: {
-        userId: booking.driverId,
-        type: "BOOKING_CONFIRMED",
-        title: "Viagem confirmada",
-        body: "O pagamento foi confirmado. Prepare-se para o encontro.",
-        meta: JSON.stringify({ bookingId, tripId: booking.tripRequestId }),
-      },
-    });
-    return booking;
+  // Neon HTTP: sequential writes.
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: "PAID", confirmedAt: new Date() },
   });
+  await prisma.payment.update({
+    where: { bookingId },
+    data: {
+      status: "CAPTURED",
+      provider: paymentsEnabled() ? "STRIPE" : "MANUAL",
+      rawPayload: JSON.stringify({
+        demo: !paymentsEnabled(),
+        mode: paymentsEnabled() ? "stripe_ready" : "demo_confirm",
+        at: new Date().toISOString(),
+      }),
+    },
+  });
+  await prisma.tripRequest.update({
+    where: { id: booking.tripRequestId },
+    data: { status: "CONFIRMED" },
+  });
+  await prisma.notification.create({
+    data: {
+      userId: booking.driverId,
+      type: "BOOKING_CONFIRMED",
+      title: "Viagem confirmada",
+      body: "O pagamento foi confirmado. Prepare-se para o encontro.",
+      meta: JSON.stringify({ bookingId, tripId: booking.tripRequestId }),
+    },
+  });
+  return booking;
 }
 
 function paymentsEnabled(): boolean {
@@ -405,15 +402,14 @@ export async function completeTrip(tripId: string, actorId: string, role: string
     trip.customerId === actorId;
   if (!allowed) throw new DomainError("FORBIDDEN", "Sem permissão");
 
-  return prisma.$transaction(async (tx) => {
-    await tx.booking.update({
-      where: { id: trip.booking!.id },
-      data: { status: "COMPLETED" },
-    });
-    return tx.tripRequest.update({
-      where: { id: tripId },
-      data: { status: "COMPLETED" },
-    });
+  // Neon HTTP: sequential writes.
+  await prisma.booking.update({
+    where: { id: trip.booking!.id },
+    data: { status: "COMPLETED" },
+  });
+  return prisma.tripRequest.update({
+    where: { id: tripId },
+    data: { status: "COMPLETED" },
   });
 }
 
@@ -446,62 +442,61 @@ export async function createReview(input: {
     throw new DomainError("EXISTS", "Já existe uma avaliação");
   }
 
-  return prisma.$transaction(async (tx) => {
-    const review = await tx.review.create({
-      data: {
-        bookingId: booking.id,
-        fromUserId: input.fromUserId,
-        toUserId: booking.driverId,
-        rating: input.rating,
-        vehicleRating: input.vehicleRating ?? null,
-        comment: input.comment || null,
-      },
-    });
-
-    const agg = await tx.review.aggregate({
-      where: { toUserId: booking.driverId },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
-
-    await tx.driverProfile.updateMany({
-      where: { userId: booking.driverId },
-      data: {
-        ratingAvg: agg._avg.rating ?? input.rating,
-        ratingCount: agg._count.rating,
-      },
-    });
-
-    if (input.vehicleRating != null && booking.offer.vehicleId) {
-      const vAgg = await tx.review.aggregate({
-        where: {
-          vehicleRating: { not: null },
-          booking: { offer: { vehicleId: booking.offer.vehicleId } },
-        },
-        _avg: { vehicleRating: true },
-        _count: { vehicleRating: true },
-      });
-      await tx.vehicle.update({
-        where: { id: booking.offer.vehicleId },
-        data: {
-          ratingAvg: vAgg._avg.vehicleRating ?? input.vehicleRating,
-          ratingCount: vAgg._count.vehicleRating,
-        },
-      });
-    }
-
-    await tx.notification.create({
-      data: {
-        userId: booking.driverId,
-        type: "REVIEW_RECEIVED",
-        title: "Nova avaliação",
-        body: `Recebeste ${input.rating}★ na Tripvo.`,
-        meta: JSON.stringify({ bookingId: booking.id, rating: input.rating }),
-      },
-    });
-
-    return review;
+  // Neon HTTP: sequential writes.
+  const review = await prisma.review.create({
+    data: {
+      bookingId: booking.id,
+      fromUserId: input.fromUserId,
+      toUserId: booking.driverId,
+      rating: input.rating,
+      vehicleRating: input.vehicleRating ?? null,
+      comment: input.comment || null,
+    },
   });
+
+  const agg = await prisma.review.aggregate({
+    where: { toUserId: booking.driverId },
+    _avg: { rating: true },
+    _count: { rating: true },
+  });
+
+  await prisma.driverProfile.updateMany({
+    where: { userId: booking.driverId },
+    data: {
+      ratingAvg: agg._avg.rating ?? input.rating,
+      ratingCount: agg._count.rating,
+    },
+  });
+
+  if (input.vehicleRating != null && booking.offer.vehicleId) {
+    const vAgg = await prisma.review.aggregate({
+      where: {
+        vehicleRating: { not: null },
+        booking: { offer: { vehicleId: booking.offer.vehicleId } },
+      },
+      _avg: { vehicleRating: true },
+      _count: { vehicleRating: true },
+    });
+    await prisma.vehicle.update({
+      where: { id: booking.offer.vehicleId },
+      data: {
+        ratingAvg: vAgg._avg.vehicleRating ?? input.vehicleRating,
+        ratingCount: vAgg._count.vehicleRating,
+      },
+    });
+  }
+
+  await prisma.notification.create({
+    data: {
+      userId: booking.driverId,
+      type: "REVIEW_RECEIVED",
+      title: "Nova avaliação",
+      body: `Recebeste ${input.rating}★ na Tripvo.`,
+      meta: JSON.stringify({ bookingId: booking.id, rating: input.rating }),
+    },
+  });
+
+  return review;
 }
 
 export async function expireStaleTripsAndOffers(now = new Date()) {

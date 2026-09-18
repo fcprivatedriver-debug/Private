@@ -1,4 +1,4 @@
-import { requireRole } from "@/lib/session";
+import { requireAdmin } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { VerifyDriverButton } from "@/components/admin/VerifyDriverButton";
 import { TRIP_STATUS_LABELS } from "@/config/constants";
@@ -7,7 +7,7 @@ import { PageGreeting, SummaryStrip } from "@/components/ui/PageGreeting";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function AdminPage() {
-  await requireRole("ADMIN");
+  await requireAdmin();
 
   const [pendingDrivers, stats, recentTrips, classCount, completedToday] = await Promise.all([
     prisma.driverProfile.findMany({

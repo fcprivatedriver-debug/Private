@@ -361,6 +361,22 @@ h3,
   text-decoration: none;
 }
 
+.logo-with-tagline {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  line-height: 1;
+}
+
+.logo-tagline {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
 .tripvo-wordmark {
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 700;
@@ -375,6 +391,18 @@ h3,
 .tripvo-letters {
   display: inline;
   white-space: nowrap;
+}
+
+.tripvo-pin {
+  display: inline-block;
+  vertical-align: -0.12em;
+  margin-left: 0.02em;
+  color: inherit;
+}
+
+.tripvo-wordmark-pin .tripvo-accent {
+  display: inline-flex;
+  align-items: center;
 }
 
 .tripvo-mark {
@@ -659,8 +687,122 @@ h3,
 .hero-scene-content {
   position: relative;
   z-index: 1;
-  padding: 3.25rem 0 3.75rem;
-  max-width: 34rem;
+  padding: 2.5rem 0 3rem;
+  max-width: 38rem;
+}
+
+.hero-kicker {
+  margin: 0 0 0.85rem;
+  font-size: clamp(0.68rem, 2.2vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.hero-tagline {
+  margin: -0.35rem 0 1.1rem;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: clamp(0.72rem, 2.4vw, 0.88rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hero-tripvo .hero-brand {
+  font-size: clamp(2.75rem, 12vw, 5.8rem);
+  margin-bottom: 0.55rem;
+  letter-spacing: -0.08em;
+}
+
+.hero-tripvo .hero-brand .tripvo-wordmark {
+  font-size: inherit;
+}
+
+.hero-tripvo .home-lead {
+  max-width: 26rem;
+  color: rgba(17, 17, 17, 0.72);
+  font-size: clamp(0.98rem, 2.8vw, 1.12rem);
+  line-height: 1.45;
+  margin: 0 0 1.35rem;
+}
+
+.hero-tripvo .hero-copy {
+  margin-bottom: 0.55rem;
+  max-width: none;
+  color: #111;
+  font-size: clamp(1.35rem, 4.5vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cta-row-hero {
+  margin-bottom: 1.5rem;
+}
+
+.trust-strip {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+@media (min-width: 720px) {
+  .trust-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.trust-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.trust-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgba(31, 79, 70, 0.1);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.trust-text {
+  display: grid;
+  gap: 0.05rem;
+  font-size: 0.84rem;
+  line-height: 1.25;
+  color: var(--fg-muted);
+}
+
+.trust-text strong {
+  color: #111;
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+
+.hero-footer-line {
+  margin: 0;
+  display: grid;
+  gap: 0.2rem;
+  font-size: clamp(0.72rem, 2.2vw, 0.82rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.hero-footer-line span {
+  color: var(--accent);
+  letter-spacing: 0.14em;
 }
 
 .hero-scene .hero-eyebrow {
@@ -688,6 +830,25 @@ h3,
   backdrop-filter: blur(8px);
   border-color: rgba(17, 17, 17, 0.16);
   color: var(--fg);
+}
+
+@media (max-width: 640px) {
+  .hero-tripvo .hero-brand {
+    font-size: clamp(2.4rem, 14vw, 3.4rem);
+  }
+
+  .site-header-inner {
+    flex-wrap: wrap;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .logo-tagline {
+    font-size: 0.52rem;
+  }
 }
 
 .home-tabs {

@@ -75,7 +75,7 @@ export async function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container site-header-inner">
-        <BrandLogo />
+        <BrandLogo withTagline />
         <nav className="nav-links">
           {!session && (
             <LocaleLink href="/como-funciona">{t("howItWorks")}</LocaleLink>

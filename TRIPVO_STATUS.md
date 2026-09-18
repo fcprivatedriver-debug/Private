@@ -1,52 +1,45 @@
-# Tripvo — estado MVP (FASE 1)
+# Tripvo — estado MVP
 
-Base: branch `tripvo` @ marketplace ZELU (`db4c1af` + rebrand FASE 1).
+Base: branch `tripvo` (marketplace ZELU rebranded).
 
 - Domínio futuro: **https://tripvo.pt**
-- Comissão standard: **5%**
-- Preview Tripvo (Vercel `private-duur`): **https://private-duur-git-tripvo-fc-private-driver.vercel.app**
-- Draft PR: https://github.com/fcprivatedriver-debug/Private/pull/55 (**não mergear para main**)
+- Comissão: **5%** (€200 → €10 Tripvo / €190 motorista)
+- Preview: **https://private-duur-git-tripvo-fc-private-driver.vercel.app**
+- Draft PR: https://github.com/fcprivatedriver-debug/Private/pull/55 (**não mergear**)
 
-## Branding
+## Correção crítica — registo
 
-- Wordmark Tipográfico: `TripvoWordmark` (kerning corrigido; T em accent)
-- Favicon / icon: marca T (já não “Z”)
-- Assets `/brand/tripvo-*.svg` + paths legacy `/brand/zelu-*.svg` redireccionados para Tripvo
-- Manifest / metadata / SEO: Tripvo
-
-## Categorias activas
-
-Economy · Comfort · Executivo · Van
-
-## Comissão
-
-`PLATFORM_COMMISSION_PERCENT = 5` → €200 → €10 Tripvo / €190 motorista
+**Causa:** `PrismaNeonHttp` não suporta nested creates / `$transaction` interactivas.
+**Fix:** creates sequenciais em `registerAction` + marketplace (accept/cancel/payment/review).
 
 ## Fluxos
 
 | Fluxo | Estado | Notas |
 |-------|--------|-------|
-| Cliente — homepage / auth | ✅ funciona | Rebrand Tripvo; tabs Cliente/Motorista |
-| Cliente — criar pedido | 🟡 incompleto | Origem, destino, data/hora, passageiros, categoria, voo, bagagem, notas (placa/cadeira via notas). **Sem** campos dedicados para paragens adicionais / cadeira / placa |
-| Cliente — receber propostas e escolher | ✅ funciona | Cliente escolhe manualmente; sem auto-assign ao preço mais baixo |
-| Motorista — ver pedidos / enviar proposta | ✅ funciona | Preço definido pelo motorista |
-| Motorista — onboarding / veículos | ✅ funciona | Classes ECONOMY/COMFORT/EXECUTIVO/VAN |
-| Admin | ✅ funciona | Verificações, classes, operações (branding Tripvo) |
-| Maps (rota / distância / duração) | ✅ funciona | Google + fallback Nominatim/OSRM |
-| Propostas (marketplace) | ✅ funciona | Modelo Offer mantido |
-| Reservas / Booking | ✅ funciona | Após aceite da proposta |
-| Contactos privados | ✅ funciona | Revelados só após pagamento confirmado (`src/lib/contacts.ts`) |
-| Pagamentos Stripe | 🟡 incompleto | Adapter + checkout demo existem; Stripe real só com `PAYMENTS_ENABLED=true` + chaves |
-| Comissão 5% | ✅ funciona | UI checkout mostra Comissão Tripvo + líquido motorista |
-| Avaliações | ✅ funciona | Review após viagem |
+| Homepage Tripvo | ✅ funciona | Wordmark + pin, TRAVEL YOUR WAY, trust strip, CTAs |
+| Cliente — registo / login | ✅ funciona | Persistência User + CustomerProfile |
+| Cliente — pedir viagem | ✅ funciona | Maps + persistência TripRequest |
+| Motorista — registo / login | ✅ funciona | User + CustomerProfile + DriverProfile sequenciais |
+| Motorista — onboarding / veículo | ✅ funciona | Fluxo existente |
+| Propostas marketplace | ✅ funciona | Cliente escolhe; sem auto-assign |
+| Comissão 5% | ✅ funciona | `PLATFORM_COMMISSION_PERCENT` + checkout UI |
+| Admin — acesso | ✅ funciona | `requireAdmin` + middleware ADMIN-only |
+| Admin — protecção roles | ✅ funciona | CUSTOMER/DRIVER → redirect |
+| Email novo motorista | 🟡 incompleto | Resend implementado; precisa `RESEND_API_KEY` (+ `EMAIL_FROM` com domínio) |
+| Email novo pedido | 🟡 incompleto | Idem |
+| Contactos privados | ✅ funciona | Após pagamento |
+| Pagamentos Stripe | 🟡 incompleto | Demo checkout; real com `PAYMENTS_ENABLED` + chaves |
+| Maps | ✅ funciona | Google + fallback |
+| Avaliações | ✅ funciona | Após viagem |
+
+## ENV a configurar no Vercel (Tripvo / private-duur)
+
+- `AUTH_SECRET` (recomendado; existe fallback demo)
+- `RESEND_API_KEY` — para emails admin
+- `EMAIL_FROM` — ex. `Tripvo <noreply@tripvo.pt>` (domínio verificado no Resend)
+- `ADMIN_NOTIFY_EMAIL` — default `fcprivatedriver@gmail.com`
+- `PAYMENTS_ENABLED` / Stripe keys — quando activar pagamentos reais
 
 ## Legenda
 
-- ✅ funciona
-- 🟡 incompleto
-- 🔴 não funciona
-
-## Notas
-
-- Não usar preview `addynow` nem produção antiga como Tripvo
-- Pagamentos novos: **não** nesta fase
+- ✅ funciona · 🟡 incompleto · 🔴 não funciona

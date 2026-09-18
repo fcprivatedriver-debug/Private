@@ -75,10 +75,15 @@ export function toActionFailure(error: unknown): ActionFailure {
       msg.includes("econnrefused") ||
       msg.includes("timeout") ||
       msg.includes("fetch failed") ||
-      msg.includes("database_url")
+      msg.includes("database_url") ||
+      msg.includes("transactions are not supported")
     ) {
       console.error("[db connectivity]", error);
-      return { ok: false, error: "Não foi possível ligar ao servidor. Tente novamente.", code: "DB_CONNECTION" };
+      return {
+        ok: false,
+        error: "Não foi possível ligar ao servidor. Tente novamente.",
+        code: "DB_CONNECTION",
+      };
     }
     console.error("[action error]", error);
     return {

@@ -3,7 +3,7 @@ import clsx from "clsx";
 
 export type TripvoLogoVariant = "A" | "B" | "C";
 
-/** Default: Option B — T in brand accent, ripvo in ink. */
+/** Default: Option B — Trip in ink, vo + pin in petrol accent. */
 export const DEFAULT_TRIPVO_VARIANT: TripvoLogoVariant = "B";
 
 /** Geometric T mark for header / favicon companion. */
@@ -42,9 +42,31 @@ export function TripvoMark({
   );
 }
 
+/** Location pin integrated into the final letter of the wordmark. */
+export function TripvoPin({
+  className = "",
+  size = "1.05em",
+}: {
+  className?: string;
+  size?: number | string;
+}) {
+  return (
+    <svg
+      className={clsx("tripvo-pin", className)}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M12 2.4c-3.7 0-6.7 2.9-6.7 6.6 0 4.6 5.4 10.7 6.2 11.5a.7.7 0 0 0 1 0c.8-.8 6.2-6.9 6.2-11.5 0-3.7-3-6.6-6.7-6.6Zm0 9.1a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
+    </svg>
+  );
+}
+
 /**
  * Typographic Tripvo wordmark — title case brand, display uppercase via CSS.
- * Keep letters in one inline text run so kerning between T and r stays intact.
+ * Keep letters in one inline text run so kerning stays intact.
  */
 export function TripvoWordmark({
   variant = DEFAULT_TRIPVO_VARIANT,
@@ -53,6 +75,7 @@ export function TripvoWordmark({
   tone = "default",
   showMark = false,
   markSize = 26,
+  withPin = false,
 }: {
   variant?: TripvoLogoVariant;
   className?: string;
@@ -60,6 +83,7 @@ export function TripvoWordmark({
   tone?: "default" | "on-dark";
   showMark?: boolean;
   markSize?: number;
+  withPin?: boolean;
 }) {
   return (
     <Tag
@@ -67,6 +91,7 @@ export function TripvoWordmark({
         "tripvo-wordmark",
         `tripvo-wordmark-${variant}`,
         tone === "on-dark" && "tripvo-wordmark-on-dark",
+        withPin && "tripvo-wordmark-pin",
         className,
       )}
       aria-label="Tripvo"
@@ -76,8 +101,12 @@ export function TripvoWordmark({
       )}
       {variant === "A" && <span className="tripvo-ink">Tripvo</span>}
       {variant === "B" && (
-        <span className="tripvo-letters tripvo-ink">
-          <span className="tripvo-accent">T</span>ripvo
+        <span className="tripvo-letters">
+          <span className="tripvo-ink">Trip</span>
+          <span className="tripvo-accent">
+            vo
+            {withPin && <TripvoPin />}
+          </span>
         </span>
       )}
       {variant === "C" && (
@@ -95,19 +124,33 @@ export function BrandLogo({
   size = "md",
   variant = DEFAULT_TRIPVO_VARIANT,
   tone = "default",
-  withMark = true,
+  withMark = false,
+  withTagline = false,
 }: {
   href?: "/" | string;
   size?: "sm" | "md" | "lg";
   variant?: TripvoLogoVariant;
   tone?: "default" | "on-dark";
   withMark?: boolean;
+  withTagline?: boolean;
 }) {
-  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.2rem";
-  const markSize = size === "lg" ? 30 : size === "sm" ? 22 : 26;
+  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.15rem";
+  const markSize = size === "lg" ? 30 : size === "sm" ? 22 : 24;
   return (
-    <Link href={href as "/"} className="logo" style={{ fontSize }} aria-label="Tripvo">
-      <TripvoWordmark variant={variant} tone={tone} showMark={withMark} markSize={markSize} />
+    <Link
+      href={href as "/"}
+      className={clsx("logo", withTagline && "logo-with-tagline")}
+      style={{ fontSize }}
+      aria-label="Tripvo — Travel your way"
+    >
+      <TripvoWordmark
+        variant={variant}
+        tone={tone}
+        showMark={withMark}
+        markSize={markSize}
+        withPin
+      />
+      {withTagline && <span className="logo-tagline">Travel your way</span>}
     </Link>
   );
 }

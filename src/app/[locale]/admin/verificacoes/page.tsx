@@ -1,10 +1,10 @@
-import { requireRole } from "@/lib/session";
+import { requireAdmin } from "@/lib/session";
 import { listVerificationQueue } from "@/domain/onboarding";
 import { VerificationQueue } from "@/components/admin/VerificationQueue";
 import { Link } from "@/i18n/navigation";
 
 export default async function AdminVerificationsPage() {
-  await requireRole("ADMIN");
+  await requireAdmin();
   const queue = await listVerificationQueue();
 
   return (

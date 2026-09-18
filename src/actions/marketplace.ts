@@ -26,6 +26,7 @@ import bcrypt from "bcryptjs";
 import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from "@/domain/onboarding";
 import { estimateRoute } from "@/lib/maps/route";
 import { toActionFailure } from "@/lib/action-errors";
+import { notifyAdminNewDriver, notifyAdminNewTrip } from "@/lib/email";
 
 function fail(error: unknown) {
   return toActionFailure(error);
@@ -82,6 +83,12 @@ export async function registerAction(formData: FormData) {
             languagesSpoken: '["pt"]',
           },
         });
+        void notifyAdminNewDriver({
+          userId: exists.id,
+          name: exists.name || parsed.name,
+          email,
+          phone: parsed.phone ?? exists.phone,
+        }).catch((err) => console.error("[notifyAdminNewDriver]", err));
       }
       if (parsed.role === "DRIVER" && !exists.customerProfile) {
         await prisma.customerProfile.create({ data: { userId: exists.id } });
@@ -97,40 +104,45 @@ export async function registerAction(formData: FormData) {
 
     const passwordHash = await bcrypt.hash(parsed.password, 10);
 
-    if (parsed.role === "CUSTOMER") {
-      await prisma.user.create({
+    // Neon HTTP adapter: nested creates use interactive transactions and fail.
+    // Create User first, then profiles as sequential single-row writes.
+    const user = await prisma.user.create({
+      data: {
+        name: parsed.name,
+        email,
+        passwordHash,
+        phone: parsed.phone ?? null,
+        role: parsed.role,
+      },
+    });
+
+    await prisma.customerProfile.create({
+      data: { userId: user.id },
+    });
+
+    if (parsed.role === "DRIVER") {
+      await prisma.driverProfile.create({
         data: {
-          name: parsed.name,
-          email,
-          passwordHash,
-          phone: parsed.phone ?? null,
-          role: "CUSTOMER",
-          customerProfile: { create: {} },
-        },
-      });
-    } else {
-      // Drivers also get a customer profile so one account can request trips later.
-      await prisma.user.create({
-        data: {
-          name: parsed.name,
-          email,
-          passwordHash,
-          phone: parsed.phone ?? null,
-          role: "DRIVER",
-          customerProfile: { create: {} },
-          driverProfile: {
-            create: {
-              status: "PENDING_VERIFICATION",
-              onboardingStatus: "NOT_STARTED",
-              onboardingStep: "profile",
-              languagesSpoken: '["pt"]',
-            },
-          },
+          userId: user.id,
+          status: "PENDING_VERIFICATION",
+          onboardingStatus: "NOT_STARTED",
+          onboardingStep: "profile",
+          languagesSpoken: '["pt"]',
         },
       });
     }
 
-    return { ok: true as const };
+    // Fire-and-forget admin notification — never block or roll back registration.
+    if (parsed.role === "DRIVER") {
+      void notifyAdminNewDriver({
+        userId: user.id,
+        name: parsed.name,
+        email,
+        phone: parsed.phone ?? null,
+      }).catch((err) => console.error("[notifyAdminNewDriver]", err));
+    }
+
+    return { ok: true as const, userId: user.id };
   } catch (error) {
     return fail(error);
   }
@@ -227,6 +239,42 @@ export async function createTripAction(formData: FormData) {
       publish: parsed.publish,
       ...coords,
     });
+
+    // Admin notification after successful persist — never fail the trip create.
+    void (async () => {
+      try {
+        const [customer, vehicleClass] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { name: true, email: true, phone: true },
+          }),
+          parsed.preferredVehicleClassId
+            ? prisma.vehicleClass.findUnique({
+                where: { id: parsed.preferredVehicleClassId },
+                select: { namePt: true, code: true },
+              })
+            : null,
+        ]);
+        await notifyAdminNewTrip({
+          tripId: trip.id,
+          pickupAddress: parsed.pickupAddress,
+          dropoffAddress: parsed.dropoffAddress,
+          pickupAt: trip.pickupAt,
+          passengers: parsed.passengers,
+          luggage: parsed.luggage,
+          category: vehicleClass
+            ? `${vehicleClass.namePt} (${vehicleClass.code})`
+            : null,
+          flightNumber: parsed.flightNumber,
+          notes: parsed.notes,
+          customerName: customer?.name || session.user.name || "—",
+          customerEmail: customer?.email || session.user.email,
+          customerPhone: customer?.phone ?? null,
+        });
+      } catch (err) {
+        console.error("[notifyAdminNewTrip]", err);
+      }
+    })();
 
     return { ok: true as const, tripId: trip.id };
   } catch (error) {
