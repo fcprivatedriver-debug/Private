@@ -3,7 +3,7 @@ import clsx from "clsx";
 
 export type TripvoLogoVariant = "A" | "B" | "C";
 
-/** Default: Option B — Trip in ink, vo + pin in petrol accent. */
+/** Default: Tripv + location pin substituting the final "o". */
 export const DEFAULT_TRIPVO_VARIANT: TripvoLogoVariant = "B";
 
 /** Geometric T mark for header / favicon companion. */
@@ -42,10 +42,13 @@ export function TripvoMark({
   );
 }
 
-/** Location pin integrated into the final letter of the wordmark. */
+/**
+ * Location pin that visually replaces the final "o" in Tripvo.
+ * Sized to sit on the baseline like a lowercase o.
+ */
 export function TripvoPin({
   className = "",
-  size = "1.05em",
+  size = "0.92em",
 }: {
   className?: string;
   size?: number | string;
@@ -55,18 +58,18 @@ export function TripvoPin({
       className={clsx("tripvo-pin", className)}
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 0 24 32"
       fill="currentColor"
       aria-hidden
     >
-      <path d="M12 2.4c-3.7 0-6.7 2.9-6.7 6.6 0 4.6 5.4 10.7 6.2 11.5a.7.7 0 0 0 1 0c.8-.8 6.2-6.9 6.2-11.5 0-3.7-3-6.6-6.7-6.6Zm0 9.1a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
+      <path d="M12 0C6.48 0 2 4.35 2 9.7c0 6.55 8.2 16.9 9.15 17.95a1.1 1.1 0 0 0 1.7 0C13.8 26.6 22 16.25 22 9.7 22 4.35 17.52 0 12 0Zm0 13.9a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4Z" />
     </svg>
   );
 }
 
 /**
- * Typographic Tripvo wordmark — title case brand, display uppercase via CSS.
- * Keep letters in one inline text run so kerning stays intact.
+ * Graphic wordmark: "Tripv" + pin-as-o.
+ * Title case (never CSS uppercase). aria-label stays "Tripvo".
  */
 export function TripvoWordmark({
   variant = DEFAULT_TRIPVO_VARIANT,
@@ -75,7 +78,7 @@ export function TripvoWordmark({
   tone = "default",
   showMark = false,
   markSize = 26,
-  withPin = false,
+  withPin = true,
 }: {
   variant?: TripvoLogoVariant;
   className?: string;
@@ -83,6 +86,7 @@ export function TripvoWordmark({
   tone?: "default" | "on-dark";
   showMark?: boolean;
   markSize?: number;
+  /** When true (default), final o is the location pin. */
   withPin?: boolean;
 }) {
   return (
@@ -99,22 +103,19 @@ export function TripvoWordmark({
       {showMark && (
         <TripvoMark size={markSize} tone={tone === "on-dark" ? "on-dark" : "default"} />
       )}
-      {variant === "A" && <span className="tripvo-ink">Tripvo</span>}
-      {variant === "B" && (
-        <span className="tripvo-letters">
-          <span className="tripvo-ink">Trip</span>
-          <span className="tripvo-accent">
-            vo
-            {withPin && <TripvoPin />}
+      <span className="tripvo-letters">
+        <span className="tripvo-ink">
+          <span className="tripvo-t">T</span>
+          <span className="tripvo-rest">ripv</span>
+        </span>
+        {withPin ? (
+          <span className="tripvo-o-pin tripvo-accent" aria-hidden>
+            <TripvoPin />
           </span>
-        </span>
-      )}
-      {variant === "C" && (
-        <span className="tripvo-letters tripvo-ink">
-          <span className="tripvo-accent">T</span>ripv
+        ) : (
           <span className="tripvo-accent">o</span>
-        </span>
-      )}
+        )}
+      </span>
     </Tag>
   );
 }
@@ -134,8 +135,8 @@ export function BrandLogo({
   withMark?: boolean;
   withTagline?: boolean;
 }) {
-  const fontSize = size === "lg" ? "1.45rem" : size === "sm" ? "1rem" : "1.15rem";
-  const markSize = size === "lg" ? 30 : size === "sm" ? 22 : 24;
+  const fontSize = size === "lg" ? "1.35rem" : size === "sm" ? "0.95rem" : "1.1rem";
+  const markSize = size === "lg" ? 28 : size === "sm" ? 20 : 22;
   return (
     <Link
       href={href as "/"}
