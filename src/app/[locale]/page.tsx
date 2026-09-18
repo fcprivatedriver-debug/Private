@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { HardNavLink } from "@/components/auth/HardNavLink";
 import {
   APP_NAME,
   ASSISTANT_NAME,
@@ -10,6 +10,7 @@ import {
 /**
  * Landing pública — sem saldos/despesas inventados.
  * O layout locale (`layout.tsx`) renderiza `{children}` para /pt/login funcionar.
+ * Entrar usa HardNavLink (navegação completa) para nunca ficar preso na shell da landing.
  */
 export default function LandingPage() {
   return (
@@ -17,12 +18,12 @@ export default function LandingPage() {
       <nav className="landing-nav" aria-label="Principal">
         <BrandLogo href="/pt" size="md" />
         <div className="landing-nav-actions">
-          <Link href="/pt/login" className="btn btn-ghost btn-sm">
+          <HardNavLink href="/pt/login" className="btn btn-ghost btn-sm">
             Entrar
-          </Link>
-          <Link href="/pt/registo" className="btn btn-primary btn-sm">
+          </HardNavLink>
+          <HardNavLink href="/pt/registo" className="btn btn-primary btn-sm">
             Começar
-          </Link>
+          </HardNavLink>
         </div>
       </nav>
 
@@ -37,12 +38,12 @@ export default function LandingPage() {
         <p className="landing-hero-lead">{APP_HERO_SUPPORT}</p>
         <p className="landing-hero-mel">{ASSISTANT_LINE}</p>
         <div className="landing-hero-cta">
-          <Link href="/pt/registo" className="btn btn-primary">
+          <HardNavLink href="/pt/registo" className="btn btn-primary">
             Começar
-          </Link>
-          <Link href="/pt/login" className="btn btn-ghost">
+          </HardNavLink>
+          <HardNavLink href="/pt/login" className="btn btn-ghost">
             Já tenho conta
-          </Link>
+          </HardNavLink>
         </div>
       </section>
 
@@ -62,9 +63,9 @@ export default function LandingPage() {
           {APP_NAME} · {ASSISTANT_NAME}
         </p>
         <div className="landing-footer-links">
-          <Link href="/pt/termos">Termos</Link>
-          <Link href="/pt/privacidade">Privacidade</Link>
-          <Link href="/pt/login">Entrar</Link>
+          <HardNavLink href="/pt/termos">Termos</HardNavLink>
+          <HardNavLink href="/pt/privacidade">Privacidade</HardNavLink>
+          <HardNavLink href="/pt/login">Entrar</HardNavLink>
         </div>
       </footer>
     </div>

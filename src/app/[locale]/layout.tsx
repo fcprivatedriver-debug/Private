@@ -8,7 +8,8 @@ import { routing } from "@/i18n/routing";
 /**
  * Layout locale CANÓNICO — APENAS providers + {children}.
  * NUNCA embutir a landing aqui (regressão 0079b05: /pt/login mostrava homepage).
- * Stamp: canonical-layout-children-v1
+ * Stamp: canonical-layout-children-v2
+ * Sem {children}, Entrar muda o URL mas o ecrã fica na landing.
  */
 export default async function LocaleLayout({
   children,
@@ -24,7 +25,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
-        {/* canonical-layout-children-v1 */}
+        {/* canonical-layout-children-v2 */}
         <ThemeProvider>{children}</ThemeProvider>
       </AuthProvider>
     </NextIntlClientProvider>
