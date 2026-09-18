@@ -27,7 +27,7 @@ import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from 
 import { estimateRoute } from "@/lib/maps/route";
 import { toActionFailure } from "@/lib/action-errors";
 import { notifyAdminNewDriver, notifyAdminNewTrip } from "@/lib/email";
-import { repairCustomerProfileColumns } from "@/lib/db-repair";
+import { repairCustomerProfileColumns, repairDriverProfileColumns } from "@/lib/db-repair";
 
 function fail(error: unknown) {
   return toActionFailure(error);
@@ -48,6 +48,41 @@ async function ensureCustomerProfileRow(userId: string) {
       ${q(profileId)},
       ${q(userId)},
       'EUR',
+      CURRENT_TIMESTAMP,
+      CURRENT_TIMESTAMP
+    )
+    ON CONFLICT ("userId") DO NOTHING
+  `);
+  return profileId;
+}
+
+async function ensureDriverProfileRow(userId: string) {
+  await repairDriverProfileColumns();
+  const existing = await prisma.driverProfile.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  if (existing) return existing.id;
+  const profileId = `dp_${userId.slice(-16)}_${Date.now().toString(36)}`;
+  const q = (value: string) => `'${value.replace(/'/g, "''")}'`;
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO "DriverProfile" (
+      "id", "userId", "status", "onboardingStatus", "onboardingStep",
+      "completenessScore", "languagesSpoken", "yearsOfExperience",
+      "ratingCount", "completedTripsCount", "documents",
+      "createdAt", "updatedAt"
+    ) VALUES (
+      ${q(profileId)},
+      ${q(userId)},
+      'PENDING_VERIFICATION',
+      'NOT_STARTED',
+      'profile',
+      0,
+      ${q('["pt"]')},
+      0,
+      0,
+      0,
+      '[]',
       CURRENT_TIMESTAMP,
       CURRENT_TIMESTAMP
     )
@@ -98,15 +133,7 @@ export async function registerAction(formData: FormData) {
         await ensureCustomerProfileRow(exists.id);
       }
       if (parsed.role === "DRIVER" && !exists.driverProfile) {
-        await prisma.driverProfile.create({
-          data: {
-            userId: exists.id,
-            status: "PENDING_VERIFICATION",
-            onboardingStatus: "NOT_STARTED",
-            onboardingStep: "profile",
-            languagesSpoken: '["pt"]',
-          },
-        });
+        await ensureDriverProfileRow(exists.id);
         try {
           await notifyAdminNewDriver({
             userId: exists.id,
@@ -153,21 +180,7 @@ export async function registerAction(formData: FormData) {
     await ensureCustomerProfileRow(user.id);
 
     if (parsed.role === "DRIVER") {
-      const existingDriver = await prisma.driverProfile.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      });
-      if (!existingDriver) {
-        await prisma.driverProfile.create({
-          data: {
-            userId: user.id,
-            status: "PENDING_VERIFICATION",
-            onboardingStatus: "NOT_STARTED",
-            onboardingStep: "profile",
-            languagesSpoken: '["pt"]',
-          },
-        });
-      }
+      await ensureDriverProfileRow(user.id);
     }
 
     // Fire-and-forget admin notification — never block or roll back registration.

@@ -6,7 +6,7 @@ import {
   getGoogleMapsApiKeySource,
   GOOGLE_MAPS_ENV_NAMES,
 } from "@/lib/maps/config";
-import { repairVehicleClassSchema, repairCustomerProfileColumns } from "@/lib/db-repair";
+import { repairVehicleClassSchema, repairCustomerProfileColumns, repairDriverProfileColumns } from "@/lib/db-repair";
 
 /** Lightweight production diagnostics (no secrets leaked). */
 export async function GET() {
@@ -37,10 +37,13 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`;
     checks.database = "ok";
     const profileRepair = await repairCustomerProfileColumns();
+    const driverRepair = await repairDriverProfileColumns();
     if (!profileRepair.ok) {
       checks.schemaRepair = `customerProfile:${profileRepair.detail ?? "failed"}`;
+    } else if (!driverRepair.ok) {
+      checks.schemaRepair = `driverProfile:${driverRepair.detail ?? "failed"}`;
     } else if (!checks.schemaRepair) {
-      checks.schemaRepair = "customerProfile:ok";
+      checks.schemaRepair = "profiles:ok";
     }
   } catch {
     checks.database = "error";

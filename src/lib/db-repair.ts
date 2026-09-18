@@ -37,6 +37,56 @@ export async function repairCustomerProfileColumns(): Promise<{
   }
 }
 
+/** Ensure DriverProfile has columns expected by Prisma (TEXT enums for drift safety). */
+export async function repairDriverProfileColumns(): Promise<{
+  ok: boolean;
+  detail?: string;
+}> {
+  try {
+    const cols: Array<[string, string]> = [
+      ["status", `TEXT NOT NULL DEFAULT 'PENDING_VERIFICATION'`],
+      ["onboardingStatus", `TEXT NOT NULL DEFAULT 'NOT_STARTED'`],
+      ["onboardingStep", `TEXT NOT NULL DEFAULT 'profile'`],
+      ["completenessScore", `INTEGER NOT NULL DEFAULT 0`],
+      ["photoUrl", `TEXT`],
+      ["bio", `TEXT`],
+      ["languagesSpoken", `TEXT NOT NULL DEFAULT '["pt"]'`],
+      ["yearsOfExperience", `INTEGER NOT NULL DEFAULT 0`],
+      ["ratingAvg", `DOUBLE PRECISION`],
+      ["ratingCount", `INTEGER NOT NULL DEFAULT 0`],
+      ["completedTripsCount", `INTEGER NOT NULL DEFAULT 0`],
+      ["responseRate", `DOUBLE PRECISION`],
+      ["avgResponseTimeMinutes", `DOUBLE PRECISION`],
+      ["documents", `TEXT NOT NULL DEFAULT '[]'`],
+      ["aiRiskScore", `DOUBLE PRECISION`],
+      ["aiConfidence", `DOUBLE PRECISION`],
+      ["aiSummary", `TEXT`],
+      ["adminNotes", `TEXT`],
+      ["rejectionReason", `TEXT`],
+      ["infoRequestMessage", `TEXT`],
+      ["submittedAt", `TIMESTAMP(3)`],
+      ["verifiedAt", `TIMESTAMP(3)`],
+      ["createdAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+      ["updatedAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+    ];
+    for (const [column, ddl] of cols) {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE "DriverProfile" ADD COLUMN IF NOT EXISTS "${column}" ${ddl}`,
+      );
+    }
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "DriverProfile" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP`,
+    );
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE "DriverProfile" ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP`,
+    );
+    return { ok: true };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message.slice(0, 200) : String(error);
+    return { ok: false, detail };
+  }
+}
+
 /**
  * Create VehicleClass when migrate history drifted on shared Neon and the
  * relation is missing. Seeds the canonical Comfort / Premium / Van catalog.
