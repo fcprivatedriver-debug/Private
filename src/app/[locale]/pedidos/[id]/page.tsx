@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
-import { TRIP_STATUS_LABELS } from "@/config/constants";
+import { TRIP_STATUS_LABELS, OFFER_STATUS_LABELS } from "@/config/constants";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { TripActions } from "@/components/trip/TripActions";
@@ -17,7 +17,7 @@ import { TripRouteMap } from "@/components/map/TripRouteMap";
 import { Link } from "@/i18n/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDistance, formatDuration } from "@/lib/maps/route";
-import { OFFER_STATUS_LABELS } from "@/config/constants";
+import { shortLocationLabel, shortRouteLabel, publicFirstName } from "@/lib/location-label";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -26,6 +26,11 @@ export default async function TripDetailPage({ params }: Props) {
   const { id } = await params;
   const locale = await getLocale();
 
+  const isAdmin = session.user.role === "ADMIN";
+  const hasDriver = Boolean(session.user.hasDriver || session.user.role === "DRIVER");
+
+  // Explicit select — never pull customer email/phone into the RSC payload for drivers
+  // until contacts are revealed server-side.
   const trip = await prisma.tripRequest.findUnique({
     where: { id },
     include: {
@@ -35,9 +40,20 @@ export default async function TripDetailPage({ params }: Props) {
             select: {
               id: true,
               name: true,
-              phone: true,
               image: true,
-              driverProfile: true,
+              driverProfile: {
+                select: {
+                  id: true,
+                  photoUrl: true,
+                  ratingAvg: true,
+                  ratingCount: true,
+                  yearsOfExperience: true,
+                  completedTripsCount: true,
+                  languagesSpoken: true,
+                  avgResponseTimeMinutes: true,
+                  status: true,
+                },
+              },
             },
           },
           vehicle: { include: { vehicleClass: true } },
@@ -45,7 +61,7 @@ export default async function TripDetailPage({ params }: Props) {
         orderBy: { priceAmount: "asc" },
       },
       booking: { include: { payment: true, review: true } },
-      customer: { select: { id: true, name: true, phone: true } },
+      customer: { select: { id: true, name: true } },
       preferredVehicleClass: true,
     },
   });
@@ -53,15 +69,17 @@ export default async function TripDetailPage({ params }: Props) {
   if (!trip) notFound();
 
   const isOwner = trip.customerId === session.user.id;
-  const isDriver = session.user.role === "DRIVER";
-  const isAdmin = session.user.role === "ADMIN";
   const isAssignedDriver = trip.booking?.driverId === session.user.id;
+  const actingAsDriver = hasDriver && !isOwner;
+  const canViewAsDriver = hasDriver && (trip.status === "OPEN" || isAssignedDriver || isAdmin);
 
-  if (!isOwner && !isDriver && !isAdmin) notFound();
+  if (!isOwner && !canViewAsDriver && !isAdmin) notFound();
 
-  const revealContacts =
-    trip.booking != null &&
-    canRevealContacts({
+  // Fetch contacts only when reveal is allowed — never embed then hide
+  let revealContacts = false;
+  let revealedPhone: string | null = null;
+  if (trip.booking) {
+    revealContacts = canRevealContacts({
       viewerId: session.user.id,
       customerId: trip.customerId,
       driverId: trip.booking.driverId,
@@ -69,20 +87,46 @@ export default async function TripDetailPage({ params }: Props) {
       paymentStatus: trip.booking.payment?.status,
       isAdmin,
     });
+    if (revealContacts) {
+      if (isOwner) {
+        const accepted = trip.offers.find((o) => o.id === trip.acceptedOfferId);
+        if (accepted) {
+          const driverUser = await prisma.user.findUnique({
+            where: { id: accepted.driverId },
+            select: { phone: true },
+          });
+          revealedPhone = driverUser?.phone ?? null;
+        }
+      } else if (isAssignedDriver || isAdmin) {
+        const customer = await prisma.user.findUnique({
+          where: { id: trip.customerId },
+          select: { phone: true },
+        });
+        revealedPhone = customer?.phone ?? null;
+      }
+    }
+  }
 
   const canManageJourney = Boolean(isOwner || isAssignedDriver || isAdmin);
 
   const driverVehicles =
-    isDriver
+    actingAsDriver || (hasDriver && isOwner)
       ? await prisma.driverProfile.findUnique({
           where: { userId: session.user.id },
-          include: { vehicles: { include: { vehicleClass: true } } },
+          include: {
+            vehicles: { include: { vehicleClass: true } },
+            verificationDocs: { select: { id: true } },
+          },
         })
       : null;
 
   const myOffer = trip.offers.find((o) => o.driverId === session.user.id);
+  const driverCanPropose =
+    actingAsDriver &&
+    trip.status === "OPEN" &&
+    driverVehicles?.status === "ACTIVE";
 
-  const offerCards = trip.offers.map((offer) => ({
+  const offerCards = (isOwner || isAdmin ? trip.offers : []).map((offer) => ({
     id: offer.id,
     priceAmount: offer.priceAmount,
     currency: offer.currency,
@@ -91,7 +135,7 @@ export default async function TripDetailPage({ params }: Props) {
     createdAt: offer.createdAt,
     driver: {
       id: offer.driver.id,
-      name: offer.driver.name || "Motorista",
+      name: publicFirstName(offer.driver.name),
       image: offer.driver.image,
       profileId: offer.driver.driverProfile?.id,
       photoUrl: offer.driver.driverProfile?.photoUrl,
@@ -116,29 +160,39 @@ export default async function TripDetailPage({ params }: Props) {
       : null,
   }));
 
+  const routeShort = shortRouteLabel(trip.pickupAddress, trip.dropoffAddress);
+
   return (
     <section className="section fade-up">
-      <div className="container">
-        <div style={{ marginBottom: "1.5rem" }}>
+      <div className="container" style={{ maxWidth: 860 }}>
+        <p className="muted" style={{ marginBottom: "0.75rem" }}>
+          {actingAsDriver ? (
+            <Link href="/pedidos-abertos">← Pedidos</Link>
+          ) : (
+            <Link href="/pedidos">← As minhas viagens</Link>
+          )}
+        </p>
+
+        <div style={{ marginBottom: "1.25rem" }}>
           <span className="badge">
-            {trip.status === "OPEN" && trip.offers.length > 0
-              ? "Propostas recebidas"
+            {trip.status === "OPEN" && trip.offers.length > 0 && (isOwner || isAdmin)
+              ? `${trip.offers.length} proposta${trip.offers.length === 1 ? "" : "s"}`
               : TRIP_STATUS_LABELS[trip.status]}
           </span>
           <h1
             className="font-display"
-            style={{ fontSize: "clamp(1.7rem, 4vw, 2.35rem)", marginTop: "0.75rem" }}
+            style={{ fontSize: "clamp(1.45rem, 4vw, 2rem)", marginTop: "0.65rem" }}
           >
-            {trip.pickupAddress}
-            <span className="muted"> → </span>
-            {trip.dropoffAddress}
+            {routeShort}
           </h1>
-          <p className="muted">
+          <p className="muted" style={{ margin: "0.35rem 0 0" }}>
             {format(trip.pickupAt, "EEEE, d MMMM yyyy · HH:mm", { locale: pt })}
           </p>
         </div>
 
-        <JourneyTracker status={trip.status} offerCount={trip.offers.length} />
+        {(isOwner || isAdmin) && (
+          <JourneyTracker status={trip.status} offerCount={trip.offers.length} />
+        )}
 
         <div className="summary-strip" style={{ marginBottom: "1rem" }}>
           <div className="summary-item">
@@ -152,9 +206,52 @@ export default async function TripDetailPage({ params }: Props) {
           <div className="summary-item">
             <div className="label-sm">Passageiros</div>
             <strong>
-              {trip.passengers} · {trip.luggage} malas
+              {trip.passengers} · {trip.luggage} mala{trip.luggage === 1 ? "" : "s"}
             </strong>
           </div>
+        </div>
+
+        <div className="panel" style={{ marginBottom: "1rem" }}>
+          <div className="trip-detail-addresses">
+            <div>
+              <div className="label-sm">Origem</div>
+              <strong>{shortLocationLabel(trip.pickupAddress, 48)}</strong>
+              <p className="muted" style={{ margin: "0.25rem 0 0", fontSize: "0.88rem" }}>
+                {trip.pickupAddress}
+              </p>
+            </div>
+            <div className="trip-card-arrow" aria-hidden>
+              ↓
+            </div>
+            <div>
+              <div className="label-sm">Destino</div>
+              <strong>{shortLocationLabel(trip.dropoffAddress, 48)}</strong>
+              <p className="muted" style={{ margin: "0.25rem 0 0", fontSize: "0.88rem" }}>
+                {trip.dropoffAddress}
+              </p>
+            </div>
+          </div>
+          {trip.flightNumber && <p className="muted">Voo {trip.flightNumber}</p>}
+          {trip.preferredVehicleClass && (
+            <p className="muted">
+              Categoria: {localizeVehicleClass(trip.preferredVehicleClass, locale).name}
+            </p>
+          )}
+          {trip.notes && (
+            <p style={{ marginTop: "0.75rem" }}>
+              <strong>Observações:</strong> {trip.notes}
+            </p>
+          )}
+          {revealContacts && revealedPhone && (
+            <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
+              Contacto: {revealedPhone}
+            </div>
+          )}
+          {!revealContacts && trip.booking && (
+            <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
+              Os contactos ficam visíveis depois do pagamento confirmado.
+            </div>
+          )}
         </div>
 
         <TripRouteMap
@@ -168,29 +265,6 @@ export default async function TripDetailPage({ params }: Props) {
 
         <div className="grid-2" style={{ marginTop: "1.5rem" }}>
           <div>
-            <div className="panel">
-              {trip.flightNumber && <p className="muted">Voo {trip.flightNumber}</p>}
-              {trip.preferredVehicleClass && (
-                <p className="muted">
-                  Preferência: {localizeVehicleClass(trip.preferredVehicleClass, locale).name}
-                </p>
-              )}
-              {trip.notes && <p style={{ marginTop: "0.75rem" }}>{trip.notes}</p>}
-              {revealContacts && (
-                <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
-                  Contacto disponível:{" "}
-                  {isOwner
-                    ? trip.offers.find((o) => o.id === trip.acceptedOfferId)?.driver.phone || "—"
-                    : trip.customer.phone || "—"}
-                </div>
-              )}
-              {!revealContacts && trip.booking && (
-                <div className="alert alert-info" style={{ marginTop: "1rem", marginBottom: 0 }}>
-                  Os contactos ficam visíveis depois do pagamento confirmado.
-                </div>
-              )}
-            </div>
-
             {(isOwner || isAssignedDriver || isAdmin) && (
               <TripActions
                 tripId={trip.id}
@@ -232,11 +306,7 @@ export default async function TripDetailPage({ params }: Props) {
                     body="Assim que motoristas verificados responderem, as propostas aparecem aqui."
                   />
                 ) : (
-                  <OfferCards
-                    tripId={trip.id}
-                    offers={offerCards}
-                    canAccept={isOwner}
-                  />
+                  <OfferCards tripId={trip.id} offers={offerCards} canAccept={isOwner} />
                 )}
               </>
             )}
@@ -249,17 +319,23 @@ export default async function TripDetailPage({ params }: Props) {
                 <div className="list-stack" style={{ marginTop: "0.75rem" }}>
                   {trip.offers.map((offer) => (
                     <div key={offer.id} className="list-item">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "0.75rem",
+                        }}
+                      >
                         <strong>{formatMoney(offer.priceAmount, offer.currency)}</strong>
                         <span className="badge">{OFFER_STATUS_LABELS[offer.status]}</span>
                       </div>
                       <div>
                         {offer.driver.driverProfile ? (
                           <Link href={`/motoristas/${offer.driver.driverProfile.id}`}>
-                            {offer.driver.name}
+                            {publicFirstName(offer.driver.name)}
                           </Link>
                         ) : (
-                          offer.driver.name
+                          publicFirstName(offer.driver.name)
                         )}
                       </div>
                       {offer.vehicle && (
@@ -284,38 +360,72 @@ export default async function TripDetailPage({ params }: Props) {
               </div>
             )}
 
-            {isDriver && trip.status === "OPEN" && (
+            {actingAsDriver && trip.status === "OPEN" && (
               <>
-                <h2 className="font-display">A sua proposta</h2>
-                {myOffer && (
+                {myOffer ? (
+                  <div className="panel">
+                    <h2 className="font-display" style={{ fontSize: "1.25rem", marginTop: 0 }}>
+                      A minha proposta
+                    </h2>
+                    <p>
+                      {formatMoney(myOffer.priceAmount)} · {OFFER_STATUS_LABELS[myOffer.status]}
+                    </p>
+                    <div className="cta-row">
+                      <Link href="/propostas" className="btn btn-secondary btn-sm">
+                        Ver as minhas propostas
+                      </Link>
+                    </div>
+                    {driverCanPropose && (
+                      <OfferForm
+                        tripRequestId={trip.id}
+                        routeLabel={routeShort}
+                        vehicles={(driverVehicles?.vehicles || []).map((v) => ({
+                          id: v.id,
+                          make: v.make,
+                          model: v.model,
+                          className: localizeVehicleClass(v.vehicleClass, locale).name,
+                        }))}
+                        existingPrice={myOffer.priceAmount / 100}
+                        existingEta={myOffer.estimatedArrivalMinutes}
+                      />
+                    )}
+                  </div>
+                ) : driverCanPropose ? (
+                  <>
+                    <h2 className="font-display" style={{ fontSize: "1.25rem" }}>
+                      Fazer proposta
+                    </h2>
+                    <OfferForm
+                      tripRequestId={trip.id}
+                      routeLabel={routeShort}
+                      vehicles={(driverVehicles?.vehicles || []).map((v) => ({
+                        id: v.id,
+                        make: v.make,
+                        model: v.model,
+                        className: localizeVehicleClass(v.vehicleClass, locale).name,
+                      }))}
+                    />
+                  </>
+                ) : (
                   <div className="alert alert-info">
-                    Proposta atual: {formatMoney(myOffer.priceAmount)} (
-                    {OFFER_STATUS_LABELS[myOffer.status]})
-                    {myOffer.estimatedArrivalMinutes
-                      ? ` · ETA ${myOffer.estimatedArrivalMinutes} min`
-                      : ""}
+                    Complete a verificação de documentos para enviar propostas.{" "}
+                    <Link href="/onboarding">Abrir onboarding</Link>
                   </div>
                 )}
-                <OfferForm
-                  tripRequestId={trip.id}
-                  vehicles={(driverVehicles?.vehicles || []).map((v) => ({
-                    id: v.id,
-                    make: v.make,
-                    model: v.model,
-                    className: localizeVehicleClass(v.vehicleClass, locale).name,
-                  }))}
-                  existingPrice={myOffer ? myOffer.priceAmount / 100 : undefined}
-                  existingEta={myOffer?.estimatedArrivalMinutes}
-                />
               </>
             )}
 
-            {isDriver && myOffer && trip.status !== "OPEN" && (
+            {actingAsDriver && myOffer && trip.status !== "OPEN" && (
               <div className="panel">
-                <h2 className="font-display">Estado</h2>
+                <h2 className="font-display" style={{ fontSize: "1.25rem", marginTop: 0 }}>
+                  Estado da proposta
+                </h2>
                 <p>
                   {formatMoney(myOffer.priceAmount)} · {OFFER_STATUS_LABELS[myOffer.status]}
                 </p>
+                <Link href="/propostas" className="btn btn-secondary btn-sm">
+                  As minhas propostas
+                </Link>
               </div>
             )}
           </div>

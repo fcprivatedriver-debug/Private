@@ -6,7 +6,12 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: Ctx) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "DRIVER") {
+  const canDriver =
+    session?.user &&
+    (session.user.role === "DRIVER" ||
+      session.user.role === "ADMIN" ||
+      Boolean(session.user.hasDriver));
+  if (!canDriver) {
     return apiError("UNAUTHORIZED", "Login necessário", 401);
   }
 
@@ -15,7 +20,7 @@ export async function POST(request: Request, context: Ctx) {
 
   try {
     if (body.action === "withdraw") {
-      const offer = await withdrawOffer(id, session.user.id);
+      const offer = await withdrawOffer(id, session!.user!.id);
       return Response.json({ offer });
     }
     return apiError("BAD_REQUEST", "Ação desconhecida");

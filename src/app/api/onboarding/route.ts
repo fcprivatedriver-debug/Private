@@ -21,7 +21,9 @@ export async function GET() {
     return Response.json({ queue });
   }
 
-  if (session.user.role !== "DRIVER") {
+  const canDriver =
+    session.user.role === "DRIVER" || Boolean(session.user.hasDriver);
+  if (!canDriver) {
     return apiError("FORBIDDEN", "Sem permissão", 403);
   }
 
@@ -39,10 +41,14 @@ export async function POST(request: Request) {
   if (!session?.user) return apiError("UNAUTHORIZED", "Login necessário", 401);
 
   const contentType = request.headers.get("content-type") || "";
+  const canDriver =
+    session.user.role === "DRIVER" ||
+    session.user.role === "ADMIN" ||
+    Boolean(session.user.hasDriver);
 
   try {
     if (contentType.includes("multipart/form-data")) {
-      if (session.user.role !== "DRIVER") return apiError("FORBIDDEN", "Sem permissão", 403);
+      if (!canDriver) return apiError("FORBIDDEN", "Sem permissão", 403);
       const form = await request.formData();
       const action = String(form.get("action") || "upload");
 

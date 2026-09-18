@@ -9,8 +9,8 @@
     "myTrips": "My trips",
     "newTrip": "Request a trip",
     "dashboard": "Dashboard",
-    "openRequests": "Open requests",
-    "myOffers": "Offers",
+    "openRequests": "Requests",
+    "myOffers": "My offers",
     "trips": "Trips",
     "vehicle": "Vehicle",
     "onboarding": "Onboarding",
@@ -20,8 +20,8 @@
     "login": "Log in",
     "start": "Request a trip",
     "logout": "Log out",
-    "modeCustomer": "Customer mode",
-    "modeDriver": "Driver mode"
+    "modeCustomer": "Customer",
+    "modeDriver": "Driver"
   },
   "home": {
     "eyebrow": "Private mobility",

@@ -120,6 +120,22 @@ export async function createOrUpdateOffer(input: {
   includesWaiting?: boolean;
   estimatedArrivalMinutes?: number;
 }) {
+  const { moderateOfferMessage, MessageModerationError } = await import(
+    "@/lib/message-moderation"
+  );
+  const { createNotification } = await import("@/lib/notifications");
+  const { shortRouteLabel } = await import("@/lib/location-label");
+
+  let safeMessage: string | null = null;
+  try {
+    safeMessage = moderateOfferMessage(input.message);
+  } catch (error) {
+    if (error instanceof MessageModerationError) {
+      throw new DomainError(error.code, error.message);
+    }
+    throw error;
+  }
+
   const driver = await prisma.user.findUnique({
     where: { id: input.driverId },
     include: { driverProfile: { include: { vehicles: true } } },
@@ -128,7 +144,10 @@ export async function createOrUpdateOffer(input: {
     throw new DomainError("FORBIDDEN", "Perfil de motorista em falta");
   }
   if (driver.driverProfile.status !== "ACTIVE") {
-    throw new DomainError("FORBIDDEN", "Motorista ainda não verificado");
+    throw new DomainError(
+      "FORBIDDEN",
+      "Complete a verificação de documentos antes de enviar propostas",
+    );
   }
 
   const trip = await prisma.tripRequest.findUnique({
@@ -137,11 +156,20 @@ export async function createOrUpdateOffer(input: {
   if (!trip || trip.status !== "OPEN") {
     throw new DomainError("INVALID_STATE", "Pedido não está aberto a propostas");
   }
+  if (trip.customerId === input.driverId) {
+    throw new DomainError("FORBIDDEN", "Não pode propor na sua própria viagem");
+  }
 
   const vehicleId =
     input.vehicleId || driver.driverProfile.vehicles[0]?.id || null;
   if (!vehicleId) {
     throw new DomainError("VEHICLE_REQUIRED", "Regista um veículo primeiro");
+  }
+
+  // Ensure the vehicle belongs to this driver
+  const ownsVehicle = driver.driverProfile.vehicles.some((v) => v.id === vehicleId);
+  if (!ownsVehicle) {
+    throw new DomainError("FORBIDDEN", "Veículo inválido");
   }
 
   const priceAmount = eurosToCents(input.priceEuros);
@@ -151,40 +179,68 @@ export async function createOrUpdateOffer(input: {
     where: {
       tripRequestId: input.tripRequestId,
       driverId: input.driverId,
-      status: "PENDING",
+      status: { in: ["PENDING", "ACCEPTED"] },
     },
   });
 
+  let offer;
+  let isNew = false;
   if (existing) {
-    return prisma.offer.update({
+    if (existing.status === "ACCEPTED") {
+      throw new DomainError("INVALID_STATE", "Esta proposta já foi aceite");
+    }
+    offer = await prisma.offer.update({
       where: { id: existing.id },
       data: {
         vehicleId,
         priceAmount,
-        message: input.message || null,
+        message: safeMessage,
         includesTolls: input.includesTolls ?? true,
         includesWaiting: input.includesWaiting ?? false,
         estimatedArrivalMinutes: input.estimatedArrivalMinutes ?? null,
         validUntil,
       },
     });
+  } else {
+    isNew = true;
+    offer = await prisma.offer.create({
+      data: {
+        tripRequestId: input.tripRequestId,
+        driverId: input.driverId,
+        vehicleId,
+        priceAmount,
+        currency: trip.currency,
+        message: safeMessage,
+        includesTolls: input.includesTolls ?? true,
+        includesWaiting: input.includesWaiting ?? false,
+        estimatedArrivalMinutes: input.estimatedArrivalMinutes ?? null,
+        validUntil,
+        status: "PENDING",
+      },
+    });
   }
 
-  return prisma.offer.create({
-    data: {
-      tripRequestId: input.tripRequestId,
-      driverId: input.driverId,
-      vehicleId,
-      priceAmount,
-      currency: trip.currency,
-      message: input.message || null,
-      includesTolls: input.includesTolls ?? true,
-      includesWaiting: input.includesWaiting ?? false,
-      estimatedArrivalMinutes: input.estimatedArrivalMinutes ?? null,
-      validUntil,
-      status: "PENDING",
-    },
-  });
+  // In-app notification for the customer (does not depend on Resend)
+  if (isNew) {
+    const route = shortRouteLabel(trip.pickupAddress, trip.dropoffAddress);
+    try {
+      await createNotification({
+        userId: trip.customerId,
+        type: "OFFER_RECEIVED",
+        title: "Nova proposta recebida",
+        body: `Recebeu uma nova proposta para ${route}.`,
+        meta: {
+          tripId: trip.id,
+          offerId: offer.id,
+          href: `/pedidos/${trip.id}`,
+        },
+      });
+    } catch (err) {
+      console.error("[notifyOfferReceived]", err);
+    }
+  }
+
+  return offer;
 }
 
 export async function withdrawOffer(offerId: string, driverId: string) {

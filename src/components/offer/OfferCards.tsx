@@ -125,13 +125,9 @@ export function OfferCards({
       <div style={{ display: "grid", gap: "1rem" }}>
         {sorted.map((offer) => {
           const elite = isTripvoElite(offer.driver);
-          const driverPhoto =
-            offer.driver.photoUrl ||
-            offer.driver.image ||
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop";
-          const vehiclePhoto =
-            firstPhoto(offer.vehicle?.photoUrls) ||
-            "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&h=300&fit=crop";
+          const driverPhoto = offer.driver.photoUrl || offer.driver.image || null;
+          const vehiclePhoto = firstPhoto(offer.vehicle?.photoUrls);
+          const initials = offer.driver.name.slice(0, 1).toUpperCase();
 
           return (
             <article key={offer.id} className="card-interactive fade-up">
@@ -144,17 +140,23 @@ export function OfferCards({
                 className="offer-card-grid"
               >
                 <div style={{ display: "flex", gap: "0.9rem", alignItems: "flex-start" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={driverPhoto}
-                    alt={offer.driver.name}
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 12,
-                      objectFit: "cover",
-                    }}
-                  />
+                  {driverPhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={driverPhoto}
+                      alt={offer.driver.name}
+                      style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: 12,
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div className="avatar-fallback" aria-hidden>
+                      {initials}
+                    </div>
+                  )}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
                       <strong style={{ fontSize: "1.05rem" }}>{offer.driver.name}</strong>
@@ -186,17 +188,23 @@ export function OfferCards({
                 </div>
 
                 <div style={{ display: "flex", gap: "0.85rem", alignItems: "center" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={vehiclePhoto}
-                    alt={offer.vehicle ? `${offer.vehicle.make} ${offer.vehicle.model}` : "Veículo"}
-                    style={{
-                      width: 96,
-                      height: 64,
-                      borderRadius: 10,
-                      objectFit: "cover",
-                    }}
-                  />
+                  {vehiclePhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={vehiclePhoto}
+                      alt={offer.vehicle ? `${offer.vehicle.make} ${offer.vehicle.model}` : "Veículo"}
+                      style={{
+                        width: 96,
+                        height: 64,
+                        borderRadius: 10,
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div className="vehicle-fallback" aria-hidden>
+                      {offer.vehicle?.className || "Veículo"}
+                    </div>
+                  )}
                   <div>
                     <div>
                       <strong>

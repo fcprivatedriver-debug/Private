@@ -256,6 +256,21 @@ export async function createTripAction(formData: FormData) {
       durationSeconds: parsed.durationSeconds,
     };
 
+    // Free-text notes are visible to drivers before payment — moderate contacts.
+    if (parsed.notes) {
+      const { assertMessageAllowed, MessageModerationError } = await import(
+        "@/lib/message-moderation"
+      );
+      try {
+        assertMessageAllowed(parsed.notes);
+      } catch (error) {
+        if (error instanceof MessageModerationError) {
+          return { ok: false as const, error: error.message, code: error.code };
+        }
+        throw error;
+      }
+    }
+
     if (!coords.distanceMeters || !coords.pickupLat) {
       const estimate = await estimateRoute({
         pickupAddress: parsed.pickupAddress,
@@ -362,9 +377,25 @@ export async function cancelTripAction(tripId: string) {
   }
 }
 
+function sessionCanActAsDriver(session: {
+  user?: { role?: string; hasDriver?: boolean } | null;
+}): boolean {
+  const user = session.user;
+  if (!user) return false;
+  return user.role === "DRIVER" || user.role === "ADMIN" || Boolean(user.hasDriver);
+}
+
+function sessionCanActAsCustomer(session: {
+  user?: { role?: string; hasCustomer?: boolean } | null;
+}): boolean {
+  const user = session.user;
+  if (!user) return false;
+  return user.role === "CUSTOMER" || user.role === "ADMIN" || Boolean(user.hasCustomer);
+}
+
 export async function createOfferAction(formData: FormData) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "DRIVER") {
+  if (!session?.user || !sessionCanActAsDriver(session)) {
     return { ok: false as const, error: "Sem permissão" };
   }
   try {
@@ -389,7 +420,7 @@ export async function createOfferAction(formData: FormData) {
 
 export async function withdrawOfferAction(offerId: string) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "DRIVER") {
+  if (!session?.user || !sessionCanActAsDriver(session)) {
     return { ok: false as const, error: "Sem permissão" };
   }
   try {
@@ -402,7 +433,7 @@ export async function withdrawOfferAction(offerId: string) {
 
 export async function acceptOfferAction(tripId: string, offerId: string) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "CUSTOMER") {
+  if (!session?.user || !sessionCanActAsCustomer(session)) {
     return { ok: false as const, error: "Sem permissão" };
   }
   try {
@@ -420,7 +451,7 @@ export async function acceptOfferAction(tripId: string, offerId: string) {
 
 export async function confirmPaymentAction(bookingId: string) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "CUSTOMER") {
+  if (!session?.user || !sessionCanActAsCustomer(session)) {
     return { ok: false as const, error: "Sem permissão" };
   }
   try {
@@ -564,6 +595,10 @@ export async function createReviewAction(formData: FormData) {
       vehicleRating: formData.get("vehicleRating") || undefined,
       comment: formData.get("comment") || undefined,
     });
+    if (parsed.comment) {
+      const { assertMessageAllowed } = await import("@/lib/message-moderation");
+      assertMessageAllowed(parsed.comment);
+    }
     await createReview({
       bookingId: parsed.bookingId,
       fromUserId: session.user.id,

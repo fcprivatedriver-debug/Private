@@ -9,8 +9,8 @@
     "myTrips": "As minhas viagens",
     "newTrip": "Pedir viagem",
     "dashboard": "Painel",
-    "openRequests": "Pedidos abertos",
-    "myOffers": "Propostas",
+    "openRequests": "Pedidos",
+    "myOffers": "As minhas propostas",
     "trips": "Viagens",
     "vehicle": "Veículo",
     "onboarding": "Onboarding",
@@ -20,8 +20,8 @@
     "login": "Entrar",
     "start": "Pedir viagem",
     "logout": "Sair",
-    "modeCustomer": "Modo Cliente",
-    "modeDriver": "Modo Motorista"
+    "modeCustomer": "Cliente",
+    "modeDriver": "Motorista"
   },
   "home": {
     "eyebrow": "Mobilidade privada",

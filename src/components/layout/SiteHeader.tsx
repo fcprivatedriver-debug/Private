@@ -5,8 +5,10 @@ import { getSessionSafe } from "@/lib/session-safe";
 import { routing } from "@/i18n/routing";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ModeSwitcher } from "@/components/layout/ModeSwitcher";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { prisma } from "@/lib/db";
 import { resolveActiveMode } from "@/lib/account-mode";
+import { countUnreadNotifications } from "@/lib/notifications";
 
 function LocaleSwitcher({ locale }: { locale: string }) {
   return (
@@ -72,6 +74,15 @@ export async function SiteHeader() {
     activeMode === "DRIVER" &&
     hasDriver;
 
+  let unreadNotifications = 0;
+  if (session?.user?.id) {
+    try {
+      unreadNotifications = await countUnreadNotifications(session.user.id);
+    } catch {
+      unreadNotifications = 0;
+    }
+  }
+
   return (
     <header className="site-header">
       <div className="container site-header-inner">
@@ -88,9 +99,9 @@ export async function SiteHeader() {
           )}
           {showDriverNav && (
             <>
-              <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
               <LocaleLink href="/pedidos-abertos">{t("openRequests")}</LocaleLink>
               <LocaleLink href="/propostas">{t("myOffers")}</LocaleLink>
+              <LocaleLink href="/painel">{t("dashboard")}</LocaleLink>
               <LocaleLink href="/viagens">{t("trips")}</LocaleLink>
               <LocaleLink href="/veiculo">{t("vehicle")}</LocaleLink>
               <LocaleLink href="/onboarding">{t("onboarding")}</LocaleLink>
@@ -113,6 +124,7 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
+              <NotificationBell initialUnread={unreadNotifications} />
               <ModeSwitcher />
               <span className="muted" style={{ fontSize: "0.88rem" }}>
                 {session.user.name?.split(" ")[0]}

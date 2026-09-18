@@ -2492,3 +2492,336 @@ h3,
     min-height: 360px;
   }
 }
+
+/* ——— Tripvo driver hub / trip cards / notifications ——— */
+
+.driver-hub-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: color-mix(in srgb, var(--brand, #0f3d38) 6%, #fff);
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 999px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.driver-hub-tab {
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fg-muted, #667);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.driver-hub-tab.is-active {
+  background: var(--brand, #0f3d38);
+  color: #f7f8f7;
+}
+
+.trip-card-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.trip-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 14px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+}
+
+.trip-card-link:hover,
+.trip-card:hover {
+  border-color: color-mix(in srgb, var(--accent, #2f6f66) 35%, var(--line, #e5e7eb));
+}
+
+.trip-card-offered {
+  background: color-mix(in srgb, var(--brand, #0f3d38) 3%, #fff);
+}
+
+.trip-card-when {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  color: var(--fg-muted, #667);
+  font-weight: 600;
+}
+
+.trip-card-route {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.trip-card-route-inline strong {
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+}
+
+.trip-card-point {
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+  font-weight: 650;
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+}
+
+.trip-card-letter {
+  width: 1.15rem;
+  color: var(--accent, #2f6f66);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.trip-card-arrow {
+  padding-left: 0.2rem;
+  color: var(--fg-muted, #889);
+  line-height: 1;
+  font-size: 0.85rem;
+}
+
+.trip-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.86rem;
+  color: var(--fg-muted, #667);
+}
+
+.trip-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.trip-filters {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .trip-filters {
+    grid-template-columns: 1.4fr 1fr 1fr auto auto;
+    align-items: center;
+  }
+}
+
+.trip-filter-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  color: var(--fg-muted, #667);
+  white-space: nowrap;
+}
+
+.trip-detail-addresses {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.mode-switch-compact .mode-btn-hint {
+  font-weight: 500;
+  opacity: 0.7;
+  font-size: 0.78em;
+}
+
+.noti-bell {
+  position: relative;
+}
+
+.noti-bell-btn {
+  position: relative;
+  border: 1px solid var(--line, #e5e7eb);
+  background: #fff;
+  border-radius: 999px;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.noti-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--accent, #2f6f66);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noti-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  width: min(22rem, 88vw);
+  max-height: 22rem;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(15, 30, 25, 0.12);
+  z-index: 40;
+}
+
+.noti-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+}
+
+.noti-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.noti-item {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.7rem 0.85rem;
+  display: grid;
+  gap: 0.2rem;
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--line, #e5e7eb) 70%, transparent);
+}
+
+.noti-item strong {
+  font-size: 0.9rem;
+}
+
+.noti-item span {
+  font-size: 0.82rem;
+  color: var(--fg-muted, #667);
+}
+
+.noti-item.is-unread {
+  background: color-mix(in srgb, var(--accent, #2f6f66) 8%, #fff);
+}
+
+.noti-empty {
+  padding: 1rem 0.85rem;
+  margin: 0;
+}
+
+.docs-panel {
+  margin-top: 0;
+}
+
+.docs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.docs-item-link {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  padding: 0.45rem 0.35rem;
+  border-radius: 8px;
+}
+
+.docs-item-link:hover {
+  background: color-mix(in srgb, var(--brand, #0f3d38) 4%, #fff);
+}
+
+.docs-icon {
+  width: 1.25rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.docs-ok .docs-icon { color: #1f7a4d; }
+.docs-warn .docs-icon { color: #b07a12; }
+.docs-bad .docs-icon { color: #a33; }
+.docs-pending .docs-icon { color: #778; }
+
+.docs-text {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.92rem;
+}
+
+.avatar-fallback,
+.vehicle-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--brand, #0f3d38) 10%, #fff);
+  color: var(--brand, #0f3d38);
+  font-weight: 700;
+}
+
+.avatar-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  font-size: 1.35rem;
+}
+
+.vehicle-fallback {
+  width: 96px;
+  height: 64px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 0.35rem;
+}
+
+@media (max-width: 430px) {
+  .site-header-inner {
+    gap: 0.55rem;
+  }
+
+  .nav-links {
+    gap: 0.4rem 0.65rem;
+    font-size: 0.84rem;
+  }
+
+  .trip-card {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .driver-hub-tabs {
+    width: 100%;
+  }
+
+  .driver-hub-tab {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.55rem;
+    font-size: 0.84rem;
+  }
+}

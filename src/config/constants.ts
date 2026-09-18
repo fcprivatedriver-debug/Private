@@ -45,11 +45,34 @@ export const JOURNEY_STEPS = [
 ] as const;
 
 export const OFFER_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendente",
+  PENDING: "Enviada",
   WITHDRAWN: "Retirada",
-  REJECTED: "Rejeitada",
+  REJECTED: "Recusada",
   ACCEPTED: "Aceite",
   EXPIRED: "Expirada",
+};
+
+export const DRIVER_DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  IDENTITY: "Documento de identidade",
+  DRIVING_LICENSE: "Carta de condução",
+  VEHICLE_REGISTRATION: "Documento do veículo",
+  INSURANCE: "Seguro",
+  PROFILE_PHOTO: "Fotografia de perfil",
+  TVDE_CERTIFICATE: "Certificado TVDE",
+  CMTVDE_LICENSE: "Licença CMTVDE",
+  CRIMINAL_RECORD: "Registo criminal",
+  OTHER: "Outro documento",
+};
+
+export const DRIVER_DOCUMENT_STATUS_LABELS: Record<string, string> = {
+  MISSING: "Em falta",
+  UPLOADED: "Enviado",
+  AI_PROCESSING: "Em análise",
+  AI_PASSED: "Análise IA positiva",
+  AI_FLAGGED: "Sinalizado pela IA",
+  APPROVED: "Aprovado",
+  REJECTED: "Rejeitado",
+  EXPIRED: "Expirado",
 };
 
 export const DRIVER_STATUS_LABELS: Record<string, string> = {

@@ -6,6 +6,7 @@ import { useTransition } from "react";
 import { switchAccountModeAction } from "@/actions/account-mode";
 import type { AccountMode } from "@/lib/account-mode";
 
+/** Shows only the current account mode; tap to switch to the other. */
 export function ModeSwitcher() {
   const { data, update } = useSession();
   const router = useRouter();
@@ -14,9 +15,12 @@ export function ModeSwitcher() {
 
   if (!user?.hasCustomer || !user?.hasDriver) return null;
 
-  async function setMode(mode: AccountMode) {
+  const mode: AccountMode = user.activeMode === "DRIVER" ? "DRIVER" : "CUSTOMER";
+  const nextMode: AccountMode = mode === "DRIVER" ? "CUSTOMER" : "DRIVER";
+
+  async function setMode(target: AccountMode) {
     startTransition(async () => {
-      const result = await switchAccountModeAction(mode);
+      const result = await switchAccountModeAction(target);
       if (!result.ok) return;
       await update({
         activeMode: result.activeMode,
@@ -24,27 +28,24 @@ export function ModeSwitcher() {
         hasDriver: result.hasDriver,
       });
       router.refresh();
-      router.push(mode === "DRIVER" ? "/painel" : "/pedidos/novo");
+      router.push(target === "DRIVER" ? "/pedidos-abertos" : "/pedidos");
     });
   }
 
   return (
-    <div className="mode-switch" role="group" aria-label="Modo da conta">
+    <div className="mode-switch mode-switch-compact" role="group" aria-label="Modo da conta">
       <button
         type="button"
-        className={user.activeMode === "CUSTOMER" ? "mode-btn is-active" : "mode-btn"}
+        className="mode-btn is-active"
         disabled={pending}
-        onClick={() => void setMode("CUSTOMER")}
+        aria-haspopup="true"
+        title={mode === "DRIVER" ? "Mudar para Cliente" : "Mudar para Motorista"}
+        onClick={() => void setMode(nextMode)}
       >
-        Modo Cliente
-      </button>
-      <button
-        type="button"
-        className={user.activeMode === "DRIVER" ? "mode-btn is-active" : "mode-btn"}
-        disabled={pending}
-        onClick={() => void setMode("DRIVER")}
-      >
-        Modo Motorista
+        {mode === "DRIVER" ? "Motorista" : "Cliente"}
+        <span className="mode-btn-hint">
+          {pending ? "…" : mode === "DRIVER" ? " · mudar" : " · mudar"}
+        </span>
       </button>
     </div>
   );

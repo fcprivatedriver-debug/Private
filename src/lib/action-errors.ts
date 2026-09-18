@@ -7,12 +7,11 @@ export type ActionFailure = {
 };
 
 function isDomainError(error: unknown): error is Error & { code: string } {
-  return (
-    error instanceof Error &&
-    "code" in error &&
-    typeof (error as { code?: unknown }).code === "string" &&
-    error.constructor?.name === "DomainError"
-  );
+  if (!(error instanceof Error) || !("code" in error)) return false;
+  const code = (error as { code?: unknown }).code;
+  if (typeof code !== "string") return false;
+  const name = error.constructor?.name || error.name;
+  return name === "DomainError" || name === "MessageModerationError" || code === "CONTACT_BLOCKED";
 }
 
 function prismaCode(error: unknown): string | null {
