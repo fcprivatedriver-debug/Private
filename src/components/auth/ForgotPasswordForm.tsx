@@ -14,8 +14,14 @@ export function ForgotPasswordForm() {
     e.preventDefault();
     const email = String(new FormData(e.currentTarget).get("email") || "");
     start(async () => {
+      setPreview(null);
       const res = await requestPasswordReset(email);
+      if (!res.ok) {
+        setMsg(res.error || "Não foi possível enviar o email agora.");
+        return;
+      }
       setMsg("Se existir conta com este email, enviámos um link para recuperares a palavra-passe.");
+      // Apenas em desenvolvimento local o servidor devolve previewUrl — nunca navegar.
       if (res.previewUrl) setPreview(res.previewUrl);
     });
   }
@@ -32,7 +38,7 @@ export function ForgotPasswordForm() {
             <input name="email" type="email" required autoComplete="email" />
           </label>
           <button className="btn btn-primary" type="submit" disabled={pending}>
-            Enviar link
+            {pending ? "A enviar…" : "Enviar link"}
           </button>
         </form>
         {msg ? <p className="muted small">{msg}</p> : null}

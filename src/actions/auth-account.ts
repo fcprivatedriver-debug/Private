@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import {
+  allowDevMailPreview,
   appBaseUrl,
   createRawToken,
   hashToken,
@@ -138,8 +139,10 @@ export async function registerFamily(formData: FormData) {
       ok: true as const,
       needsVerification: true as const,
       email,
-      previewUrl: mail.ok && !mail.delivered ? verifyUrl : undefined,
+      previewUrl:
+        mail.ok && !mail.delivered && allowDevMailPreview() ? verifyUrl : undefined,
       mailDelivered: mail.ok ? mail.delivered : false,
+      mailError: mail.ok ? undefined : mail.error,
     };
   } catch (err) {
     console.error("[registerFamily]", err);
@@ -164,20 +167,40 @@ export async function verifyEmailToken(rawToken: string) {
 export async function resendVerificationEmail(emailRaw: string) {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return { ok: true as const }; // não revelar
-  if (user.emailVerified) return { ok: true as const, already: true as const };
+  if (!user) {
+    // Não revelar existência — mensagem de sucesso genérica no cliente.
+    return { ok: true as const, delivered: true as const };
+  }
+  if (user.emailVerified) {
+    return { ok: true as const, already: true as const, delivered: true as const };
+  }
 
   const raw = createRawToken();
   await storeToken(`verify:${email}`, raw, VERIFY_HOURS);
   const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
+  console.info("[auth] resend verification", {
+    email,
+    base: appBaseUrl(),
+    host: (() => {
+      try {
+        return new URL(verifyUrl).host;
+      } catch {
+        return "invalid";
+      }
+    })(),
+  });
   const mail = await sendAppEmail({
     to: email,
     subject: "Confirma o teu email na MEL",
     text: `Confirma o teu email:\n${verifyUrl}\n\n— addYknow`,
   });
+  if (!mail.ok) {
+    return { ok: false as const, error: mail.error };
+  }
   return {
     ok: true as const,
-    previewUrl: mail.ok && !mail.delivered ? verifyUrl : undefined,
+    delivered: mail.delivered,
+    previewUrl: !mail.delivered && allowDevMailPreview() ? verifyUrl : undefined,
   };
 }
 
@@ -185,19 +208,34 @@ export async function requestPasswordReset(emailRaw: string) {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user?.passwordHash) {
-    return { ok: true as const }; // silencioso
+    return { ok: true as const, delivered: true as const }; // silencioso
   }
   const raw = createRawToken();
   await storeToken(`reset:${email}`, raw, RESET_HOURS);
   const url = `${appBaseUrl()}/pt/recuperar/${raw}`;
+  console.info("[auth] password reset", {
+    email,
+    base: appBaseUrl(),
+    host: (() => {
+      try {
+        return new URL(url).host;
+      } catch {
+        return "invalid";
+      }
+    })(),
+  });
   const mail = await sendAppEmail({
     to: email,
     subject: "Recuperar palavra-passe — addYknow",
     text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— addYknow`,
   });
+  if (!mail.ok) {
+    return { ok: false as const, error: mail.error };
+  }
   return {
     ok: true as const,
-    previewUrl: mail.ok && !mail.delivered ? url : undefined,
+    delivered: mail.delivered,
+    previewUrl: !mail.delivered && allowDevMailPreview() ? url : undefined,
   };
 }
 
