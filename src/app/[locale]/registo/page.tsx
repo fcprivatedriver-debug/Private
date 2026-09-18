@@ -92,7 +92,7 @@ function RegisterFormInner() {
             {error}
           </div>
         )}
-        <form onSubmit={onSubmit} className="panel" noValidate>
+        <form onSubmit={onSubmit} method="post" action="#" className="panel" noValidate>
           <div className="field">
             <label className="label" htmlFor="role">
               {t("accountType")}

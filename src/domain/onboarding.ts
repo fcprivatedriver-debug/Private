@@ -82,6 +82,12 @@ function parseLanguages(raw: string): string[] {
 }
 
 export async function getDriverOnboarding(userId: string) {
+  const { repairMarketplaceSchema, repairDriverProfileColumns } = await import(
+    "@/lib/db-repair"
+  );
+  await repairDriverProfileColumns();
+  await repairMarketplaceSchema();
+
   const profile = await prisma.driverProfile.findUnique({
     where: { userId },
     include: {

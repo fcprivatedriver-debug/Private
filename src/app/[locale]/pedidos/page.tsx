@@ -9,6 +9,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function CustomerTripsPage() {
   const session = await requireRole("CUSTOMER");
+  const { repairMarketplaceSchema } = await import("@/lib/db-repair");
+  await repairMarketplaceSchema();
+
   const trips = await prisma.tripRequest.findMany({
     where: { customerId: session.user.id },
     orderBy: { createdAt: "desc" },

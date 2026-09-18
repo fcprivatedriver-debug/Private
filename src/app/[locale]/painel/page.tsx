@@ -10,6 +10,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function DriverDashboardPage() {
   const session = await requireRole("DRIVER");
+  const { repairMarketplaceSchema, repairDriverProfileColumns } = await import(
+    "@/lib/db-repair"
+  );
+  await repairDriverProfileColumns();
+  await repairMarketplaceSchema();
+
   const profile = await prisma.driverProfile.findUnique({
     where: { userId: session.user.id },
     include: { vehicles: true },

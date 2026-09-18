@@ -27,7 +27,7 @@ import { refreshCompleteness, setOnboardingStep, adminDecideVerification } from 
 import { estimateRoute } from "@/lib/maps/route";
 import { toActionFailure } from "@/lib/action-errors";
 import { notifyAdminNewDriver, notifyAdminNewTrip } from "@/lib/email";
-import { repairCustomerProfileColumns, repairDriverProfileColumns } from "@/lib/db-repair";
+import { repairCustomerProfileColumns, repairDriverProfileColumns, repairMarketplaceSchema } from "@/lib/db-repair";
 
 function fail(error: unknown) {
   return toActionFailure(error);
@@ -35,6 +35,7 @@ function fail(error: unknown) {
 
 async function ensureCustomerProfileRow(userId: string) {
   await repairCustomerProfileColumns();
+  await repairMarketplaceSchema();
   const existing = await prisma.customerProfile.findUnique({
     where: { userId },
     select: { id: true },
