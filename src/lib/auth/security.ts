@@ -142,7 +142,14 @@ export function appBaseUrl(): string {
   }
 
   if (vercelEnv === "preview" || (onVercel && process.env.VERCEL_URL)) {
-    const host = (process.env.VERCEL_URL || "").replace(/^https?:\/\//, "").replace(/\/$/, "");
+    // Prefer branch alias (stable) over deployment-specific host.
+    const branch = (process.env.VERCEL_BRANCH_URL || "")
+      .replace(/^https?:\/\//, "")
+      .replace(/\/$/, "");
+    const deploy = (process.env.VERCEL_URL || "")
+      .replace(/^https?:\/\//, "")
+      .replace(/\/$/, "");
+    const host = branch || deploy;
     if (host && !isLoopbackHost(host)) {
       return `https://${host}`;
     }

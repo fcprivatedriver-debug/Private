@@ -72,6 +72,21 @@ describe("appBaseUrl", () => {
     assert.equal(appBaseUrl(), PRODUCTION_APP_ORIGIN);
   });
 
+  it("Preview prefere VERCEL_BRANCH_URL ao deployment host", () => {
+    setEnv({
+      VERCEL: "1",
+      VERCEL_ENV: "preview",
+      VERCEL_URL: "private-duur-mlv2sf9es-fc-private-driver.vercel.app",
+      VERCEL_BRANCH_URL:
+        "private-duur-git-cursor-canonical-stable-ec69-fc-private-driver.vercel.app",
+      NODE_ENV: "production",
+    });
+    assert.equal(
+      appBaseUrl(),
+      "https://private-duur-git-cursor-canonical-stable-ec69-fc-private-driver.vercel.app",
+    );
+  });
+
   it("Preview usa VERCEL_URL", () => {
     setEnv({
       VERCEL: "1",

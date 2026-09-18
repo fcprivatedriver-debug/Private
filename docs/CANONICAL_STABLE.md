@@ -38,7 +38,21 @@
 ### Env
 
 - Production deve ter `AUTH_URL=https://addandknow.pt` (e opcionalmente `NEXT_PUBLIC_APP_URL`).
-- Sem token Vercel neste ambiente o agente não consegue listar/alterar env vars — o código já não depende de fallback localhost.
+- Sem token Vercel neste ambiente o agente **não** listou env vars — o Preview private-duur respondeu `Envio de email não configurado` ⇒ `RESEND_API_KEY` ausente no Preview.
+- Código já não depende de fallback localhost; links usam `linkHost` Preview/`addandknow.pt`.
+
+### Resultado Preview (pós-fix)
+
+| Gate | Resultado |
+|------|-----------|
+| EMAIL VERIFICATION | PASS |
+| REENVIO (sem 127.0.0.1) | PASS |
+| RESEND REAL | FAIL (sem `RESEND_API_KEY` no Preview) |
+| URL DO LINK | domínio Preview `*.vercel.app` (não localhost) |
+| RESET PASSWORD | PASS UI / FAIL entrega Resend |
+| REFS localhost | ZERO |
+
+**AINDA NÃO RESOLVIDO** para entrega real até Resend no Preview/Production correcto.
 
 ## Branch canónica
 
