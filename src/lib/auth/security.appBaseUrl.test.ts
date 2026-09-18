@@ -16,6 +16,7 @@ const KEYS = [
   "VERCEL",
   "VERCEL_ENV",
   "VERCEL_URL",
+  "VERCEL_BRANCH_URL",
   "NODE_ENV",
 ] as const;
 

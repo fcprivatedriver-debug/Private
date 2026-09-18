@@ -9,7 +9,6 @@ import {
   hashToken,
   sendAppEmail,
   validatePassword,
-  PASSWORD_HINT,
 } from "@/lib/auth/security";
 import { registerSchema } from "@/lib/validators";
 import { requireSession } from "@/lib/session";
