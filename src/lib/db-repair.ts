@@ -104,7 +104,9 @@ async function ensureEnum(name: string, values: string[]) {
 
 /**
  * Ensure marketplace tables exist in public schema (non-destructive).
- * Root cause of post-register 500: TripRequest missing + Vehicle.vehicleClassId missing.
+ * Known Preview failures from shared Neon drift:
+ * - TripRequest missing
+ * - Vehicle.vehicleClassId / Vehicle.luggageCapacity missing on pre-existing Vehicle table
  */
 export async function repairMarketplaceSchema(): Promise<{
   ok: boolean;
@@ -206,23 +208,45 @@ export async function repairMarketplaceSchema(): Promise<{
         CONSTRAINT "Vehicle_pkey" PRIMARY KEY ("id")
       )
     `);
+    // Existing shared Neon "Vehicle" tables often predate Prisma fields.
+    // CREATE TABLE IF NOT EXISTS does not add missing columns — repair them.
+    const vehicleCols: Array<[string, string]> = [
+      ["vehicleClassId", `TEXT`],
+      ["make", `TEXT`],
+      ["model", `TEXT`],
+      ["year", `INTEGER`],
+      ["color", `TEXT`],
+      ["plate", `TEXT`],
+      ["seats", `INTEGER NOT NULL DEFAULT 4`],
+      ["luggageCapacity", `INTEGER NOT NULL DEFAULT 2`],
+      ["photoUrls", `TEXT NOT NULL DEFAULT '[]'`],
+      ["ratingAvg", `DOUBLE PRECISION`],
+      ["ratingCount", `INTEGER NOT NULL DEFAULT 0`],
+      ["createdAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+      ["updatedAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+    ];
+    for (const [column, ddl] of vehicleCols) {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "${column}" ${ddl}`,
+      );
+    }
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "vehicleClassId" TEXT`,
+      `ALTER TABLE "Vehicle" ALTER COLUMN "luggageCapacity" SET DEFAULT 2`,
     );
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "photoUrls" TEXT NOT NULL DEFAULT '[]'`,
+      `ALTER TABLE "Vehicle" ALTER COLUMN "seats" SET DEFAULT 4`,
     );
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "ratingAvg" DOUBLE PRECISION`,
+      `ALTER TABLE "Vehicle" ALTER COLUMN "photoUrls" SET DEFAULT '[]'`,
     );
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "ratingCount" INTEGER NOT NULL DEFAULT 0`,
+      `ALTER TABLE "Vehicle" ALTER COLUMN "ratingCount" SET DEFAULT 0`,
     );
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+      `UPDATE "Vehicle" SET "luggageCapacity" = 2 WHERE "luggageCapacity" IS NULL`,
     );
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`,
+      `UPDATE "Vehicle" SET "seats" = 4 WHERE "seats" IS NULL`,
     );
 
     await prisma.$executeRawUnsafe(`
@@ -357,6 +381,28 @@ export async function repairMarketplaceSchema(): Promise<{
         CONSTRAINT "DriverDocument_pkey" PRIMARY KEY ("id")
       )
     `);
+    const driverDocCols: Array<[string, string]> = [
+      ["driverProfileId", `TEXT`],
+      ["type", `TEXT`],
+      ["status", `TEXT NOT NULL DEFAULT 'UPLOADED'`],
+      ["fileName", `TEXT`],
+      ["mimeType", `TEXT`],
+      ["sizeBytes", `INTEGER`],
+      ["storageKey", `TEXT`],
+      ["url", `TEXT`],
+      ["aiAnalysis", `TEXT`],
+      ["aiScore", `DOUBLE PRECISION`],
+      ["aiFlags", `TEXT NOT NULL DEFAULT '[]'`],
+      ["reviewerNotes", `TEXT`],
+      ["reviewedAt", `TIMESTAMP(3)`],
+      ["createdAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+      ["updatedAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+    ];
+    for (const [column, ddl] of driverDocCols) {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE "DriverDocument" ADD COLUMN IF NOT EXISTS "${column}" ${ddl}`,
+      );
+    }
 
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "VerificationReview" (
@@ -374,6 +420,23 @@ export async function repairMarketplaceSchema(): Promise<{
         CONSTRAINT "VerificationReview_pkey" PRIMARY KEY ("id")
       )
     `);
+    const verificationCols: Array<[string, string]> = [
+      ["driverProfileId", `TEXT`],
+      ["source", `TEXT`],
+      ["decision", `TEXT`],
+      ["riskScore", `DOUBLE PRECISION`],
+      ["confidence", `DOUBLE PRECISION`],
+      ["recommendation", `TEXT`],
+      ["findings", `TEXT NOT NULL DEFAULT '[]'`],
+      ["notes", `TEXT`],
+      ["actorUserId", `TEXT`],
+      ["createdAt", `TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`],
+    ];
+    for (const [column, ddl] of verificationCols) {
+      await prisma.$executeRawUnsafe(
+        `ALTER TABLE "VerificationReview" ADD COLUMN IF NOT EXISTS "${column}" ${ddl}`,
+      );
+    }
 
     // Helpful indexes (IF NOT EXISTS)
     await prisma.$executeRawUnsafe(
