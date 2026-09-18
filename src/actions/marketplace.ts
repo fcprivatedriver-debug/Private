@@ -41,11 +41,12 @@ async function ensureCustomerProfileRow(userId: string) {
   });
   if (existing) return existing.id;
   const profileId = `cp_${userId.slice(-16)}_${Date.now().toString(36)}`;
+  const q = (value: string) => `'${value.replace(/'/g, "''")}'`;
   await prisma.$executeRawUnsafe(`
     INSERT INTO "CustomerProfile" ("id", "userId", "defaultCurrency", "createdAt", "updatedAt")
     VALUES (
-      ${JSON.stringify(profileId)},
-      ${JSON.stringify(userId)},
+      ${q(profileId)},
+      ${q(userId)},
       'EUR',
       CURRENT_TIMESTAMP,
       CURRENT_TIMESTAMP
