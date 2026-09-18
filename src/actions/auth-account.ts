@@ -10,6 +10,10 @@ import {
   sendAppEmail,
   validatePassword,
 } from "@/lib/auth/security";
+import {
+  resolveLoginCredentials,
+  type LoginCredentialsResult,
+} from "@/lib/auth/login-credentials";
 import { registerSchema } from "@/lib/validators";
 import { requireSession } from "@/lib/session";
 
@@ -81,7 +85,13 @@ export async function registerFamily(formData: FormData) {
 
     const email = parsed.data.email.toLowerCase();
     const exists = await prisma.user.findUnique({ where: { email } });
-    if (exists) return { ok: false as const, error: "Email já registado" };
+    if (exists) {
+      return {
+        ok: false as const,
+        error: "Email já registado. Entra com a tua conta.",
+        code: "EMAIL_EXISTS" as const,
+      };
+    }
 
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
     const skipVerify = isTestEmail(email);
@@ -276,15 +286,28 @@ export async function changePassword(formData: FormData) {
   return { ok: true as const };
 }
 
-export async function checkEmailVerified(emailRaw: string) {
+/**
+ * Valida email+password sem criar sessão e sem enviar email.
+ * Usado pelo LoginForm para distinguir password errada de email não verificado.
+ * Não substitui o authorize do NextAuth — após ok, o cliente chama signIn.
+ */
+export async function authenticateCredentials(
+  emailRaw: string,
+  password: string,
+): Promise<LoginCredentialsResult> {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({
     where: { email },
     select: { emailVerified: true, passwordHash: true },
   });
-  if (!user?.passwordHash) return { ok: true as const }; // login falhará normalmente
-  if (!user.emailVerified) {
-    return { ok: false as const, reason: "EMAIL_NOT_VERIFIED" as const };
-  }
-  return { ok: true as const };
+  const passwordValid = user?.passwordHash
+    ? await bcrypt.compare(password, user.passwordHash)
+    : false;
+  return resolveLoginCredentials({
+    email,
+    userExists: Boolean(user),
+    hasPassword: Boolean(user?.passwordHash),
+    passwordValid,
+    emailVerified: Boolean(user?.emailVerified),
+  });
 }
