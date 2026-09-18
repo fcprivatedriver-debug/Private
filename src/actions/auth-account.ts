@@ -14,6 +14,9 @@ import {
 import { registerSchema } from "@/lib/validators";
 import { requireSession } from "@/lib/session";
 
+const VERIFY_HOURS = 48;
+const RESET_HOURS = 2;
+
 function publicLinkMeta(absoluteUrl: string) {
   try {
     const u = new URL(absoluteUrl);
@@ -177,10 +180,15 @@ export async function resendVerificationEmail(emailRaw: string) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     // Não revelar existência — mensagem de sucesso genérica no cliente.
-    return { ok: true as const, delivered: true as const };
+    return { ok: true as const, delivered: true as const, previewUrl: undefined as string | undefined };
   }
   if (user.emailVerified) {
-    return { ok: true as const, already: true as const, delivered: true as const };
+    return {
+      ok: true as const,
+      already: true as const,
+      delivered: true as const,
+      previewUrl: undefined as string | undefined,
+    };
   }
 
   const raw = createRawToken();
@@ -208,7 +216,11 @@ export async function requestPasswordReset(emailRaw: string) {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user?.passwordHash) {
-    return { ok: true as const, delivered: true as const }; // silencioso
+    return {
+      ok: true as const,
+      delivered: true as const,
+      previewUrl: undefined as string | undefined,
+    }; // silencioso
   }
   const raw = createRawToken();
   await storeToken(`reset:${email}`, raw, RESET_HOURS);
