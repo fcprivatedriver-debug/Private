@@ -21,6 +21,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [emailValue, setEmailValue] = useState("");
   const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [devLink, setDevLink] = useState<string | null>(null);
   const [resending, startResend] = useTransition();
@@ -45,6 +46,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email"));
     const password = String(form.get("password"));
+    setEmailValue(email);
     try {
       // Credenciais primeiro — nunca reenviar email nem tratar password errada
       // como "email não verificado".
@@ -56,6 +58,7 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
       }
       if (!check.ok && check.reason === "EMAIL_NOT_VERIFIED") {
         setUnverifiedEmail(check.email);
+        setEmailValue(check.email);
         setError(
           "Confirma o teu email antes de entrar. Se ainda não recebeste o link, podes reenviar abaixo.",
         );
@@ -148,7 +151,15 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         <form onSubmit={onSubmit} className="form-grid">
           <label className="field">
             <span>Email</span>
-            <input name="email" type="email" required autoComplete="email" placeholder="o.teu@email.com" />
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="o.teu@email.com"
+              value={emailValue}
+              onChange={(ev) => setEmailValue(ev.target.value)}
+            />
           </label>
           <PasswordField
             label="Palavra-passe"
