@@ -14,7 +14,23 @@
 import { mkdir, writeFile, readFile, unlink } from "fs/promises";
 import path from "path";
 import { createHash, randomBytes, randomUUID } from "crypto";
-import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
+import { prisma, resolveNinaSchema } from "@/lib/db";
+
+/**
+ * Nome qualificado da tabela StoredObject para SQL raw.
+ *
+ * CRITICAL — PrismaNeon / PrismaPg com `{ schema: "nina" }` só qualificam
+ * queries de modelo. `$executeRaw` / `$queryRaw` NÃO alteram search_path:
+ * `INSERT INTO "StoredObject"` resolve em `public` → 42P01 em Production
+ * (tabela vive em `nina`). Local sem schema force continua em `"StoredObject"`.
+ */
+function storedObjectRelation(): Prisma.Sql {
+  const schema = resolveNinaSchema();
+  return schema
+    ? Prisma.raw(`"${schema}"."StoredObject"`)
+    : Prisma.raw(`"StoredObject"`);
+}
 
 export const MAX_RECEIPT_BYTES = 5 * 1024 * 1024; // 5 MB
 export const ALLOWED_RECEIPT_MIME = new Set([
@@ -137,7 +153,7 @@ async function insertStoredObjectProps(input: {
   createdById: string | null;
 }): Promise<void> {
   await prisma.$executeRaw`
-    INSERT INTO "StoredObject" (
+    INSERT INTO ${storedObjectRelation()} (
       "id", "familyId", "storageKey", "fileName", "mimeType",
       "sizeBytes", "backend", "data", "createdById", "createdAt"
     ) VALUES (
@@ -177,7 +193,7 @@ async function selectStoredObjectByKey(storageKey: string): Promise<{
       "mimeType",
       "fileName",
       "externalUrl"
-    FROM "StoredObject"
+    FROM ${storedObjectRelation()}
     WHERE "storageKey" = ${storageKey}
     LIMIT 1
   `;
@@ -299,7 +315,7 @@ export async function readStoredFile(storageKey: string): Promise<{
 
 export async function deleteStoredFile(storageKey: string): Promise<void> {
   const key = assertSafeStorageKey(storageKey);
-  await prisma.$executeRaw`DELETE FROM "StoredObject" WHERE "storageKey" = ${key}`;
+  await prisma.$executeRaw`DELETE FROM ${storedObjectRelation()} WHERE "storageKey" = ${key}`;
   await deleteLocal(key);
 }
 
