@@ -1,0 +1,95 @@
+{
+  "results": {
+    "buildId": "5ufpQ-LoQl09sjqCfXxCl",
+    "jpeg": {
+      "parsed": {
+        "ok": false,
+        "error": "A leitura automÃ¡tica de faturas ainda nÃ£o estÃ¡ disponÃ­vel. Regista a despesa manualmente ou por voz.",
+        "receiptUrl": "/api/uploads/families/cmu2rovwr0001gma8sg90j6n4/1789724764326-b4a8d684-fatura-mini.jpg",
+        "receiptKind": "image",
+        "result": null
+      },
+      "hasError": false,
+      "hasStored": true,
+      "ui": "addYknow\nConta de Filipe\nPessoal\nFamiliar\nFaturas fotografadas\n\nFotografa ou carrega a fatura — fica guardada de forma segura. A leitura automática ainda não está disponível: introduz loja, data e valor manualmente.\n\nFotografar e registar\n\nFotografar / carregar fatura\n\nJPEG, PNG, WEBP ou PDF · máx. 5 MB\n\nTirar fotografia\nEscolher fotografia\nEscolher PDF\n\nA leitura automática de faturas ainda não está disponível. Regista a despesa manualmente ou por voz.\n\nfatura-mini.jpg\n\nGuardada · ver ficheiro\n\nLoja\nData\nValor total (€)\nIVA (€) — opcional\nCategoria\nMétodo\nNumerário\nCartão de débito\nCartão de crédito\nMB Way\nTransferência\nDébito direto\nRevolut\nOutro\nConta\n—\nConta principal\nGuardar despesa com fatura\n+\n⌂\nHoje\n◎\nGuia\n◉\nFalar\n☰\nCompras\n⋯\nMais"
+    },
+    "captura": {
+      "parsed": {
+        "ok": true,
+        "reply": "Fatura guardada.",
+        "detail": "A leitura automÃ¡tica de faturas ainda nÃ£o estÃ¡ disponÃ­vel. Regista a despesa manualmente ou por voz.",
+        "receiptUrl": "/api/uploads/families/cmu2rovwr0001gma8sg90j6n4/1789724773068-b5c43b74-fatura-mini.jpg",
+        "receiptKind": "image",
+        "ocrAvailable": false,
+        "kind": "receipt_stored"
+      },
+      "hasError": false,
+      "ui": "addYknow\nConta de Filipe\nPessoal\nFamiliar\nFatura\n\nAnexa a fatura — fotografia ou PDF.\n\nTirar fotografia\nEscolher fotografia\nEscolher PDF\nFatura guardada.\nA leitura automática de faturas ainda não está disponível. Regista a despesa manualmente ou por voz.\nRegistar valor e anexar fatura\n+\n⌂\nHoje\n◎\nGuia\n◉\nFalar\n☰\nCompras\n⋯\nMais"
+    },
+    "pdf": {
+      "parsed": {
+        "ok": false,
+        "error": "A leitura automÃ¡tica de faturas ainda nÃ£o estÃ¡ disponÃ­vel. Regista a despesa manualmente ou por voz.",
+        "receiptUrl": "/api/uploads/families/cmu2rovwr0001gma8sg90j6n4/1789724781586-e5b27483-fatura-mini.pdf",
+        "receiptKind": "pdf",
+        "result": null
+      },
+      "hasError": false,
+      "hasStored": true,
+      "ui": "addYknow\nConta de Filipe\nPessoal\nFamiliar\nFaturas fotografadas\n\nFotografa ou carrega a fatura — fica guardada de forma segura. A leitura automática ainda não está disponível: introduz loja, data e valor manualmente.\n\nFotografar e registar\n\nFotografar / carregar fatura\n\nJPEG, PNG, WEBP ou PDF · máx. 5 MB\n\nTirar fotografia\nEscolher fotografia\nEscolher PDF\n\nA leitura automática de faturas ainda não está disponível. Regista a despesa manualmente ou por voz.\n\nfatura-mini.pdf\n\nDocumento PDF seleccionado.\n\nGuardada · ver ficheiro\n\nLoja\nData\nValor total (€)\nIVA (€) — opcional\nCategoria\nMétodo\nNumerário\nCartão de débito\nCartão de crédito\nMB Way\nTransferência\nDébito direto\nRevolut\nOutro\nConta\n—\nConta principal\nGuardar despesa com fatura\n+\n⌂\nHoje\n◎\nGuia\n◉\nFalar\n☰\nCompras\n⋯\nMais"
+    },
+    "expense": {
+      "url": "https://www.addandknow.pt/pt/despesas",
+      "hasError": false,
+      "snippet": "addYknow\nConta de Filipe\nPessoal\nFamiliar\nDespesas · As Minhas Finanças\n\nToca num movimento para o abrir, editar ou eliminar — sem criar duplicados.\n\nCaptura\n+ Adicionar despesa\nCategoria\nSupermercado\nConta\nConta principal\nFiltrar\n1 resultados\nAceitação fatura d5c35fa\n18/09/2026 09:46 · Supermercado · Pessoal\n−12,34 €\n+\n⌂\nHoje\n◎\nGuia\n◉\nFalar\n☰\nCompras\n⋯\nMais",
+      "parsed": null
+    },
+    "relogin": {
+      "hasExpense": true,
+      "snippet": "addYknow\nConta de Filipe\nPessoal\nFamiliar\nDespesas · As Minhas Finanças\n\nToca num movimento para o abrir, editar ou eliminar — sem criar duplicados.\n\nCaptura\n+ Adicionar despesa\nCategoria\nSupermercado\nConta\nConta principal\nFiltrar\n1 resultados\nAceitação fatura d5c35fa\n18/09/2026 09:46 · Supermercado · Pessoal\n−12,34 €\n+\n⌂\nHoje\n◎\nGuia\n◉\nFalar\n☰\nCompras\n⋯\nMais"
+    },
+    "uploads": [
+      {
+        "url": "/api/uploads/families/cmu2rovwr0001gma8sg90j6n4/1789724764326-b4a8d684-fatura-mini.jpg",
+        "status": 200,
+        "bytes": 316,
+        "statusAfterRelogin": 200
+      },
+      {
+        "url": "/api/uploads/families/cmu2rovwr0001gma8sg90j6n4/1789724773068-b5c43b74-fatura-mini.jpg",
+        "status": 200,
+        "bytes": 316,
+        "statusAfterRelogin": 200
+      },
+      {
+        "url": "/api/uploads/families/cmu2rovwr0001gma8sg90j6n4/1789724781586-e5b27483-fatura-mini.pdf",
+        "status": 200,
+        "bytes": 453,
+        "contentType": "application/pdf",
+        "statusAfterRelogin": 200
+      }
+    ]
+  },
+  "posts": [
+    {
+      "url": "https://www.addandknow.pt/pt/despesas/nova",
+      "status": 200,
+      "body": "",
+      "parsed": null
+    },
+    {
+      "url": "https://www.addandknow.pt/pt/login",
+      "status": 200,
+      "body": "0:{\"a\":\"$@1\",\"f\":\"\",\"b\":\"5ufpQ-LoQl09sjqCfXxCl\"}\n1:{\"ok\":true}\n",
+      "parsed": {
+        "ok": true
+      }
+    },
+    {
+      "url": "https://www.addandknow.pt/api/auth/callback/credentials?",
+      "status": 200,
+      "body": "{\"url\":\"https://addandknow.pt\"}",
+      "parsed": null
+    }
+  ]
+}
