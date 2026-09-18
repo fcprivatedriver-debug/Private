@@ -2,9 +2,13 @@
 
 Base: branch `tripvo` @ marketplace ZELU (`db4c1af` + rebrand FASE 1).
 
-Domínio futuro: **https://tripvo.pt** · Comissão standard: **5%**
+- Domínio futuro: **https://tripvo.pt**
+- Comissão standard: **5%**
+- Preview Tripvo (Vercel `private-duur`): **https://private-duur-git-tripvo-fc-private-driver.vercel.app**
+- Deploy HEAD `88a4d31`: https://private-duur-4zym62np9-fc-private-driver.vercel.app
+- Draft PR: https://github.com/fcprivatedriver-debug/Private/pull/55 (**não mergear para main**)
 
-Preview (Vercel `private-duur`, branch `tripvo`): ver relatório da última run.
+Health preview: `vehicleClassCount` inclui classes inativas; API `/api/vehicle-classes` activa: ECONOMY · COMFORT · EXECUTIVO · VAN.
 
 ## Fluxos
 
@@ -36,3 +40,4 @@ Preview (Vercel `private-duur`, branch `tripvo`): ver relatório da última run.
 - Comissão centralizada: `src/config/constants.ts` → `PLATFORM_COMMISSION_PERCENT = 5`
 - Deploy upsert: `scripts/ensure-schema.mjs` força classes MVP + `defaultCommissionPercent = 5`
 - Pagamentos novos: **não** implementados nesta fase
+- Não usar preview `addynow` nem produção ZELU antiga como Tripvo
