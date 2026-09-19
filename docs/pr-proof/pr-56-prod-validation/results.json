@@ -1,0 +1,111 @@
+[
+  {
+    "name": "1a_direct_login",
+    "ok": true,
+    "detail": {
+      "has": 1,
+      "stamp": 1,
+      "landingHero": 0,
+      "url": "https://www.addandknow.pt/pt/login"
+    }
+  },
+  {
+    "name": "1b_entrar_click",
+    "ok": true,
+    "detail": {
+      "url": "https://www.addandknow.pt/pt/login",
+      "landingHero": 0
+    }
+  },
+  {
+    "name": "1c_criar_conta_click",
+    "ok": true,
+    "detail": {
+      "url": "https://www.addandknow.pt/pt/registo",
+      "h1": "Começar na addYknow"
+    }
+  },
+  {
+    "name": "1d_direct_registo",
+    "ok": true,
+    "detail": {
+      "has": 1,
+      "url": "https://www.addandknow.pt/pt/registo"
+    }
+  },
+  {
+    "name": "1e_mobile_login",
+    "ok": true,
+    "detail": {
+      "has": 1
+    }
+  },
+  {
+    "name": "2a_verified_login",
+    "ok": true,
+    "detail": {
+      "url": "https://www.addandknow.pt/pt/dashboard"
+    }
+  },
+  {
+    "name": "2b_session_reload",
+    "ok": true,
+    "detail": {
+      "url": "https://www.addandknow.pt/pt/dashboard"
+    }
+  },
+  {
+    "name": "3_wrong_password",
+    "ok": true,
+    "detail": {
+      "err": "Email ou palavra-passe incorrectos. Tenta outra vez com calma.",
+      "resend": false
+    }
+  },
+  {
+    "name": "4a_register_flow",
+    "ok": true,
+    "detail": {
+      "url": "https://www.addandknow.pt/pt/verificar-email?email=prod-proof-1789820990%40example.com",
+      "onVerify": true,
+      "mailNotConfigured": false,
+      "mailSentClaim": true,
+      "bodySnippet": "addYknow\nConfirma o teu email\n\nEnviámos um link para prod-proof-1789820990@example.com. A conta fica activa depois de confirmares — demora um clique.\n\nReenviar email\nIr para entrar"
+    }
+  },
+  {
+    "name": "4b_resend_on_verify_page",
+    "ok": true,
+    "detail": {
+      "url": "https://www.addandknow.pt/pt/verificar-email?email=prod-proof-1789820990%40example.com",
+      "notCfg": true,
+      "sent": false,
+      "localhost": false,
+      "msgSnippet": "Não consegui enviar o email agora."
+    }
+  },
+  {
+    "name": "4c_unverified_login_ui",
+    "ok": true,
+    "detail": {
+      "err": "Confirma o teu email antes de entrar. Se ainda não recebeste o link, podes reenviar abaixo.",
+      "resendVisible": true,
+      "url": "https://www.addandknow.pt/pt/login"
+    }
+  },
+  {
+    "name": "4d_resend_on_login",
+    "ok": true,
+    "detail": {
+      "msgs": [
+        "Confirma o teu email antes de entrar. Se ainda não recebeste o link, podes reenviar abaixo.",
+        "Não consegui enviar o email agora.",
+        "Recuperar palavra-passe · Criar conta"
+      ],
+      "notCfg": true,
+      "sent": false,
+      "localhost": false,
+      "url": "https://www.addandknow.pt/pt/login"
+    }
+  }
+]
