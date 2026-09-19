@@ -26,6 +26,11 @@ export function RegisterForm() {
       if (res.needsVerification) {
         const q = new URLSearchParams({ email: res.email });
         if (res.previewUrl) q.set("preview", res.previewUrl);
+        // Nunca fingir sucesso de envio quando Resend falhou.
+        if (res.mailError) q.set("mailError", res.mailError);
+        else if (res.mailDelivered === false && !res.previewUrl) {
+          q.set("mailError", "Não foi possível entregar o email agora.");
+        }
         router.push(`/pt/verificar-email?${q.toString()}`);
         return;
       }

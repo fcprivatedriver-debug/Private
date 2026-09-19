@@ -10,7 +10,8 @@ export function VerifyEmailPending() {
   const params = useSearchParams();
   const email = params.get("email") || "";
   const preview = params.get("preview");
-  const [msg, setMsg] = useState<string | null>(null);
+  const initialMailError = params.get("mailError");
+  const [msg, setMsg] = useState<string | null>(initialMailError);
   const [devLink, setDevLink] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -41,14 +42,25 @@ export function VerifyEmailPending() {
     });
   }
 
+  const sentClaim = !initialMailError && !preview;
+
   return (
     <div className="auth-page">
       <div className="auth-card">
         <BrandLogo href="/pt" />
         <h1>Confirma o teu email</h1>
         <p className="lead">
-          Enviámos um link para <strong>{email || "o teu email"}</strong>. A conta fica activa
-          depois de confirmares — demora um clique.
+          {sentClaim ? (
+            <>
+              Enviámos um link para <strong>{email || "o teu email"}</strong>. A conta fica activa
+              depois de confirmares — demora um clique.
+            </>
+          ) : (
+            <>
+              A conta para <strong>{email || "o teu email"}</strong> foi criada. Confirma o email
+              com o link de activação — podes reenviar abaixo se o envio anterior falhou.
+            </>
+          )}
         </p>
         {preview ? (
           <p className="muted small">
@@ -64,7 +76,7 @@ export function VerifyEmailPending() {
             Ir para entrar
           </Link>
         </form>
-        {msg ? <p className="muted small">{msg}</p> : null}
+        {msg ? <p className={msg === initialMailError ? "form-error" : "muted small"}>{msg}</p> : null}
         {devLink ? (
           <p className="muted small">
             <a href={devLink}>abrir link de confirmação</a>
