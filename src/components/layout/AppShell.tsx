@@ -116,7 +116,12 @@ export function AppShell({
         </div>
       </aside>
       <div className="app-main">
-        <header className="app-topbar">
+        {/*
+          Cabeçalho REAL da app (Hoje / Compras / restantes rotas em (app)/layout).
+          NÃO usar BrandLogo + familyName aqui — isso gerava “avatar genérico” +
+          “Família / Família”. Identidade = HeaderIdentity; espaço = SpaceSwitcher.
+        */}
+        <header className="app-topbar app-topbar--space-identity" data-testid="app-space-header">
           <HeaderIdentity
             space={activeSpace}
             userName={userName}
@@ -124,7 +129,7 @@ export function AppShell({
             userImage={userImage}
             familyImage={familyImage}
           />
-          <div className="topbar-space-mobile">
+          <div className="topbar-space">
             <SpaceSwitcher space={activeSpace} onSpaceChange={setActiveSpace} />
           </div>
           <div className="topbar-actions topbar-actions-desktop">
