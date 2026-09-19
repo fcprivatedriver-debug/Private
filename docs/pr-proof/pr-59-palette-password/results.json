@@ -1,0 +1,103 @@
+[
+  {
+    "name": "eye_visible_and_toggle",
+    "ok": true,
+    "detail": {
+      "hit": {
+        "isBtn": true
+      },
+      "styles": {
+        "color": "rgb(36, 85, 99)",
+        "w": "44px",
+        "h": "44px",
+        "padRight": "56px"
+      },
+      "typeBefore": "password",
+      "typeAfter": "text",
+      "label": "Ocultar palavra-passe"
+    }
+  },
+  {
+    "name": "register_eye",
+    "ok": true,
+    "detail": {
+      "count": 1,
+      "t": "text"
+    }
+  },
+  {
+    "name": "dashboard_desktop",
+    "ok": true,
+    "detail": {
+      "pageBg": "rgb(244, 247, 247)",
+      "btn": {
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(82, 114, 115)",
+        "weight": "400",
+        "size": "14px",
+        "shadow": "rgba(36, 85, 99, 0.12) 0px 3px 10px 0px"
+      },
+      "mel": "Fala com a Mel"
+    }
+  },
+  {
+    "name": "session_reload_desktop",
+    "ok": true,
+    "detail": {
+      "url": "https://private-duur-git-cursor-dashboard-quic-4e54e4-fc-private-driver.vercel.app/pt/dashboard"
+    }
+  },
+  {
+    "name": "dashboard_mobile",
+    "ok": true,
+    "detail": {
+      "pageBg": "rgb(244, 247, 247)",
+      "btn": {
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(82, 114, 115)",
+        "weight": "400",
+        "size": "16px",
+        "shadow": "rgba(36, 85, 99, 0.12) 0px 3px 10px 0px"
+      },
+      "mel": "Fala com a Mel"
+    }
+  },
+  {
+    "name": "session_reload_mobile",
+    "ok": true,
+    "detail": {
+      "url": "https://private-duur-git-cursor-dashboard-quic-4e54e4-fc-private-driver.vercel.app/pt/dashboard"
+    }
+  },
+  {
+    "name": "wrong_password_keeps_form",
+    "ok": true,
+    "detail": {
+      "stillForm": 1,
+      "err": "Email ou palavra-passe incorrectos. Tenta outra vez com calma."
+    }
+  },
+  {
+    "name": "autocomplete_attrs",
+    "ok": true,
+    "detail": {
+      "acUser": "username",
+      "acPass": "current-password"
+    }
+  },
+  {
+    "name": "error_uses_palette",
+    "ok": true,
+    "detail": {
+      "errColor": "rgb(163, 61, 61)"
+    }
+  },
+  {
+    "name": "password_manager_save_prompt",
+    "ok": false,
+    "detail": {
+      "status": "NÃO VERIFICADO",
+      "note": "Prompt do navegador não observável de forma fiável em Chromium headless. Código: autocomplete + form mantido no DOM durante loading."
+    }
+  }
+]

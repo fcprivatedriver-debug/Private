@@ -3,38 +3,50 @@
 /* addYknow design system — leve, financeira, teal suave (mobile-first) */
 
 :root {
-  /* Brand / accent (teal) — maps also to legacy --navy* for compatibility */
-  --teal: #3db8b0;
-  --teal-dark: #1f7a74;
-  --teal-soft: #5ec9c2;
-  --teal-mist: #e8f7f6;
+  /* addYknow paleta — contraste / clareza / confiança */
+  --brand: #245563;
+  --brand-soft: #527273;
+  --selected: #e7f1f0;
+
+  /* Brand / accent — maps also to legacy --navy* / --teal* */
+  --teal: #245563;
+  --teal-dark: #245563;
+  --teal-soft: #527273;
+  --teal-mist: #e7f1f0;
   --navy: var(--teal);
-  --navy-deep: var(--teal-dark);
-  --navy-soft: var(--teal-soft);
-  --navy-mist: var(--teal-mist);
+  --navy-deep: var(--brand);
+  --navy-soft: var(--brand-soft);
+  --navy-mist: var(--selected);
 
-  --bg: #f7f9fb;
+  --bg: #f4f7f7;
   --bg-elevated: #ffffff;
-  --bg-soft: #eef3f7;
-  --fg: #1a2332;
-  --fg-muted: #6b7785;
+  --bg-soft: #e7f1f0;
+  --fg: #24383d;
+  --fg-muted: #527273;
+  --muted: #527273; /* alias — evita ícones invisíveis (var(--muted) indefinida) */
 
-  --income: #3d9b6e;
-  --income-soft: rgba(61, 155, 110, 0.12);
-  --expense: #d4706a;
-  --expense-soft: rgba(212, 112, 106, 0.12);
-  --warn: #c4922a;
-  --warn-soft: rgba(196, 146, 42, 0.12);
+  /* Valores financeiros: neutros (não alarmistas) */
+  --income: #287453;
+  --income-soft: rgba(40, 116, 83, 0.12);
+  --expense: #24383d;
+  --expense-soft: rgba(36, 85, 99, 0.08);
 
-  --line: rgba(26, 35, 50, 0.07);
-  --line-strong: rgba(26, 35, 50, 0.12);
+  /* Estados reais */
+  --ok: #287453;
+  --warn: #946200;
+  --warn-soft: rgba(148, 98, 0, 0.12);
+  --error: #a33d3d;
+  --error-soft: rgba(163, 61, 61, 0.12);
+
+  --line: rgba(36, 56, 61, 0.08);
+  --line-strong: rgba(36, 56, 61, 0.14);
 
   --radius-sm: 10px;
   --radius: 14px;
   --radius-lg: 18px;
 
-  --shadow-soft: 0 1px 2px rgba(26, 35, 50, 0.04);
-  --shadow-lift: 0 6px 20px rgba(26, 35, 50, 0.06);
+  --shadow-soft: 0 1px 2px rgba(36, 85, 99, 0.04);
+  --shadow-lift: 0 6px 20px rgba(36, 85, 99, 0.06);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dur: 0.18s;
@@ -48,7 +60,7 @@
   --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-body: "Manrope", "Segoe UI", sans-serif;
 
-  --accent: var(--teal);
+  --accent: var(--brand);
   --accent-contrast: #ffffff;
 
   /* Typography scale */
@@ -141,36 +153,53 @@ html.dark .brand-mark { color: #2a4a73; }
   white-space: nowrap;
 }
 
-/* Password show/hide */
+/* Password show/hide
+ * Causa do olho “invisível”:
+ * 1) color: var(--muted) sem --muted definido
+ * 2) .field input { padding } vinha depois e anulava padding-right do olho
+ */
 .password-field {
   position: relative;
   display: block;
-}
-.password-field input {
   width: 100%;
-  padding-right: 2.75rem;
+}
+.password-field input,
+.field .password-field input {
+  width: 100%;
+  /* Espaço para olho (~44px) + ícone nativo do gestor de passwords */
+  padding-right: 3.5rem !important;
 }
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: 0.35rem;
+  right: 0.2rem;
   transform: translateY(-50%);
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--muted);
+  color: #245563;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .password-toggle:hover,
 .password-toggle:focus-visible {
-  color: var(--fg);
-  outline: none;
-  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  color: #245563;
+  outline: 2px solid rgba(36, 85, 99, 0.28);
+  outline-offset: 1px;
+  background: #e7f1f0;
+}
+.password-toggle svg {
+  display: block;
+  pointer-events: none;
 }
 
 .sr-only {
@@ -213,10 +242,76 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
 }
 .btn-danger-outline {
   background: transparent;
-  border-color: var(--expense);
-  color: var(--expense);
+  border-color: var(--error);
+  color: var(--error);
 }
 .w-full { width: 100%; }
+
+/* Dashboard quick actions — relevo leve azul petróleo */
+.dash-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.dash-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 3.6rem;
+  padding: 1.05rem 1.15rem;
+  border-radius: 16px;
+  border: none;
+  background: #ffffff;
+  color: #527273;
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: none;
+  box-shadow: 0 3px 10px rgba(36, 85, 99, 0.12);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.dash-action-icon {
+  flex-shrink: 0;
+  color: #245563;
+}
+.dash-action--text {
+  gap: 0;
+}
+.dash-action:hover {
+  background: #ffffff;
+  color: #527273;
+  text-shadow: none;
+}
+.dash-action:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(36, 85, 99, 0.1);
+  background: #ffffff;
+  color: #527273;
+  text-shadow: none;
+}
+.dash-action:focus-visible {
+  outline: 2px solid rgba(36, 85, 99, 0.35);
+  outline-offset: 2px;
+  background: #ffffff;
+  color: #527273;
+  text-shadow: none;
+}
+@media (max-width: 640px) {
+  .dash-action {
+    font-size: 1rem; /* 16px — legível no telemóvel sem cortes */
+    min-height: 3.75rem;
+    padding: 1.1rem 1rem;
+  }
+}
 
 /* Landing */
 .landing {
@@ -947,7 +1042,7 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   border-color: #1e3a5f;
   box-shadow: 0 0 0 3px var(--navy-mist);
 }
-.form-error { color: var(--expense); margin: 0; }
+.form-error { color: var(--error); margin: 0; }
 .inline-form {
   display: flex;
   gap: 0.35rem;
