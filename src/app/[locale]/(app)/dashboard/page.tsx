@@ -2,6 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
+import {
+  DashExpenseIcon,
+  DashIncomeIcon,
+  DashMobilityIcon,
+  DashScheduleIcon,
+  DashShoppingIcon,
+} from "@/components/dashboard/DashActionIcons";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -68,28 +75,33 @@ export default async function DashboardPage() {
 
         <div className="dash-actions">
           <Link href="/pt/despesas" className="dash-action">
-            ＋ Despesa
+            <DashExpenseIcon />
+            <span>Despesa</span>
           </Link>
 
           <Link href="/pt/receitas" className="dash-action">
-            ＋ Receita
+            <DashIncomeIcon />
+            <span>Receita</span>
           </Link>
 
           <Link href="/pt/calendario" className="dash-action">
-            📅 Agendar
+            <DashScheduleIcon />
+            <span>Agendar</span>
           </Link>
 
           <Link href="/pt/mobilidade" className="dash-action">
-            ⛽ Mobilidade
+            <DashMobilityIcon />
+            <span>Mobilidade</span>
           </Link>
 
           <Link href="/pt/lista" className="dash-action">
-            🛒 Compras
+            <DashShoppingIcon />
+            <span>Compras</span>
           </Link>
 
           <Link
             href="/pt/captura?mode=voice&auto=1"
-            className="dash-action"
+            className="dash-action dash-action--text"
           >
             Fala com a Mel
           </Link>

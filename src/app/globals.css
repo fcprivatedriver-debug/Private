@@ -218,7 +218,7 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
 }
 .w-full { width: 100%; }
 
-/* Dashboard quick actions — relevo discreto azul petróleo */
+/* Dashboard quick actions — relevo leve azul petróleo */
 .dash-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -228,21 +228,20 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.45rem;
   width: 100%;
-  min-height: 3.25rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  border: 1.5px solid #245563;
+  min-height: 3.6rem;
+  padding: 1.05rem 1.15rem;
+  border-radius: 16px;
+  border: none;
   background: #ffffff;
   color: #245563;
-  font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.2;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25;
   text-align: center;
   text-decoration: none;
-  box-shadow:
-    0 2px 0 #245563,
-    0 4px 10px rgba(36, 85, 99, 0.18);
+  box-shadow: 0 3px 10px rgba(36, 85, 99, 0.12);
   transition:
     transform 120ms ease,
     box-shadow 120ms ease,
@@ -250,21 +249,27 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
+.dash-action-icon {
+  flex-shrink: 0;
+  color: #245563;
+}
+.dash-action--text {
+  gap: 0;
+}
 .dash-action:hover {
   background: #ffffff;
   color: #245563;
 }
-.dash-action:active,
-.dash-action:focus-visible {
-  transform: translateY(2px);
-  box-shadow:
-    0 0 0 #245563,
-    0 1px 3px rgba(36, 85, 99, 0.16);
-  outline: none;
+.dash-action:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(36, 85, 99, 0.1);
+  background: #ffffff;
 }
 .dash-action:focus-visible {
-  outline: 2px solid rgba(36, 85, 99, 0.35);
+  outline: 2px solid rgba(36, 85, 99, 0.28);
   outline-offset: 2px;
+  background: #ffffff;
+  color: #245563;
 }
 
 /* Landing */
