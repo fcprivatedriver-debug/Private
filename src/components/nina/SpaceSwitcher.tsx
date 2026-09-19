@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { setNinaSpace, type NinaSpace } from "@/actions/household";
 import { cn } from "@/lib/utils";
 
-export function SpaceSwitcher({ space }: { space: NinaSpace }) {
+export function SpaceSwitcher({
+  space,
+  onSpaceChange,
+}: {
+  space: NinaSpace;
+  onSpaceChange?: (next: NinaSpace) => void;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [optimistic, setOptimistic] = useOptimistic(space);
@@ -14,6 +20,7 @@ export function SpaceSwitcher({ space }: { space: NinaSpace }) {
     if (next === optimistic || pending) return;
     start(async () => {
       setOptimistic(next);
+      onSpaceChange?.(next);
       await setNinaSpace(next);
       router.refresh();
     });

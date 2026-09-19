@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  assertAllowedProfilePhoto,
   assertAllowedReceipt,
   assertSafeStorageKey,
+  MAX_PROFILE_PHOTO_BYTES,
   MAX_RECEIPT_BYTES,
   StorageError,
 } from "./storage";
@@ -27,6 +29,35 @@ describe("receipt storage validation", () => {
     assert.throws(
       () => assertAllowedReceipt({ fileName: "a.exe", mimeType: "application/octet-stream", sizeBytes: 10 }),
       (e: unknown) => e instanceof StorageError && e.code === "INVALID_TYPE",
+    );
+  });
+});
+
+describe("profile photo validation", () => {
+  it("aceita JPEG/PNG/WEBP", () => {
+    assert.equal(
+      assertAllowedProfilePhoto({ fileName: "p.jpg", mimeType: "image/jpeg", sizeBytes: 100 }).mimeType,
+      "image/jpeg",
+    );
+    assert.equal(
+      assertAllowedProfilePhoto({ fileName: "p.png", mimeType: "image/png", sizeBytes: 100 }).mimeType,
+      "image/png",
+    );
+  });
+
+  it("rejeita PDF e ficheiros grandes", () => {
+    assert.throws(
+      () => assertAllowedProfilePhoto({ fileName: "a.pdf", mimeType: "application/pdf", sizeBytes: 100 }),
+      (e: unknown) => e instanceof StorageError && e.code === "INVALID_TYPE",
+    );
+    assert.throws(
+      () =>
+        assertAllowedProfilePhoto({
+          fileName: "a.jpg",
+          mimeType: "image/jpeg",
+          sizeBytes: MAX_PROFILE_PHOTO_BYTES + 1,
+        }),
+      (e: unknown) => e instanceof StorageError && e.code === "TOO_LARGE",
     );
   });
 

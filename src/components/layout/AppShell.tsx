@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { HeaderIdentity } from "@/components/layout/HeaderIdentity";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { SpaceSwitcher } from "@/components/nina/SpaceSwitcher";
@@ -45,17 +47,26 @@ export function AppShell({
   children,
   userName,
   familyName,
+  userImage,
+  familyImage,
   unreadAlerts = 0,
   space = "personal",
 }: {
   children: React.ReactNode;
   userName: string;
   familyName?: string;
+  userImage?: string | null;
+  familyImage?: string | null;
   unreadAlerts?: number;
   space?: NinaSpace;
 }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [activeSpace, setActiveSpace] = useState<NinaSpace>(space);
+
+  useEffect(() => {
+    setActiveSpace(space);
+  }, [space]);
 
   return (
     <div className="app-shell">
@@ -66,7 +77,7 @@ export function AppShell({
           {familyName ? <p className="sidebar-family">{familyName}</p> : null}
         </div>
         <div className="sidebar-space">
-          <SpaceSwitcher space={space} />
+          <SpaceSwitcher space={activeSpace} onSpaceChange={setActiveSpace} />
         </div>
         <nav className="sidebar-nav" aria-label="Principal">
           {NAV.map((item) => {
@@ -106,12 +117,15 @@ export function AppShell({
       </aside>
       <div className="app-main">
         <header className="app-topbar">
-          <div className="topbar-brand-mobile">
-            <BrandLogo href="/pt/dashboard" size="sm" />
-            {familyName ? <span className="topbar-family">{familyName}</span> : null}
-          </div>
+          <HeaderIdentity
+            space={activeSpace}
+            userName={userName}
+            familyName={familyName}
+            userImage={userImage}
+            familyImage={familyImage}
+          />
           <div className="topbar-space-mobile">
-            <SpaceSwitcher space={space} />
+            <SpaceSwitcher space={activeSpace} onSpaceChange={setActiveSpace} />
           </div>
           <div className="topbar-actions topbar-actions-desktop">
             <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary btn-sm" prefetch>

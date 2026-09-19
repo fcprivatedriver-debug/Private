@@ -736,6 +736,110 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   z-index: 20;
 }
 .topbar-brand-mobile { display: none; }
+.topbar-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  flex: 1;
+  position: relative;
+}
+.topbar-avatar-btn {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid color-mix(in srgb, var(--brand) 28%, transparent);
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(36, 85, 99, 0.18);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.topbar-avatar-btn:hover,
+.topbar-avatar-btn:focus-visible {
+  transform: scale(1.03);
+  box-shadow: 0 2px 8px rgba(36, 85, 99, 0.22);
+  outline: none;
+}
+.topbar-avatar-btn.is-pending { opacity: 0.7; }
+.topbar-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.topbar-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.topbar-space-name {
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-avatar-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 40;
+  min-width: 12.5rem;
+  padding: 0.35rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 0.15rem;
+}
+.topbar-avatar-menu-item {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  min-height: 44px;
+}
+.topbar-avatar-menu-item:hover,
+.topbar-avatar-menu-item:focus-visible {
+  background: var(--bg-soft);
+  outline: none;
+}
+.topbar-avatar-menu-item.is-danger { color: var(--expense); }
+.topbar-avatar-error {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--expense) 12%, var(--bg-elevated));
+  color: var(--expense);
+  font-size: 0.78rem;
+  font-weight: 600;
+  z-index: 35;
+}
 .topbar-actions { display: flex; gap: 0.5rem; margin-left: auto; }
 .app-content {
   padding: 1.5rem;
@@ -1167,7 +1271,7 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
 @media (max-width: 980px) {
   .app-shell { grid-template-columns: 1fr; }
   .app-sidebar { display: none; }
-  .topbar-brand-mobile { display: block; }
+  .topbar-identity { display: flex; }
   .mobile-nav {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -1478,7 +1582,7 @@ html.dark .nina-bubble.user .nina-bubble-body {
     min-width: 0;
     margin-top: 0;
   }
-  .topbar-brand-mobile { flex: 1; }
+  .topbar-identity { flex: 1; min-width: 0; }
   .topbar-actions {
     flex-shrink: 0;
     gap: 0.4rem;
@@ -2149,17 +2253,16 @@ html[data-theme="purple"] {
   --bg-soft: #f3eef8;
 }
 
-.sidebar-family,
-.topbar-family {
+.sidebar-family {
   margin: 0.15rem 0 0;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--navy);
 }
-.topbar-brand-mobile {
+.topbar-identity {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .avatar-picker {
@@ -2433,9 +2536,9 @@ html[data-theme="purple"] {
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .space-switch-btn.active {
-  background: var(--bg-elevated);
-  color: var(--teal-dark);
-  box-shadow: var(--shadow-soft);
+  background: var(--brand);
+  color: #fff;
+  box-shadow: none;
 }
 .space-switch-short { display: inline; }
 .space-switch-full { display: none; }
@@ -2535,7 +2638,18 @@ html[data-theme="blue"] {
     margin-top: 0;
     order: 2;
   }
-  .topbar-brand-mobile { flex: 1; }
+  .topbar-identity {
+    flex: 1;
+    min-width: 0;
+    order: 1;
+  }
+  .topbar-avatar-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .topbar-space-name {
+    font-size: 0.98rem;
+  }
   .mobile-nav {
     min-height: var(--nav-h);
     padding-bottom: env(safe-area-inset-bottom, 0px);
