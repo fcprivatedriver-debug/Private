@@ -735,7 +735,6 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   top: 0;
   z-index: 20;
 }
-.topbar-brand-mobile { display: none; }
 .topbar-identity {
   display: flex;
   align-items: center;
@@ -841,6 +840,14 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   z-index: 35;
 }
 .topbar-actions { display: flex; gap: 0.5rem; margin-left: auto; }
+.topbar-space {
+  display: block;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.app-topbar--space-identity {
+  gap: 0.65rem;
+}
 .app-content {
   padding: 1.5rem;
   max-width: 1200px;
@@ -1573,15 +1580,13 @@ html.dark .nina-bubble.user .nina-bubble-body {
   padding: 0 0.85rem 1rem;
 }
 /* space-switcher styles → secção Redesign UX/UI no final */
-.topbar-space-mobile { display: none; }
+.topbar-space {
+  display: block;
+  flex: 0 0 auto;
+  order: 2;
+  min-width: 0;
+}
 @media (max-width: 980px) {
-  .topbar-space-mobile {
-    display: block;
-    flex: 0 0 auto;
-    order: 2;
-    min-width: 0;
-    margin-top: 0;
-  }
   .topbar-identity { flex: 1; min-width: 0; }
   .topbar-actions {
     flex-shrink: 0;
@@ -2536,9 +2541,14 @@ html[data-theme="purple"] {
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .space-switch-btn.active {
-  background: var(--brand);
-  color: #fff;
+  background: #245563;
+  background: var(--brand, #245563);
+  color: #fff !important;
   box-shadow: none;
+}
+.app-topbar--space-identity .space-switch-btn.active {
+  background: #245563;
+  color: #fff;
 }
 .space-switch-short { display: inline; }
 .space-switch-full { display: none; }
@@ -2633,7 +2643,7 @@ html[data-theme="blue"] {
     padding: 0.55rem 0.85rem;
   }
   .topbar-actions-desktop { display: none; }
-  .topbar-space-mobile {
+  .topbar-space {
     flex: 0 0 auto;
     margin-top: 0;
     order: 2;

@@ -36,9 +36,10 @@ export function HeaderIdentity({
   const [pending, start] = useTransition();
 
   const isFamily = space === "family";
-  const displayName = isFamily
-    ? familyName || "Família"
-    : userName.trim().split(/\s+/)[0] || userName;
+  // Um único nome — nunca BrandLogo + familyName (evita “Família / Família”).
+  const personalName = (userName.trim().split(/\s+/)[0] || userName.trim() || "Eu").trim();
+  const familyLabel = (familyName || "").trim() || "Família";
+  const displayName = isFamily ? familyLabel : personalName;
   const photoUrl = isFamily ? familyImage : userImage;
   const hasPhoto = Boolean(photoUrl);
 
@@ -91,7 +92,12 @@ export function HeaderIdentity({
   }
 
   return (
-    <div className="topbar-identity" ref={rootRef}>
+    <div
+      className="topbar-identity"
+      ref={rootRef}
+      data-testid="header-identity"
+      data-space={space}
+    >
       <button
         type="button"
         className={cn("topbar-avatar-btn", pending && "is-pending")}
@@ -112,7 +118,7 @@ export function HeaderIdentity({
         )}
       </button>
 
-      <p className="topbar-space-name" title={displayName}>
+      <p className="topbar-space-name" data-testid="header-space-name" title={displayName}>
         {displayName}
       </p>
 
