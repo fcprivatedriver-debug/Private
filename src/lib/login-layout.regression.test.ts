@@ -20,5 +20,6 @@ describe("locale layout mounts children (login)", () => {
 
   it("tem stamp canónico de verificação", () => {
     assert.match(source, /canonical-layout-children-v2/);
+    assert.match(source, /data-addyknow-layout/);
   });
 });

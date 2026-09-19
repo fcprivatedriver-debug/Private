@@ -30,17 +30,11 @@ Assinatura no HTML de Production (ainda presente em addandknow.pt):
 Isto **não** é middleware, `LoginForm`, `safePostLoginPath`, SessionProvider nem `router.push`.  
 Esses só correm *depois* do layout montar o filho — e o filho nunca monta.
 
-## Estado dos deploys (2026-09-18)
+## Estado dos deploys (actualizado 2026-09-19)
 
-| Superfície | SHA / build | `/pt/login` |
-|---|---|---|
-| **www.addandknow.pt (live)** | build antigo `flmXjbUcuQT6cjOmkXA7k` (layout partido) | LANDING — FAIL |
-| `origin/main` | `88d8788` (merge #51, layout restaurado) | código OK |
-| Deploy URL Production addynow `addynow-kkiyepbzc-…` | `88d8788` | formulário OK |
-| Preview #53 | `fef381a` | formulário OK |
-| Production private-duur @ `88d8788` | **FAILED** | — |
+Ver **`docs/PRODUCTION_LOGIN_BLOCKER.md`** para evidência completa.
 
-Conclusão operacional: o fix de código está em `main` e num deploy Production addynow, mas o **domínio live ainda serve o build antigo com o layout partido**. O deploy Production de `private-duur` falhou.
+Resumo: `www.addandknow.pt` ≡ `addynow.vercel.app` (HTML sha256 idêntico) ainda serve o build partido. O fix está em `main` e no Preview #56; falta **Promote to Production no projeto addynow** (sem merge/promote automático por este agente).
 
 ## Correção de código (já em main / Preview)
 

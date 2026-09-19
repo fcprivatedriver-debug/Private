@@ -10,6 +10,9 @@ import { routing } from "@/i18n/routing";
  * NUNCA embutir a landing aqui (regressão 0079b05: /pt/login mostrava homepage).
  * Stamp: canonical-layout-children-v2
  * Sem {children}, Entrar muda o URL mas o ecrã fica na landing.
+ *
+ * data-addyknow-layout no DOM permite verificar Production sem parsear RSC:
+ * PASS = atributo presente + auth-card; FAIL = landing-v2 sem auth-card.
  */
 export default async function LocaleLayout({
   children,
@@ -26,7 +29,9 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
         {/* canonical-layout-children-v2 */}
-        <ThemeProvider>{children}</ThemeProvider>
+        <div data-addyknow-layout="canonical-layout-children-v2">
+          <ThemeProvider>{children}</ThemeProvider>
+        </div>
       </AuthProvider>
     </NextIntlClientProvider>
   );
