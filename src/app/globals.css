@@ -235,12 +235,13 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   border-radius: 16px;
   border: none;
   background: #ffffff;
-  color: #245563;
-  font-weight: 500;
+  color: #527273;
+  font-weight: 400;
   font-size: 0.875rem;
   line-height: 1.25;
   text-align: center;
   text-decoration: none;
+  text-shadow: none;
   box-shadow: 0 3px 10px rgba(36, 85, 99, 0.12);
   transition:
     transform 120ms ease,
@@ -258,18 +259,22 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
 }
 .dash-action:hover {
   background: #ffffff;
-  color: #245563;
+  color: #527273;
+  text-shadow: none;
 }
 .dash-action:active {
   transform: translateY(1px);
   box-shadow: 0 1px 4px rgba(36, 85, 99, 0.1);
   background: #ffffff;
+  color: #527273;
+  text-shadow: none;
 }
 .dash-action:focus-visible {
   outline: 2px solid rgba(36, 85, 99, 0.28);
   outline-offset: 2px;
   background: #ffffff;
-  color: #245563;
+  color: #527273;
+  text-shadow: none;
 }
 
 /* Landing */
