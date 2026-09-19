@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#ffffff",
+        background: "#F4F7F7",
         padding: "28px 20px 48px",
       }}
     >
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
           <p
             style={{
               margin: "0 0 6px",
-              color: "#667085",
+              color: "#527273",
               fontSize: "15px",
             }}
           >
@@ -54,7 +54,7 @@ export default async function DashboardPage() {
           <h1
             style={{
               margin: 0,
-              color: "#123f63",
+              color: "#245563",
               fontSize: "30px",
               lineHeight: 1.15,
             }}
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
           <p
             style={{
               margin: "10px 0 0",
-              color: "#667085",
+              color: "#527273",
               fontSize: "17px",
             }}
           >
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
           <Link
             href="/pt/guia"
             style={{
-              color: "#123f63",
+              color: "#245563",
               fontWeight: 600,
               textDecoration: "none",
             }}

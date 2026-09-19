@@ -38,18 +38,18 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Não desmontar o formulário durante o login — o gestor de passwords
+    // precisa dos campos username/password ainda no DOM após o submit.
     setLoading(true);
     setError(null);
     setUnverifiedEmail(null);
     setResendMsg(null);
     setDevLink(null);
     const form = new FormData(e.currentTarget);
-    const email = String(form.get("email"));
+    const email = String(form.get("email") || form.get("username") || "");
     const password = String(form.get("password"));
     setEmailValue(email);
     try {
-      // Credenciais primeiro — nunca reenviar email nem tratar password errada
-      // como "email não verificado".
       const check = await authenticateCredentials(email, password);
       if (!check.ok && check.reason === "INVALID_CREDENTIALS") {
         setError("Email ou palavra-passe incorrectos. Tenta outra vez com calma.");
@@ -97,7 +97,6 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         setResendMsg("Este email já está verificado — podes entrar.");
         return;
       }
-      // Nunca navegar para previewUrl (em Production/preview poderia ser loopback).
       if (res.previewUrl) {
         setDevLink(res.previewUrl);
         setResendMsg("Em modo desenvolvimento, usa o link abaixo:");
@@ -111,7 +110,9 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
     });
   }
 
-  if (status === "authenticated" || leaving || loading) {
+  // Só sair do formulário quando a navegação pós-login está em curso
+  // (ou já autenticado ao abrir a página) — nunca só por "loading".
+  if (status === "authenticated" || leaving) {
     return (
       <div className="auth-page">
         <div className="auth-card">
@@ -148,17 +149,20 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
             <a href={devLink}>abrir link de confirmação</a>
           </p>
         ) : null}
-        <form onSubmit={onSubmit} className="form-grid">
-          <label className="field">
+        <form onSubmit={onSubmit} className="form-grid" method="post">
+          <label className="field" htmlFor="login-username">
             <span>Email</span>
             <input
+              id="login-username"
               name="email"
               type="email"
               required
-              autoComplete="email"
+              autoComplete="username"
+              inputMode="email"
               placeholder="o.teu@email.com"
               value={emailValue}
               onChange={(ev) => setEmailValue(ev.target.value)}
+              disabled={loading}
             />
           </label>
           <PasswordField
@@ -167,9 +171,10 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
             required
             autoComplete="current-password"
             placeholder="••••••••"
+            disabled={loading}
           />
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            Entrar
+            {loading ? "A entrar…" : "Entrar"}
           </button>
         </form>
         {demoMode ? (

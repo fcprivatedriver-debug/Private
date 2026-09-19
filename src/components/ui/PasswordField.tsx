@@ -16,26 +16,41 @@ export function PasswordField({
   hint,
   id,
   className,
+  autoComplete,
+  name = "password",
   ...inputProps
 }: PasswordFieldProps) {
   const autoId = useId();
   const inputId = id || autoId;
   const [visible, setVisible] = useState(false);
+  const showLabel = visible ? "Ocultar palavra-passe" : "Mostrar palavra-passe";
 
   const field = (
     <div className="password-field">
       <input
         {...inputProps}
         id={inputId}
+        name={name}
         type={visible ? "text" : "password"}
+        autoComplete={autoComplete}
         className={className}
+        // Não bloquear colar / gestores de passwords
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
       />
       <button
         type="button"
         className="password-toggle"
-        aria-label={visible ? "Ocultar palavra-passe" : "Mostrar palavra-passe"}
+        aria-label={showLabel}
+        title={showLabel}
         aria-pressed={visible}
-        onClick={() => setVisible((v) => !v)}
+        aria-controls={inputId}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setVisible((v) => !v);
+        }}
       >
         {visible ? <EyeOffIcon /> : <EyeIcon />}
       </button>

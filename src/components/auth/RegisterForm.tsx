@@ -69,9 +69,16 @@ export function RegisterForm() {
               required
             />
           </label>
-          <label className="field">
+          <label className="field" htmlFor="register-email">
             <span>Email</span>
-            <input name="email" type="email" required autoComplete="email" />
+            <input
+              id="register-email"
+              name="email"
+              type="email"
+              required
+              autoComplete="username"
+              inputMode="email"
+            />
           </label>
           <PasswordField
             label="Palavra-passe"
