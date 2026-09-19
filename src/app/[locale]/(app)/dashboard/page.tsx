@@ -2,6 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
+import {
+  DashExpenseIcon,
+  DashIncomeIcon,
+  DashMobilityIcon,
+  DashScheduleIcon,
+  DashShoppingIcon,
+} from "@/components/dashboard/DashActionIcons";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -22,7 +29,7 @@ export default async function DashboardPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#ffffff",
+        background: "#F4F7F7",
         padding: "28px 20px 48px",
       }}
     >
@@ -37,7 +44,7 @@ export default async function DashboardPage() {
           <p
             style={{
               margin: "0 0 6px",
-              color: "#667085",
+              color: "#527273",
               fontSize: "15px",
             }}
           >
@@ -47,7 +54,7 @@ export default async function DashboardPage() {
           <h1
             style={{
               margin: 0,
-              color: "#123f63",
+              color: "#245563",
               fontSize: "30px",
               lineHeight: 1.15,
             }}
@@ -58,7 +65,7 @@ export default async function DashboardPage() {
           <p
             style={{
               margin: "10px 0 0",
-              color: "#667085",
+              color: "#527273",
               fontSize: "17px",
             }}
           >
@@ -66,38 +73,37 @@ export default async function DashboardPage() {
           </p>
         </header>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "14px",
-          }}
-        >
-          <Link href="/pt/despesas" className="btn btn-primary">
-            ＋ Despesa
+        <div className="dash-actions">
+          <Link href="/pt/despesas" className="dash-action">
+            <DashExpenseIcon />
+            <span>Despesa</span>
           </Link>
 
-          <Link href="/pt/receitas" className="btn btn-ghost">
-            ＋ Receita
+          <Link href="/pt/receitas" className="dash-action">
+            <DashIncomeIcon />
+            <span>Receita</span>
           </Link>
 
-          <Link href="/pt/calendario" className="btn btn-ghost">
-            📅 Agendar
+          <Link href="/pt/calendario" className="dash-action">
+            <DashScheduleIcon />
+            <span>Agendar</span>
           </Link>
 
-          <Link href="/pt/mobilidade" className="btn btn-ghost">
-            ⛽ Mobilidade
+          <Link href="/pt/mobilidade" className="dash-action">
+            <DashMobilityIcon />
+            <span>Mobilidade</span>
           </Link>
 
-          <Link href="/pt/lista" className="btn btn-ghost">
-            🛒 Compras
+          <Link href="/pt/lista" className="dash-action">
+            <DashShoppingIcon />
+            <span>Compras</span>
           </Link>
 
           <Link
             href="/pt/captura?mode=voice&auto=1"
-            className="btn btn-primary"
+            className="dash-action dash-action--text"
           >
-            🎤 Falar com a MEL
+            Fala com a Mel
           </Link>
         </div>
 
@@ -105,7 +111,7 @@ export default async function DashboardPage() {
           <Link
             href="/pt/guia"
             style={{
-              color: "#123f63",
+              color: "#245563",
               fontWeight: 600,
               textDecoration: "none",
             }}
