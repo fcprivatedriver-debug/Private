@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { instantCapturePhoto, instantCaptureSpeak } from "@/actions/capture";
+import { requestUserLocation } from "@/lib/geolocation";
 
 type Mode = "voice" | "photo" | "write";
 
@@ -11,10 +12,13 @@ type CaptureResult = {
   reply: string;
   detail?: string;
   receiptUrl?: string;
+  needsLocation?: boolean;
+  pendingMobility?: { mode: "fuel" | "ev" | "auto"; utterance: string };
 };
 
 const OK_RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
+
 
 const VOICE_EXAMPLES = [
   "Quanto gastei este mês?",
@@ -94,17 +98,34 @@ export function InstantCapture({
   }, [previewUrl]);
 
   const submitUtterance = useCallback(
-    (utterance: string) => {
+    (utterance: string, geo?: { lat: number; lng: number } | null) => {
       const q = utterance.trim();
       if (!q || pendingRef.current) return;
       setError(null);
       setResult(null);
       start(async () => {
-        const res = await instantCaptureSpeak(q);
+        const res = await instantCaptureSpeak(q, geo);
         if (res.ok) {
-          setResult({ reply: res.reply, detail: res.detail });
+          const receiptUrl =
+            "receiptUrl" in res && typeof res.receiptUrl === "string" ? res.receiptUrl : undefined;
+          const pendingMobility =
+            "pendingMobility" in res && res.pendingMobility && typeof res.pendingMobility === "object"
+              ? (res.pendingMobility as {
+                  mode: "fuel" | "ev" | "auto";
+                  utterance: string;
+                })
+              : undefined;
+          setResult({
+            reply: res.reply,
+            detail: res.detail,
+            receiptUrl,
+            needsLocation: "needsLocation" in res ? Boolean(res.needsLocation) : false,
+            pendingMobility: pendingMobility
+              ? { mode: pendingMobility.mode, utterance: pendingMobility.utterance }
+              : undefined,
+          });
           setText("");
-          if ("deepLink" in res && res.deepLink) {
+          if ("deepLink" in res && typeof res.deepLink === "string" && res.deepLink) {
             window.open(res.deepLink, "_blank", "noopener,noreferrer");
           }
           router.refresh();
@@ -115,6 +136,31 @@ export function InstantCapture({
     },
     [router],
   );
+
+  const allowLocation = useCallback(() => {
+    const utterance = result?.pendingMobility?.utterance || text.trim();
+    if (!utterance || pendingRef.current) return;
+    start(async () => {
+      const geo = await requestUserLocation();
+      if (!geo.ok) {
+        setResult({
+          reply:
+            geo.message +
+            (geo.reason === "denied"
+              ? " Se bloqueaste o pedido, altera a permissão nas definições do browser/site e tenta outra vez."
+              : ""),
+          detail: "Localização",
+          needsLocation: true,
+          pendingMobility: result?.pendingMobility,
+        });
+        return;
+      }
+      submitUtterance(utterance, {
+        lat: geo.position.lat,
+        lng: geo.position.lng,
+      });
+    });
+  }, [result, text, submitUtterance]);
 
   const startListening = useCallback(
     (fromAuto: boolean) => {
@@ -416,6 +462,34 @@ export function InstantCapture({
         <div className="captura-result" role="status">
           <strong>{result.reply}</strong>
           {result.detail ? <span>{result.detail}</span> : null}
+          {result.needsLocation ? (
+            <span style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.75rem" }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                disabled={pending}
+                onClick={() => allowLocation()}
+              >
+                Permitir localização
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                disabled={pending}
+                onClick={() =>
+                  setResult({
+                    reply:
+                      "Quando os dados reais de postos/carregadores estiverem disponíveis, poderás indicar uma zona manualmente. Para já, podes permitir a localização do browser.",
+                    detail: "Localização",
+                    needsLocation: true,
+                    pendingMobility: result.pendingMobility,
+                  })
+                }
+              >
+                Indicar local manualmente
+              </button>
+            </span>
+          ) : null}
           {result.receiptUrl ? (
             <span style={{ display: "block", marginTop: "0.5rem" }}>
               <Link

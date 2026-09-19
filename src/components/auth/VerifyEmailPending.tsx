@@ -11,18 +11,33 @@ export function VerifyEmailPending() {
   const email = params.get("email") || "";
   const preview = params.get("preview");
   const [msg, setMsg] = useState<string | null>(null);
+  const [devLink, setDevLink] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   function resend(e: FormEvent) {
     e.preventDefault();
     start(async () => {
+      setDevLink(null);
       const res = await resendVerificationEmail(email);
-      if (res.previewUrl) {
-        setMsg("Em modo desenvolvimento, usa este link:");
-        window.location.href = res.previewUrl;
+      if (!res.ok) {
+        setMsg(res.error || "Não foi possível enviar o email agora.");
         return;
       }
-      setMsg("Se o email existir, enviámos um novo link.");
+      if ("already" in res && res.already) {
+        setMsg("Este email já está verificado — podes entrar.");
+        return;
+      }
+      // Nunca navegar para previewUrl (em Production era 127.0.0.1:3000).
+      if (res.previewUrl) {
+        setDevLink(res.previewUrl);
+        setMsg("Em modo desenvolvimento, usa o link abaixo:");
+        return;
+      }
+      if (res.delivered === false) {
+        setMsg("Não foi possível entregar o email agora. Tenta daqui a um momento.");
+        return;
+      }
+      setMsg("Email enviado. Verifica a tua caixa de entrada.");
     });
   }
 
@@ -43,13 +58,18 @@ export function VerifyEmailPending() {
         ) : null}
         <form onSubmit={resend} className="btn-row" style={{ marginTop: "1rem" }}>
           <button className="btn btn-ghost" type="submit" disabled={pending || !email}>
-            Reenviar email
+            {pending ? "A enviar…" : "Reenviar email"}
           </button>
           <Link href="/pt/login" className="btn btn-primary">
             Ir para entrar
           </Link>
         </form>
         {msg ? <p className="muted small">{msg}</p> : null}
+        {devLink ? (
+          <p className="muted small">
+            <a href={devLink}>abrir link de confirmação</a>
+          </p>
+        ) : null}
       </div>
     </div>
   );

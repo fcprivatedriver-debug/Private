@@ -3,12 +3,15 @@
 import { getSession, signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState, useTransition } from "react";
 import { useLocale } from "next-intl";
 import { safePostLoginPath } from "@/lib/auth-routes";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { checkEmailVerified } from "@/actions/auth-account";
+import {
+  authenticateCredentials,
+  resendVerificationEmail,
+} from "@/actions/auth-account";
 
 function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const params = useSearchParams();
@@ -18,6 +21,10 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [emailValue, setEmailValue] = useState("");
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
+  const [devLink, setDevLink] = useState<string | null>(null);
+  const [resending, startResend] = useTransition();
 
   function go(role?: string | null) {
     setLeaving(true);
@@ -34,19 +41,33 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
     setLoading(true);
     setError(null);
     setUnverifiedEmail(null);
+    setResendMsg(null);
+    setDevLink(null);
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email"));
+    const password = String(form.get("password"));
+    setEmailValue(email);
     try {
-      const check = await checkEmailVerified(email);
+      // Credenciais primeiro — nunca reenviar email nem tratar password errada
+      // como "email não verificado".
+      const check = await authenticateCredentials(email, password);
+      if (!check.ok && check.reason === "INVALID_CREDENTIALS") {
+        setError("Email ou palavra-passe incorrectos. Tenta outra vez com calma.");
+        setLoading(false);
+        return;
+      }
       if (!check.ok && check.reason === "EMAIL_NOT_VERIFIED") {
-        setUnverifiedEmail(email);
-        setError("Confirma o teu email antes de entrar. Enviámos-te um link de activação.");
+        setUnverifiedEmail(check.email);
+        setEmailValue(check.email);
+        setError(
+          "Confirma o teu email antes de entrar. Se ainda não recebeste o link, podes reenviar abaixo.",
+        );
         setLoading(false);
         return;
       }
       const res = await signIn("credentials", {
         email,
-        password: String(form.get("password")),
+        password,
         redirect: false,
       });
       if (res?.error) {
@@ -60,6 +81,34 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
       setError("Não consegui entrar agora. Tenta daqui a um momento.");
       setLoading(false);
     }
+  }
+
+  function onResend() {
+    if (!unverifiedEmail) return;
+    startResend(async () => {
+      setResendMsg(null);
+      setDevLink(null);
+      const res = await resendVerificationEmail(unverifiedEmail);
+      if (!res.ok) {
+        setResendMsg(res.error || "Não foi possível enviar o email agora.");
+        return;
+      }
+      if ("already" in res && res.already) {
+        setResendMsg("Este email já está verificado — podes entrar.");
+        return;
+      }
+      // Nunca navegar para previewUrl (em Production/preview poderia ser loopback).
+      if (res.previewUrl) {
+        setDevLink(res.previewUrl);
+        setResendMsg("Em modo desenvolvimento, usa o link abaixo:");
+        return;
+      }
+      if (res.delivered === false) {
+        setResendMsg("Não foi possível entregar o email agora. Tenta daqui a um momento.");
+        return;
+      }
+      setResendMsg("Email enviado. Verifica a tua caixa de entrada.");
+    });
   }
 
   if (status === "authenticated" || leaving || loading) {
@@ -82,16 +131,35 @@ function LoginFormInner({ demoMode }: { demoMode: boolean }) {
         <p className="lead">Entra para continuares com a MEL.</p>
         {error ? <p className="form-error">{error}</p> : null}
         {unverifiedEmail ? (
+          <div className="btn-row" style={{ marginBottom: "1rem" }}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              disabled={resending}
+              onClick={onResend}
+            >
+              {resending ? "A enviar…" : "Reenviar email"}
+            </button>
+          </div>
+        ) : null}
+        {resendMsg ? <p className="muted small">{resendMsg}</p> : null}
+        {devLink ? (
           <p className="muted small">
-            <Link href={`/pt/verificar-email?email=${encodeURIComponent(unverifiedEmail)}`}>
-              Reenviar email de confirmação
-            </Link>
+            <a href={devLink}>abrir link de confirmação</a>
           </p>
         ) : null}
         <form onSubmit={onSubmit} className="form-grid">
           <label className="field">
             <span>Email</span>
-            <input name="email" type="email" required autoComplete="email" placeholder="o.teu@email.com" />
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="o.teu@email.com"
+              value={emailValue}
+              onChange={(ev) => setEmailValue(ev.target.value)}
+            />
           </label>
           <PasswordField
             label="Palavra-passe"

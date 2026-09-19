@@ -92,10 +92,12 @@ export function InviteShare({
         setInfo(
           "Convite criado. O envio por SMS ainda não está activo — partilha o link abaixo com o familiar.",
         );
-      } else if (res.previewUrl && !res.delivered) {
-        setInfo("Convite criado (sem entrega de email configurada — copia o link).");
-      } else {
+      } else if (res.delivered) {
         setInfo("Convite enviado por email.");
+      } else {
+        setInfo(
+          "Convite criado, mas o email não foi entregue — partilha o link abaixo com o familiar.",
+        );
       }
       form.reset();
       router.refresh();

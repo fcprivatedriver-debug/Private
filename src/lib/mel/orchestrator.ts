@@ -69,7 +69,7 @@ function needsFinancialTools(question: string): boolean {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-  return /(quanto|saldo|gastei|gastamos|gaste|recebi|receita|despesa|orcamento|orçamento|poup|objetivo|meta|categoria|restaurante|supermercado|mes passado|mês passado|este mes|este mês|familia|família|disponivel|disponível)/.test(
+  return /(quanto|saldo|gastei|gastamos|gaste|recebi|receita|despesa|orcamento|orçamento|poup|objetivo|meta|categoria|restaurante|supermercado|mes passado|mês passado|este mes|este mês|familia|família|disponivel|disponível|onde gastei|onde tenho mais|onde esta o dinheiro|onde está o dinheiro)/.test(
     q,
   );
 }
@@ -90,6 +90,18 @@ export async function runMelConversation(opts: {
       tone: "warm",
       source: "fallback",
       suggestions: DEFAULT_SUGGESTIONS,
+    };
+  }
+
+  // Evitar OpenAI para input manifestamente incompleto (ex.: "ond")
+  const { gateMelUtterance } = await import("@/lib/mel/utterance-gate");
+  const gate = gateMelUtterance(question);
+  if (gate.action === "complete") {
+    return {
+      text: gate.message,
+      tone: "warm",
+      source: "fallback",
+      suggestions: gate.suggestions,
     };
   }
 

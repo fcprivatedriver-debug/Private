@@ -3,7 +3,7 @@
  * Resend = email. SMS fica preparado sem fornecedor ativo.
  */
 
-import { sendAppEmail, appBaseUrl } from "@/lib/auth/security";
+import { sendAppEmail, appBaseUrl, allowDevMailPreview } from "@/lib/auth/security";
 import { APP_NAME } from "@/config/brand";
 
 export type InviteDeliveryChannel = "EMAIL" | "PHONE" | "LINK";
@@ -38,21 +38,28 @@ export async function deliverFamilyInvite(opts: {
       ok: true,
       delivered: mail.delivered,
       channel: "EMAIL",
-      previewUrl: mail.delivered ? undefined : url,
+      // Só expor URL no UI em development local quando Resend não entregou.
+      previewUrl: !mail.delivered && allowDevMailPreview() ? url : undefined,
     };
   }
 
   if (opts.channel === "PHONE") {
-    // Sem fornecedor SMS — não fingir envio.
+    // Sem fornecedor SMS — não fingir envio. Link relativo é suficiente no UI
+    // (InviteShare usa window.location.origin); não devolver localhost absoluto.
     return {
       ok: true,
       delivered: false,
       channel: "PHONE",
-      previewUrl: url,
+      previewUrl: allowDevMailPreview() ? url : undefined,
     };
   }
 
-  return { ok: true, delivered: false, channel: "LINK", previewUrl: url };
+  return {
+    ok: true,
+    delivered: false,
+    channel: "LINK",
+    previewUrl: allowDevMailPreview() ? url : undefined,
+  };
 }
 
 /** SMS activo? Sempre false até haver integração autorizada. */

@@ -20,6 +20,7 @@ export function RegisterForm() {
       const res = await registerFamily(fd);
       if (!res.ok) {
         setError(res.error);
+        // Email já existente → utilizador deve ir ao login (sem criar conta).
         return;
       }
       if (res.needsVerification) {

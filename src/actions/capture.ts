@@ -95,7 +95,10 @@ function replyForScope(scope: FinanceScope, description?: string) {
  * Captura Instantânea por voz/texto — registo em segundos, sem formulários.
  * Não faz perguntas de confirmação: usa contexto, hábitos ou o espaço atual.
  */
-export async function instantCaptureSpeak(utterance: string) {
+export async function instantCaptureSpeak(
+  utterance: string,
+  geo?: { lat: number; lng: number } | null,
+) {
   const { session, membership, family } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
     return { ok: false as const, error: "Sem permissão para registar." };
@@ -104,8 +107,82 @@ export async function instantCaptureSpeak(utterance: string) {
   const text = utterance.trim();
   if (!text) return { ok: false as const, error: "Diz o que queres registar." };
 
+  // Gate MEL — incompleto / finanças / mobilidade antes do parser de registo
+  const { gateMelUtterance } = await import("@/lib/mel/utterance-gate");
+  const gate = gateMelUtterance(text);
+  if (gate.action === "complete") {
+    return {
+      ok: true as const,
+      reply: gate.message,
+      detail: "MEL",
+      kind: "assistant" as const,
+      scope: "PERSONAL" as const,
+      suggestions: gate.suggestions,
+    };
+  }
+  if (gate.action === "finance_where") {
+    const { askNina } = await import("@/actions/nina");
+    const mel = await askNina(text);
+    if (mel.ok) {
+      return {
+        ok: true as const,
+        reply: mel.reply.text,
+        detail: "Finanças",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        suggestions: mel.reply.suggestions,
+      };
+    }
+    return { ok: false as const, error: "Não consegui consultar as tuas finanças agora." };
+  }
+  if (gate.action === "mobility") {
+    if (geo?.lat == null || geo?.lng == null) {
+      return {
+        ok: true as const,
+        reply:
+          "Para procurar postos ou carregadores perto de ti, preciso da tua localização.",
+        detail: "Mobilidade",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        needsLocation: true as const,
+        pendingMobility: { mode: gate.mode, utterance: text },
+      };
+    }
+    const modules = await import("@/actions/assistant-modules");
+    const r = await modules.handleMobilityIntent({
+      mode: gate.mode,
+      utterance: text,
+      lat: geo.lat,
+      lng: geo.lng,
+    });
+    return {
+      ok: true as const,
+      reply: r.reply,
+      detail: "Mobilidade",
+      kind: "assistant" as const,
+      scope: "PERSONAL" as const,
+      deepLink: r.deepLink,
+    };
+  }
+
   const intent = parseMoneyIntent(text);
   if (!intent) {
+    // Pergunta livre → MEL (askNina), não só erro de registo
+    const { askNina } = await import("@/actions/nina");
+    const mel = await askNina(text, undefined, geo);
+    if (mel.ok) {
+      return {
+        ok: true as const,
+        reply: mel.reply.text,
+        detail: "MEL",
+        kind: "assistant" as const,
+        scope: "PERSONAL" as const,
+        suggestions: mel.reply.suggestions,
+        needsLocation: "needsLocation" in mel ? mel.needsLocation : undefined,
+        pendingMobility: "pendingMobility" in mel ? mel.pendingMobility : undefined,
+        deepLink: "deepLink" in mel ? mel.deepLink : undefined,
+      };
+    }
     return {
       ok: false as const,
       error: "Não percebi. Experimenta «gastei 24 euros na BP» ou «adiciona leite Vigor».",
@@ -163,11 +240,30 @@ export async function instantCaptureSpeak(utterance: string) {
       };
     }
     if (intent.kind === "mobility") {
+      if (geo?.lat == null || geo?.lng == null) {
+        return {
+          ok: true as const,
+          reply:
+            "Para procurar postos ou carregadores perto de ti, preciso da tua localização.",
+          detail: "Mobilidade",
+          kind: "assistant" as const,
+          scope: "PERSONAL" as const,
+          needsLocation: true as const,
+          pendingMobility: {
+            mode: intent.mode,
+            utterance: intent.utterance,
+            batteryPercent: intent.batteryPercent,
+            budgetEuros: intent.budgetEuros,
+          },
+        };
+      }
       const r = await modules.handleMobilityIntent({
         mode: intent.mode,
         utterance: intent.utterance,
         batteryPercent: intent.batteryPercent,
         budgetEuros: intent.budgetEuros,
+        lat: geo.lat,
+        lng: geo.lng,
       });
       return {
         ok: true as const,

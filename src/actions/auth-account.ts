@@ -3,18 +3,31 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import {
+  allowDevMailPreview,
   appBaseUrl,
   createRawToken,
   hashToken,
   sendAppEmail,
   validatePassword,
-  PASSWORD_HINT,
 } from "@/lib/auth/security";
+import {
+  resolveLoginCredentials,
+  type LoginCredentialsResult,
+} from "@/lib/auth/login-credentials";
 import { registerSchema } from "@/lib/validators";
 import { requireSession } from "@/lib/session";
 
 const VERIFY_HOURS = 48;
 const RESET_HOURS = 2;
+
+function publicLinkMeta(absoluteUrl: string) {
+  try {
+    const u = new URL(absoluteUrl);
+    return { linkHost: u.host, linkOrigin: u.origin };
+  } catch {
+    return { linkHost: "invalid", linkOrigin: "invalid" };
+  }
+}
 
 function isTestEmail(email: string) {
   // Contas técnicas @nina.app (seed/legado) podem saltar verificação.
@@ -72,7 +85,13 @@ export async function registerFamily(formData: FormData) {
 
     const email = parsed.data.email.toLowerCase();
     const exists = await prisma.user.findUnique({ where: { email } });
-    if (exists) return { ok: false as const, error: "Email já registado" };
+    if (exists) {
+      return {
+        ok: false as const,
+        error: "Email já registado. Entra com a tua conta.",
+        code: "EMAIL_EXISTS" as const,
+      };
+    }
 
     const passwordHash = await bcrypt.hash(parsed.data.password, 10);
     const skipVerify = isTestEmail(email);
@@ -128,6 +147,7 @@ export async function registerFamily(formData: FormData) {
     const raw = createRawToken();
     await storeToken(`verify:${email}`, raw, VERIFY_HOURS);
     const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
+    const link = publicLinkMeta(verifyUrl);
     const mail = await sendAppEmail({
       to: email,
       subject: "Confirma o teu email na MEL",
@@ -138,8 +158,11 @@ export async function registerFamily(formData: FormData) {
       ok: true as const,
       needsVerification: true as const,
       email,
-      previewUrl: mail.ok && !mail.delivered ? verifyUrl : undefined,
+      ...link,
+      previewUrl:
+        mail.ok && !mail.delivered && allowDevMailPreview() ? verifyUrl : undefined,
       mailDelivered: mail.ok ? mail.delivered : false,
+      mailError: mail.ok ? undefined : mail.error,
     };
   } catch (err) {
     console.error("[registerFamily]", err);
@@ -164,20 +187,37 @@ export async function verifyEmailToken(rawToken: string) {
 export async function resendVerificationEmail(emailRaw: string) {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return { ok: true as const }; // não revelar
-  if (user.emailVerified) return { ok: true as const, already: true as const };
+  if (!user) {
+    // Não revelar existência — mensagem de sucesso genérica no cliente.
+    return { ok: true as const, delivered: true as const, previewUrl: undefined as string | undefined };
+  }
+  if (user.emailVerified) {
+    return {
+      ok: true as const,
+      already: true as const,
+      delivered: true as const,
+      previewUrl: undefined as string | undefined,
+    };
+  }
 
   const raw = createRawToken();
   await storeToken(`verify:${email}`, raw, VERIFY_HOURS);
   const verifyUrl = `${appBaseUrl()}/pt/verificar/${raw}`;
+  const link = publicLinkMeta(verifyUrl);
+  console.info("[auth] resend verification", { email, ...link });
   const mail = await sendAppEmail({
     to: email,
     subject: "Confirma o teu email na MEL",
     text: `Confirma o teu email:\n${verifyUrl}\n\n— addYknow`,
   });
+  if (!mail.ok) {
+    return { ok: false as const, error: mail.error, ...link };
+  }
   return {
     ok: true as const,
-    previewUrl: mail.ok && !mail.delivered ? verifyUrl : undefined,
+    delivered: mail.delivered,
+    ...link,
+    previewUrl: !mail.delivered && allowDevMailPreview() ? verifyUrl : undefined,
   };
 }
 
@@ -185,19 +225,30 @@ export async function requestPasswordReset(emailRaw: string) {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user?.passwordHash) {
-    return { ok: true as const }; // silencioso
+    return {
+      ok: true as const,
+      delivered: true as const,
+      previewUrl: undefined as string | undefined,
+    }; // silencioso
   }
   const raw = createRawToken();
   await storeToken(`reset:${email}`, raw, RESET_HOURS);
   const url = `${appBaseUrl()}/pt/recuperar/${raw}`;
+  const link = publicLinkMeta(url);
+  console.info("[auth] password reset", { email, ...link });
   const mail = await sendAppEmail({
     to: email,
     subject: "Recuperar palavra-passe — addYknow",
     text: `Para definires uma nova palavra-passe:\n${url}\n\nVálido por ${RESET_HOURS} horas.\n\n— addYknow`,
   });
+  if (!mail.ok) {
+    return { ok: false as const, error: mail.error, ...link };
+  }
   return {
     ok: true as const,
-    previewUrl: mail.ok && !mail.delivered ? url : undefined,
+    delivered: mail.delivered,
+    ...link,
+    previewUrl: !mail.delivered && allowDevMailPreview() ? url : undefined,
   };
 }
 
@@ -235,15 +286,28 @@ export async function changePassword(formData: FormData) {
   return { ok: true as const };
 }
 
-export async function checkEmailVerified(emailRaw: string) {
+/**
+ * Valida email+password sem criar sessão e sem enviar email.
+ * Usado pelo LoginForm para distinguir password errada de email não verificado.
+ * Não substitui o authorize do NextAuth — após ok, o cliente chama signIn.
+ */
+export async function authenticateCredentials(
+  emailRaw: string,
+  password: string,
+): Promise<LoginCredentialsResult> {
   const email = emailRaw.trim().toLowerCase();
   const user = await prisma.user.findUnique({
     where: { email },
     select: { emailVerified: true, passwordHash: true },
   });
-  if (!user?.passwordHash) return { ok: true as const }; // login falhará normalmente
-  if (!user.emailVerified) {
-    return { ok: false as const, reason: "EMAIL_NOT_VERIFIED" as const };
-  }
-  return { ok: true as const };
+  const passwordValid = user?.passwordHash
+    ? await bcrypt.compare(password, user.passwordHash)
+    : false;
+  return resolveLoginCredentials({
+    email,
+    userExists: Boolean(user),
+    hasPassword: Boolean(user?.passwordHash),
+    passwordValid,
+    emailVerified: Boolean(user?.emailVerified),
+  });
 }

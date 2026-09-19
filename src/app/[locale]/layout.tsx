@@ -5,6 +5,15 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { routing } from "@/i18n/routing";
 
+/**
+ * Layout locale CANÓNICO — APENAS providers + {children}.
+ * NUNCA embutir a landing aqui (regressão 0079b05: /pt/login mostrava homepage).
+ * Stamp: canonical-layout-children-v2
+ * Sem {children}, Entrar muda o URL mas o ecrã fica na landing.
+ *
+ * data-addyknow-layout no DOM permite verificar Production sem parsear RSC:
+ * PASS = atributo presente + auth-card; FAIL = landing-v2 sem auth-card.
+ */
 export default async function LocaleLayout({
   children,
   params,
@@ -19,7 +28,10 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
-        <ThemeProvider>{children}</ThemeProvider>
+        {/* canonical-layout-children-v2 */}
+        <div data-addyknow-layout="canonical-layout-children-v2">
+          <ThemeProvider>{children}</ThemeProvider>
+        </div>
       </AuthProvider>
     </NextIntlClientProvider>
   );

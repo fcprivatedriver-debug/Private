@@ -11,7 +11,7 @@
     "test:mel": "tsx --test src/lib/mel/mel.test.ts",
     "test:external-data": "tsx --test src/lib/external-data/*.test.ts",
     "test:pwa": "tsx --test src/lib/pwa/pwa-identity.test.ts",
-    "test": "tsx --test src/lib/mel/mel.test.ts src/lib/pwa/pwa-identity.test.ts src/lib/external-data/*.test.ts",
+    "test": "tsx --test src/lib/mel/mel.test.ts src/lib/pwa/pwa-identity.test.ts src/lib/external-data/*.test.ts src/lib/auth/security.appBaseUrl.test.ts src/lib/auth/login-credentials.test.ts src/lib/auth/login-verification.regression.test.ts src/lib/login-layout.regression.test.ts",
 
     "db:migrate": "prisma migrate dev",
     "db:deploy": "node scripts/migrate-deploy.mjs",
