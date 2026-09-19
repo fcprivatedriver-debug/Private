@@ -21,8 +21,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
-      userName={session.user.name || membership.displayName}
+      userName={membership.displayName || session.user.name || ""}
       familyName={membership.family.name}
+      userImage={membership.user.image || membership.photoUrl}
+      familyImage={membership.family.image}
       unreadAlerts={unread}
       space={space}
     >

@@ -33,11 +33,17 @@ function storedObjectRelation(): Prisma.Sql {
 }
 
 export const MAX_RECEIPT_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
 export const ALLOWED_RECEIPT_MIME = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "application/pdf",
+]);
+export const ALLOWED_PROFILE_PHOTO_MIME = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
 ]);
 
 export type StoredFile = {
@@ -72,6 +78,8 @@ export const STORAGE_USER_ERRORS = {
   TOO_LARGE: `Ficheiro demasiado grande (máx. ${Math.round(MAX_RECEIPT_BYTES / (1024 * 1024))} MB).`,
   INVALID_TYPE: "Formato não suportado. Usa JPEG, PNG, WEBP ou PDF.",
   EMPTY: "Ficheiro vazio.",
+  PROFILE_TOO_LARGE: `Fotografia demasiado grande (máx. ${Math.round(MAX_PROFILE_PHOTO_BYTES / (1024 * 1024))} MB).`,
+  PROFILE_INVALID_TYPE: "Formato não suportado. Usa JPEG, PNG ou WEBP.",
 } as const;
 
 function detectMime(fileName: string, declared?: string): string {
@@ -99,6 +107,33 @@ export function assertAllowedReceipt(input: {
     throw new StorageError(STORAGE_USER_ERRORS.INVALID_TYPE, "INVALID_TYPE");
   }
   return { mimeType };
+}
+
+export function assertAllowedProfilePhoto(input: {
+  fileName: string;
+  mimeType?: string;
+  sizeBytes: number;
+}): { mimeType: string } {
+  if (input.sizeBytes <= 0) {
+    throw new StorageError(STORAGE_USER_ERRORS.EMPTY, "INVALID_TYPE");
+  }
+  if (input.sizeBytes > MAX_PROFILE_PHOTO_BYTES) {
+    throw new StorageError(STORAGE_USER_ERRORS.PROFILE_TOO_LARGE, "TOO_LARGE");
+  }
+  const mimeType = detectMime(input.fileName, input.mimeType);
+  if (!ALLOWED_PROFILE_PHOTO_MIME.has(mimeType)) {
+    throw new StorageError(STORAGE_USER_ERRORS.PROFILE_INVALID_TYPE, "INVALID_TYPE");
+  }
+  return { mimeType };
+}
+
+function buildProfileStorageKey(
+  kind: "user" | "family",
+  ownerId: string,
+  fileName: string,
+): string {
+  const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+  return `profiles/${kind}/${ownerId}/${Date.now()}-${randomUUID().slice(0, 8)}-${safeName}`;
 }
 
 function buildStorageKey(familyId: string, fileName: string): string {
@@ -245,6 +280,64 @@ export async function storeFamilyFile(input: {
   }
 
   // Espelho local só em dev (não é a fonte de verdade)
+  if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
+    try {
+      await storeLocal(storageKey, input.bytes);
+    } catch {
+      // ignore — DB já tem o ficheiro
+    }
+  }
+
+  return {
+    storageKey,
+    url,
+    sizeBytes: input.bytes.length,
+    mimeType,
+    fileName: input.fileName,
+    backend: "db",
+  };
+}
+
+/**
+ * Guarda fotografia de perfil (utilizador ou família) em Neon StoredObject.
+ * Continua a exigir familyId para a FK existente — a chave indica o dono lógico.
+ */
+export async function storeProfilePhoto(input: {
+  familyId: string;
+  ownerKind: "user" | "family";
+  ownerId: string;
+  fileName: string;
+  mimeType: string;
+  bytes: Buffer;
+  createdById?: string | null;
+}): Promise<StoredFile> {
+  const { mimeType } = assertAllowedProfilePhoto({
+    fileName: input.fileName,
+    mimeType: input.mimeType,
+    sizeBytes: input.bytes.length,
+  });
+
+  const storageKey = buildProfileStorageKey(input.ownerKind, input.ownerId, input.fileName);
+  const url = `/api/uploads/${storageKey}`;
+  const id = newStoredObjectId();
+  const dataBase64 = input.bytes.toString("base64");
+
+  try {
+    await insertStoredObjectProps({
+      id,
+      familyId: input.familyId,
+      storageKey,
+      fileName: input.fileName.slice(0, 180),
+      mimeType,
+      sizeBytes: input.bytes.length,
+      dataBase64,
+      createdById: input.createdById ?? null,
+    });
+  } catch (err) {
+    logStorageError("insertStoredObject(profile)", err);
+    throw new StorageError(STORAGE_USER_ERRORS.WRITE_FAILED, "WRITE_FAILED");
+  }
+
   if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
     try {
       await storeLocal(storageKey, input.bytes);
