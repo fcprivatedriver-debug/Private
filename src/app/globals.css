@@ -218,6 +218,55 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
 }
 .w-full { width: 100%; }
 
+/* Dashboard quick actions — relevo discreto azul petróleo */
+.dash-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.dash-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1.5px solid #245563;
+  background: #ffffff;
+  color: #245563;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  box-shadow:
+    0 2px 0 #245563,
+    0 4px 10px rgba(36, 85, 99, 0.18);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.dash-action:hover {
+  background: #ffffff;
+  color: #245563;
+}
+.dash-action:active,
+.dash-action:focus-visible {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 #245563,
+    0 1px 3px rgba(36, 85, 99, 0.16);
+  outline: none;
+}
+.dash-action:focus-visible {
+  outline: 2px solid rgba(36, 85, 99, 0.35);
+  outline-offset: 2px;
+}
+
 /* Landing */
 .landing {
   min-height: 100vh;

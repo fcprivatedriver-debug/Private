@@ -66,38 +66,32 @@ export default async function DashboardPage() {
           </p>
         </header>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "14px",
-          }}
-        >
-          <Link href="/pt/despesas" className="btn btn-primary">
+        <div className="dash-actions">
+          <Link href="/pt/despesas" className="dash-action">
             ＋ Despesa
           </Link>
 
-          <Link href="/pt/receitas" className="btn btn-ghost">
+          <Link href="/pt/receitas" className="dash-action">
             ＋ Receita
           </Link>
 
-          <Link href="/pt/calendario" className="btn btn-ghost">
+          <Link href="/pt/calendario" className="dash-action">
             📅 Agendar
           </Link>
 
-          <Link href="/pt/mobilidade" className="btn btn-ghost">
+          <Link href="/pt/mobilidade" className="dash-action">
             ⛽ Mobilidade
           </Link>
 
-          <Link href="/pt/lista" className="btn btn-ghost">
+          <Link href="/pt/lista" className="dash-action">
             🛒 Compras
           </Link>
 
           <Link
             href="/pt/captura?mode=voice&auto=1"
-            className="btn btn-primary"
+            className="dash-action"
           >
-            🎤 Falar com a MEL
+            Fala com a Mel
           </Link>
         </div>
 
