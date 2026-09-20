@@ -2669,3 +2669,36 @@ html[data-theme="blue"] {
   }
   .captura-fab:not(.quick-add-fab) { display: none; }
 }
+
+/* ——— Confirmação de fatura analisada ——— */
+.invoice-confirm { margin-top: 0.75rem; }
+.invoice-field-list {
+  display: grid;
+  gap: 0.5rem;
+}
+.invoice-field {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: var(--bg-soft, #f3f6f5);
+}
+.invoice-field.is-ok { border-left: 3px solid #0f7a4a; }
+.invoice-field.is-doubt,
+.invoice-field.is-missing { border-left: 3px solid #b45309; }
+.invoice-field-mark {
+  font-weight: 700;
+  min-width: 1.1rem;
+  color: #0f7a4a;
+}
+.invoice-field.is-doubt .invoice-field-mark,
+.invoice-field.is-missing .invoice-field-mark { color: #b45309; }
+.invoice-field-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted, #64748b);
+  font-weight: 600;
+}
+.invoice-field-value { font-size: 0.98rem; }
+.invoice-confirm.is-saved { border-left: 3px solid #0f7a4a; }

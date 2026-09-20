@@ -277,8 +277,9 @@ export function ExpenseForm({
         <select
           name="categoryId"
           required
-          defaultValue={initial?.categoryId ?? defaults?.categoryId ?? options[0]?.value}
+          defaultValue={initial?.categoryId ?? defaults?.categoryId ?? ""}
         >
+          <option value="">Escolher categoria…</option>
           {options.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}
@@ -532,7 +533,7 @@ export function RecurringForm({ categories, accounts }: { categories: Cat[]; acc
       <Field label="Nome">
         <input name="name" required placeholder="Ex: Netflix" list="recurring-presets" />
         <datalist id="recurring-presets">
-          {["Renda", "Água", "Luz", "Gás", "Internet", "Netflix", "Spotify", "Seguros", "Ginásio"].map((p) => (
+          {["Renda", "Água", "Eletricidade", "Gás", "Internet", "Netflix", "Spotify", "Seguros", "Ginásio"].map((p) => (
             <option key={p} value={p} />
           ))}
         </datalist>

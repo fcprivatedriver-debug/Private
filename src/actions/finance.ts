@@ -745,8 +745,16 @@ export async function runOcrPreview(formData: FormData) {
     return { ok: false as const, error: stored.error };
   }
 
-  const result = await recognizeReceipt({ fileName: file.name });
-  if (!result.available) {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const result = await recognizeReceipt({
+    fileName: file.name,
+    bytes,
+    mimeType: file.type || stored.stored.mimeType,
+    userId: session.user.id,
+    familyId: family.id,
+  });
+
+  if (!result.available || !result.extraction) {
     return {
       ok: false as const,
       error:
@@ -754,26 +762,49 @@ export async function runOcrPreview(formData: FormData) {
         "A leitura automática de faturas ainda não está disponível.",
       receiptUrl: stored.stored.url,
       receiptKind: stored.kind,
-      // Nunca devolver totais/produtos inventados ao cliente
       result: null,
+      analysis: null,
     };
   }
 
   return {
     ok: true as const,
-    result,
+    result: {
+      storeName: result.storeName,
+      date: result.date,
+      dueDate: result.dueDate,
+      totalCents: result.totalCents,
+      vatCents: result.vatCents,
+      suggestedCategorySlug: result.suggestedCategorySlug,
+      confidence: result.confidence,
+      items: result.items,
+    },
     receiptUrl: stored.stored.url,
     receiptKind: stored.kind,
+    analysis: {
+      supplier: result.extraction.supplier,
+      total: result.extraction.total,
+      currency: result.extraction.currency,
+      invoiceDate: result.extraction.invoiceDate,
+      dueDate: result.extraction.dueDate,
+      invoiceNumber: result.extraction.invoiceNumber,
+      categorySlug: result.extraction.category,
+      description: result.extraction.description,
+      vat: result.extraction.vat ?? null,
+      confidence: result.extraction.confidence,
+    },
   };
 }
 
 /**
- * Guarda despesa a partir de dados introduzidos pelo utilizador + fatura já persistida.
- * Nunca usa valores OCR inventados — só o que o utilizador confirma no formulário.
+ * Guarda despesa a partir de dados confirmados pelo utilizador + fatura já persistida.
+ * Nunca usa valores OCR inventados — só o que o utilizador confirma.
+ * Idempotente: se já existir despesa com o mesmo receiptUrl, devolve essa.
  */
 export async function confirmOcrExpense(input: {
   storeName: string;
   date: string;
+  dueDate?: string | null;
   totalCents: number;
   vatCents: number;
   categoryId: string;
@@ -781,7 +812,11 @@ export async function confirmOcrExpense(input: {
   paymentMethod: PaymentMethod;
   accountId?: string | null;
   receiptUrl?: string | null;
+  invoiceNumber?: string | null;
+  ocrRawJson?: string | null;
   items?: { name: string; quantity: number; unitCents: number; totalCents: number; vatRate?: number }[];
+  /** Evita duplo clique — token opcional do cliente */
+  clientToken?: string | null;
 }) {
   const { session, membership, family } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
@@ -809,6 +844,22 @@ export async function confirmOcrExpense(input: {
       receiptImageUrl = attached.receiptImageUrl;
       receiptPdfUrl = attached.receiptPdfUrl;
     }
+
+    // Idempotência: mesma fatura já associada a uma despesa
+    const existing = await prisma.expense.findFirst({
+      where: {
+        familyId: family.id,
+        OR: [
+          ...(receiptImageUrl ? [{ receiptImageUrl }] : []),
+          ...(receiptPdfUrl ? [{ receiptPdfUrl }] : []),
+        ],
+      },
+      select: { id: true },
+      orderBy: { createdAt: "desc" },
+    });
+    if (existing) {
+      return { ok: true as const, id: existing.id, deduped: true as const };
+    }
   }
 
   let storeId: string | undefined;
@@ -835,10 +886,16 @@ export async function confirmOcrExpense(input: {
 
   const notesParts = ["Fatura fotografada"];
   if (input.vatCents > 0) notesParts.push(`IVA ${(input.vatCents / 100).toFixed(2)} €`);
-  // items só se o utilizador os tiver introduzido — nunca inventados pelo OCR stub
+  if (input.invoiceNumber) notesParts.push(`N.º ${input.invoiceNumber}`);
+  if (input.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(input.dueDate)) {
+    const [y, m, d] = input.dueDate.split("-");
+    notesParts.push(`Vencimento: ${d}/${m}/${y}`);
+  }
   if (input.items && input.items.length > 0) {
     notesParts.push(`${input.items.length} linha(s) confirmada(s)`);
   }
+
+  const scope = await scopeFromSpace();
 
   const created = await prisma.expense.create({
     data: {
@@ -849,7 +906,7 @@ export async function confirmOcrExpense(input: {
       createdById: session.user.id,
       updatedById: session.user.id,
       storeId,
-      scope: "PERSONAL",
+      scope,
       amountCents: input.totalCents,
       date: new Date(input.date),
       description,
@@ -858,6 +915,8 @@ export async function confirmOcrExpense(input: {
       notes: notesParts.join(" · "),
       receiptImageUrl,
       receiptPdfUrl,
+      vatCents: input.vatCents > 0 ? input.vatCents : null,
+      ocrRawJson: input.ocrRawJson || null,
     },
   });
 
@@ -871,7 +930,57 @@ export async function confirmOcrExpense(input: {
     summary: `Criou despesa «${description}» com fatura (${(input.totalCents / 100).toFixed(2)} €)`,
   });
   revalidateApp();
-  return { ok: true as const, id: created.id };
+  return { ok: true as const, id: created.id, deduped: false as const };
+}
+
+/**
+ * Confirma análise de fatura (captura) → cria despesa no espaço activo.
+ * Aceita categorySlug ou categoryId.
+ */
+export async function confirmInvoiceExpense(input: {
+  receiptUrl: string;
+  supplier: string;
+  description?: string;
+  totalEuros: number;
+  currency?: string | null;
+  invoiceDate: string;
+  dueDate?: string | null;
+  invoiceNumber?: string | null;
+  categoryId?: string | null;
+  categorySlug?: string | null;
+  vatEuros?: number | null;
+  paymentMethod?: PaymentMethod;
+  accountId?: string | null;
+  extractionJson?: string | null;
+}) {
+  const { family } = await requireFamilyContext();
+
+  const categoryRef = (input.categoryId || input.categorySlug || "").trim();
+  const categoryId = await ensureCategory(family.id, "EXPENSE", categoryRef);
+  if (!categoryId) {
+    return { ok: false as const, error: "Escolhe uma categoria." };
+  }
+
+  const totalCents = Math.round(Number(input.totalEuros) * 100);
+  const vatCents =
+    input.vatEuros != null && Number.isFinite(input.vatEuros)
+      ? Math.round(Number(input.vatEuros) * 100)
+      : 0;
+
+  return confirmOcrExpense({
+    storeName: input.supplier || "",
+    date: input.invoiceDate,
+    dueDate: input.dueDate || null,
+    totalCents,
+    vatCents,
+    categoryId,
+    description: (input.description || input.supplier || "Fatura").trim(),
+    paymentMethod: input.paymentMethod || "DEBIT_CARD",
+    accountId: input.accountId || null,
+    receiptUrl: input.receiptUrl,
+    invoiceNumber: input.invoiceNumber || null,
+    ocrRawJson: input.extractionJson || null,
+  });
 }
 
 export async function startImport(provider: ImportProvider) {

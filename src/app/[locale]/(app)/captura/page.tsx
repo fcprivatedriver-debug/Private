@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getActiveFamilyForUser } from "@/lib/session";
 import { InstantCapture } from "@/components/nina/InstantCapture";
+import { listExpenseCategories } from "@/lib/categories-ensure";
 
 type Mode = "voice" | "photo" | "write";
 
@@ -22,6 +23,11 @@ export default async function CapturaPage({
   const autoStart =
     mode === "voice" && (sp.auto === "1" || sp.auto === "true");
 
+  const categories =
+    mode === "photo"
+      ? await listExpenseCategories(membership.familyId)
+      : [];
+
   return (
     <div className={`captura-page falar-page ${autoStart ? "captura-fast" : ""}`}>
       <h1 className="page-title">
@@ -29,10 +35,15 @@ export default async function CapturaPage({
       </h1>
       <p className="page-sub falar-prompt">
         {mode === "photo"
-          ? "Anexa a fatura — fotografia ou PDF."
+          ? "Fotografa ou anexa — a MEL analisa e prepara a despesa."
           : "Como posso ajudar?"}
       </p>
-      <InstantCapture initialMode={mode} autoStart={autoStart} compact />
+      <InstantCapture
+        initialMode={mode}
+        autoStart={autoStart}
+        compact
+        categories={categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))}
+      />
     </div>
   );
 }

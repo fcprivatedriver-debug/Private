@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { instantCapturePhoto, instantCaptureSpeak } from "@/actions/capture";
 import { requestUserLocation } from "@/lib/geolocation";
+import {
+  InvoiceConfirmPanel,
+  type InvoiceAnalysisDraft,
+} from "@/components/nina/InvoiceConfirmPanel";
 
 type Mode = "voice" | "photo" | "write";
 
@@ -14,6 +18,9 @@ type CaptureResult = {
   receiptUrl?: string;
   needsLocation?: boolean;
   pendingMobility?: { mode: "fuel" | "ev" | "auto"; utterance: string };
+  analysis?: InvoiceAnalysisDraft | null;
+  ocrAvailable?: boolean;
+  analyzing?: boolean;
 };
 
 const OK_RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
@@ -86,11 +93,14 @@ export function InstantCapture({
   initialMode = "voice",
   autoStart = false,
   compact = false,
+  categories = [],
 }: {
   initialMode?: Mode;
   autoStart?: boolean;
   /** UI enxuta para ecrã Falar */
   compact?: boolean;
+  /** Categorias de despesa (ordem sortOrder) — para confirmação de fatura */
+  categories?: { id: string; name: string; slug: string }[];
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -101,6 +111,7 @@ export function InstantCapture({
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [needsTap, setNeedsTap] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -257,32 +268,40 @@ export function InstantCapture({
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
-    // Limpar ambos — nunca mostrar erro e «Fatura guardada» ao mesmo tempo
+    // Limpar ambos — nunca mostrar erro e sucesso ao mesmo tempo
     setError(null);
-    setResult(null);
+    setResult({ reply: "A analisar a fatura…", analyzing: true });
+    setAnalyzing(true);
     const fd = new FormData();
     fd.set("file", file);
     start(async () => {
       try {
         const res = await instantCapturePhoto(fd);
+        setAnalyzing(false);
         if (!res.ok) {
           setResult(null);
           setError(sanitizeClientError(res.error));
           return;
         }
-        // Sucesso só após persistência confirmada (ok + receiptUrl)
         if (!res.receiptUrl) {
           setResult(null);
           setError("Não foi possível guardar a fatura. Tenta novamente.");
           return;
         }
         setError(null);
+        const analysis =
+          "analysis" in res && res.analysis && typeof res.analysis === "object"
+            ? (res.analysis as InvoiceAnalysisDraft)
+            : null;
         setResult({
           reply: res.reply,
           detail: res.detail,
           receiptUrl: res.receiptUrl,
+          analysis,
+          ocrAvailable: "ocrAvailable" in res ? Boolean(res.ocrAvailable) : false,
         });
       } catch {
+        setAnalyzing(false);
         setResult(null);
         setError("Não foi possível guardar a fatura. Tenta novamente.");
       }
@@ -468,7 +487,7 @@ export function InstantCapture({
               disabled={pending}
               onClick={() => cameraRef.current?.click()}
             >
-              {pending ? "A guardar…" : "Tirar fotografia"}
+              {pending || analyzing ? "A analisar…" : "Tirar fotografia"}
             </button>
             <button
               type="button"
@@ -498,6 +517,18 @@ export function InstantCapture({
         <p className="text-expense" role="alert">
           {error}
         </p>
+      ) : result?.analyzing || analyzing ? (
+        <div className="captura-result" role="status">
+          <strong>A analisar a fatura…</strong>
+          <span>A extrair fornecedor, total, datas e categoria.</span>
+        </div>
+      ) : result?.receiptUrl && result.ocrAvailable && result.analysis ? (
+        <InvoiceConfirmPanel
+          receiptUrl={result.receiptUrl}
+          analysis={result.analysis}
+          categories={categories}
+          onDismiss={() => setResult(null)}
+        />
       ) : result ? (
         <div className="captura-result" role="status">
           <strong>{result.reply}</strong>

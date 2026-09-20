@@ -3,8 +3,10 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
   { name: "Supermercado", slug: "supermercado", icon: "cart", color: "#2563eb" },
   { name: "Casa", slug: "casa", icon: "home", color: "#7c3aed" },
   { name: "Água", slug: "agua", icon: "droplet", color: "#0ea5e9" },
-  { name: "Luz", slug: "luz", icon: "zap", color: "#f59e0b" },
+  // slug "luz" preservado (despesas antigas); label actualizado para Eletricidade
+  { name: "Eletricidade", slug: "luz", icon: "zap", color: "#f59e0b" },
   { name: "Gás", slug: "gas", icon: "flame", color: "#ef4444" },
+  { name: "Eletricidade/Gás", slug: "eletricidade-gas", icon: "zap", color: "#d97706" },
   { name: "Internet", slug: "internet", icon: "wifi", color: "#6366f1" },
   { name: "Telemóveis", slug: "telemoveis", icon: "phone", color: "#8b5cf6" },
   { name: "Seguros", slug: "seguros", icon: "shield", color: "#475569" },
@@ -50,14 +52,19 @@ export const BUDGET_GROUPS = [
 export const RECURRING_PRESETS = [
   "Renda",
   "Água",
-  "Luz",
+  "Eletricidade",
   "Gás",
+  "Eletricidade/Gás",
   "Internet",
   "Netflix",
   "Spotify",
   "Seguros",
   "Ginásio",
 ] as const;
+
+/** Limiar de confiança para aceitar um campo OCR sem confirmação extra. */
+export const INVOICE_FIELD_CONFIDENCE_OK = 0.75;
+export const INVOICE_FIELD_CONFIDENCE_REVIEW = 0.5;
 
 export const IMPORT_PROVIDERS = [
   { id: "CONTINENTE", name: "Continente", kind: "api" },
