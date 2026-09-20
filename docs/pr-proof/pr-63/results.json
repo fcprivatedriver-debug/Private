@@ -1,0 +1,113 @@
+{
+  "base": "http://127.0.0.1:3000",
+  "sha": "8f1ab6e",
+  "results": [
+    {
+      "name": "A login",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000/pt/dashboard"
+    },
+    {
+      "name": "B Fatura abre opções sem câmara auto",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000/pt/captura?mode=photo"
+    },
+    {
+      "name": "B2 legacy auto=1 photo ainda mostra botões (sem auto-click)",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000/pt/captura?mode=photo&auto=1"
+    },
+    {
+      "name": "B3 voz auto=1 ainda disponível",
+      "pass": true,
+      "detail": "http://127.0.0.1:3000/pt/captura?mode=voice&auto=1"
+    },
+    {
+      "name": "C gallery JPEG",
+      "pass": true,
+      "detail": "success=true err=false both=false leak=false url=/api/uploads/families/cmu9e1x970002jsjqnmxsfwsa/1789883989985-c840c92e-t.jpg"
+    },
+    {
+      "name": "D gallery PNG",
+      "pass": true,
+      "detail": "success=true err=false both=false leak=false url=/api/uploads/families/cmu9e1x970002jsjqnmxsfwsa/1789883995604-d0bfd871-t.png"
+    },
+    {
+      "name": "E gallery WEBP",
+      "pass": true,
+      "detail": "success=true err=false both=false leak=false url=/api/uploads/families/cmu9e1x970002jsjqnmxsfwsa/1789884001215-55f4aa2f-t.webp"
+    },
+    {
+      "name": "F PDF <5MB",
+      "pass": true,
+      "detail": "/api/uploads/families/cmu9e1x970002jsjqnmxsfwsa/1789884006845-4fa7e0a0-t.pdf"
+    },
+    {
+      "name": "G /api/uploads JPEG",
+      "pass": true,
+      "detail": "status=200 ct=image/jpeg bytes=692"
+    },
+    {
+      "name": "G2 /api/uploads PNG",
+      "pass": true,
+      "detail": "status=200 ct=image/png bytes=156"
+    },
+    {
+      "name": "G3 /api/uploads WEBP",
+      "pass": true,
+      "detail": "status=200 ct=image/webp bytes=82"
+    },
+    {
+      "name": "G4 /api/uploads PDF",
+      "pass": true,
+      "detail": "status=200 ct=application/pdf bytes=422"
+    },
+    {
+      "name": "H refresh — upload ainda acessível",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "I logout/login — persistência",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "J Pessoal — fatura",
+      "pass": true,
+      "detail": "Fatura guardada"
+    },
+    {
+      "name": "J2 Familiar — fatura",
+      "pass": true,
+      "detail": "Fatura guardada"
+    },
+    {
+      "name": "K foto perfil Pessoal",
+      "pass": true,
+      "detail": "uploaded=true bad=false failMsg=false inputs=2"
+    },
+    {
+      "name": "K foto perfil Familiar",
+      "pass": true,
+      "detail": "uploaded=true bad=false failMsg=false inputs=2"
+    },
+    {
+      "name": "L botão Tirar fotografia presente (toque explícito)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "L2 câmara (toque explícito) guarda fatura",
+      "pass": true,
+      "detail": "Fatura guardada"
+    },
+    {
+      "name": "M UI mutuamente exclusiva após upload",
+      "pass": true,
+      "detail": "errNodes=0 okNodes=1 bothInText=false"
+    }
+  ],
+  "pass": 21,
+  "fail": 0
+}

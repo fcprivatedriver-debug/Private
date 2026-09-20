@@ -19,6 +19,27 @@ type CaptureResult = {
 const OK_RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
 
+/** Nunca mostrar stack/Prisma/Neon ao utilizador. */
+function sanitizeClientError(message: string | null | undefined): string {
+  const fallback = "Não foi possível guardar a fatura. Tenta novamente.";
+  if (!message || !message.trim()) return fallback;
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("prisma") ||
+    lower.includes("neon") ||
+    lower.includes("invalidarg") ||
+    lower.includes("serde_json") ||
+    lower.includes("storedobject") ||
+    lower.includes("raw query") ||
+    lower.includes("js functions cannot") ||
+    lower.includes("at async") ||
+    lower.includes("\n    at ")
+  ) {
+    return fallback;
+  }
+  return message;
+}
+
 
 const VOICE_EXAMPLES = [
   "Quanto gastei este mês?",
@@ -115,6 +136,7 @@ export function InstantCapture({
                   utterance: string;
                 })
               : undefined;
+          setError(null);
           setResult({
             reply: res.reply,
             detail: res.detail,
@@ -130,7 +152,8 @@ export function InstantCapture({
           }
           router.refresh();
         } else {
-          setError(res.error);
+          setResult(null);
+          setError(sanitizeClientError(res.error));
         }
       });
     },
@@ -223,43 +246,56 @@ export function InstantCapture({
       !OK_RECEIPT_TYPES.includes(file.type) &&
       !/\.(jpe?g|png|webp|pdf)$/i.test(file.name)
     ) {
+      setResult(null);
       setError("Formato não suportado. Usa JPEG, PNG, WEBP ou PDF.");
       return;
     }
     if (file.size > MAX_RECEIPT_BYTES) {
+      setResult(null);
       setError("Ficheiro demasiado grande (máx. 5 MB).");
       return;
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
+    // Limpar ambos — nunca mostrar erro e «Fatura guardada» ao mesmo tempo
     setError(null);
     setResult(null);
     const fd = new FormData();
     fd.set("file", file);
     start(async () => {
-      const res = await instantCapturePhoto(fd);
-      if (!res.ok) {
-        setError(res.error);
-        return;
+      try {
+        const res = await instantCapturePhoto(fd);
+        if (!res.ok) {
+          setResult(null);
+          setError(sanitizeClientError(res.error));
+          return;
+        }
+        // Sucesso só após persistência confirmada (ok + receiptUrl)
+        if (!res.receiptUrl) {
+          setResult(null);
+          setError("Não foi possível guardar a fatura. Tenta novamente.");
+          return;
+        }
+        setError(null);
+        setResult({
+          reply: res.reply,
+          detail: res.detail,
+          receiptUrl: res.receiptUrl,
+        });
+      } catch {
+        setResult(null);
+        setError("Não foi possível guardar a fatura. Tenta novamente.");
       }
-      setResult({
-        reply: res.reply,
-        detail: res.detail,
-        receiptUrl: res.receiptUrl,
-      });
     });
   }
 
   useEffect(() => {
     if (!autoStart || autoTried.current) return;
     autoTried.current = true;
+    // Só a voz pode auto-iniciar. Fatura/foto NUNCA abre a câmara sozinha —
+    // o utilizador tem de tocar em «Tirar fotografia».
     if (initialMode === "voice") {
       const t = window.setTimeout(() => startListening(true), 280);
-      return () => window.clearTimeout(t);
-    }
-    if (initialMode === "photo") {
-      // Câmara nativa no telemóvel — inputs separados evitam botão sem resposta no Android
-      const t = window.setTimeout(() => cameraRef.current?.click(), 350);
       return () => window.clearTimeout(t);
     }
   }, [autoStart, initialMode, startListening]);
@@ -458,7 +494,11 @@ export function InstantCapture({
         </section>
       ) : null}
 
-      {result ? (
+      {error ? (
+        <p className="text-expense" role="alert">
+          {error}
+        </p>
+      ) : result ? (
         <div className="captura-result" role="status">
           <strong>{result.reply}</strong>
           {result.detail ? <span>{result.detail}</span> : null}
@@ -502,7 +542,6 @@ export function InstantCapture({
           ) : null}
         </div>
       ) : null}
-      {error ? <p className="text-expense">{error}</p> : null}
 
       {!compact ? (
         <section className="captura-alt panel">
