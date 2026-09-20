@@ -137,20 +137,74 @@ h1, h2, h3 {
 .text-warn { color: var(--warn); }
 .text-income { color: var(--income); }
 
-/* Brand */
+/* Brand — logótipo Add / and / Know (mockup) */
 .brand-logo {
   display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  color: var(--navy-deep);
+  align-items: flex-start;
+  color: #1a4a4a;
+  text-decoration: none;
+  line-height: 1;
 }
-.brand-mark { display: grid; place-items: center; color: #1e3a5f; }
-html.dark .brand-mark { color: #2a4a73; }
-.brand-word {
+.brand-stacked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+.brand-line {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.03em;
+  color: #1a4a4a;
+  line-height: 1.05;
+}
+.brand-line--add {
+  padding-left: 0;
+}
+.brand-line--and {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding-left: 0.85em;
+  position: relative;
+}
+.brand-line--know {
+  padding-left: 1.7em;
+}
+.brand-and-text {
+  position: relative;
+  z-index: 1;
+}
+.brand-leaves {
+  width: 1.15em;
+  height: 0.9em;
+  margin-left: -0.05em;
+  margin-top: -0.35em;
+  flex: 0 0 auto;
+}
+.brand-slogan {
+  margin-top: 0.28rem;
+  padding-left: 1.7em;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.42em;
+  letter-spacing: 0.01em;
+  color: #6a8a8a;
   white-space: nowrap;
+  line-height: 1.2;
+}
+.brand-logo--sm .brand-line { font-size: 1.05rem; }
+.brand-logo--md .brand-line { font-size: 1.45rem; }
+.brand-logo--lg .brand-line { font-size: 2rem; }
+.brand-logo--sm .brand-slogan { font-size: 0.55rem; }
+.brand-logo--md .brand-slogan { font-size: 0.68rem; }
+.brand-logo--lg .brand-slogan { font-size: 0.82rem; }
+html.dark .brand-logo,
+html.dark .brand-line {
+  color: #a8e6e2;
+}
+html.dark .brand-slogan {
+  color: #93a4b0;
 }
 
 /* Password show/hide
@@ -432,12 +486,9 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
   padding: 1rem 1.25rem;
   max-width: 720px;
 }
-.landing-v2 .brand-logo { color: var(--landing-navy); }
-.landing-v2 .brand-mark { color: var(--landing-teal); }
-.landing-v2 .brand-word {
-  color: var(--landing-navy);
-  font-size: 1.2rem !important;
-}
+.landing-v2 .brand-logo { color: #1a4a4a; }
+.landing-v2 .brand-line { color: #1a4a4a; }
+.landing-v2 .brand-slogan { color: #6a8a8a; }
 .landing-v2 .btn-primary {
   background: var(--landing-teal);
   color: #fff;
@@ -723,17 +774,68 @@ html.dark .btn-primary { background: var(--teal-soft); color: #0c1a1a; }
 
 .app-main { min-width: 0; }
 .app-topbar {
-  height: var(--header-h);
+  height: auto;
+  min-height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0.55rem 1.5rem;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
-  backdrop-filter: blur(10px);
+  background: var(--bg-elevated);
+  gap: 0.75rem;
+}
+.app-chrome-sticky {
   position: sticky;
   top: 0;
   z-index: 20;
+  background: var(--bg-elevated);
+}
+.app-topbar--brand {
+  border-bottom: none;
+  padding-bottom: 0.35rem;
+}
+.app-space-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.35rem 1.5rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-elevated);
+}
+.topbar-utility {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+  color: #1a4a4a;
+}
+.topbar-utility-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  color: inherit;
+}
+.topbar-utility-btn:hover,
+.topbar-utility-btn:focus-visible {
+  background: var(--bg-soft);
+  outline: none;
+}
+.topbar-utility-dot {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5484d;
+  border: 1.5px solid var(--bg-elevated);
+}
+html.dark .topbar-utility {
+  color: #a8e6e2;
 }
 .topbar-identity {
   display: flex;
@@ -2642,7 +2744,9 @@ html[data-theme="blue"] {
     min-height: 48px;
     padding: 0.55rem 0.85rem;
   }
-  .topbar-actions-desktop { display: none; }
+  .app-space-bar {
+    padding: 0.25rem 0.85rem 0.55rem;
+  }
   .topbar-space {
     flex: 0 0 auto;
     margin-top: 0;

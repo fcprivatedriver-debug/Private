@@ -41,16 +41,6 @@ export default async function DashboardPage() {
         }}
       >
         <header style={{ marginBottom: "32px" }}>
-          <p
-            style={{
-              margin: "0 0 6px",
-              color: "#527273",
-              fontSize: "15px",
-            }}
-          >
-            addYknow
-          </p>
-
           <h1
             style={{
               margin: 0,
