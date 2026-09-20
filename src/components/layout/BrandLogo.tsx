@@ -2,25 +2,28 @@ import Link from "next/link";
 import { APP_NAME, ASSISTANT_NAME, APP_SLOGAN } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
-/** Folhas do logótipo — referência visual exacta do mockup. */
+/**
+ * Folhas — referência oficial: duas folhas teal na zona superior de KNOW
+ * (acima de Know, à direita de “and”), não junto do “and”.
+ */
 function BrandLeaves({ className }: { className?: string }) {
   return (
     <svg
       className={cn("brand-leaves", className)}
-      viewBox="0 0 36 28"
+      viewBox="0 0 40 32"
       fill="none"
       aria-hidden
     >
       <path
-        d="M8 22c2.2-7.5 7.2-12.2 14.5-14.2-1.1 6.8-5.2 12.2-12.2 15.4-.8.4-1.7-.4-1.3-1.2Z"
+        d="M6 26c3-9 9.5-15 18.5-17.5-1.5 8.5-6.5 15-15.2 18.8-.9.4-1.9-.5-1.4-1.3Z"
         fill="#3ECFBE"
       />
       <path
-        d="M14 20c3.4-6.8 9.2-10.4 16.8-11.2-2.4 6.2-7.4 10.6-15.2 12.8-.9.3-1.7-.6-1.6-1.6Z"
+        d="M14 24c4-8.2 11-12.5 20-13.5-2.8 7.5-9 12.8-18.2 15.5-1 .3-1.9-.7-1.8-1.8Z"
         fill="#2BB8A8"
       />
       <path
-        d="M12 14c1.6-5.8 5.8-9.6 11.8-11.4.2 5.4-2.6 10.2-9.6 13.2-.9.4-1.8-.4-1.4-1.2Z"
+        d="M11 16c2-7 7-11.5 14-13.5.3 6.5-3 12.2-11.5 15.8-1 .4-2-.5-1.5-1.4Z"
         fill="#5ED9CB"
       />
     </svg>
@@ -48,14 +51,15 @@ export function BrandLogo({
       href={href}
       className={cn("brand-logo", `brand-logo--${size}`, className)}
       aria-label={`${APP_NAME} — ${APP_SLOGAN}. Com a ${ASSISTANT_NAME}.`}
+      data-testid="brand-logo"
     >
       <span className="brand-stacked" aria-hidden>
         <span className="brand-line brand-line--add">Add</span>
-        <span className="brand-line brand-line--and">
-          <span className="brand-and-text">and</span>
+        <span className="brand-line brand-line--and">and</span>
+        <span className="brand-line brand-line--know">
           <BrandLeaves />
+          <span className="brand-know-text">Know</span>
         </span>
-        <span className="brand-line brand-line--know">Know</span>
         {withSlogan ? <span className="brand-slogan">{APP_SLOGAN}</span> : null}
       </span>
       <span className="sr-only">{APP_NAME}</span>

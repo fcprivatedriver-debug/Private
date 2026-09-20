@@ -137,75 +137,91 @@ h1, h2, h3 {
 .text-warn { color: var(--warn); }
 .text-income { color: var(--income); }
 
-/* Brand — logótipo Add / and / Know (mockup) */
+/* Brand — logótipo Add / and / Know (referência oficial em escada) */
 .brand-logo {
   display: inline-flex;
   align-items: flex-start;
-  color: #1a4a4a;
+  color: #1a3f3f;
   text-decoration: none;
   line-height: 1;
 }
 .brand-stacked {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
+  position: relative;
+  display: block;
+  /* Ligeiramente mais largo — escada com offsets claros */
+  width: 8.6em;
+  min-height: 3.55em;
 }
 .brand-line {
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: -0.03em;
-  color: #1a4a4a;
-  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #1a3f3f;
+  line-height: 0.92;
+  position: absolute;
+  left: 0;
 }
+/* Degrau 1 */
 .brand-line--add {
-  padding-left: 0;
+  top: 0;
+  left: 0;
+  font-size: 1em;
 }
+/* Degrau 2 — ~58% · abaixo + à direita (topo ≈ baseline Add) */
 .brand-line--and {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding-left: 0.85em;
-  position: relative;
+  top: 0.92em;
+  left: 1.65em;
+  font-size: 0.58em;
 }
+/* Degrau 3 — Know grande · mais abaixo + mais à direita */
 .brand-line--know {
-  padding-left: 1.7em;
+  top: 1.55em;
+  left: 2.75em;
+  font-size: 1em;
+  display: block;
 }
-.brand-and-text {
+.brand-know-text {
   position: relative;
   z-index: 1;
 }
+/* Folhas na zona superior de KNOW (acima do K, à direita de “and”) */
 .brand-leaves {
-  width: 1.15em;
-  height: 0.9em;
-  margin-left: -0.05em;
-  margin-top: -0.35em;
-  flex: 0 0 auto;
+  position: absolute;
+  left: 0.45em;
+  top: -1.05em;
+  width: 1.3em;
+  height: 1em;
+  pointer-events: none;
+  z-index: 2;
 }
 .brand-slogan {
-  margin-top: 0.28rem;
-  padding-left: 1.7em;
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* top em relativo ao font-size do .brand-stacked (não ao do slogan) */
+  top: 2.85em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 0.42em;
-  letter-spacing: 0.01em;
-  color: #6a8a8a;
+  /* herda tamanho do stacked; escala via transform para não alterar o em do top */
+  font-size: 1em;
+  transform: scale(0.34);
+  transform-origin: top center;
+  letter-spacing: 0.02em;
+  color: #6a8585;
   white-space: nowrap;
   line-height: 1.2;
 }
-.brand-logo--sm .brand-stacked { font-size: 1.05rem; }
-.brand-logo--md .brand-stacked { font-size: 1.45rem; }
-.brand-logo--lg .brand-stacked { font-size: 2rem; }
-.brand-line--add,
-.brand-line--know {
-  font-size: 1em;
+.brand-logo--sm .brand-stacked { font-size: 1.1rem; width: 9em; min-height: 3.85em; }
+.brand-logo--md .brand-stacked { font-size: 1.55rem; width: 9.4em; min-height: 3.95em; }
+.brand-logo--lg .brand-stacked { font-size: 2.1rem; width: 9.8em; min-height: 4.15em; }
+.brand-logo--sm .brand-slogan,
+.brand-logo--md .brand-slogan,
+.brand-logo--lg .brand-slogan {
+  transform: scale(0.34);
 }
-.brand-line--and {
-  font-size: 0.58em; /* ~55–60% de Add/Know */
-}
-.brand-logo--sm .brand-slogan { font-size: 0.55rem; }
-.brand-logo--md .brand-slogan { font-size: 0.68rem; }
-.brand-logo--lg .brand-slogan { font-size: 0.82rem; }
 html.dark .brand-logo,
 html.dark .brand-line {
   color: #a8e6e2;

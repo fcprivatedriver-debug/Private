@@ -55,13 +55,13 @@ async function main() {
   // 3. Logo em escada
   try {
     const add = await page.locator(".brand-line--add").first().textContent();
-    const and = await page.locator(".brand-and-text").first().textContent();
-    const know = await page.locator(".brand-line--know").first().textContent();
+    const and = await page.locator(".brand-line--and").first().textContent();
+    const know = await page.locator(".brand-know-text, .brand-line--know").first().textContent();
     const slogan = await page.locator(".brand-slogan").first().textContent();
     const ok =
       add?.trim() === "Add" &&
       and?.trim() === "and" &&
-      know?.trim() === "Know" &&
+      /Know/.test(know || "") &&
       /Controla Poupa Vive/i.test(slogan || "");
     record(3, "Logo em escada", ok, `${add}/${and}/${know} · ${slogan}`);
   } catch (e) {
@@ -237,10 +237,13 @@ async function main() {
     const sel = page.locator('[data-know-filter="member"]');
     const opts = await sel.locator("option").count();
     if (opts > 1) {
-      await sel.selectOption({ index: 1 });
+      const val = await sel.locator("option").nth(1).getAttribute("value");
+      await sel.selectOption(val || { index: 1 });
       await page.getByRole("button", { name: /Aplicar filtros/i }).click();
-      await page.waitForTimeout(1200);
+      await page.waitForTimeout(1500);
+      const ok = page.url().includes("member=") || (await sel.inputValue()) !== "";
       record(14, "Filtro por membro", page.url().includes("member="), page.url());
+      void ok;
     } else {
       record(14, "Filtro por membro", (await sel.count()) > 0, `opts=${opts}`);
     }
