@@ -137,7 +137,7 @@ export default async function DashboardPage({
     color: c.color,
     amountCents: c.cents,
   }));
-  let evolution = dash.evolution;
+  const evolution = dash.evolution;
 
   if (!isCurrentMonth || useCustomRange) {
     const { monthBounds } = await import("@/lib/money");
