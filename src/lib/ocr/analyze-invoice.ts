@@ -136,7 +136,7 @@ export async function analyzeInvoiceDocument(input: {
       ok: false,
       available: false,
       error:
-        "A análise automática de faturas precisa da chave OpenAI (OPENAI_API_KEY) neste ambiente.",
+        "A análise automática não está configurada neste ambiente. A fatura ficou guardada — confirma os dados para criar a despesa.",
       code: "NOT_CONFIGURED",
     };
   }
