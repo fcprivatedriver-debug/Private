@@ -91,17 +91,33 @@ export function KnowDashboard(props: KnowDashboardProps) {
 
   const catTotal = props.categoryChart.reduce((s, c) => s + c.amountCents, 0) || 1;
 
-  function applyFilters() {
+  function applyFilters(e?: React.MouseEvent<HTMLButtonElement>) {
+    const form = e?.currentTarget.closest(".know-filters");
+    const read = (name: string) => {
+      const el = form?.querySelector(`[data-know-filter="${name}"]`) as
+        | HTMLSelectElement
+        | HTMLInputElement
+        | null;
+      return el?.value ?? "";
+    };
+    const m = Number(read("month") || periodMonth);
+    const y = Number(read("year") || periodYear);
+    const from = read("from") || dateFrom;
+    const to = read("to") || dateTo;
+    const k = (read("kind") || kind) as typeof kind;
+    const cat = read("cat") || categoryId;
+    const mem = read("member") || memberId;
+
     start(() => {
       const params = new URLSearchParams();
       params.set("pane", "know");
-      params.set("y", String(periodYear));
-      params.set("m", String(periodMonth));
-      if (dateFrom) params.set("from", dateFrom);
-      if (dateTo) params.set("to", dateTo);
-      if (categoryId) params.set("cat", categoryId);
-      if (memberId) params.set("member", memberId);
-      if (kind !== "all") params.set("kind", kind);
+      params.set("y", String(y));
+      params.set("m", String(m));
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      if (cat) params.set("cat", cat);
+      if (mem) params.set("member", mem);
+      if (k !== "all") params.set("kind", k);
       router.push(`/pt/dashboard?${params.toString()}`);
     });
   }
@@ -126,6 +142,7 @@ export function KnowDashboard(props: KnowDashboardProps) {
           <label className="field">
             <span>Mês</span>
             <select
+              data-know-filter="month"
               value={periodMonth}
               onChange={(e) => setPeriodMonth(Number(e.target.value))}
             >
@@ -139,6 +156,7 @@ export function KnowDashboard(props: KnowDashboardProps) {
           <label className="field">
             <span>Ano</span>
             <select
+              data-know-filter="year"
               value={periodYear}
               onChange={(e) => setPeriodYear(Number(e.target.value))}
             >
@@ -153,17 +171,27 @@ export function KnowDashboard(props: KnowDashboardProps) {
             <span>De</span>
             <input
               type="date"
+              data-know-filter="from"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
             />
           </label>
           <label className="field">
             <span>Até</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            <input
+              type="date"
+              data-know-filter="to"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
           </label>
           <label className="field">
             <span>Tipo</span>
-            <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
+            <select
+              data-know-filter="kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value as typeof kind)}
+            >
               <option value="all">Receitas e despesas</option>
               <option value="income">Só receitas</option>
               <option value="expense">Só despesas</option>
@@ -171,7 +199,11 @@ export function KnowDashboard(props: KnowDashboardProps) {
           </label>
           <label className="field">
             <span>Categoria</span>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <select
+              data-know-filter="cat"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
               <option value="">Todas</option>
               {props.categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -183,7 +215,11 @@ export function KnowDashboard(props: KnowDashboardProps) {
           {props.space === "family" ? (
             <label className="field">
               <span>Membro</span>
-              <select value={memberId} onChange={(e) => setMemberId(e.target.value)}>
+              <select
+                data-know-filter="member"
+                value={memberId}
+                onChange={(e) => setMemberId(e.target.value)}
+              >
                 <option value="">Toda a família</option>
                 {props.members.map((m) => (
                   <option key={m.id} value={m.id}>
