@@ -63,7 +63,7 @@ async function captureStills() {
   await shot(page, "10-dashboard");
   await gotoShot(page, "/pt/captura", "10h-captura");
   await gotoShot(page, "/pt/captura?mode=voice&auto=1", "10h2-captura-voz");
-  await gotoShot(page, "/pt/captura?mode=photo&auto=1", "10h3-captura-foto-auto");
+  await gotoShot(page, "/pt/captura?mode=photo", "10h3-captura-foto");
   await page.getByRole("button", { name: /Supermercado, 35 euros/i }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   await shot(page, "10i-captura-registado");

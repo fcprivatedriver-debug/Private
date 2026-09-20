@@ -92,8 +92,10 @@ export function OcrClient({
         return;
       }
 
-      // Sem OCR: fatura guardada — formulário manual vazio (nunca valores inventados).
+      // Sem OCR mas fatura persistida — formulário manual (nunca valores inventados).
+      // ok:false aqui é «OCR indisponível», NÃO falha de storage (storage falhou → sem receiptUrl).
       if (res.receiptUrl) {
+        setError(null);
         setReceiptUrl(res.receiptUrl);
         setManualOpen(true);
         setStoreName("");
@@ -101,13 +103,13 @@ export function OcrClient({
         setVat("");
         setDate(new Date().toISOString().slice(0, 10));
         setMessage(
-          res.error ||
-            "A leitura automática ainda não está disponível. Introduz os dados manualmente — a fatura já está guardada.",
+          "A leitura automática ainda não está disponível. Introduz os dados manualmente — a fatura já está guardada.",
         );
         return;
       }
       setReceiptUrl(null);
       setManualOpen(false);
+      setMessage(null);
       setError(res.error || "Não foi possível guardar a fatura.");
     });
   }
@@ -178,8 +180,13 @@ export function OcrClient({
         </div>
       </div>
 
-      {error ? <p className="form-error">{error}</p> : null}
-      {message ? <p className="muted">{message}</p> : null}
+      {error ? (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      ) : message ? (
+        <p className="muted">{message}</p>
+      ) : null}
 
       {fileLabel ? (
         <div className="receipt-preview panel" style={{ padding: "0.75rem" }}>

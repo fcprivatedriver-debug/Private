@@ -7,7 +7,9 @@ import { usePathname } from "next/navigation";
 const ACTIONS = [
   { href: "/pt/despesas/nova", label: "Despesa", hint: "Registar um gasto" },
   { href: "/pt/receitas/nova", label: "Receita", hint: "Registar uma entrada" },
-  { href: "/pt/captura?mode=photo&auto=1", label: "Fatura", hint: "Fotografar ou anexar" },
+  // Sem auto=1: o ecrã Fatura mostra Tirar / Escolher foto / PDF.
+  // A câmara só abre após toque explícito em «Tirar fotografia».
+  { href: "/pt/captura?mode=photo", label: "Fatura", hint: "Fotografar ou anexar" },
 ] as const;
 
 /**

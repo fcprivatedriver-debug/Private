@@ -41,7 +41,7 @@ Quem já tem Nina/AddYnow/addYknow com este `id` **não** precisa de reinstalar.
 |--------|-----|
 | Dashboard | `/pt/dashboard` |
 | Falar com a MEL | `/pt/captura?mode=voice&auto=1` |
-| Fotografar Fatura | `/pt/captura?mode=photo&auto=1` |
+| Fotografar Fatura | `/pt/captura?mode=photo` (opções; câmara só após toque) |
 | Lista de Compras | `/pt/lista` |
 | Objetivos | `/pt/objetivos` |
 

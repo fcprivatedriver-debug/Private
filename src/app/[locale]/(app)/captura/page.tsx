@@ -18,7 +18,9 @@ export default async function CapturaPage({
   const sp = (await searchParams) || {};
   const mode: Mode =
     sp.mode === "photo" || sp.mode === "write" || sp.mode === "voice" ? sp.mode : "voice";
-  const autoStart = sp.auto === "1" || sp.auto === "true";
+  // auto=1 só para voz — Fatura nunca inicia a câmara sozinha
+  const autoStart =
+    mode === "voice" && (sp.auto === "1" || sp.auto === "true");
 
   return (
     <div className={`captura-page falar-page ${autoStart ? "captura-fast" : ""}`}>
