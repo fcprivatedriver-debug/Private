@@ -486,12 +486,13 @@ export async function instantCaptureSpeak(
 }
 
 /**
- * Captura Instantânea por fotografia.
- * Guarda o ficheiro de forma persistente (Neon) mas NÃO inventa OCR nem cria despesa fictícia.
- * O utilizador regista o valor por voz/manual; a foto fica disponível para anexar/consultar.
+ * Captura Instantânea por fotografia/PDF.
+ * 1) Persiste o ficheiro (Neon)
+ * 2) Analisa com Vision (se OpenAI configurado)
+ * 3) Devolve dados para confirmação — NÃO cria despesa sozinho
  */
 export async function instantCapturePhoto(formData: FormData) {
-  const { membership, family } = await requireFamilyContext();
+  const { session, membership, family } = await requireFamilyContext();
   if (!canEditFinances(membership.role)) {
     return { ok: false as const, error: "Sem permissão para registar." };
   }
@@ -510,35 +511,55 @@ export async function instantCapturePhoto(formData: FormData) {
     return { ok: false as const, error: storedRes.error };
   }
 
+  const bytes = Buffer.from(await file.arrayBuffer());
   const ocr = await recognizeReceipt({
     fileName: file.name,
     hintText: String(formData.get("hint") || ""),
+    bytes,
+    mimeType: file.type || storedRes.stored.mimeType,
+    userId: session.user.id,
+    familyId: family.id,
   });
 
-  // Ficheiro persistido em Neon (StoredObject). Sem motor OCR real: nunca inventar totais/produtos.
-  if (!ocr.available) {
+  if (!ocr.available || !ocr.extraction) {
     return {
       ok: true as const,
       reply: "Fatura guardada.",
       detail:
         ocr.unavailableReason ||
-        "A leitura automática ainda não está disponível. Regista o valor manualmente em Despesas — a fatura já está anexável.",
+        "A leitura automática não conseguiu extrair dados. Confirma o valor em Despesas — a fatura já está anexável.",
       receiptUrl: storedRes.stored.url,
       receiptKind: storedRes.kind,
       ocrAvailable: false as const,
       kind: "receipt_stored" as const,
+      analysis: null,
     };
   }
 
-  // Motor OCR real futuro: ainda assim NÃO criar despesa automaticamente —
-  // o utilizador confirma os valores lidos.
   return {
     ok: true as const,
-    reply: "Fatura guardada.",
-    detail: "Confirma os dados lidos antes de registar a despesa.",
+    reply: "Fatura analisada",
+    detail: "Confirma os dados antes de guardar a despesa.",
     receiptUrl: storedRes.stored.url,
     receiptKind: storedRes.kind,
     ocrAvailable: true as const,
-    kind: "receipt_stored" as const,
+    kind: "receipt_analyzed" as const,
+    analysis: {
+      supplier: ocr.extraction.supplier,
+      total: ocr.extraction.total,
+      currency: ocr.extraction.currency,
+      invoiceDate: ocr.extraction.invoiceDate,
+      dueDate: ocr.extraction.dueDate,
+      invoiceNumber: ocr.extraction.invoiceNumber,
+      categorySlug: ocr.extraction.category,
+      description: ocr.extraction.description,
+      vat: ocr.extraction.vat ?? null,
+      confidence: ocr.extraction.confidence,
+      readyToConfirm:
+        ocr.totalCents > 0 &&
+        ocr.confidence >= 0.7 &&
+        Boolean(ocr.extraction.invoiceDate) &&
+        Boolean(ocr.extraction.category),
+    },
   };
 }

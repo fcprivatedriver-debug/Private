@@ -75,8 +75,8 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Fotografar Fatura",
         short_name: "Fatura",
-        description: "Abrir câmara para ler a fatura",
-        url: "/pt/captura?mode=photo&auto=1&utm_source=pwa_shortcut&utm_medium=photo",
+        description: "Anexar fotografia ou PDF da fatura",
+        url: "/pt/captura?mode=photo&utm_source=pwa_shortcut&utm_medium=photo",
         icons: [{ src: "/icons/shortcut-photo.png", sizes: "96x96", type: "image/png" }],
       },
       {

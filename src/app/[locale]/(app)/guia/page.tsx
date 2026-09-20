@@ -38,7 +38,7 @@ const SECTIONS = [
   {
     title: "Como fotografar uma fatura",
     body: "Abre a câmara na Captura, fotografa o recibo e confirma os dados. A despesa fica registada com a imagem.",
-    href: "/pt/captura?mode=photo&auto=1",
+    href: "/pt/captura?mode=photo",
     cta: "Experimentar",
   },
   {

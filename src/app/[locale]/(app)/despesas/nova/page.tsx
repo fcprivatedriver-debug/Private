@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { ExpenseForm } from "@/components/finance/Forms";
 import { getNinaSpace } from "@/actions/household";
 import { resolveFamilyReceiptAttachment } from "@/lib/receipts";
+import { listExpenseCategories } from "@/lib/categories-ensure";
 
 export default async function NovaDespesaPage({
   searchParams,
@@ -21,20 +22,25 @@ export default async function NovaDespesaPage({
     ? await resolveFamilyReceiptAttachment(membership.familyId, sp.receipt)
     : null;
 
-  const [categories, accounts, members, space] = await Promise.all([
-    prisma.category.findMany({ where: { familyId: membership.familyId }, orderBy: { name: "asc" } }),
+  const [expenseCategories, incomeCategories, accounts, members, space] = await Promise.all([
+    listExpenseCategories(membership.familyId),
+    prisma.category.findMany({
+      where: { familyId: membership.familyId, kind: "INCOME" },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
     prisma.financeAccount.findMany({ where: { familyId: membership.familyId, isActive: true } }),
     prisma.familyMember.findMany({ where: { familyId: membership.familyId } }),
     getNinaSpace(),
   ]);
+
+  const categories = [...expenseCategories, ...incomeCategories];
 
   return (
     <div className="page-stack nova-despesa-page">
       <h1 className="page-title">Nova despesa</h1>
       {attachedReceipt ? (
         <p className="muted small" style={{ marginTop: 0 }}>
-          Fatura já fotografada — confirma o valor e guarda. A leitura automática ainda não está
-          disponível.
+          Fatura já anexada — confirma os dados e guarda.
         </p>
       ) : null}
       <ExpenseForm

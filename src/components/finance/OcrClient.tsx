@@ -41,9 +41,11 @@ export function OcrClient({
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [amount, setAmount] = useState("");
   const [vat, setVat] = useState("");
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("DEBIT_CARD");
   const [accountId, setAccountId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
 
   function acceptFile(file: File | null) {
     if (!file) return;
@@ -68,14 +70,23 @@ export function OcrClient({
 
     const fd = new FormData();
     fd.set("file", file);
+    setAnalyzing(true);
+    setMessage("A analisar a fatura…");
     start(async () => {
       const res = await runOcrPreview(fd);
-      if (res.ok) {
-        // Motor OCR real futuro — ainda assim o utilizador confirma no formulário.
+      setAnalyzing(false);
+      if (res.ok && res.result) {
         setReceiptUrl(res.receiptUrl);
         setManualOpen(true);
         setStoreName(res.result.storeName || "");
         setDate(res.result.date || new Date().toISOString().slice(0, 10));
+        setDueDate(
+          "dueDate" in res.result && typeof res.result.dueDate === "string"
+            ? res.result.dueDate
+            : "analysis" in res && res.analysis?.dueDate
+              ? res.analysis.dueDate
+              : "",
+        );
         setAmount(
           res.result.totalCents > 0
             ? (res.result.totalCents / 100).toFixed(2).replace(".", ",")
@@ -86,28 +97,36 @@ export function OcrClient({
             ? (res.result.vatCents / 100).toFixed(2).replace(".", ",")
             : "",
         );
-        const cat = categories.find((c) => c.slug === res.result.suggestedCategorySlug);
-        if (cat) setCategoryId(cat.id);
-        setMessage("Confirma os dados lidos da fatura antes de guardar.");
+        const slug =
+          res.result.suggestedCategorySlug ||
+          ("analysis" in res && res.analysis?.categorySlug) ||
+          "";
+        const cat = categories.find((c) => c.slug === slug);
+        setCategoryId(cat?.id || "");
+        setMessage("Fatura analisada — confirma e guarda.");
         return;
       }
 
-      // Sem OCR: fatura guardada — formulário manual vazio (nunca valores inventados).
+      // Sem OCR mas fatura persistida — formulário manual (nunca valores inventados).
       if (res.receiptUrl) {
+        setError(null);
         setReceiptUrl(res.receiptUrl);
         setManualOpen(true);
         setStoreName("");
         setAmount("");
         setVat("");
+        setDueDate("");
+        setCategoryId("");
         setDate(new Date().toISOString().slice(0, 10));
         setMessage(
           res.error ||
-            "A leitura automática ainda não está disponível. Introduz os dados manualmente — a fatura já está guardada.",
+            "Não foi possível extrair todos os dados. Confirma manualmente — a fatura já está guardada.",
         );
         return;
       }
       setReceiptUrl(null);
       setManualOpen(false);
+      setMessage(null);
       setError(res.error || "Não foi possível guardar a fatura.");
     });
   }
@@ -157,7 +176,7 @@ export function OcrClient({
             disabled={pending}
             onClick={() => cameraRef.current?.click()}
           >
-            {pending ? "A guardar…" : "Tirar fotografia"}
+            {pending || analyzing ? "A analisar…" : "Tirar fotografia"}
           </button>
           <button
             type="button"
@@ -178,8 +197,13 @@ export function OcrClient({
         </div>
       </div>
 
-      {error ? <p className="form-error">{error}</p> : null}
-      {message ? <p className="muted">{message}</p> : null}
+      {error ? (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      ) : message ? (
+        <p className="muted">{message}</p>
+      ) : null}
 
       {fileLabel ? (
         <div className="receipt-preview panel" style={{ padding: "0.75rem" }}>
@@ -225,6 +249,7 @@ export function OcrClient({
               const res = await confirmOcrExpense({
                 storeName,
                 date,
+                dueDate: dueDate || null,
                 totalCents,
                 vatCents: Number.isFinite(vatCents) ? vatCents : 0,
                 categoryId,
@@ -256,6 +281,10 @@ export function OcrClient({
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           </label>
           <label className="field">
+            <span>Vencimento (opcional)</span>
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </label>
+          <label className="field">
             <span>Valor total (€)</span>
             <input
               value={amount}
@@ -277,6 +306,7 @@ export function OcrClient({
           <label className="field">
             <span>Categoria</span>
             <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+              <option value="">Escolher categoria…</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
