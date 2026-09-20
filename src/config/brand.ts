@@ -11,6 +11,9 @@
 export const APP_NAME = "addYknow";
 export const ASSISTANT_NAME = "MEL";
 
+/** Slogan do logótipo visual (Add and Know) */
+export const APP_SLOGAN = "Controla Poupa Vive";
+
 /** Assinatura principal */
 export const APP_TAGLINE = "Sabe onde vai o teu dinheiro. Agora.";
 
