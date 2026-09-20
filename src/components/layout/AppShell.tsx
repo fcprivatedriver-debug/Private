@@ -11,7 +11,6 @@ import { SpaceSwitcher } from "@/components/nina/SpaceSwitcher";
 import { QuickAddFab } from "@/components/layout/QuickAddFab";
 import type { NinaSpace } from "@/actions/household";
 import { cn } from "@/lib/utils";
-import { NINA_MISSION_SHORT } from "@/lib/ai/mission";
 
 /** Sidebar completa — secundário fica em Mais no mobile. */
 const NAV = [
@@ -43,6 +42,44 @@ const MOBILE = [
   { href: "/pt/definicoes", label: "Mais", icon: "⋯" },
 ];
 
+function TopbarIconSearch() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden>
+      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TopbarIconBell() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden>
+      <path
+        d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.2 1.8H4.8L6 16.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M10 19.2a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TopbarIconProfile() {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="10" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M6.8 18.2c1.4-2.2 3.2-3.3 5.2-3.3s3.8 1.1 5.2 3.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function AppShell({
   children,
   userName,
@@ -73,8 +110,6 @@ export function AppShell({
       <aside className="app-sidebar">
         <div className="sidebar-top">
           <BrandLogo href="/pt/dashboard" size="sm" />
-          <p className="sidebar-tag">{NINA_MISSION_SHORT}</p>
-          {familyName ? <p className="sidebar-family">{familyName}</p> : null}
         </div>
         <div className="sidebar-space">
           <SpaceSwitcher space={activeSpace} onSpaceChange={setActiveSpace} />
@@ -116,31 +151,37 @@ export function AppShell({
         </div>
       </aside>
       <div className="app-main">
-        {/*
-          Cabeçalho REAL da app (Hoje / Compras / restantes rotas em (app)/layout).
-          NÃO usar BrandLogo + familyName aqui — isso gerava “avatar genérico” +
-          “Família / Família”. Identidade = HeaderIdentity; espaço = SpaceSwitcher.
-        */}
-        <header className="app-topbar app-topbar--space-identity" data-testid="app-space-header">
-          <HeaderIdentity
-            space={activeSpace}
-            userName={userName}
-            familyName={familyName}
-            userImage={userImage}
-            familyImage={familyImage}
-          />
-          <div className="topbar-space">
-            <SpaceSwitcher space={activeSpace} onSpaceChange={setActiveSpace} />
+        <div className="app-chrome-sticky">
+          {/* Cabeçalho de marca — logótipo Add and Know (mockup) */}
+          <header className="app-topbar app-topbar--brand" data-testid="app-brand-header">
+            <BrandLogo href="/pt/dashboard" size="sm" />
+            <nav className="topbar-utility" aria-label="Atalhos">
+              <Link href="/pt/pesquisa" className="topbar-utility-btn" aria-label="Pesquisar" prefetch>
+                <TopbarIconSearch />
+              </Link>
+              <Link href="/pt/alertas" className="topbar-utility-btn" aria-label="Avisos" prefetch>
+                <TopbarIconBell />
+                {unreadAlerts > 0 ? <span className="topbar-utility-dot" aria-hidden /> : null}
+              </Link>
+              <Link href="/pt/perfil" className="topbar-utility-btn" aria-label="Perfil" prefetch>
+                <TopbarIconProfile />
+              </Link>
+            </nav>
+          </header>
+          {/* Identidade Pessoal/Familiar — sob o logótipo (mockup) */}
+          <div className="app-space-bar" data-testid="app-space-header">
+            <HeaderIdentity
+              space={activeSpace}
+              userName={userName}
+              familyName={familyName}
+              userImage={userImage}
+              familyImage={familyImage}
+            />
+            <div className="topbar-space">
+              <SpaceSwitcher space={activeSpace} onSpaceChange={setActiveSpace} />
+            </div>
           </div>
-          <div className="topbar-actions topbar-actions-desktop">
-            <Link href="/pt/captura?mode=voice&auto=1" className="btn btn-primary btn-sm" prefetch>
-              Falar
-            </Link>
-            <Link href="/pt/despesas/nova" className="btn btn-ghost btn-sm" prefetch>
-              Despesa
-            </Link>
-          </div>
-        </header>
+        </div>
         <main className="app-content">{children}</main>
       </div>
       <QuickAddFab />
