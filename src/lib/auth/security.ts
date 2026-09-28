@@ -19,8 +19,15 @@ export function createRawToken(): string {
 }
 
 export type MailResult =
-  | { ok: true; delivered: boolean; previewUrl?: string }
-  | { ok: false; error: string };
+  | {
+      ok: true;
+      /** Aceite pela API Resend (não garante inbox — ver eventos Resend). */
+      delivered: boolean;
+      previewUrl?: string;
+      /** ID devolvido pelo Resend (nunca a API key). */
+      providerMessageId?: string;
+    }
+  | { ok: false; error: string; code?: "RESEND_MISSING" | "RESEND_API_ERROR" };
 
 export async function sendAppEmail(opts: {
   to: string;
@@ -50,13 +57,32 @@ export async function sendAppEmail(opts: {
       });
       if (!res.ok) {
         const body = await res.text();
-        console.error("[mail] resend failed", res.status, body);
-        return { ok: false, error: "Não consegui enviar o email agora." };
+        console.error("[mail] resend failed", res.status, body.slice(0, 400));
+        return {
+          ok: false,
+          error: "Não consegui enviar o email agora.",
+          code: "RESEND_API_ERROR",
+        };
       }
-      return { ok: true, delivered: true };
+      let providerMessageId: string | undefined;
+      try {
+        const json = (await res.json()) as { id?: string };
+        providerMessageId = typeof json.id === "string" ? json.id : undefined;
+        if (providerMessageId) {
+          console.info("[mail] resend accepted", { id: providerMessageId, to: opts.to });
+        }
+      } catch {
+        /* resposta sem JSON — ainda assim aceite HTTP */
+      }
+      // Aceite pela API ≠ garantia de inbox (bounce/spam). Não inventar "delivered".
+      return { ok: true, delivered: true, providerMessageId };
     } catch (err) {
       console.error("[mail] resend error", err);
-      return { ok: false, error: "Não consegui enviar o email agora." };
+      return {
+        ok: false,
+        error: "Não consegui enviar o email agora.",
+        code: "RESEND_API_ERROR",
+      };
     }
   }
 
@@ -68,6 +94,7 @@ export async function sendAppEmail(opts: {
     return {
       ok: false,
       error: "Envio de email não configurado neste ambiente.",
+      code: "RESEND_MISSING",
     };
   }
   return { ok: true, delivered: false };

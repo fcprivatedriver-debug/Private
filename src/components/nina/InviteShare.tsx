@@ -93,7 +93,17 @@ export function InviteShare({
           "Convite criado. O envio por SMS ainda não está activo — partilha o link abaixo com o familiar.",
         );
       } else if (res.delivered) {
-        setInfo("Convite enviado por email.");
+        setInfo(
+          res.providerMessageId
+            ? "Convite enviado por email (aceite pelo serviço de envio)."
+            : "Convite enviado por email.",
+        );
+      } else if (res.mailError) {
+        // Nunca «Convite enviado» quando o mail falhou.
+        setError(res.mailError);
+        setInfo(
+          "O convite foi criado — partilha o link abaixo com o familiar enquanto o email não estiver disponível.",
+        );
       } else {
         setInfo(
           "Convite criado, mas o email não foi entregue — partilha o link abaixo com o familiar.",
@@ -216,15 +226,21 @@ export function InviteShare({
                     disabled={pending}
                     onClick={() =>
                       start(async () => {
+                        setError(null);
+                        setInfo(null);
                         const res = await resendFamilyInvite(inv.id);
-                        if (!res.ok) setError(res.error);
-                        else {
+                        if (!res.ok) {
+                          setError(res.error);
+                        } else {
                           setInvitePath(res.invitePath);
-                          setInfo(
-                            res.channel === "PHONE" || !res.delivered
-                              ? "Convite actualizado — partilha o link."
-                              : "Convite reenviado.",
-                          );
+                          if (res.delivered) {
+                            setInfo("Convite reenviado por email.");
+                          } else if (res.mailError) {
+                            setError(res.mailError);
+                            setInfo("Partilha o link abaixo com o familiar.");
+                          } else {
+                            setInfo("Convite actualizado — partilha o link.");
+                          }
                         }
                         router.refresh();
                       })
