@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { APP_NAME } from "@/config/brand";
+import {
+  canShowInstallPrompt,
+  isStandaloneDisplay,
+  readPwaInstallState,
+  writePwaInstallState,
+  type PwaInstallState,
+} from "@/lib/pwa/install-prompt";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -13,17 +20,7 @@ function isIos() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
-function isStandalone() {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    // iOS Safari
-    ("standalone" in navigator && Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
-  );
-}
-
 const SW_RELOAD_KEY = "addyknow-sw-reloading";
-const IOS_INSTALL_DISMISSED_KEY = "addyknow-ios-install-dismissed";
 
 export function PwaRegister() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
@@ -31,6 +28,7 @@ export function PwaRegister() {
   const [showIosTip, setShowIosTip] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+  const installStateRef = useRef<PwaInstallState>({});
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -101,36 +99,117 @@ export function PwaRegister() {
   }, []);
 
   useEffect(() => {
-    // Já em standalone = app instalada: nunca pedir "Instalar" de novo (evita loop substituir).
-    if (isStandalone()) return;
+    if (typeof window === "undefined") return;
+
+    const standalone = isStandaloneDisplay(window);
+    const state = readPwaInstallState(window.localStorage);
+    installStateRef.current = state;
+
+    // App já instalada / modo standalone — nunca pedir instalação.
+    if (standalone) {
+      if (!state.installedAt) {
+        const next = { ...state, installedAt: Date.now() };
+        installStateRef.current = next;
+        writePwaInstallState(window.localStorage, next);
+      }
+      return;
+    }
+
+    const allow = () =>
+      canShowInstallPrompt(installStateRef.current, {
+        standalone: isStandaloneDisplay(window),
+      });
+
+    const markShown = () => {
+      const next = {
+        ...installStateRef.current,
+        shownAt: Date.now(),
+      };
+      installStateRef.current = next;
+      writePwaInstallState(window.localStorage, next);
+    };
 
     const onBip = (e: Event) => {
       e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
+      const ev = e as BeforeInstallPromptEvent;
+      setDeferred(ev);
+      // Só mostrar se política permitir — NÃO em cada remount/navegação.
+      if (!allow()) return;
+      markShown();
       setShowInstall(true);
     };
     window.addEventListener("beforeinstallprompt", onBip);
 
-    if (isIos()) {
+    const onInstalled = () => {
+      const next = {
+        ...installStateRef.current,
+        installedAt: Date.now(),
+      };
+      installStateRef.current = next;
+      writePwaInstallState(window.localStorage, next);
+      setShowInstall(false);
+      setShowIosTip(false);
+      setDeferred(null);
+    };
+    window.addEventListener("appinstalled", onInstalled);
+
+    // iOS: tip manual (sem beforeinstallprompt) — mesmo cooldown/persistência.
+    if (isIos() && allow()) {
       const path = window.location.pathname;
       const onAuth = /\/(login|registo)\/?$/.test(path);
-      const dismissed =
-        localStorage.getItem(IOS_INSTALL_DISMISSED_KEY) ||
-        localStorage.getItem("nina-ios-install-dismissed");
-      // Never cover the login/register form on iPhone (toast intercepts taps).
-      if (!dismissed && !onAuth) setShowIosTip(true);
+      if (!onAuth) {
+        // Atraso breve: não interceptar a primeira interacção ao entrar.
+        const t = window.setTimeout(() => {
+          if (!allow()) return;
+          markShown();
+          setShowIosTip(true);
+        }, 8_000);
+        return () => {
+          window.clearTimeout(t);
+          window.removeEventListener("beforeinstallprompt", onBip);
+          window.removeEventListener("appinstalled", onInstalled);
+        };
+      }
     }
 
-    return () => window.removeEventListener("beforeinstallprompt", onBip);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBip);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  const dismissInstall = useCallback(() => {
+    const next = {
+      ...installStateRef.current,
+      dismissedAt: Date.now(),
+    };
+    installStateRef.current = next;
+    if (typeof window !== "undefined") {
+      writePwaInstallState(window.localStorage, next);
+    }
+    setShowInstall(false);
+    setShowIosTip(false);
   }, []);
 
   const install = useCallback(async () => {
     if (!deferred) return;
     await deferred.prompt();
-    await deferred.userChoice;
+    const choice = await deferred.userChoice;
     setDeferred(null);
     setShowInstall(false);
-  }, [deferred]);
+    if (choice.outcome === "accepted") {
+      const next = {
+        ...installStateRef.current,
+        installedAt: Date.now(),
+      };
+      installStateRef.current = next;
+      if (typeof window !== "undefined") {
+        writePwaInstallState(window.localStorage, next);
+      }
+    } else {
+      dismissInstall();
+    }
+  }, [deferred, dismissInstall]);
 
   const applyUpdate = useCallback(() => {
     waitingWorker?.postMessage("SKIP_WAITING");
@@ -166,6 +245,7 @@ export function PwaRegister() {
           className="nina-pwa-toast nina-pwa-install"
           role="dialog"
           aria-label={`Instalar ${APP_NAME}`}
+          data-testid="pwa-install-prompt"
         >
           <div>
             <strong>Instalar {APP_NAME}</strong>
@@ -174,7 +254,7 @@ export function PwaRegister() {
             </p>
           </div>
           <div className="nina-pwa-toast-actions">
-            <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowInstall(false)}>
+            <button type="button" className="btn btn-sm btn-ghost" onClick={dismissInstall}>
               Agora não
             </button>
             <button type="button" className="btn btn-sm btn-primary" onClick={install}>
@@ -185,21 +265,19 @@ export function PwaRegister() {
       ) : null}
 
       {showIosTip && !showInstall ? (
-        <div className="nina-pwa-toast nina-pwa-install" role="dialog" aria-label="Adicionar ao ecrã">
+        <div
+          className="nina-pwa-toast nina-pwa-install"
+          role="dialog"
+          aria-label="Adicionar ao ecrã"
+          data-testid="pwa-ios-install-tip"
+        >
           <div>
             <strong>Adicionar ao ecrã principal</strong>
             <p className="muted small" style={{ margin: "0.15rem 0 0" }}>
               No Safari: Partilhar → «Adicionar ao Ecrã Principal» como {APP_NAME}.
             </p>
           </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-ghost"
-            onClick={() => {
-              localStorage.setItem(IOS_INSTALL_DISMISSED_KEY, "1");
-              setShowIosTip(false);
-            }}
-          >
+          <button type="button" className="btn btn-sm btn-ghost" onClick={dismissInstall}>
             Entendi
           </button>
         </div>

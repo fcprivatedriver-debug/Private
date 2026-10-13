@@ -9,6 +9,7 @@
 import { pathToFileURL } from "node:url";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { withConnectTimeout } from "./pg-url.mjs";
 
 /** Load local .env when not on Vercel (scripts run outside Next.js). */
 function loadLocalEnvFiles() {
@@ -133,6 +134,12 @@ export function applyEnsureEnv({ exitOnError = true } = {}) {
       );
     }
     console.log(`[ensure-env] Using PostgreSQL schema "${schema}" for Nina`);
+  }
+
+  // Neon suspends idle computes. Prisma's default 5s connect timeout
+  // reports that wake-up as P1001. This only affects the current process.
+  for (const key of ["DATABASE_URL", "DIRECT_URL", "DATABASE_URL_UNPOOLED"]) {
+    if (process.env[key]) process.env[key] = withConnectTimeout(process.env[key]);
   }
 
   // Do NOT set AUTH_URL from VERCEL_URL.

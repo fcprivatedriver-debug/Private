@@ -17,10 +17,11 @@ export function SpaceSwitcher({
   const [optimistic, setOptimistic] = useOptimistic(space);
 
   function switchTo(next: NinaSpace) {
-    if (next === optimistic || pending) return;
+    if (next === optimistic) return;
+    // Chrome imediato (não bloquear por pending do server action)
+    onSpaceChange?.(next);
     start(async () => {
       setOptimistic(next);
-      onSpaceChange?.(next);
       await setNinaSpace(next);
       router.refresh();
     });
@@ -38,7 +39,7 @@ export function SpaceSwitcher({
         role="tab"
         aria-selected={optimistic === "personal"}
         className={cn("space-switch-btn", optimistic === "personal" && "active")}
-        disabled={pending}
+        disabled={false}
         onClick={() => switchTo("personal")}
       >
         <span className="space-switch-full">Pessoal</span>
@@ -49,7 +50,7 @@ export function SpaceSwitcher({
         role="tab"
         aria-selected={optimistic === "family"}
         className={cn("space-switch-btn", optimistic === "family" && "active")}
-        disabled={pending}
+        disabled={false}
         onClick={() => switchTo("family")}
       >
         <span className="space-switch-full">Familiar</span>

@@ -355,6 +355,10 @@ async function inviteFamilyMember(
   });
 
   const invitePath = `/pt/convite/${invite.token}`;
+  const inviterName =
+    membership.displayName?.split(" ")[0] ||
+    session.user.name?.split(" ")[0] ||
+    "Alguém";
   const { deliverFamilyInvite } = await import("@/lib/invites/delivery");
   const delivery = await deliverFamilyInvite({
     channel,
@@ -362,21 +366,38 @@ async function inviteFamilyMember(
     toPhone: phone,
     inviteeName: name,
     familyName: family.name,
+    inviterName,
     invitePath,
   });
 
+  revalidateAll();
+
+  // Convite SEMPRE criado na BD — se o email falhar, devolver link para partilha
+  // e NUNCA afirmar «Convite enviado».
   if (!delivery.ok) {
-    return { ok: false as const, error: delivery.error };
+    return {
+      ok: true as const,
+      invitePath,
+      channel,
+      delivered: false as const,
+      mailError: delivery.error,
+      mailCode: delivery.code,
+      previewUrl: undefined,
+      smsReady: false as const,
+      providerMessageId: undefined,
+    };
   }
 
-  revalidateAll();
   return {
     ok: true as const,
     invitePath,
     channel,
     delivered: delivery.delivered,
+    mailError: undefined,
+    mailCode: undefined,
     previewUrl: delivery.previewUrl,
     smsReady: false as const,
+    providerMessageId: delivery.providerMessageId,
   };
 }
 
@@ -418,6 +439,9 @@ export async function resendFamilyInvite(inviteId: string) {
     | "PHONE"
     | "LINK";
   const invitePath = `/pt/convite/${invite.token}`;
+  const inviterName =
+    membership.displayName?.split(" ")[0] ||
+    "Alguém";
   const { deliverFamilyInvite } = await import("@/lib/invites/delivery");
   const delivery = await deliverFamilyInvite({
     channel: channel === "LINK" ? "EMAIL" : channel,
@@ -425,16 +449,31 @@ export async function resendFamilyInvite(inviteId: string) {
     toPhone: invite.phone,
     inviteeName: invite.inviteeName || "Familiar",
     familyName: family.name,
+    inviterName,
     invitePath,
   });
-  if (!delivery.ok) return { ok: false as const, error: delivery.error };
   revalidateAll();
+  if (!delivery.ok) {
+    return {
+      ok: true as const,
+      invitePath,
+      delivered: false as const,
+      mailError: delivery.error,
+      mailCode: delivery.code,
+      previewUrl: undefined,
+      channel,
+      providerMessageId: undefined,
+    };
+  }
   return {
     ok: true as const,
     invitePath,
     delivered: delivery.delivered,
+    mailError: undefined,
+    mailCode: undefined,
     previewUrl: delivery.previewUrl,
     channel,
+    providerMessageId: delivery.providerMessageId,
   };
 }
 
