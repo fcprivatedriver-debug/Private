@@ -16,11 +16,18 @@ export const HOUSEHOLD_KIND_HINTS: Record<HouseholdKind, string> = {
 
 /** Papéis amigáveis (UI) mapeados para FamilyRole */
 export const PERMISSION_LABELS: Record<FamilyRole, string> = {
-  OWNER: "Administrador",
+  OWNER: "Proprietário",
   ADMIN: "Administrador",
-  MEMBER: "Editor",
+  MEMBER: "Membro",
   VIEWER: "Apenas consulta",
 };
+
+export function roleLabel(role: string): string {
+  if (role in PERMISSION_LABELS) {
+    return PERMISSION_LABELS[role as FamilyRole];
+  }
+  return role;
+}
 
 export const PERMISSION_HINTS: Record<FamilyRole, string> = {
   OWNER: "Gere membros, permissões e a conta.",

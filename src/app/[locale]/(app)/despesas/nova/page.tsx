@@ -41,6 +41,7 @@ export default async function NovaDespesaPage({
         categories={categories}
         accounts={accounts}
         members={members}
+        actorMemberId={membership.id}
         space={space}
         attachedReceipt={attachedReceipt ?? undefined}
       />

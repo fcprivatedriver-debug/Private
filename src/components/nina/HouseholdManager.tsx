@@ -169,9 +169,9 @@ export function HouseholdManager({
                         });
                       }}
                     >
-                      <option value="ADMIN">Administrador</option>
-                      <option value="MEMBER">Editor</option>
-                      <option value="VIEWER">Apenas consulta</option>
+                      <option value="ADMIN">{PERMISSION_LABELS.ADMIN}</option>
+                      <option value="MEMBER">{PERMISSION_LABELS.MEMBER}</option>
+                      <option value="VIEWER">{PERMISSION_LABELS.VIEWER}</option>
                     </select>
                     <button
                       type="button"

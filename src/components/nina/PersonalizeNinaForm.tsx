@@ -206,6 +206,7 @@ export function PersonalizeNinaForm({
             minLength={8}
             autoComplete="new-password"
             hint={PASSWORD_HINT}
+            showRules
           />
           <button className="btn btn-ghost" type="submit" disabled={pending}>
             Actualizar palavra-passe

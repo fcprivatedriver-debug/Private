@@ -79,7 +79,7 @@ const SECTIONS = [
   },
   {
     title: "Calendário e lembretes",
-    body: "A MEL marca no Google, Apple ou Outlook e usa lembretes do sistema — sem calendário privado.",
+    body: "A ligação ao Google Calendar, Outlook e Apple Calendar ainda não está disponível. Os lembretes do sistema continuam no telemóvel.",
     href: "/pt/calendario",
     cta: "Abrir",
   },

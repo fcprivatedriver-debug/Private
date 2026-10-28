@@ -4,6 +4,7 @@ import { getActiveFamilyForUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { Panel } from "@/components/ui/FinanceUI";
 import { ProfileForm } from "@/components/nina/ProfileForm";
+import { roleLabel } from "@/domain/household";
 
 export default async function PerfilPage() {
   const session = await auth();
@@ -35,7 +36,7 @@ export default async function PerfilPage() {
       </Panel>
       <Panel title="Na Conta Familiar">
         <p style={{ marginTop: 0 }}>
-          A MEL trata-te por <strong>{membership.displayName}</strong> · {membership.role} ·{" "}
+          A MEL trata-te por <strong>{membership.displayName}</strong> · {roleLabel(membership.role)} ·{" "}
           {membership.family.name}
         </p>
         <p className="muted small">

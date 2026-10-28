@@ -6,10 +6,14 @@ import { getExpensesFiltered } from "@/lib/queries";
 import { prisma } from "@/lib/db";
 import { formatEUR } from "@/lib/money";
 import { Panel } from "@/components/ui/FinanceUI";
+import { getNinaSpace } from "@/actions/household";
+import { incomeScopeWhere } from "@/lib/scope";
 
 export default async function PesquisaPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ q?: string }>;
 }) {
   const session = await auth();
@@ -17,14 +21,21 @@ export default async function PesquisaPage({
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
+  const { locale } = await params;
   const { q } = await searchParams;
+  const space = await getNinaSpace();
   const expenses = q
-    ? await getExpensesFiltered(membership.familyId, { q })
+    ? await getExpensesFiltered(membership.familyId, {
+        q,
+        space,
+        memberId: membership.id,
+      })
     : [];
   const incomes = q
     ? await prisma.income.findMany({
         where: {
           familyId: membership.familyId,
+          ...incomeScopeWhere(space, membership.id),
           OR: [
             { description: { contains: q, mode: "insensitive" } },
             { notes: { contains: q, mode: "insensitive" } },
@@ -54,7 +65,7 @@ export default async function PesquisaPage({
         <Panel title="Sugestões">
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             {["Continente", "Galp", "Netflix", "supermercado", "MB_WAY"].map((s) => (
-              <Link key={s} href={`/pt/pesquisa?q=${encodeURIComponent(s)}`} className="btn btn-ghost btn-sm">
+              <Link key={s} href={`/${locale}/pesquisa?q=${encodeURIComponent(s)}`} className="btn btn-ghost btn-sm">
                 {s}
               </Link>
             ))}
@@ -65,7 +76,11 @@ export default async function PesquisaPage({
           <Panel title={`Despesas (${expenses.length})`}>
             <div className="list-rows">
               {expenses.map((e) => (
-                <div key={e.id} className="list-row">
+                <Link
+                  key={e.id}
+                  href={`/${locale}/despesas/${e.id}`}
+                  className="list-row list-row-link"
+                >
                   <div className="list-row-main">
                     <strong>{e.description}</strong>
                     <span>
@@ -74,7 +89,7 @@ export default async function PesquisaPage({
                     </span>
                   </div>
                   <span className="amount-expense">−{formatEUR(e.amountCents)}</span>
-                </div>
+                </Link>
               ))}
               {expenses.length === 0 ? <p className="muted">Sem resultados.</p> : null}
             </div>
@@ -82,13 +97,17 @@ export default async function PesquisaPage({
           <Panel title={`Receitas (${incomes.length})`}>
             <div className="list-rows">
               {incomes.map((i) => (
-                <div key={i.id} className="list-row">
+                <Link
+                  key={i.id}
+                  href={`/${locale}/receitas/${i.id}`}
+                  className="list-row list-row-link"
+                >
                   <div className="list-row-main">
                     <strong>{i.description}</strong>
                     <span>{i.category.name} · {i.date.toLocaleDateString("pt-PT")}</span>
                   </div>
                   <span className="amount-income">+{formatEUR(i.amountCents)}</span>
-                </div>
+                </Link>
               ))}
             </div>
           </Panel>

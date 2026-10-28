@@ -38,7 +38,7 @@ export default async function OrcamentosPage() {
             </div>
           ))}
           {data.budgetRows.length === 0 ? (
-            <p className="muted">Defina o primeiro orçamento.</p>
+            <p className="muted">Define o primeiro orçamento.</p>
           ) : null}
         </Panel>
         <div className="stack-lg">

@@ -9,19 +9,20 @@ import { TransactionAuditPanel } from "@/components/finance/TransactionAuditPane
 import { MovementFichaActions } from "@/components/finance/MovementFichaActions";
 import { MovementSummary } from "@/components/finance/MovementSummary";
 import { canEditTransaction } from "@/domain/household";
+import { canReadMovement } from "@/domain/movement-access";
 import { authorLabel } from "@/lib/transaction-audit";
 
 export default async function FichaDespesaPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/pt/login");
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const { id } = await params;
+  const { id, locale } = await params;
   const expense = await prisma.expense.findFirst({
     where: { id, familyId: membership.familyId },
     include: {
@@ -33,6 +34,15 @@ export default async function FichaDespesaPage({
     },
   });
   if (!expense) notFound();
+  if (
+    !canReadMovement({
+      scope: expense.scope,
+      memberId: expense.memberId,
+      actorMemberId: membership.id,
+    })
+  ) {
+    notFound();
+  }
 
   const [categories, accounts, members, audits] = await Promise.all([
     prisma.category.findMany({ where: { familyId: membership.familyId }, orderBy: { name: "asc" } }),
@@ -77,7 +87,7 @@ export default async function FichaDespesaPage({
             Movimento original — editar não cria duplicado.
           </p>
         </div>
-        <Link href="/pt/despesas" className="btn btn-ghost">
+        <Link href={`/${locale}/despesas`} className="btn btn-ghost">
           Voltar
         </Link>
       </div>
@@ -99,6 +109,7 @@ export default async function FichaDespesaPage({
           categories={categories}
           accounts={accounts}
           members={members}
+          actorMemberId={membership.id}
           space={expense.scope === "FAMILY" ? "family" : "personal"}
           initial={{
             id: expense.id,

@@ -41,9 +41,11 @@ type List = {
 export function ShoppingListClient({
   lists,
   activeListId,
+  pricesAvailable = false,
 }: {
   lists: List[];
   activeListId: string;
+  pricesAvailable?: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -89,7 +91,7 @@ export function ShoppingListClient({
         <button
           type="button"
           className="btn btn-ghost"
-          disabled={pending}
+          disabled={pending || !pricesAvailable}
           onClick={() => {
             start(async () => {
               const res = await compareShoppingTrip();
@@ -122,6 +124,11 @@ export function ShoppingListClient({
         >
           Comparar supermercados
         </button>
+        {pricesAvailable ? null : (
+          <p className="muted small" style={{ margin: 0 }}>
+            A comparação de preços ainda não está disponível. Estamos a preparar a ligação aos supermercados.
+          </p>
+        )}
         <button
           type="button"
           className="btn btn-ghost btn-sm"
@@ -212,8 +219,9 @@ export function ShoppingListClient({
       </form>
 
       <p className="muted small" style={{ margin: 0 }}>
-        Preços via Product Service (Continente e Pingo Doce). Se o site da loja não responder,
-        quando existir uma fonte de preços autorizada. Sem fonte configurada, mostramos «Preço indisponível» — nunca valores inventados.
+        {pricesAvailable
+          ? "A comparação usa apenas preços já guardados de Continente, Pingo Doce e Auchan. Se um produto não tiver preço, fica assinalado como indisponível."
+          : "Sem uma fonte de preços ligada, a lista guarda os artigos e não mostra valores inventados."}
       </p>
 
       {voiceHint ? (

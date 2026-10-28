@@ -47,6 +47,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
             minLength={8}
             autoComplete="new-password"
             hint={PASSWORD_HINT}
+            showRules
           />
           <PasswordField
             label="Confirmar"

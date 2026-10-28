@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type InputHTMLAttributes } from "react";
+import { passwordCheckState } from "@/lib/auth/password-rules";
 
 type PasswordFieldProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -8,6 +9,8 @@ type PasswordFieldProps = Omit<
 > & {
   label?: string;
   hint?: string;
+  /** Lista viva dos requisitos, sem enviar a palavra-passe para fora. */
+  showRules?: boolean;
 };
 
 /** Campo de palavra-passe com mostrar/ocultar (ícone de olho). */
@@ -18,12 +21,19 @@ export function PasswordField({
   className,
   autoComplete,
   name = "password",
+  showRules = false,
+  defaultValue,
+  value,
+  onChange,
   ...inputProps
 }: PasswordFieldProps) {
   const autoId = useId();
   const inputId = id || autoId;
+  const rulesId = `${inputId}-rules`;
   const [visible, setVisible] = useState(false);
+  const [draft, setDraft] = useState(String(value ?? defaultValue ?? ""));
   const showLabel = visible ? "Ocultar palavra-passe" : "Mostrar palavra-passe";
+  const checks = showRules ? passwordCheckState(value != null ? String(value) : draft) : [];
 
   const field = (
     <div className="password-field">
@@ -34,6 +44,13 @@ export function PasswordField({
         type={visible ? "text" : "password"}
         autoComplete={autoComplete}
         className={className}
+        defaultValue={value == null ? defaultValue : undefined}
+        value={value}
+        aria-describedby={showRules ? rulesId : undefined}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          onChange?.(event);
+        }}
         // Não bloquear colar / gestores de passwords
         autoCapitalize="off"
         autoCorrect="off"
@@ -57,14 +74,46 @@ export function PasswordField({
     </div>
   );
 
-  if (!label) return field;
+  if (!label) {
+    return (
+      <>
+        {field}
+        {showRules ? <PasswordRules id={rulesId} checks={checks} /> : null}
+      </>
+    );
+  }
 
   return (
     <label className="field" htmlFor={inputId}>
       <span>{label}</span>
       {field}
       {hint ? <span className="muted small">{hint}</span> : null}
+      {showRules ? <PasswordRules id={rulesId} checks={checks} /> : null}
     </label>
+  );
+}
+
+function PasswordRules({
+  id,
+  checks,
+}: {
+  id: string;
+  checks: { id: string; label: string; met: boolean }[];
+}) {
+  return (
+    <ul id={id} className="password-rules" aria-live="polite">
+      {checks.map((rule) => (
+        <li key={rule.id} data-met={rule.met ? "yes" : "no"}>
+          <span className="password-rules-mark" aria-hidden>
+            {rule.met ? "✓" : "○"}
+          </span>
+          <span>
+            {rule.met ? "Cumprido: " : "Em falta: "}
+            {rule.label}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

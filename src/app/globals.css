@@ -278,6 +278,23 @@ html.dark .brand-slogan {
   display: block;
   pointer-events: none;
 }
+.password-rules {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+.password-rules li {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  font-size: 0.82rem;
+  color: var(--fg-muted);
+}
+.password-rules li[data-met="yes"] {
+  color: var(--income, #0f7a4a);
+}
 
 .sr-only {
   position: absolute;
@@ -1118,6 +1135,16 @@ html.dark .topbar-utility {
   border-bottom: 1px solid var(--line);
 }
 .list-row:last-child { border-bottom: 0; }
+.list-row-link {
+  color: inherit;
+  text-decoration: none;
+}
+.list-row-link:hover,
+.list-row-link:focus-visible {
+  background: var(--bg-soft);
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
 .list-row-main { min-width: 0; }
 .list-row-main strong { display: block; font-size: 0.92rem; }
 .list-row-main span { font-size: 0.8rem; color: var(--fg-muted); }
@@ -2297,6 +2324,13 @@ body {
     bottom: 1.25rem;
   }
 }
+/* Ecrãs baixos (ex. 1024×768): o toast no fundo cobria «Criar conta». */
+@media (max-height: 820px) {
+  .nina-pwa-toast {
+    top: max(0.75rem, env(safe-area-inset-top, 0px));
+    bottom: auto;
+  }
+}
 
 /* Standalone installed app */
 @media (display-mode: standalone) {
@@ -2587,8 +2621,8 @@ html[data-theme="purple"] {
 
 .quick-add {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right, 0px));
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
   z-index: 40;
   display: none;
   flex-direction: column;
@@ -2792,7 +2826,7 @@ html[data-theme="blue"] {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   .app-content {
-    padding: 1rem 1rem calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    padding: 1rem 1rem calc(8.75rem + env(safe-area-inset-bottom, 0px));
   }
   .captura-fab:not(.quick-add-fab) { display: none; }
 }
@@ -3041,4 +3075,33 @@ html[data-theme="blue"] {
 @media (max-width: 720px) {
   .app-space-bar { padding-left: 1rem; padding-right: 1rem; }
   .app-topbar--brand { padding-left: 1rem; padding-right: 1rem; }
+}
+/* 320px: o logótipo em 1.1rem + 3 botões de 42px ultrapassava a largura. */
+@media (max-width: 390px) {
+  .app-topbar--brand {
+    padding-left: 0.45rem;
+    padding-right: 0.35rem;
+    gap: 0.2rem;
+  }
+  .brand-logo {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .brand-logo--sm .brand-stacked {
+    font-size: 0.9rem;
+    width: 8.6em;
+  }
+  .topbar-utility {
+    gap: 0;
+    flex: 0 0 auto;
+  }
+  .topbar-utility-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .app-space-bar {
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
+    gap: 0.35rem;
+  }
 }

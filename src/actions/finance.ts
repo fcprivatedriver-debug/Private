@@ -32,6 +32,11 @@ import {
 } from "@/domain/categories";
 import { getNinaSpace } from "@/actions/household";
 import { canEditFinances, canEditTransaction } from "@/domain/household";
+import {
+  canReadMovement,
+  resolveMovementMember,
+  resolveMovementScope,
+} from "@/domain/movement-access";
 import { logTransactionAudit } from "@/lib/transaction-audit";
 import type { FinanceScope } from "@prisma/client";
 
@@ -45,9 +50,70 @@ async function scopeFromSpace() {
 }
 
 function parseScope(raw: FormDataEntryValue | null, fallback: FinanceScope): FinanceScope {
-  const v = String(raw || "").toUpperCase();
-  if (v === "FAMILY" || v === "PERSONAL") return v;
-  return fallback;
+  return resolveMovementScope({
+    requested: raw == null ? "" : String(raw),
+    fallback,
+  });
+}
+
+async function assignMovement(input: {
+  familyId: string;
+  actorMemberId: string;
+  requestedScope: FormDataEntryValue | null;
+  requestedMemberId: FormDataEntryValue | null;
+  fallbackScope: FinanceScope;
+}) {
+  const scope = parseScope(input.requestedScope, input.fallbackScope);
+  const members = await prisma.familyMember.findMany({
+    where: { familyId: input.familyId },
+    select: { id: true },
+  });
+  const member = resolveMovementMember({
+    scope,
+    requestedMemberId:
+      input.requestedMemberId == null ? "" : String(input.requestedMemberId),
+    actorMemberId: input.actorMemberId,
+    familyMemberIds: members.map((row) => row.id),
+  });
+  if (!member.ok) return member;
+  return { ok: true as const, scope, memberId: member.memberId };
+}
+
+function hiddenFromActor<T extends { scope: FinanceScope; memberId: string | null }>(
+  existing: T,
+  actorMemberId: string,
+) {
+  if (
+    !canReadMovement({
+      scope: existing.scope,
+      memberId: existing.memberId,
+      actorMemberId,
+    })
+  ) {
+    return { ok: false as const, error: "Movimento não encontrado." };
+  }
+  return null;
+}
+
+async function accountInFamily(familyId: string, accountId: string | null | undefined) {
+  if (!accountId) return { ok: true as const, accountId: null as string | null };
+  const account = await prisma.financeAccount.findFirst({
+    where: { id: accountId, familyId },
+  });
+  if (!account) return { ok: false as const, error: "Conta inválida." };
+  return { ok: true as const, accountId: account.id };
+}
+
+async function subcategoryInFamily(
+  familyId: string,
+  subcategoryId: string | null | undefined,
+) {
+  if (!subcategoryId) return { ok: true as const, subcategoryId: null as string | null };
+  const category = await prisma.category.findFirst({
+    where: { id: subcategoryId, familyId },
+  });
+  if (!category) return { ok: false as const, error: "Subcategoria inválida." };
+  return { ok: true as const, subcategoryId: category.id };
 }
 
 /** Cria categoria só quando o utilizador a usa pela primeira vez. */
@@ -108,13 +174,24 @@ export async function createIncome(formData: FormData) {
   const amountCents = parseEURInput(parsed.data.amount);
   if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
 
-  const scope = parseScope(formData.get("scope"), await scopeFromSpace());
+  const assigned = await assignMovement({
+    familyId: family.id,
+    actorMemberId: membership.id,
+    requestedScope: formData.get("scope"),
+    requestedMemberId: formData.get("memberId"),
+    fallbackScope: await scopeFromSpace(),
+  });
+  if (!assigned.ok) return assigned;
+  const account = await accountInFamily(family.id, parsed.data.accountId || null);
+  if (!account.ok) return account;
+
+  const scope = assigned.scope;
   const created = await prisma.income.create({
     data: {
       familyId: family.id,
       categoryId,
-      accountId: parsed.data.accountId || null,
-      memberId: parsed.data.memberId || membership.id,
+      accountId: account.accountId,
+      memberId: assigned.memberId,
       createdById: session.user.id,
       updatedById: session.user.id,
       scope,
@@ -166,6 +243,19 @@ export async function createExpense(formData: FormData) {
   const amountCents = parseEURInput(parsed.data.amount);
   if (amountCents == null || amountCents <= 0) return { ok: false as const, error: "Valor inválido" };
 
+  const assigned = await assignMovement({
+    familyId: family.id,
+    actorMemberId: membership.id,
+    requestedScope: formData.get("scope"),
+    requestedMemberId: formData.get("memberId"),
+    fallbackScope: await scopeFromSpace(),
+  });
+  if (!assigned.ok) return assigned;
+  const account = await accountInFamily(family.id, parsed.data.accountId || null);
+  if (!account.ok) return account;
+  const subcategory = await subcategoryInFamily(family.id, parsed.data.subcategoryId || null);
+  if (!subcategory.ok) return subcategory;
+
   let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl);
   let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl);
 
@@ -211,14 +301,14 @@ export async function createExpense(formData: FormData) {
     storeId = store.id;
   }
 
-  const scope = parseScope(formData.get("scope"), await scopeFromSpace());
+  const scope = assigned.scope;
   const created = await prisma.expense.create({
     data: {
       familyId: family.id,
       categoryId,
-      subcategoryId: parsed.data.subcategoryId || null,
-      accountId: parsed.data.accountId || null,
-      memberId: parsed.data.memberId || membership.id,
+      subcategoryId: subcategory.subcategoryId,
+      accountId: account.accountId,
+      memberId: assigned.memberId,
       createdById: session.user.id,
       updatedById: session.user.id,
       storeId,
@@ -276,6 +366,8 @@ export async function updateIncome(formData: FormData) {
 
   const existing = await prisma.income.findFirst({ where: { id, familyId: family.id } });
   if (!existing) return { ok: false as const, error: "Receita não encontrada" };
+  const hidden = hiddenFromActor(existing, membership.id);
+  if (hidden) return hidden;
 
   if (
     !canEditTransaction({
@@ -288,13 +380,24 @@ export async function updateIncome(formData: FormData) {
     return { ok: false as const, error: "Não podes editar este movimento." };
   }
 
-  const scope = parseScope(formData.get("scope"), existing.scope);
+  const assigned = await assignMovement({
+    familyId: family.id,
+    actorMemberId: membership.id,
+    requestedScope: formData.get("scope"),
+    requestedMemberId: formData.get("memberId"),
+    fallbackScope: existing.scope,
+  });
+  if (!assigned.ok) return assigned;
+  const account = await accountInFamily(family.id, parsed.data.accountId || null);
+  if (!account.ok) return account;
+
+  const scope = assigned.scope;
   await prisma.income.update({
     where: { id },
     data: {
       categoryId,
-      accountId: parsed.data.accountId || null,
-      memberId: parsed.data.memberId || membership.id,
+      accountId: account.accountId,
+      memberId: assigned.memberId,
       updatedById: session.user.id,
       scope,
       amountCents,
@@ -334,6 +437,8 @@ export async function deleteIncome(id: string) {
   const { session, family, membership } = await requireFamilyContext();
   const existing = await prisma.income.findFirst({ where: { id, familyId: family.id } });
   if (!existing) return { ok: false as const, error: "Receita não encontrada" };
+  const hidden = hiddenFromActor(existing, membership.id);
+  if (hidden) return hidden;
   if (
     !canEditTransaction({
       role: membership.role,
@@ -387,6 +492,8 @@ export async function updateExpense(formData: FormData) {
 
   const existing = await prisma.expense.findFirst({ where: { id, familyId: family.id } });
   if (!existing) return { ok: false as const, error: "Despesa não encontrada" };
+  const hidden = hiddenFromActor(existing, membership.id);
+  if (hidden) return hidden;
 
   if (
     !canEditTransaction({
@@ -418,7 +525,20 @@ export async function updateExpense(formData: FormData) {
     storeId = null;
   }
 
-  const scope = parseScope(formData.get("scope"), existing.scope);
+  const assigned = await assignMovement({
+    familyId: family.id,
+    actorMemberId: membership.id,
+    requestedScope: formData.get("scope"),
+    requestedMemberId: formData.get("memberId"),
+    fallbackScope: existing.scope,
+  });
+  if (!assigned.ok) return assigned;
+  const account = await accountInFamily(family.id, parsed.data.accountId || null);
+  if (!account.ok) return account;
+  const subcategory = await subcategoryInFamily(family.id, parsed.data.subcategoryId || null);
+  if (!subcategory.ok) return subcategory;
+
+  const scope = assigned.scope;
 
   let receiptImageUrl = emptyToNull(parsed.data.receiptImageUrl) ?? existing.receiptImageUrl;
   let receiptPdfUrl = emptyToNull(parsed.data.receiptPdfUrl) ?? existing.receiptPdfUrl;
@@ -470,9 +590,9 @@ export async function updateExpense(formData: FormData) {
     where: { id },
     data: {
       categoryId,
-      subcategoryId: parsed.data.subcategoryId || null,
-      accountId: parsed.data.accountId || null,
-      memberId: parsed.data.memberId || membership.id,
+      subcategoryId: subcategory.subcategoryId,
+      accountId: account.accountId,
+      memberId: assigned.memberId,
       updatedById: session.user.id,
       storeId,
       scope,
@@ -518,6 +638,8 @@ export async function deleteExpense(id: string) {
   const { session, family, membership } = await requireFamilyContext();
   const existing = await prisma.expense.findFirst({ where: { id, familyId: family.id } });
   if (!existing) return { ok: false as const, error: "Despesa não encontrada" };
+  const hidden = hiddenFromActor(existing, membership.id);
+  if (hidden) return hidden;
   if (
     !canEditTransaction({
       role: membership.role,
