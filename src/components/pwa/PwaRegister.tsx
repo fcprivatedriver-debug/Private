@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { APP_NAME } from "@/config/brand";
 import {
   canShowInstallPrompt,
   isStandaloneDisplay,
+  noteInstallVisit,
   readPwaInstallState,
   writePwaInstallState,
   type PwaInstallState,
@@ -29,6 +31,7 @@ export function PwaRegister() {
   const [updateReady, setUpdateReady] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const installStateRef = useRef<PwaInstallState>({});
+  const pathname = usePathname() || "";
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -118,6 +121,7 @@ export function PwaRegister() {
     const allow = () =>
       canShowInstallPrompt(installStateRef.current, {
         standalone: isStandaloneDisplay(window),
+        pathname: window.location.pathname,
       });
 
     const markShown = () => {
@@ -155,9 +159,7 @@ export function PwaRegister() {
 
     // iOS: tip manual (sem beforeinstallprompt) — mesmo cooldown/persistência.
     if (isIos() && allow()) {
-      const path = window.location.pathname;
-      const onAuth = /\/(login|registo)\/?$/.test(path);
-      if (!onAuth) {
+      if (allow()) {
         // Atraso breve: não interceptar a primeira interacção ao entrar.
         const t = window.setTimeout(() => {
           if (!allow()) return;
@@ -177,6 +179,23 @@ export function PwaRegister() {
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !pathname) return;
+    const current = readPwaInstallState(window.localStorage);
+    const next = noteInstallVisit(current, pathname);
+    installStateRef.current = next;
+    if (next !== current) writePwaInstallState(window.localStorage, next);
+    if (
+      !canShowInstallPrompt(next, {
+        standalone: isStandaloneDisplay(window),
+        pathname,
+      })
+    ) {
+      setShowInstall(false);
+      setShowIosTip(false);
+    }
+  }, [pathname]);
 
   const dismissInstall = useCallback(() => {
     const next = {

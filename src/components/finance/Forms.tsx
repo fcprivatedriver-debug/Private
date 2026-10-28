@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   createIncome,
   createExpense,
@@ -45,6 +45,41 @@ function incomeOptions(categories: Cat[]) {
   return DEFAULT_INCOME_CATEGORIES.map((c) => ({ value: c.slug, label: c.name }));
 }
 
+function useLocale() {
+  const params = useParams();
+  const raw = params?.locale;
+  const locale = Array.isArray(raw) ? raw[0] : raw;
+  return locale || "pt";
+}
+
+function MemberControl({
+  space,
+  members,
+  actorMemberId,
+  initialMemberId,
+}: {
+  space: "personal" | "family";
+  members: Mem[];
+  actorMemberId: string;
+  initialMemberId?: string | null;
+}) {
+  if (space !== "family") {
+    return <input type="hidden" name="memberId" value={actorMemberId} />;
+  }
+  const selected = initialMemberId || actorMemberId;
+  return (
+    <Field label="Membro">
+      <select name="memberId" defaultValue={selected}>
+        {members.map((m) => (
+          <option key={m.id} value={m.id}>
+            {m.displayName}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
 function expenseOptions(categories: Cat[]) {
   const fromDb = categories.filter((c) => c.kind === "EXPENSE");
   if (fromDb.length > 0) {
@@ -57,11 +92,15 @@ export function IncomeForm({
   categories,
   accounts,
   members,
+  actorMemberId,
+  space = "personal",
   initial,
 }: {
   categories: Cat[];
   accounts: Acc[];
   members: Mem[];
+  actorMemberId: string;
+  space?: "personal" | "family";
   initial?: {
     id: string;
     amountCents: number;
@@ -75,11 +114,13 @@ export function IncomeForm({
   };
 }) {
   const router = useRouter();
+  const locale = useLocale();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const options = incomeOptions(categories);
   const editing = Boolean(initial?.id);
+  const movementSpace = initial?.scope === "FAMILY" ? "family" : initial?.scope === "PERSONAL" ? "personal" : space;
 
   return (
     <form
@@ -91,7 +132,7 @@ export function IncomeForm({
           const res = editing ? await updateIncome(fd) : await createIncome(fd);
           if (!res.ok) setError(res.error);
           else {
-            router.push(editing ? "/pt/transacoes" : "/pt/receitas");
+            router.push(editing ? `/${locale}/transacoes` : `/${locale}/receitas`);
             setSaved(true);
         router.refresh();
           }
@@ -151,15 +192,12 @@ export function IncomeForm({
           ))}
         </select>
       </Field>
-      <Field label="Membro">
-        <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.displayName}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <MemberControl
+        space={movementSpace}
+        members={members}
+        actorMemberId={actorMemberId}
+        initialMemberId={initial?.memberId}
+      />
       <Field label="Observações">
         <textarea name="notes" rows={3} placeholder="Opcional" defaultValue={initial?.notes ?? ""} />
       </Field>
@@ -176,6 +214,7 @@ export function ExpenseForm({
   categories,
   accounts,
   members,
+  actorMemberId,
   defaults,
   initial,
   attachedReceipt,
@@ -184,6 +223,7 @@ export function ExpenseForm({
   categories: Cat[];
   accounts: Acc[];
   members: Mem[];
+  actorMemberId: string;
   defaults?: Partial<{
     amount: string;
     date: string;
@@ -217,6 +257,7 @@ export function ExpenseForm({
   space?: "personal" | "family";
 }) {
   const router = useRouter();
+  const locale = useLocale();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -241,7 +282,7 @@ export function ExpenseForm({
           const res = editing ? await updateExpense(fd) : await createExpense(fd);
           if (!res.ok) setError(res.error);
           else {
-            router.push(editing ? "/pt/transacoes" : "/pt/despesas");
+            router.push(editing ? `/${locale}/transacoes` : `/${locale}/despesas`);
             setSaved(true);
         router.refresh();
           }
@@ -310,7 +351,15 @@ export function ExpenseForm({
             value={initial?.time ?? new Date().toTimeString().slice(0, 5)}
           />
           <input type="hidden" name="paymentMethod" value={initial?.paymentMethod ?? "DEBIT_CARD"} />
-          <input type="hidden" name="memberId" value={initial?.memberId ?? members[0]?.id ?? ""} />
+          <input
+            type="hidden"
+            name="memberId"
+            value={
+              space === "family"
+                ? (initial?.memberId ?? actorMemberId)
+                : actorMemberId
+            }
+          />
         </>
       ) : null}
 
@@ -380,19 +429,12 @@ export function ExpenseForm({
               ))}
             </select>
           </Field>
-          {space === "family" || editing ? (
-            <Field label="Membro">
-              <select name="memberId" defaultValue={initial?.memberId ?? members[0]?.id}>
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.displayName}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          ) : (
-            <input type="hidden" name="memberId" value={initial?.memberId ?? members[0]?.id ?? ""} />
-          )}
+          <MemberControl
+            space={space === "family" || initial?.scope === "FAMILY" ? "family" : "personal"}
+            members={members}
+            actorMemberId={actorMemberId}
+            initialMemberId={initial?.memberId}
+          />
           <Field label="Observações">
             <textarea name="notes" rows={2} defaultValue={initial?.notes ?? ""} />
           </Field>
@@ -644,7 +686,8 @@ export function MemberForm() {
           required
           minLength={8}
           autoComplete="new-password"
-          aria-label="Password inicial"
+          aria-label="Palavra-passe inicial"
+          showRules
         />
       </Field>
       <button className="btn btn-primary" disabled={pending} type="submit">

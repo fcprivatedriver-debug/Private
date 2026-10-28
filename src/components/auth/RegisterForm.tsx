@@ -87,6 +87,7 @@ export function RegisterForm() {
             minLength={8}
             autoComplete="new-password"
             hint={PASSWORD_HINT}
+            showRules
           />
           <button className="btn btn-primary" type="submit" disabled={pending}>
             {pending ? "A preparar…" : "Criar conta"}

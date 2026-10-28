@@ -45,6 +45,15 @@ export default async function ListaPage({
   const openCount =
     lists.find((l) => l.id === activeListId)?.items.filter((i) => !i.isChecked).length ?? 0;
 
+  let priceRows = 0;
+  try {
+    priceRows = await prisma.extProductPrice.count({
+      where: { priceCents: { gt: 0 } },
+    });
+  } catch {
+    priceRows = 0;
+  }
+
   return (
     <div className="page-stack compras-page">
       <header className="compras-header">
@@ -74,6 +83,7 @@ export default async function ListaPage({
             })),
           }))}
           activeListId={activeListId}
+          pricesAvailable={priceRows > 0}
         />
       )}
     </div>

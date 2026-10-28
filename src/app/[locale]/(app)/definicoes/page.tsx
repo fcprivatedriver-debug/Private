@@ -4,6 +4,7 @@ import { getActiveFamilyForUser } from "@/lib/session";
 import { Panel } from "@/components/ui/FinanceUI";
 import { SettingsClient } from "@/components/finance/SettingsClient";
 import { InstallGuide } from "@/components/pwa/InstallGuide";
+import { roleLabel } from "@/domain/household";
 import Link from "next/link";
 
 const LINKS = [
@@ -54,7 +55,7 @@ export default async function DefinicoesPage() {
 
       <section className="mais-account">
         <p className="small">
-          {session.user.email} · {membership.role}
+          {session.user.email} · {roleLabel(membership.role)}
         </p>
         <form
           action={async () => {

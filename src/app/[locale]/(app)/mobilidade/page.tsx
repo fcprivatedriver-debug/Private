@@ -67,8 +67,8 @@ export default async function MobilidadePage() {
       </Panel>
 
       <p className="muted small">
-        Arquitetura modular: Fuel Service → providers · EV Service → charging providers ·
-        Navigation. A UI nunca fala directamente com os providers.
+        A comparação de preços de combustível e de carregadores ainda não está ligada.
+        Podes pedir direções e escolher a app de mapas.
       </p>
     </div>
   );

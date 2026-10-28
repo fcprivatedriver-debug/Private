@@ -4,6 +4,7 @@ import { getActiveFamilyForUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { IncomeForm } from "@/components/finance/Forms";
 import { Panel } from "@/components/ui/FinanceUI";
+import { getNinaSpace } from "@/actions/household";
 
 export default async function NovaReceitaPage() {
   const session = await auth();
@@ -11,10 +12,11 @@ export default async function NovaReceitaPage() {
   const membership = await getActiveFamilyForUser(session.user.id);
   if (!membership) redirect("/pt/registo");
 
-  const [categories, accounts, members] = await Promise.all([
+  const [categories, accounts, members, space] = await Promise.all([
     prisma.category.findMany({ where: { familyId: membership.familyId }, orderBy: { name: "asc" } }),
     prisma.financeAccount.findMany({ where: { familyId: membership.familyId, isActive: true } }),
     prisma.familyMember.findMany({ where: { familyId: membership.familyId } }),
+    getNinaSpace(),
   ]);
 
   return (
@@ -24,7 +26,13 @@ export default async function NovaReceitaPage() {
         Salário, subsídio, donativo, reembolso, venda, renda ou outro — tu decides.
       </p>
       <Panel title="Detalhes">
-        <IncomeForm categories={categories} accounts={accounts} members={members} />
+        <IncomeForm
+          categories={categories}
+          accounts={accounts}
+          members={members}
+          actorMemberId={membership.id}
+          space={space}
+        />
       </Panel>
     </div>
   );
