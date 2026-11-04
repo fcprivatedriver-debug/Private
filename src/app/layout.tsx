@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -48,6 +49,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt">
       <body className={`${display.variable} ${body.variable} antialiased`}>
+        <Script src="https://www.googletagmanager.com/gtag/js?id=AW-18157261346" strategy="afterInteractive" />
+        <Script id="fc-google-ads-tag" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag("js", new Date());
+          gtag("config", "AW-18157261346");
+        `}</Script>
         <SiteHeader />
         <main>{children}</main>
         <SiteFooter />
