@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,6 +17,25 @@ const NAV = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  useEffect(() => {
+    const trackWhatsAppClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest<HTMLAnchorElement>("a[href]");
+      if (!link) return;
+      const url = new URL(link.href, window.location.href);
+      if (!["wa.me", "api.whatsapp.com", "web.whatsapp.com"].includes(url.hostname)) return;
+      const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
+      gtag?.("event", "conversion", {
+        send_to: "AW-18157261346/q-yyCK3n9bEdEKKkh9JD",
+        value: 1.0,
+        currency: "EUR",
+      });
+    };
+    document.addEventListener("click", trackWhatsAppClick);
+    return () => document.removeEventListener("click", trackWhatsAppClick);
+  }, []);
+
 
   return (
     <header className="site-header">
